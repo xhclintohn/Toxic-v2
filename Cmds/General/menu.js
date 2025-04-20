@@ -91,10 +91,10 @@ await client.sendMessage(m.chat, {
                         contextInfo: {
                             externalAdReply: {
                                 showAdAttribution: false,
-                                title: `DREADED V3`,
+                                title: `Toxic-V3`,
                                 body: `Hi ${m.pushName}`,
                                 thumbnail: pict,
-                                sourceUrl: `https://github.com/Fortunatusmokaya/dreaded-v3`,
+                                sourceUrl: `https://github.com/xhclintohn/Toxic-v2`,
                                 mediaType: 1,
                                 renderLargerThumbnail: true
                             }
