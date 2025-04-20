@@ -14,7 +14,7 @@ module.exports = async (context) => {
             { name: 'Groups', emoji: '👥' }, // People for group management
             { name: 'AI', emoji: '🧠' }, // Brain for AI-powered commands
             { name: 'Media', emoji: '🎬' }, // Clapperboard for media content
-            { name: 'Editing', emoji: '✂️' }, // Scissors for editing tools
+            { name: 'Editting', emoji: '✂️' }, // Scissors for editing tools
             { name: 'Utils', emoji: '🔧' } // Wrench for utility commands
         ];
 
