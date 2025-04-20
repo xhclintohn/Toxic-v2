@@ -8,7 +8,7 @@ await ownerMiddleware(context, async () => {
     client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, 
     participants, pushname, body, budy, totalCommands, args, mime, qmsg, msgDreaded, 
     botNumber, itsMe, packname, author, generateProfilePicture, groupMetadata, 
-    dreadedspeed, mycode, fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, 
+    toxicpeed, mycode, fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, 
     prefix, cmd, botname, mode, gcpresence, antitag, antidelete, antionce, 
     fetchBuffer, uploadtoimgur, ytmp3, getGroupAdmins, Tag
   } = context;
