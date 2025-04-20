@@ -17,7 +17,7 @@ const {
   commands,
   totalCommands
 } = require("../Handler/commandHandler");
-const botname = process.env.BOTNAME || "DREADED";
+const botname = process.env.BOTNAME || "Toxic";
 const connectionHandler = async (_0x218261, _0x461fdf, _0xd50ec0) => {
   const {
     connection: _0x115a4c,
