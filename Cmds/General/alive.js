@@ -1,10 +1,15 @@
-//alive.js
-
 module.exports = async (context) => {
-    const { client, m, prefix } = context;
+    const { client, m, prefix, pict } = context;
 
-const botname = process.env.BOTNAME || "DREADED";
+    try {
+        const caption = `🟢 *Hello ${m.pushName}, T𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3 is online!*\n\nType *${prefix}menu* to explore my commands.\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐗𝐈𝐂-MD 𝐕3*`;
 
- await client.sendMessage(m.chat, { image: { url: 'https://telegra.ph/file/d6dab955fbaa42fce2280.jpg' }, caption: `Hello ${m.pushName}, Dreaded is active now.\n\nType ${prefix}menu to see my command list..\n\nSome important links concerning the bot are given below.\n\nOfficial website:\n https://dreaded.site\n\nPairing site:\n https://pair.dreaded.site.\n\nRandom APIs site:\nhttps://api.dreaded.site\n\nThis free random APIs are meant for other developers and may not always work.\n\nXd );`, fileLength: "9999999999898989899999999" }, { quoted: m }); 
-
-}
+        await client.sendMessage(m.chat, {
+            image: pict, // Assuming pict is provided in context; replace with local image path if needed
+            caption: caption
+        }, { quoted: m });
+    } catch (error) {
+        console.error('Error in alive command:', error);
+        await client.sendMessage(m.chat, { text: `Oops! Failed to check status: ${error.message}` }, { quoted: m });
+    }
+};
