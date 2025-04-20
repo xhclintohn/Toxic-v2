@@ -13,7 +13,7 @@ const { readFileSync } = require('fs');
 
 const path = require('path');
 
-const filePath = path.resolve(__dirname, '../dreaded.jpg'); 
+const filePath = path.resolve(__dirname, '../toxic.jpg'); 
 const kali = readFileSync(filePath);
 
 
