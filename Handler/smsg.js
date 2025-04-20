@@ -119,12 +119,12 @@ m.reply = (text, chatId = m.chat, options = {}) => {
       text: text,
       contextInfo: {
         externalAdReply: {
-          title: `DREADED V2`,
+          title: `Toxic V3`,
           body: m.pushName,
           previewType: "PHOTO",
-          thumbnailUrl: 'https://telegra.ph/file/c75efecf7f0aef851fc02.jpg', 
+          thumbnailUrl: 'https://i.ibb.co/7JcYBD5Y/cbb9f804644ae8c4.jpg', 
           thumbnail: kali, 
-          sourceUrl: 'https://github.com/Fortunatusmokaya/dreaded-v2'
+          sourceUrl: 'https://github.com/xhclintohn/Toxic-v2'
         }
       }
     }, 
