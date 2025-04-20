@@ -18,7 +18,7 @@ module.exports = {
                 { name: 'Groups', emoji: '👥' },
                 { name: 'AI', emoji: '🧠' },
                 { name: 'Media', emoji: '🎬' },
-                { name: 'Editing', emoji: '✂️' },
+                { name: 'Editting', emoji: '✂️' },
                 { name: 'Utils', emoji: '🔧' }
             ];
 
