@@ -3,14 +3,12 @@ const path = require('path');
 
 const cmdsDir = path.join(__dirname, '..', 'Cmds');
 
-
 function findAllCommandFiles(dir) {
     let commandFiles = [];
     let totalCommands = 0;
 
     function findFiles(directory) {
         const files = fs.readdirSync(directory);
-
         for (const file of files) {
             const filePath = path.join(directory, file);
             const stat = fs.statSync(filePath);
@@ -30,68 +28,66 @@ function findAllCommandFiles(dir) {
 
 const { commandFiles, totalCommands } = findAllCommandFiles(cmdsDir);
 
-
 const commands = {};
 const aliases = {
-    speed: "ping", 
-kick: "remove",
-mute: "close", 
-unmute: "open", 
-    latency: "ping", 
+    speed: "ping",
+    kick: "remove",
+    mute: "close",
+    unmute: "open",
+    latency: "ping",
     runtime: "uptime",
-admin: "oadmin", 
-groups: "botgc",
-bc: "broadcast", 
-pp: "fullpp",  
-kickall: "kill",
-kickall2: "kill2", 
-exec: "shell", 
-leave: "leavegc",
-left: "leavegc",
-join: "joingc",
-gh: "github",
-ss: "screenshot", 
-getpp: "profile",
-allvars: "allvar",
-redeploy: "update",
-whois: "profile",
-ssweb: "ssweb",
-help: "menu",
-commands: "menu",
-list: "menu",
-repo: "script",
-sc: "script",
-linkgc: "link",
-gclink: "link",
-grouplink: "link",
-linkgroup: "link",
-mention: "tagall", 
-vv: "retrieve", 
-reset: "revoke",
-mute: "close", 
-app: "apk",
-fb: "fbdl", 
-facebook: "fbdl",
-url: "upload", 
-tourl: "upload", 
-yta: "ytmp3",
-ytv: "ytmp4", 
-mf: "mediafire",
-emojimix: "emix",  
-enc: "encrypt",
-req: "requests",
-approve: "approve-all",
-reject: "reject-all",                        
-    up: "uptime" 
+    admin: "oadmin",
+    groups: "botgc",
+    bc: "broadcast",
+    pp: "fullpp",
+    kickall: "kill",
+    kickall2: "kill2",
+    exec: "shell",
+    leave: "leavegc",
+    left: "leavegc",
+    join: "joingc",
+    gh: "github",
+    ss: "screenshot",
+    getpp: "profile",
+    allvars: "allvar",
+    redeploy: "update",
+    whois: "profile",
+    ssweb: "ssweb",
+    help: "menu",
+    commands: "menu",
+    list: "menu",
+    repo: "script",
+    sc: "script",
+    linkgc: "link",
+    gclink: "link",
+    grouplink: "link",
+    linkgroup: "link",
+    mention: "tagall",
+    vv: "retrieve",
+    reset: "revoke",
+    mute: "close",
+    app: "apk",
+    fb: "fbdl",
+    facebook: "fbdl",
+    url: "upload",
+    tourl: "upload",
+    yta: "ytmp3",
+    ytv: "ytmp4",
+    mf: "mediafire",
+    emojimix: "emix",
+    enc: "encrypt",
+    req: "requests",
+    approve: "approve-all",
+    reject: "reject-all",
+    up: "uptime"
 };
-
 
 commandFiles.forEach((file) => {
     const commandName = path.basename(file, '.js');
     const commandModule = require(file);
 
-
-    commands[commandName] = commandModule;
+    // Store the command's run function (or the module itself if it's a function)
+    commands[commandName] = commandModule.run || commandModule;
 });
 
-module.exports = { commands, aliases, totalCommands }; 
+module.exports = { commands, aliases, totalCommands };
