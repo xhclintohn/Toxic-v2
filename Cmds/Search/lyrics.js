@@ -1,46 +1,46 @@
-const fetch = require('node-fetch');
-
 module.exports = async (context) => {
-    const { client, m, text, fetchJson } = context;
-
-    const apiUrl = `https://api.dreaded.site/api/lyrics?title=${encodeURIComponent(text)}`;
+    const { client, m, text, pict } = context;
 
     try {
-        if (!text) return m.reply("Provide a song name!");
-
-        const data = await fetchJson(apiUrl);
-
-        if (!data.success || !data.result || !data.result.lyrics) {
-            return m.reply(`Sorry, I couldn't find any lyrics for "${text}".`);
+        if (!text) {
+            return await client.sendMessage(m.chat, {
+                text: `🎵 *Please provide a song name!* Example: *.lyrics Alone*`
+            }, { quoted: m });
         }
 
-        const { title, artist, link, thumb, lyrics } = data.result;
+        // Placeholder: Simulate lyrics data (replace with your own lyrics source if available)
+        const mockData = {
+            success: true,
+            result: {
+                title: text,
+                artist: "Unknown Artist",
+                lyrics: "Sample lyrics for demonstration purposes.\nReplace with actual lyrics data.",
+                thumb: null
+            }
+        };
 
-        const imageUrl = thumb || "https://i.imgur.com/Cgte666.jpeg";
-
-        const imageBuffer = await fetch(imageUrl)
-            .then(res => res.buffer())
-            .catch(err => {
-                console.error('Error fetching image:', err);
-                return null;
-            });
-
-        if (!imageBuffer) {
-            return m.reply("An error occurred while fetching the image.");
+        if (!mockData.success || !mockData.result || !mockData.result.lyrics) {
+            return await client.sendMessage(m.chat, {
+                text: `❌ *Sorry, I couldn't find lyrics for "${text}"!* Try another song.`
+            }, { quoted: m });
         }
 
-        const caption = `**Title**: ${title}\n**Artist**: ${artist}\n\n${lyrics}`;
+        const { title, artist, lyrics } = mockData.result;
 
-        await client.sendMessage(
-            m.chat,
-            {
-                image: imageBuffer,
-                caption: caption
-            },
-            { quoted: m }
-        );
+        const caption = `🎵 *Song Lyrics*\n\n` +
+                       `📜 *Title*: ${title}\n` +
+                       `🎤 *Artist*: ${artist}\n\n` +
+                       `${lyrics}\n\n` +
+                       `◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐗𝐈𝐂-MD 𝐕3*`;
+
+        await client.sendMessage(m.chat, {
+            image: { url: pict }, // Use context-provided pict
+            caption: caption
+        }, { quoted: m });
     } catch (error) {
-        console.error(error);
-        m.reply(`An error occurred while fetching the lyrics for "${text}".`);
+        console.error('Error in lyrics command:', error);
+        await client.sendMessage(m.chat, {
+            text: `⚠️ *Oops! Failed to fetch lyrics for "${text}":* ${error.message}`
+        }, { quoted: m });
     }
-}
+};
