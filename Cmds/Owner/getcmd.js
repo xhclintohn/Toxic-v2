@@ -1,54 +1,67 @@
+const fs = require('fs').promises;
+
 module.exports = async (context) => {
+    const { client, m, text, prefix } = context;
 
-const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware'); 
-const fs = require('fs');
-    await ownerMiddleware(context, async () => {
-        const { client, m, text, Owner, prefix } = context;
+    try {
+        // Restrict to your number only
+        const allowedNumber = '254735342808@s.whatsapp.net';
+        if (m.sender !== allowedNumber) {
+            return await client.sendMessage(m.chat, {
+                text: `❌ *Access denied!* This command is restricted to the bot owner.\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3*`
+            }, { quoted: m });
+        }
 
-        if (!text) return m.reply(`Provide name of command to fetch it's code. Like, ${prefix}getcmd fullpp`);
+        if (!text) {
+            return await client.sendMessage(m.chat, {
+                text: `📜 *Please provide a command name!* Example: *${prefix}getcmd ping*\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐖𝐈𝐂-𝐌𝐃 𝐕3*`
+            }, { quoted: m });
+        }
 
         const categories = [
-            { name: 'AI' },
             { name: 'General' },
-            { name: 'Media' },
-            { name: 'Editting' },
-            { name: 'groups' },
+            { name: 'Settings' },
             { name: 'Owner' },
-            { name: 'Coding' }
+            { name: 'Heroku' },
+            { name: 'Wa-Privacy' },
+            { name: 'Groups' },
+            { name: 'AI' },
+            { name: 'Media' },
+            { name: 'Editing' },
+            { name: 'Utils' }
         ];
 
         let fileFound = false;
+        const commandName = text.endsWith('.js') ? text.slice(0, -3) : text;
 
-        const promises = categories.map((category) => {
-            const fileName = text
-            const filePath = `./Cmds/${category.name}/${fileName.endsWith('.js') ? fileName : `${fileName}.js`}`;
+        for (const category of categories) {
+            const filePath = `./Cmds/${category.name}/${commandName}.js`;
 
-            return new Promise((resolve, reject) => {
-                fs.stat(filePath, (err, stats) => {
-                    if (err) {
-                       
-                        resolve(false);
-                    } else {
-                       
-                        fs.readFile(filePath, 'utf8', (err, data) => {
-                            if (err) {
-                                m.reply(`Error reading file:-\n ${err.message}`);
-                                resolve(false);
-                            } else {
-                                m.reply(`//${text}.js\n\n${data}`);
-                                fileFound = true; 
-                                resolve(true);
-                            }
-                        });
-                    }
-                });
-            });
-        });
-
-        await Promise.all(promises);
+            try {
+                const data = await fs.readFile(filePath, 'utf8');
+                const replyText = `✅ *Command Source: ${commandName}.js*\n\n\`\`\`javascript\n${data}\n\`\`\`\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3*`;
+                await client.sendMessage(m.chat, { text: replyText }, { quoted: m });
+                fileFound = true;
+                break;
+            } catch (err) {
+                if (err.code !== 'ENOENT') {
+                    await client.sendMessage(m.chat, {
+                        text: `⚠️ *Error reading command file:* ${err.message}\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3*`
+                    }, { quoted: m });
+                    return;
+                }
+            }
+        }
 
         if (!fileFound) {
-            m.reply(`Command not found: ${text}`);
+            await client.sendMessage(m.chat, {
+                text: `❌ *Command not found:* ${commandName}\n\nTry a valid command name!\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3*`
+            }, { quoted: m });
         }
-    });
+    } catch (error) {
+        console.error('Error in getcmd command:', error);
+        await client.sendMessage(m.chat, {
+            text: `⚠️ *Oops! Failed to process command:* ${error.message}\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐖𝐈𝐂-𝐌𝐃 𝐕3*`
+        }, { quoted: m });
+    }
 };
