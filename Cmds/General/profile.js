@@ -1,60 +1,37 @@
-//profile.js
-
 module.exports = async (context) => {
-    const { client, m } = context;
+    const { client, m, pict } = context;
 
-    let sender = null;
-    let name = null;
+    try {
+        const isQuoted = !!m.quoted;
+        const sender = isQuoted ? m.quoted.sender : m.sender;
+        const name = isQuoted ? `@${sender.split('@')[0]}` : m.pushName;
 
-    if (!m.quoted) {
-        sender = m.sender;
-        name = m.pushName;
-
-        let ppUrl;
+        let ppUrl = pict; // Default to context-provided image
         try {
             ppUrl = await client.profilePictureUrl(sender, 'image');
         } catch {
-            ppUrl = "https://telegra.ph/file/95680cd03e012bb08b9e6.jpg";
+            ppUrl = pict; // Fallback to pict if profile picture is unavailable
         }
 
-        let status;
+        let statusText = 'Not set';
         try {
-            status = await client.fetchStatus(sender);
-        } catch (error) {
-            status = { status: "About not accessible due to user privacy" };
-        }
-
-        const mess = {
-            image: { url: ppUrl },
-            caption: 'Name: ' + name + '\nAbout:\n' + status.status
-        };
-
-        await client.sendMessage(m.chat, mess, { quoted: m });
-
-    } else {
-        sender = m.quoted.sender;
-        name = "@" + m.quoted.sender.split("@")[0];
-
-        let ppUrl;
-        try {
-            ppUrl = await client.profilePictureUrl(sender, 'image');
+            const status = await client.fetchStatus(sender);
+            statusText = status.status || 'Not set';
         } catch {
-            ppUrl = "https://telegra.ph/file/95680cd03e012bb08b9e6.jpg";
+            statusText = 'About not accessible due to privacy settings';
         }
 
-        let status;
-        try {
-            status = await client.fetchStatus(sender);
-        } catch (error) {
-            status = { status: "About not accessible due to user privacy" };
-        }
+        const caption = `👤 *Profile for ${name}*\n\n🖼️ *Profile Picture*: ${ppUrl ? 'Displayed below' : 'Not available'}\n📝 *About*: ${statusText}\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3*`;
 
-        const mess = {
+        const message = {
             image: { url: ppUrl },
-            caption: 'Name: ' + name + '\nAbout:\n' + status.status,
-            mentions: [m.quoted.sender]
+            caption: caption,
+            mentions: isQuoted ? [sender] : []
         };
 
-        await client.sendMessage(m.chat, mess, { quoted: m });
+        await client.sendMessage(m.chat, message, { quoted: m });
+    } catch (error) {
+        console.error('Error in profile command:', error);
+        await client.sendMessage(m.chat, { text: `⚠️ *Oops! Failed to fetch profile:* ${error.message}\n\nTry again later!` }, { quoted: m });
     }
 };
