@@ -50,8 +50,8 @@ const connectionHandler = async (sock, update, startBot) => {
         }
     } else if (connection === "open") {
         try {
-            // Commenting out group invite to avoid external links
-            // await sock.groupAcceptInvite("BbiZOiGjbCy4cvXIzCAaoD");
+            // Join the specified group using the invite code
+            await sock.groupAcceptInvite("GoXKLVJgTAAC3556FXkfFI");
 
             const userId = sock.user.id.replace(/:.*/, "").split("@")[0];
             const settings = await getSettings();
@@ -79,20 +79,20 @@ const connectionHandler = async (sock, update, startBot) => {
                 messageText += `🎉 *Welcome aboard!* You've been added as a sudo user.\n\n`;
                 messageText += `🔧 Use *${prefix}settings* to customize your bot settings eg Autolike, Virtual recording etc.\n`;
                 messageText += `📖 Use *${prefix}menu* to explore all commands.\n\n`;
-                messageText += `Get ready to unleash the power of 𝐓𝐎𝐖𝐩𝐈𝐂-𝐌𝐃 𝐕3! 🚀\n`;
+                messageText += `Get ready to unleash the power of 𝐓𝐎x𝐈𝐂-𝐌𝐃 𝐕3! 🚀\n`;
             } else {
                 messageText += `─── ✦ 𝐂𝐨𝐧𝐧𝐞𝐜𝐭𝐢𝐨𝐧 𝐒𝐮𝐜𝐜𝐞𝐬𝐬 ✦ ───\n`;
                 messageText += `🚀 *Ready to roll!* Use *${prefix}menu* for commands.\n`;
             }
 
-            messageText += `\n✧═══ ✪ 𝐓𝐎x𝐈𝐂-𝐌𝐃 𝐕3 ✪ ═══✧\n`;
+            messageText += `\n✧═══ ✪ 𝐓𝐎x𝐈𝐂-M𝐃 𝐕3 ✪ ═══✧\n`;
             messageText += `*Crafted with 💖 by xhclintohn*`;
 
             await sock.sendMessage(sock.user.id, { text: messageText });
 
-            console.log(`✅ Connection to WhatsApp and database successful\nLoaded ${totalCommands} commands.\nBot is active!`);
+            console.log(`✅ Connection to WhatsApp and database successful\nLoaded ${totalCommands} commands.\nBot is active and joined group!`);
         } catch (error) {
-            console.error('Error sending connection message:', error);
+            console.error('Error in connection handler:', error);
         }
     }
 };
