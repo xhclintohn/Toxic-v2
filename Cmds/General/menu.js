@@ -76,7 +76,7 @@ module.exports = {
 
             menuText += `\n◈━━━━━━━━━━━━━━━━◈\n`;
             menuText += `*Explore the power of 𝐓𝐎𝐗𝐈𝐂-MD 𝐕3!*\n`;
-            menuText += `Visit: https://github.com/xhclintohn/Toxic-v2\n`;
+            menuText += `🍁🌬️\n`;
 
             await client.sendMessage(m.chat, {
                 text: menuText,
