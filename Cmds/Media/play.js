@@ -3,14 +3,19 @@ module.exports = async (context) => {
     const yts = require("yt-search");
     const fetch = require("node-fetch");
 
+    // Function to format stylish reply
+    const formatStylishReply = (message) => {
+        return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
+    };
+
     if (!text) {
-        return m.reply("Please provide a song name! 🎵");
+        return m.reply(formatStylishReply("Yo, you forgot to give me a song name! 🎵 Try again."));
     }
 
     try {
         const { videos } = await yts(text);
         if (!videos || videos.length === 0) {
-            throw new Error("No songs found! 😕");
+            throw new Error("Couldn't find any songs matching that. 😕 Wanna try another?");
         }
 
         const song = videos[0];
@@ -26,16 +31,16 @@ module.exports = async (context) => {
         });
 
         if (!response.ok) {
-            throw new Error(`API request failed with status ${response.status} 🚫`);
+            throw new Error("Something went wrong with the download server. 🚫 Let's try again later.");
         }
 
         const data = await response.json();
         if (!data.success || !data.result?.download_url) {
-            throw new Error("Failed to retrieve audio from API! 😞");
+            throw new Error("Ugh, couldn't grab the audio from the server. 😞 Any other song you want?");
         }
 
         const songTitle = data.result.title || song.title;
-        await m.reply(`_Downloading ${songTitle}_ 🎧`);
+        await m.reply(formatStylishReply(`Grabbing *${songTitle}* for you! 🎧 Hang tight.`));
 
         await client.sendMessage(m.chat, {
             document: { url: data.result.download_url },
@@ -45,6 +50,6 @@ module.exports = async (context) => {
 
     } catch (error) {
         console.error("Error in play command:", error.message);
-        return m.reply(`Download failed: ${error.message} 😢`);
+        return m.reply(formatStylishReply(`Oops, something broke: ${error.message} 😢 Wanna try another song?`));
     }
 };
