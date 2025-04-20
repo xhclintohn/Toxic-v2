@@ -1,115 +1,134 @@
 const { getGroupSetting, getSudoUsers } = require("../Database/config");
-const botname = process.env.BOTNAME || 'ToxicMD';
 
-
-const Events = async (client, Fortu) => {
-    const Myself = await client.decodeJid(client.user.id);
+const Events = async (client, event, pict) => {
+    const botJid = await client.decodeJid(client.user.id);
 
     try {
-        
-
-        let metadata = await client.groupMetadata(Fortu.id);
-        let participants = Fortu.participants;
-        let desc = metadata.desc || "No Description";
-
-
-const groupSettings = await getGroupSetting(Fortu.id);
-        const events = groupSettings?.events;
+        const metadata = await client.groupMetadata(event.id);
+        const participants = event.participants;
+        const desc = metadata.desc || "No Description";
+        const groupSettings = await getGroupSetting(event.id);
+        const eventsEnabled = groupSettings?.events;
         const antidemote = groupSettings?.antidemote;
         const antipromote = groupSettings?.antipromote;
-const sudoUsers = await getSudoUsers();
+        const sudoUsers = await getSudoUsers();
+        const currentDevs = Array.isArray(sudoUsers)
+            ? sudoUsers.map(v => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net")
+            : [];
 
-
-const DevToxic = Array.isArray(sudoUsers) ? sudoUsers : [];
-const currentDevs = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net");
-
-
-
-        for (let num of participants) {
-            let dpuser;
-
+        for (const participant of participants) {
+            let dpUrl = pict;
             try {
-                dpuser = await client.profilePictureUrl(num, "image");
+                dpUrl = await client.profilePictureUrl(participant, "image");
             } catch {
-                dpuser = "https://telegra.ph/file/0a620a1cf04d3ba3874f5.jpg";
+                dpUrl = pict; // Fallback to context-provided pict
             }
 
-            if (events && Fortu.action === "add") {
-                let userName = num;
+            if (eventsEnabled && event.action === "add") {
+                try {
+                    const userName = participant.split("@")[0];
+                    const welcomeText = `🌟 *Welcome to ${metadata.subject}* 🌟\n\n` +
+                                       `👋 *Hello @${userName}!*\n\n` +
+                                       `─── ✦ Group Info ✦ ───\n` +
+                                       `📌 *Group*: ${metadata.subject}\n` +
+                                       `📝 *Description*: ${desc}\n\n` +
+                                       `Enjoy your stay! 🚀\n\n` +
+                                       `✧═══ ✪ 𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3 ✪ ═══✧\n` +
+                                       `*Powered by 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧*`;
 
-                let Welcometext = `Holla @${userName.split("@")[0]} 👋\n\nWelcome to ${metadata.subject}.\n\nGroup Description: ${desc}\n\nThank You.\n\nThis is an automated message sent by ${botname} via Baileys.`;
-
-                await client.sendMessage(Fortu.id, {
-                    image: { url: dpuser },
-                    caption: Welcometext,
-                    mentions: [num],
-                });
-            } else if (events && Fortu.action === "remove") {
-                let userName2 = num;
-
-                let Lefttext = `Goodbye @${userName2.split("@")[0]} 👋, probably not gonna miss you`;
-
-                await client.sendMessage(Fortu.id, {
-                    image: { url: dpuser },
-                    caption: Lefttext,
-                    mentions: [num],
-                });
-            } else if (Fortu.action === "demote") {
-                if (antidemote) {
-                    if (
-                        Fortu.author == metadata.owner || 
-                        Fortu.author == Myself || 
-                        Fortu.author == Fortu.participants[0] || 
-                        currentDevs.includes(Fortu.author)
-                    ) {
-                        await client.sendMessage(Fortu.id, {
-                            text: `A super user has demoted @${(Fortu.participants[0]).split("@")[0]}`,
-                            mentions: [Fortu.participants[0]]
-                        });
-                        return;
-                    }
-
-                    await client.groupParticipantsUpdate(Fortu.id, [Fortu.author], "demote");
-                    await client.groupParticipantsUpdate(Fortu.id, [Fortu.participants[0]], "promote");
-
-                    client.sendMessage(
-                        Fortu.id,
-                        {
-                            text: `@${(Fortu.author).split("@")[0]} you will be demoted for demoting @${(Fortu.participants[0]).split("@")[0]}.\n\nAntidemote is active and only super users are allowed to demote!`,
-                            mentions: [Fortu.author, Fortu.participants[0]]
-                        }
-                    );
+                    await client.sendMessage(event.id, {
+                        image: { url: dpUrl },
+                        caption: welcomeText,
+                        mentions: [participant]
+                    });
+                } catch (err) {
+                    console.error(`Error sending welcome message for ${participant}:`, err);
                 }
-            } else if (Fortu.action === "promote") {
-                if (antipromote) {
+            } else if (eventsEnabled && event.action === "remove") {
+                try {
+                    const userName = participant.split("@")[0];
+                    const leaveText = `🚪 *Goodbye @${userName}* 🚪\n\n` +
+                                      `We'll miss you... maybe! 😎\n\n` +
+                                      `✧═══ ✪ 𝐓𝐎𝐗𝐼𝐂-𝐌𝐃 𝐕3 ✪ ═══✧\n` +
+                                      `*Powered by 𝐓𝐎𝐖𝐩𝐈𝐂-𝐌𝐃 𝐕3*`;
+
+                    await client.sendMessage(event.id, {
+                        image: { url: dpUrl },
+                        caption: leaveText,
+                        mentions: [participant]
+                    });
+                } catch (err) {
+                    console.error(`Error sending leave message for ${participant}:`, err);
+                }
+            } else if (event.action === "demote" && antidemote) {
+                try {
                     if (
-                        Fortu.author == metadata.owner || 
-                        Fortu.author == Myself || 
-                        Fortu.author == Fortu.participants[0] || 
-                        currentDevs.includes(Fortu.author)
+                        event.author === metadata.owner ||
+                        event.author === botJid ||
+                        event.author === participant ||
+                        currentDevs.includes(event.author)
                     ) {
-                        await client.sendMessage(Fortu.id, {
-                            text: `A super user has promoted @${(Fortu.participants[0]).split("@")[0]}`,
-                            mentions: [Fortu.participants[0]]
+                        await client.sendMessage(event.id, {
+                            text: `🔽 *Super user demoted @${participant.split("@")[0]}*\n\n` +
+                                  `✧═══ ✪ 𝐓𝐎𝐗𝐼𝐂-𝐌𝐃 𝐕3 ✪ ═══✧\n` +
+                                  `*Powered by 𝐓𝐎𝐖𝐩𝐈𝐂-𝐌𝐃 𝐕3*`,
+                            mentions: [participant]
                         });
                         return;
                     }
 
-                    await client.groupParticipantsUpdate(Fortu.id, [Fortu.author, Fortu.participants[0]], "demote");
+                    await client.groupParticipantsUpdate(event.id, [event.author], "demote");
+                    await client.groupParticipantsUpdate(event.id, [participant], "promote");
 
-                    client.sendMessage(
-                        Fortu.id,
-                        {
-                            text: `@${(Fortu.author).split("@")[0]} you have been demoted for promoting @${(Fortu.participants[0]).split("@")[0]} to admin. @${(Fortu.participants[0]).split("@")[0]} has also been demoted.\n\nAntipromote is active and only super users can promote!`,
-                            mentions: [Fortu.author, Fortu.participants[0]]
-                        }
-                    );
+                    await client.sendMessage(event.id, {
+                        text: `🔽 *@${event.author.split("@")[0]} demoted for demoting @${participant.split("@")[0]}!*\n\n` +
+                              `Antidemote is active. Only super users can demote.\n\n` +
+                              `✧═══ ✪ 𝐓𝐎𝐗𝐼𝐂-𝐌𝐃 𝐕3 ✪ ═══✧\n` +
+                              `*Powered by 𝐴𝐓𝐎𝐖𝐩𝐈𝐂-𝐌𝐃 𝐕3*`,
+                        mentions: [event.author, participant]
+                    });
+                } catch (err) {
+                    console.error(`Error handling demote for ${participant}:`, err);
+                }
+            } else if (event.action === "promote" && antipromote) {
+                try {
+                    if (
+                        event.author === metadata.owner ||
+                        event.author === botJid ||
+                        event.author === participant ||
+                        currentDevs.includes(event.author)
+                    ) {
+                        await client.sendMessage(event.id, {
+                            text: `🔼 *Super user promoted @${participant.split("@")[0]}*\n\n` +
+                                  `✧═══ ✪ 𝐓𝐎𝐗𝐼𝐂-𝐌𝐃 𝐕3 ✪ ═══✧\n` +
+                                  `*Powered by 𝐓𝐎x𝐈𝐂-𝐌𝐃 𝐕3*`,
+                            mentions: [participant]
+                        });
+                        return;
+                    }
+
+                    await client.groupParticipantsUpdate(event.id, [event.author, participant], "demote");
+
+                    await client.sendMessage(event.id, {
+                        text: `🔼 *@${event.author.split("@")[0]} demoted for promoting @${participant.split("@")[0]}!*\n\n` +
+                              `@${participant.split("@")[0]} has also been demoted. Antipromote is active. Only super users can promote.\n\n` +
+                              `✧═══ ✪ 𝐓𝐎𝐗𝐼𝐂-𝐌𝐃 𝐕3 ✪ ═══✧\n` +
+                              `*Powered by 𝐓𝐎x𝐈𝐂-𝐌𝐃 𝐕3*`,
+                        mentions: [event.author, participant]
+                    });
+                } catch (err) {
+                    console.error(`Error handling promote for ${participant}:`, err);
                 }
             }
         }
     } catch (err) {
-        console.log(err);
+        console.error('Error in group events handler:', err);
+        await client.sendMessage(event.id, {
+            text: `⚠️ *Oops! Failed to process group event:* ${err.message}\n\n` +
+                  `✧═══ ✪ 𝐓𝐎x𝐈𝐂-𝐌𝐃 𝐕3 ✪ ═══✧\n` +
+                  `*Powered by 𝐓𝐎𝐖x𝐂-𝐌𝐃 𝐕3*`
+        }).catch(() => {});
     }
 };
 
-module.exports = Events; 
+module.exports = Events;
