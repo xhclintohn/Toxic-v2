@@ -76,7 +76,7 @@ module.exports = {
             }
 
             menuText += `\n◈━━━━━━━━━━━━━━━━◈\n`;
-            menuText += `*Explore the power of 𝐓𝐎𝐗𝐈𝐂-MD 𝐕3!*\n`;
+            menuText += `*Explore the power of 𝐓𝐎𝐗𝐈𝐂-MD!*\n`;
             menuText += `🍁🌬️\n`;
 
             // Send the menu text
