@@ -67,9 +67,9 @@ await client.query(`
             presence: 'online',
             autoview: 'true',
             autolike: 'true',
-            autoread: 'true',
+            autoread: 'false',
             autobio: 'false',
-            anticall: 'true', 
+            anticall: 'false', 
             reactEmoji: '❤️'  
         };
 
@@ -91,14 +91,14 @@ await client.query(`
 
 
 const defaultGroupSettings = {
-    antitag: 'true',         
+    antitag: 'false',         
     antidelete: 'true',               
     gcpresence: 'false',    
-    antiforeign: 'true',   
+    antiforeign: 'false',   
     antidemote: 'false',      
-    antipromote: 'true',
+    antipromote: 'false',
     events: 'false',
-    antilink: 'true'
+    antilink: 'false'
 };
 
 async function initializeGroupSettings(jid) {
