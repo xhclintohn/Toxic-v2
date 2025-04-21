@@ -70,7 +70,7 @@ await client.query(`
             autoread: 'false',
             autobio: 'false',
             anticall: 'false', 
-            reactEmoji: '❤️'  
+            reactEmoji: '🍁'  
         };
 
         for (const [key, value] of Object.entries(defaultSettings)) {
