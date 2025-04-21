@@ -2,7 +2,7 @@ module.exports = async (context) => {
     const { client, m, pict } = context;
 
     try {
-        const repoUrl = 'https://api.github.com/repos/xhclintohn/Toxic-v2';
+        const repoUrl = 'https://api.github.com/repos/xhclintohn/Toxic-MD';
         const response = await fetch(repoUrl);
         const repoData = await response.json();
 
