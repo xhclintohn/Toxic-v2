@@ -1,5 +1,5 @@
 const {
-  default: toxicConnect,
+  default: dreadedConnect,
   useMultiFileAuthState,
   DisconnectReason,
   fetchLatestBaileysVersion,
@@ -49,7 +49,7 @@ const connectionHandler = require('../Handler/connectionHandler');
 
 // const connectionEvents = require("./connectionEvents.js");
 
-async function startToxic() {
+async function startDreaded() {
 
 let settingss = await getSettings();
         if (!settingss) return;
@@ -58,11 +58,11 @@ const { autobio, mode, anticall } = settingss;
 
 
         const {  saveCreds, state } = await useMultiFileAuthState(sessionName)
-            const client = toxicConnect({
+            const client = dreadedConnect({
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
 version: [2, 3000, 1015901307],
-        browser: [`Toxic`,'Safari','3.0'],
+        browser: [`TOXIC`,'Safari','3.0'],
 fireInitQueries: false,
             shouldSyncHistoryMessage: false,
             downloadHistory: false,
@@ -97,7 +97,7 @@ if (autobio){
 
                          client.updateProfileStatus( 
 
-                                         `${botname} is active 24/7\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} It's a ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.` 
+                                         `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.` 
 
                                  ) 
 
@@ -105,7 +105,7 @@ if (autobio){
 
 }
 
- 
+
 const processedCalls = new Set();
 
 client.ws.on('CB:call', async (json) => {
@@ -155,7 +155,7 @@ client.ev.on("messages.upsert", async (chatUpdate) => {
         if (isGroup) {
             const antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
 
-            
+
             if ((antilink === true || antilink === 'true') && messageContent.includes("https") && sender !== Myself) {
                 const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
                 const groupAdmins = groupMetadata.participants.filter(p => p.admin).map(p => p.id);
@@ -185,31 +185,13 @@ client.ev.on("messages.upsert", async (chatUpdate) => {
         }
 
         // autolike for statuses
-if (autolike && mek.key.remoteJid === "status@broadcast") {
-    if (!mek.status) {
-        const maxRetries = 3;
-        let attempt = 0;
-        const sendReaction = async () => {
-            while (attempt < maxRetries) {
-                try {
-                    await client.sendMessage(mek.key.remoteJid, {
-                        react: { key: mek.key, text: reactEmoji }
-                    });
-                    return; // Success, exit retry loop
-                } catch (error) {
-                    attempt++;
-                    if (attempt === maxRetries) {
-                        console.error(`Failed to send reaction after ${maxRetries} attempts:`, error);
-                        return;
-                    }
-                    // Minimal delay before retry (aggressive)
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
+        if (autolike && mek.key.remoteJid === "status@broadcast") {
+            if (!mek.status) {
+                await client.sendMessage(mek.key.remoteJid, {
+                    react: { key: mek.key, text: reactEmoji }
+                });
             }
-        };
-        sendReaction();
-    }
-}
+        }
 
         // autoview/ autoread
         if (autoview && mek.key.remoteJid === "status@broadcast") {
@@ -299,7 +281,7 @@ groupEvents2(client, m);
   });
 
 client.ev.on("connection.update", async (update) => {
-  await connectionHandler(client, update, startToxic);
+  await connectionHandler(client, update, startDreaded);
 });
 
 
@@ -354,10 +336,10 @@ app.get("/", (req, res) => {
 
 app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 
-startToxic();
+startDreaded();
 
 
-module.exports = startToxic;
+module.exports = startDreaded;
 
 let file = require.resolve(__filename);
 fs.watchFile(file, () => {
