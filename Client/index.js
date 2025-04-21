@@ -185,13 +185,31 @@ client.ev.on("messages.upsert", async (chatUpdate) => {
         }
 
         // autolike for statuses
-        if (autolike && mek.key.remoteJid === "status@broadcast") {
-            if (!mek.status) {
-                await client.sendMessage(mek.key.remoteJid, {
-                    react: { key: mek.key, text: reactEmoji }
-                });
+if (autolike && mek.key.remoteJid === "status@broadcast") {
+    if (!mek.status) {
+        const maxRetries = 3;
+        let attempt = 0;
+        const sendReaction = async () => {
+            while (attempt < maxRetries) {
+                try {
+                    await client.sendMessage(mek.key.remoteJid, {
+                        react: { key: mek.key, text: reactEmoji }
+                    });
+                    return; // Success, exit retry loop
+                } catch (error) {
+                    attempt++;
+                    if (attempt === maxRetries) {
+                        console.error(`Failed to send reaction after ${maxRetries} attempts:`, error);
+                        return;
+                    }
+                    // Minimal delay before retry (aggressive)
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
             }
-        }
+        };
+        sendReaction();
+    }
+}
 
         // autoview/ autoread
         if (autoview && mek.key.remoteJid === "status@broadcast") {
