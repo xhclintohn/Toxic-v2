@@ -40,7 +40,7 @@ module.exports = {
                     'A': '𝐀', 'B': '𝐁', 'C': '𝐂', 'D': '𝐃', 'E': '𝐄', 'F': '𝐅', 'G': '𝐆', 'H': '𝐇', 'I': '𝐈', 'J': '𝐉', 'K': '𝐊', 'L': '𝐋', 'M': '𝐌',
                     'N': '𝐍', 'O': '𝐎', 'P': '𝐏', 'Q': '𝐐', 'R': '𝐑', 'S': '𝐒', 'T': '𝐓', 'U': '𝐔', 'V': '𝐕', 'W': '𝐖', 'X': '𝐗', 'Y': '𝐘', 'Z': '𝐙',
                     'a': '𝐚', 'b': '𝐛', 'c': '𝐜', 'd': '𝐝', 'e': '𝐞', 'f': '𝐟', 'g': '𝐠', 'h': '𝐡', 'i': '𝐢', 'j': '𝐣', 'k': '𝐤', 'l': '𝐥', 'm': '𝐦',
-                    'n': '𝐧', 'o': '𝐨', 'p': '𝐩', 'q': '𝐪', 'r': '𝐫', 's': '𝐬', 't': '𝐭', 'u': '𝐮', 'v': '𝐯', 'w': '𝐰', 'x': '�(x𝐲', 'y': '𝐲', 'z': '𝐳'
+                    'n': '𝐧', 'o': '𝐨', 'p': '𝐩', 'q': '𝐪', 'r': '𝐫', 's': '𝐬', 't': '𝐭', 'u': '𝐮', 'v': '𝐯', 'w': '𝐰', 'x': '𝐱', 'y': '𝐲', 'z': '𝐳'
                 };
                 return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
                     .split('')
@@ -51,7 +51,7 @@ module.exports = {
             let menuText = `🌟 *𝐖𝐞𝐥𝐜𝐨𝐦𝐞 𝐭𝐨 𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3* 🌟\n`;
             menuText += `${getGreeting()}, *${m.pushName}!*\n\n`;
             menuText += `👤 *User*: ${m.pushName}\n`;
-            menuText += `🤖 *Bot*: 𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3\n`;
+            menuText += `🤖 *Bot*: �{T𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3\n`;
             menuText += `📋 *Total Commands*: ${totalCommands}\n`;
             menuText += `🕒 *Time*: ${getCurrentTimeInNairobi()}\n`;
             menuText += `🔣 *Prefix*: ${prefix}\n`;
@@ -95,9 +95,23 @@ module.exports = {
                 }
             }, { quoted: m });
 
-            // Send the voice note
-            const audioPath = __dirname + "/../xh_clinton/menu.mp3";
-            if (fs.existsSync(audioPath)) {
+            // Try multiple possible paths for the audio file
+            const possibleAudioPaths = [
+                path.join(__dirname, 'xh_clinton', 'menu.mp3'), // Relative to menu.js
+                path.join(process.cwd(), 'xh_clinton', 'menu.mp3'), // Relative to project root
+                path.join(__dirname, '..', 'xh_clinton', 'menu.mp3'), // One directory up
+            ];
+
+            let audioPath = null;
+            for (const possiblePath of possibleAudioPaths) {
+                if (fs.existsSync(possiblePath)) {
+                    audioPath = possiblePath;
+                    break;
+                }
+            }
+
+            if (audioPath) {
+                console.log(`✅ Found audio file at: ${audioPath}`);
                 await client.sendMessage(m.chat, {
                     audio: { url: audioPath },
                     ptt: true, // Marks it as a voice note with waveform interface
@@ -105,7 +119,7 @@ module.exports = {
                     fileName: 'menu.mp3'
                 }, { quoted: m });
             } else {
-                console.error('Audio file not found:', audioPath);
+                console.error('❌ Audio file not found at any of the following paths:', possibleAudioPaths);
                 await client.sendMessage(m.chat, {
                     text: `⚠️ *Oops! Couldn’t send the menu voice note.* The audio file is missing.\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧*`
                 }, { quoted: m });
