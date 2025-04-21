@@ -8,21 +8,31 @@ module.exports = async (context) => {
 
         let settings = await getSettings();
         const prefix = settings.prefix;
+        
+        // Set default value to false if not exists
+        if (typeof settings.anticall === 'undefined') {
+            await updateSetting('anticall', false);
+            settings.anticall = false;
+        }
+        
         let isEnabled = settings.anticall === true;
 
         if (value === 'on' || value === 'off') {
             const action = value === 'on';
 
             if (isEnabled === action) {
-                return await m.reply(`✅ Anti-call is already ${value.toUpperCase()}.`);
+                return await m.reply('◈━━━━━━━━━━━━━━━━◈\n│❒ ✅ Anti-call is already ' + value.toUpperCase() + '.\n◈━━━━━━━━━━━━━━━━◈');
             }
 
             await updateSetting('anticall', action ? true : false);
-            await m.reply(`✅ Anti-call has been turned ${value.toUpperCase()}.`);
+            await m.reply('◈━━━━━━━━━━━━━━━━◈\n│❒ ✅ Anti-call has been turned ' + value.toUpperCase() + '.\n◈━━━━━━━━━━━━━━━━◈');
         } else {
             await m.reply(
-                `📄 Current Anti-call setting: ${isEnabled ? 'ON' : 'OFF'}\n\n` +
-                `_Use "${prefix}anticall on" or "${prefix}anticall off" to change it._`
+                '◈━━━━━━━━━━━━━━━━◈\n' +
+                `│❒ 📄 Current Anti-call setting: ${isEnabled ? 'ON' : 'OFF'}\n` +
+                '│❒ \n' +
+                `│❒ Use "${prefix}anticall on" or "${prefix}anticall off" to change it._\n` +
+                '◈━━━━━━━━━━━━━━━━◈'
             );
         }
     });
