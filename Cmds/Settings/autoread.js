@@ -15,18 +15,18 @@ module.exports = async (context) => {
 
         if (value === 'on') {
             if (settings.autoread) {
-                return await m.reply('◈━━━━━━━━━━━━━━━━◈\n│❒ Autoread is already ON.\n◈━━━━━━━━━━━━━━━━◈');
+                return await m.reply('◈━━━━━━━━━━━━━━━━◈\n│❒ ✅ Autoread is already ON.\n◈━━━━━━━━━━━━━━━━◈');
             }
             await updateSetting('autoread', 'true');
-            await m.reply('◈━━━━━━━━━━━━━━━━◈\n│❒ Autoread has been turned ON.\n│❒ The bot will now automatically read messages.\n◈━━━━━━━━━━━━━━━━◈');
+            await m.reply('◈━━━━━━━━━━━━━━━━◈\n│❒ ✅ Autoread has been turned ON.\n│❒ The bot will now automatically read messages.\n◈━━━━━━━━━━━━━━━━◈');
         } else if (value === 'off') {
             if (!settings.autoread) {
-                return await m.reply('◈━━━━━━━━━━━━━━━━◈\n│❒ Autoread is already OFF.\n◈━━━━━━━━━━━━━━━━◈');
+                return await m.reply('◈━━━━━━━━━━━━━━━━◈\n│❒ ❌ Autoread is already OFF.\n◈━━━━━━━━━━━━━━━━◈');
             }
             await updateSetting('autoread', 'false');
-            await m.reply('◈━━━━━━━━━━━━━━━━◈\n│❒ Autoread has been turned OFF.\n◈━━━━━━━━━━━━━━━━◈');
+            await m.reply('◈━━━━━━━━━━━━━━━━◈\n│❒ ❌ Autoread has been turned OFF.\n◈━━━━━━━━━━━━━━━━◈');
         } else {
-            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Current autoread setting: ${settings.autoread ? 'ON' : 'OFF'}\n│❒ \n│❒ Use _${settings.prefix}autoread on_ or _${settings.prefix}autoread off_.\n◈━━━━━━━━━━━━━━━━◈`);
+            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ 📄 Current autoread setting: ${settings.autoread ? 'ON' : 'OFF'}\n│❒ \n│❒ Use _${settings.prefix}autoread on_ or _${settings.prefix}autoread off_.\n◈━━━━━━━━━━━━━━━━◈`);
         }
     });
 };
