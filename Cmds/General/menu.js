@@ -96,7 +96,7 @@ module.exports = {
             }, { quoted: m });
 
             // Send the voice note
-            const audioPath = path.join(__dirname, 'xh_clinton', 'menu.mp3');
+            const audioPath = __dirname + "/../xh_clinton/menu.mp3";
             if (fs.existsSync(audioPath)) {
                 await client.sendMessage(m.chat, {
                     audio: { url: audioPath },
