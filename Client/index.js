@@ -63,8 +63,8 @@ const getToxicReply = (text) => {
 async function startDreaded() {
   let settingss = await getSettings();
   if (!settingss) {
-    console.error(chalk.redBright("Failed to load settings! Toxic Multidevice is down! 💀"));
-    return;
+    console.error(chalk.redBright("Failed to load settings! Using defaults... 💀"));
+    settingss = { autobio: false, mode: 'public', anticall: false, autoread: false, autolike: false, autoview: false, presence: 'unavailable', reactEmoji: '😈' };
   }
 
   const { autobio, mode, anticall } = settingss;
@@ -124,7 +124,7 @@ async function startDreaded() {
   // Enhanced anti-call system
   const processedCalls = new Set();
   client.ws.on('CB:call', async (json) => {
-    const settingszs = await getSettings();
+    const settingszs = await getSettings() || {};
     if (!settingszs?.anticall) return;
 
     const callId = json.content[0].attrs['call-id'];
@@ -136,7 +136,7 @@ async function startDreaded() {
 
     try {
       await client.rejectCall(callId, callerJid);
-      await client.sendText(callerJid, "Calling *Toxic Multidevice*? You’re done, fool! Banned! 😈 Contact the owner if you got the guts. 💀", m);
+      await client.sendText(callerJid, "Calling *Toxic Multidevice*? You’re done, fool! Banned! 😈 Contact the owner if you got the guts. 💀", null);
       const bannedUsers = await getBannedUsers();
       if (!bannedUsers.includes(callerNumber)) {
         await banUser(callerNumber);
@@ -148,9 +148,7 @@ async function startDreaded() {
 
   // Message handling with toxic responses
   client.ev.on("messages.upsert", async (chatUpdate) => {
-    let settings = await getSettings();
-    if (!settings) return;
-
+    let settings = await getSettings() || {};
     const { autoread, autolike, autoview, presence, reactEmoji } = settings;
 
     try {
