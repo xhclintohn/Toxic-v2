@@ -41,251 +41,256 @@ const sessionName = path.join(__dirname, '..', 'Session');
 
 const groupEvents = require("../Handler/eventHandler");
 const groupEvents2 = require("../Handler/eventHandler2");
-const connectionHandler = require('../Handler/connectionHandler");
+const connectionHandler = require('../Handler/connectionHandler');
 
 async function startToxic() {
-  await authenticationn();
+  try {
+    await authenticationn();
 
-  let settingss = await getSettings();
-  if (!settingss) return null;
+    let settingss = await getSettings();
+    if (!settingss) return null;
 
-  const { autobio, mode, anticall } = settingss;
+    const { autobio, mode, anticall } = settingss;
 
-  const { saveCreds, state } = await useMultiFileAuthState(sessionName);
-  const client = toxicConnect({
-    logger: pino({ level: 'silent' }),
-    printQRInTerminal: true,
-    version: [2, 3000, 1015901307],
-    browser: [`TOXIC`, 'Safari', '3.0'],
-    fireInitQueries: false,
-    shouldSyncHistoryMessage: false,
-    downloadHistory: false,
-    syncFullHistory: false,
-    generateHighQualityLinkPreview: true,
-    markOnlineOnConnect: true,
-    keepAliveIntervalMs: 30_000,
-    auth: state,
-    getMessage: async (key) => {
-      if (store) {
-        const mssg = await store.loadMessage(key.remoteJid, key.id);
-        return mssg.message || undefined;
+    const { saveCreds, state } = await useMultiFileAuthState(sessionName);
+    const client = toxicConnect({
+      logger: pino({ level: 'silent' }),
+      printQRInTerminal: true,
+      version: [2, 3000, 1015901307],
+      browser: [`TOXIC`, 'Safari', '3.0'],
+      fireInitQueries: false,
+      shouldSyncHistoryMessage: false,
+      downloadHistory: false,
+      syncFullHistory: false,
+      generateHighQualityLinkPreview: true,
+      markOnlineOnConnect: true,
+      keepAliveIntervalMs: 30_000,
+      auth: state,
+      getMessage: async (key) => {
+        if (store) {
+          const mssg = await store.loadMessage(key.remoteJid, key.id);
+          return mssg.message || undefined;
+        }
+        return {
+          conversation: "HERE"
+        };
       }
-      return {
-        conversation: "HERE"
-      };
+    });
+
+    store.bind(client.ev);
+
+    setInterval(() => { store.writeToFile("store.json"); }, 3000);
+
+    if (autobio) {
+      setInterval(() => {
+        const date = new Date();
+        client.updateProfileStatus(
+          `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.`
+        );
+      }, 10 * 1000);
     }
-  });
 
-  store.bind(client.ev);
+    const processedCalls = new Set();
 
-  setInterval(() => { store.writeToFile("store.json"); }, 3000);
+    client.ws.on('CB:call', async (json) => {
+      const settingss = await getSettings();
+      if (!settingss?.anticall) return;
 
-  if (autobio) {
-    setInterval(() => {
-      const date = new Date();
-      client.updateProfileStatus(
-        `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.`
-      );
-    }, 10 * 1000);
-  }
+      const callId = json.content[0].attrs['call-id'];
+      const callerJid = json.content[0].attrs['call-creator'];
+      const callerNumber = callerJid.replace(/[@.a-z]/g, "");
 
-  const processedCalls = new Set();
-
-  client.ws.on('CB:call', async (json) => {
-    const settingss = await getSettings();
-    if (!settingss?.anticall) return;
-
-    const callId = json.content[0].attrs['call-id'];
-    const callerJid = json.content[0].attrs['call-creator'];
-    const callerNumber = callerJid.replace(/[@.a-z]/g, "");
-
-    if (processedCalls.has(callId)) {
-      return;
-    }
-    processedCalls.add(callId);
-
-    try {
-      await client.rejectCall(callId, callerJid);
-      await client.sendMessage(callerJid, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, dumbass, calling me? You're banned now. Cry to the owner, loser!` });
-
-      const bannedUsers = await getBannedUsers();
-      if (!bannedUsers.includes(callerNumber)) {
-        await banUser(callerNumber);
+      if (processedCalls.has(callId)) {
+        return;
       }
-    } catch (error) {
-      console.error('Error handling call:', error);
-    }
-  });
+      processedCalls.add(callId);
 
-  client.ev.on("messages.upsert", async (chatUpdate) => {
-    let settings = await getSettings();
-    if (!settings) return null;
+      try {
+        await client.rejectCall(callId, callerJid);
+        await client.sendMessage(callerJid, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, dumbass, calling me? You're banned now. Cry to the owner, loser!` });
 
-    const { autoread, autolike, autoview, presence, reactEmoji } = settings;
+        const bannedUsers = await getBannedUsers();
+        if (!bannedUsers.includes(callerNumber)) {
+          await banUser(callerNumber);
+        }
+      } catch (error) {
+        console.error('Error handling call:', error);
+      }
+    });
 
-    try {
-      let mek = chatUpdate.messages[0];
-      if (!mek.message) return;
+    client.ev.on("messages.upsert", async (chatUpdate) => {
+      let settings = await getSettings();
+      if (!settings) return null;
 
-      mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
+      const { autoread, autolike, autoview, presence, reactEmoji } = settings;
 
-      const messageContent = mek.message.conversation || mek.message.extendedTextMessage?.text || "";
-      const isGroup = mek.key.remoteJid.endsWith("@g.us");
-      const sender = mek.key.participant || mek.key.remoteJid;
-      const botJid = await client.decodeJid(client.user.id);
+      try {
+        let mek = chatUpdate.messages[0];
+        if (!mek.message) return;
 
-      if (isGroup) {
-        const antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
+        mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
-        if ((antilink === true || antilink === 'true') && messageContent.includes("https") && sender !== botJid) {
-          const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
-          const groupAdmins = groupMetadata.participants.filter(p => p.admin).map(p => p.id);
-          const isAdmin = groupAdmins.includes(sender);
-          const isBotAdmin = groupAdmins.includes(botJid);
+        const messageContent = mek.message.conversation || mek.message.extendedTextMessage?.text || "";
+        const isGroup = mek.key.remoteJid.endsWith("@g.us");
+        const sender = mek.key.participant || mek.key.remoteJid;
+        const botJid = await client.decodeJid(client.user.id);
 
-          if (!isBotAdmin) return;
-          if (!isAdmin) {
+        if (isGroup) {
+          const antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
+
+          if ((antilink === true || antilink === 'true') && messageContent.includes("https") && sender !== botJid) {
+            const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
+            const groupAdmins = groupMetadata.participants.filter(p => p.admin).map(p => p.id);
+            const isAdmin = groupAdmins.includes(sender);
+            const isBotAdmin = groupAdmins.includes(botJid);
+
+            if (!isBotAdmin) return;
+            if (!isAdmin) {
+              await client.sendMessage(mek.key.remoteJid, {
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ @${sender.split("@")[0]}, you think you can sneak links in here? Kicked your ass out!`,
+                contextInfo: { mentionedJid: [sender] }
+              }, { quoted: mek });
+
+              await client.groupParticipantsUpdate(mek.key.remoteJid, [sender], "remove");
+
+              await client.sendMessage(mek.key.remoteJid, {
+                delete: {
+                  remoteJid: mek.key.remoteJid,
+                  fromMe: false,
+                  id: mek.key.id,
+                  participant: sender
+                }
+              });
+            }
+            return;
+          }
+        }
+
+        if (autolike && mek.key.remoteJid === "status@broadcast") {
+          if (!mek.status) {
             await client.sendMessage(mek.key.remoteJid, {
-              text: `◈━━━━━━━━━━━━━━━━◈\n│❒ @${sender.split("@")[0]}, you think you can sneak links in here? Kicked your ass out!`,
-              contextInfo: { mentionedJid: [sender] }
-            }, { quoted: mek });
-
-            await client.groupParticipantsUpdate(mek.key.remoteJid, [sender], "remove");
-
-            await client.sendMessage(mek.key.remoteJid, {
-              delete: {
-                remoteJid: mek.key.remoteJid,
-                fromMe: false,
-                id: mek.key.id,
-                participant: sender
-              }
+              react: { key: mek.key, text: reactEmoji }
             });
           }
-          return;
         }
-      }
 
-      if (autolike && mek.key.remoteJid === "status@broadcast") {
-        if (!mek.status) {
-          await client.sendMessage(mek.key.remoteJid, {
-            react: { key: mek.key, text: reactEmoji }
-          });
+        if (autoview && mek.key.remoteJid === "status@broadcast") {
+          await client.readMessages([mek.key]);
+        } else if (autoread && mek.key.remoteJid.endsWith('@s.whatsapp.net')) {
+          await client.readMessages([mek.key]);
         }
-      }
 
-      if (autoview && mek.key.remoteJid === "status@broadcast") {
-        await client.readMessages([mek.key]);
-      } else if (autoread && mek.key.remoteJid.endsWith('@s.whatsapp.net')) {
-        await client.readMessages([mek.key]);
-      }
-
-      if (mek.key.remoteJid.endsWith('@s.whatsapp.net')) {
-        const Chat = mek.key.remoteJid;
-        if (presence === 'online') {
-          await client.sendPresenceUpdate("available", Chat);
-        } else if (presence === 'typing') {
-          await client.sendPresenceUpdate("composing", Chat);
-        } else if (presence === 'recording') {
-          await client.sendPresenceUpdate("recording", Chat);
-        } else {
-          await client.sendPresenceUpdate("unavailable", Chat);
+        if (mek.key.remoteJid.endsWith('@s.whatsapp.net')) {
+          const Chat = mek.key.remoteJid;
+          if (presence === 'online') {
+            await client.sendPresenceUpdate("available", Chat);
+          } else if (presence === 'typing') {
+            await client.sendPresenceUpdate("composing", Chat);
+          } else if (presence === 'recording') {
+            await client.sendPresenceUpdate("recording", Chat);
+          } else {
+            await client.sendPresenceUpdate("unavailable", Chat);
+          }
         }
+
+        if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
+
+        m = smsg(client, mek, store);
+        require("./toxic")(client, m, chatUpdate, store);
+      } catch (err) {
+        console.error('Message processing error:', err);
       }
+    });
 
-      if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
+    const unhandledRejections = new Map();
+    process.on("unhandledRejection", (reason, promise) => {
+      unhandledRejections.set(promise, reason);
+      console.error("Unhandled Rejection at:", promise, "reason:", reason);
+    });
+    process.on("rejectionHandled", (promise) => {
+      unhandledRejections.delete(promise);
+    });
+    process.on("Something went wrong", function (err) {
+      console.error("Caught exception:", err);
+    });
 
-      m = smsg(client, mek, store);
-      require("./toxic")(client, m, chatUpdate, store);
-    } catch (err) {
-      console.log(err);
-    }
-  });
+    client.decodeJid = (jid) => {
+      if (!jid) return jid;
+      if (/:\d+@/gi.test(jid)) {
+        let decode = jidDecode(jid) || {};
+        return (decode.user && decode.server && decode.user + "@" + decode.server) || jid;
+      } else return jid;
+    };
 
-  const unhandledRejections = new Map();
-  process.on("unhandledRejection", (reason, promise) => {
-    unhandledRejections.set(promise, reason);
-    console.log("Unhandled Rejection at:", promise, "reason:", reason);
-  });
-  process.on("rejectionHandled", (promise) => {
-    unhandledRejections.delete(promise);
-  });
-  process.on("Something went wrong", function (err) {
-    console.log("Caught exception: ", err);
-  });
+    client.getName = (jid, withoutContact = false) => {
+      id = client.decodeJid(jid);
+      withoutContact = client.withoutContact || withoutContact;
+      let v;
+      if (id.endsWith("@g.us"))
+        return new Promise(async (resolve) => {
+          v = store.contacts[id] || {};
+          if (!(v.name || v.subject)) v = client.groupMetadata(id) || {};
+          resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
+        });
+      else
+        v =
+          id === "0@s.whatsapp.net"
+            ? {
+                id,
+                name: "WhatsApp",
+              }
+            : id === client.decodeJid(client.user.id)
+            ? client.user
+            : store.contacts[id] || {};
+      return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
+    };
 
-  client.decodeJid = (jid) => {
-    if (!jid) return jid;
-    if (/:\d+@/gi.test(jid)) {
-      let decode = jidDecode(jid) || {};
-      return (decode.user && decode.server && decode.user + "@" + decode.server) || jid;
-    } else return jid;
-  };
+    client.public = true;
 
-  client.getName = (jid, withoutContact = false) => {
-    id = client.decodeJid(jid);
-    withoutContact = client.withoutContact || withoutContact;
-    let v;
-    if (id.endsWith("@g.us"))
-      return new Promise(async (resolve) => {
-        v = store.contacts[id] || {};
-        if (!(v.name || v.subject)) v = client.groupMetadata(id) || {};
-        resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
-      });
-    else
-      v =
-        id === "0@s.whatsapp.net"
-          ? {
-              id,
-              name: "WhatsApp",
-            }
-          : id === client.decodeJid(client.user.id)
-          ? client.user
-          : store.contacts[id] || {};
-    return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
-  };
+    client.serializeM = (m) => smsg(client, m, store);
 
-  client.public = true;
+    client.ev.on("group-participants.update", async (m) => {
+      groupEvents(client, m);
+      groupEvents2(client, m);
+    });
 
-  client.serializeM = (m) => smsg(client, m, store);
+    client.ev.on("connection.update", async (update) => {
+      await connectionHandler(client, update, startToxic);
+    });
 
-  client.ev.on("group-participants.update", async (m) => {
-    groupEvents(client, m);
-    groupEvents2(client, m);
-  });
+    client.ev.on("creds.update", saveCreds);
 
-  client.ev.on("connection.update", async (update) => {
-    await connectionHandler(client, update, startToxic);
-  });
+    client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ ${text}`, ...options }, { quoted });
 
-  client.ev.on("creds.update", saveCreds);
+    client.downloadMediaMessage = async (message) => {
+      let mime = (message.msg || message).mimetype || '';
+      let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+      const stream = await downloadContentFromMessage(message, messageType);
+      let buffer = Buffer.from([]);
+      for await (const chunk of stream) {
+        buffer = Buffer.concat([buffer, chunk]);
+      }
+      return buffer;
+    };
 
-  client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ ${text}`, ...options }, { quoted });
-
-  client.downloadMediaMessage = async (message) => {
-    let mime = (message.msg || message).mimetype || '';
-    let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
-    const stream = await downloadContentFromMessage(message, messageType);
-    let buffer = Buffer.from([]);
-    for await (const chunk of stream) {
-      buffer = Buffer.concat([buffer, chunk]);
-    }
-    return buffer;
-  };
-
-  client.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
-    let quoted = message.msg ? message.msg : message;
-    let mime = (message.msg || message).mimetype || '';
-    let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
-    const stream = await downloadContentFromMessage(quoted, messageType);
-    let buffer = Buffer.from([]);
-    for await (const chunk of stream) {
-      buffer = Buffer.concat([buffer, chunk]);
-    }
-    let type = await FileType.fromBuffer(buffer);
-    const trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
-    await fs.writeFileSync(trueFileName, buffer);
-    return trueFileName;
-  };
+    client.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
+      let quoted = message.msg ? message.msg : message;
+      let mime = (message.msg || message).mimetype || '';
+      let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+      const stream = await downloadContentFromMessage(quoted, messageType);
+      let buffer = Buffer.from([]);
+      for await (const chunk of stream) {
+        buffer = Buffer.concat([buffer, chunk]);
+      }
+      let type = await FileType.fromBuffer(buffer);
+      const trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
+      await fs.writeFileSync(trueFileName, buffer);
+      return trueFileName;
+    };
+  } catch (err) {
+    console.error('Startup error:', err);
+    process.exit(1);
+  }
 }
 
 app.use(express.static('public'));
