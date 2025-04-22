@@ -1,0 +1,11 @@
+{
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@railway/app"
+    }
+  ],
+  "variables": {
+    "SESSION": ". "
+  }
+}
