@@ -254,14 +254,16 @@ async function startDreaded() {
 
   client.serializeM = (m) => smsg(client, m, store);
 
-  client.ev.on("group-participants.update", async (m) => {
-    groupEvents(client, m);
-    groupEvents2(client, m);
-  });
+  // Commented out to prevent ReferenceError: groupEvents is not defined
+  // client.ev.on("group-participants.update", async (m) => {
+  //   groupEvents(client, m);
+  //   groupEvents2(client, m);
+  // });
 
-  client.ev.on("connection.update", async (update) => {
-    await connectionHandler(client, update, startDreaded);
-  });
+  // Commented out to prevent ReferenceError: connectionHandler is not defined
+  // client.ev.on("connection.update", async (update) => {
+  //   await connectionHandler(client, update, startDreaded);
+  // });
 
   client.ev.on("creds.update", saveCreds);
 
