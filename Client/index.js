@@ -190,12 +190,14 @@ async function startDreaded() {
       // Auto-like statuses
       if (autolike && mek.key.remoteJid === "status@broadcast") {
         try {
+          const emoji = reactEmoji || "😈";
+          console.log(chalk.cyan(`Status detected: from=${mek.key.participant || mek.key.remoteJid}, reactEmoji=${emoji}`));
           await client.sendMessage(mek.key.remoteJid, {
-            reaction: { text: reactEmoji || "😈", key: mek.key }
+            reaction: { text: emoji, key: mek.key }
           });
-          console.log(chalk.green(`Auto-liked status from ${mek.key.participant || mek.key.remoteJid} with ${reactEmoji || "😈"} 😈`));
+          console.log(chalk.green(`Auto-liked status from ${mek.key.participant || mek.key.remoteJid} with ${emoji} 😈`));
         } catch (err) {
-          console.error(chalk.red("Failed to auto-like status:", err));
+          console.error(chalk.red(`Failed to auto-like status:`, err));
         }
       }
 
