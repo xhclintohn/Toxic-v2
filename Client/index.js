@@ -1,5 +1,5 @@
 const {
-  default: toxicConnect,
+  default: dreadedConnect,
   useMultiFileAuthState,
   DisconnectReason,
   fetchLatestBaileysVersion,
@@ -10,10 +10,11 @@ const {
   getContentType,
 } = require("@whiskeysockets/baileys");
 
+
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
 const fs = require("fs");
-const FileType = require("file-type");
+ const FileType = require("file-type");
 const { exec, spawn, execSync } = require("child_process");
 const axios = require("axios");
 const chalk = require("chalk");
@@ -24,108 +25,124 @@ const port = process.env.PORT || 10000;
 const _ = require("lodash");
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
-const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, sleep } = require('../lib/botFunctions');
+ const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
 const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
 const { getSettings, getBannedUsers, banUser, getGroupSetting } = require("../Database/config");
 
-const { botname } = require('../Env/settings');
+
+const { botname  } = require('../Env/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('../Handler/commandHandler');
+authenticationn();
 
 const path = require('path');
 
-const sessionName = path.join(__dirname, '..', 'Session');
+const sessionName = path.join(__dirname, '..', 'Session'); 
+
 
 const groupEvents = require("../Handler/eventHandler");
 const groupEvents2 = require("../Handler/eventHandler2");
 const connectionHandler = require('../Handler/connectionHandler');
 
-async function startToxic() {
-  try {
-    await authenticationn();
+// const connectionEvents = require("./connectionEvents.js");
 
-    let settingss = await getSettings();
-    if (!settingss) return null;
+async function startDreaded() {
 
-    const { autobio, mode, anticall } = settingss;
+let settingss = await getSettings();
+        if (!settingss) return;
 
-    const { saveCreds, state } = await useMultiFileAuthState(sessionName);
-    const client = toxicConnect({
-      logger: pino({ level: 'silent' }),
-      printQRInTerminal: true,
-      version: [2, 3000, 1015901307],
-      browser: [`TOXIC`, 'Safari', '3.0'],
-      fireInitQueries: false,
-      shouldSyncHistoryMessage: false,
-      downloadHistory: false,
-      syncFullHistory: false,
-      generateHighQualityLinkPreview: true,
-      markOnlineOnConnect: true,
-      keepAliveIntervalMs: 30_000,
-      auth: state,
-      getMessage: async (key) => {
-        if (store) {
-          const mssg = await store.loadMessage(key.remoteJid, key.id);
-          return mssg.message || undefined;
+const { autobio, mode, anticall } = settingss;
+
+
+        const {  saveCreds, state } = await useMultiFileAuthState(sessionName)
+            const client = dreadedConnect({
+        logger: pino({ level: 'silent' }),
+        printQRInTerminal: true,
+version: [2, 3000, 1015901307],
+        browser: [`TOXIC`,'Safari','3.0'],
+fireInitQueries: false,
+            shouldSyncHistoryMessage: false,
+            downloadHistory: false,
+            syncFullHistory: false,
+            generateHighQualityLinkPreview: true,
+            markOnlineOnConnect: true,
+            keepAliveIntervalMs: 30_000,
+        auth: state,
+        getMessage: async (key) => {
+            if (store) {
+                const mssg = await store.loadMessage(key.remoteJid, key.id)
+                return mssg.message || undefined
+            }
+            return {
+                conversation: "HERE"
+            }
         }
-        return {
-          conversation: "HERE"
-        };
-      }
-    });
+    })
 
-    store.bind(client.ev);
 
-    setInterval(() => { store.writeToFile("store.json"); }, 3000);
+  store.bind(client.ev);
 
-    if (autobio) {
-      setInterval(() => {
-        const date = new Date();
-        client.updateProfileStatus(
-          `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.`
-        );
-      }, 10 * 1000);
-    }
 
-    const processedCalls = new Set();
 
-    client.ws.on('CB:call', async (json) => {
-      const settingss = await getSettings();
-      if (!settingss?.anticall) return;
 
-      const callId = json.content[0].attrs['call-id'];
-      const callerJid = json.content[0].attrs['call-creator'];
-      const callerNumber = callerJid.replace(/[@.a-z]/g, "");
+        setInterval(() => { store.writeToFile("store.json"); }, 3000);
 
-      if (processedCalls.has(callId)) {
+if (autobio){ 
+            setInterval(() => { 
+
+                                 const date = new Date() 
+
+                         client.updateProfileStatus( 
+
+                                         `${botname} is active 24/7\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} It's a ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.` 
+
+                                 ) 
+
+                         }, 10 * 1000) 
+
+}
+
+ 
+const processedCalls = new Set();
+
+client.ws.on('CB:call', async (json) => {
+    const settingszs = await getSettings();
+    if (!settingszs?.anticall) return;
+
+    const callId = json.content[0].attrs['call-id'];
+    const callerJid = json.content[0].attrs['call-creator'];
+    const callerNumber = callerJid.replace(/[@.a-z]/g, "");
+
+    if (processedCalls.has(callId)) {
         return;
-      }
-      processedCalls.add(callId);
+    }
+    processedCalls.add(callId);
 
-      try {
+    try {
         await client.rejectCall(callId, callerJid);
-        await client.sendMessage(callerJid, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, dumbass, calling me? You're banned now. Cry to the owner, loser!` });
+        await client.sendMessage(callerJid, { text: "You will be banned for calling. Contact the owner!" });
 
         const bannedUsers = await getBannedUsers();
         if (!bannedUsers.includes(callerNumber)) {
-          await banUser(callerNumber);
+            await banUser(callerNumber);
         }
-      } catch (error) {
+    } catch (error) {
         console.error('Error handling call:', error);
-      }
-    });
+    }
+});
 
-    client.ev.on("messages.upsert", async (chatUpdate) => {
-      let settings = await getSettings();
-      if (!settings) return null;
 
-      const { autoread, autolike, autoview, presence, reactEmoji } = settings;
+client.ev.on("messages.upsert", async (chatUpdate) => {
+    let settings = await getSettings();
+    if (!settings) return;
 
-      try {
-        let mek = chatUpdate.messages[0];
+    const { autoread, autolike, autoview, presence, reactEmoji } = settings;
+
+    try {
+        mek = chatUpdate.messages[0];
         if (!mek.message) return;
 
         mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
@@ -133,177 +150,196 @@ async function startToxic() {
         const messageContent = mek.message.conversation || mek.message.extendedTextMessage?.text || "";
         const isGroup = mek.key.remoteJid.endsWith("@g.us");
         const sender = mek.key.participant || mek.key.remoteJid;
-        const botJid = await client.decodeJid(client.user.id);
+        const Myself = await client.decodeJid(client.user.id);
 
         if (isGroup) {
-          const antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
+            const antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
 
-          if ((antilink === true || antilink === 'true') && messageContent.includes("https") && sender !== botJid) {
-            const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
-            const groupAdmins = groupMetadata.participants.filter(p => p.admin).map(p => p.id);
-            const isAdmin = groupAdmins.includes(sender);
-            const isBotAdmin = groupAdmins.includes(botJid);
+            
+            if ((antilink === true || antilink === 'true') && messageContent.includes("https") && sender !== Myself) {
+                const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
+                const groupAdmins = groupMetadata.participants.filter(p => p.admin).map(p => p.id);
+                const isAdmin = groupAdmins.includes(sender);
+                const isBotAdmin = groupAdmins.includes(Myself);
 
-            if (!isBotAdmin) return;
-            if (!isAdmin) {
-              await client.sendMessage(mek.key.remoteJid, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ @${sender.split("@")[0]}, you think you can sneak links in here? Kicked your ass out!`,
-                contextInfo: { mentionedJid: [sender] }
-              }, { quoted: mek });
+                if (!isBotAdmin) return;
+                if (!isAdmin) {
+                    await client.sendMessage(mek.key.remoteJid, {
+                        text: `🚫 @${sender.split("@")[0]}, sending links is prohibited! You have been removed.`,
+                        contextInfo: { mentionedJid: [sender] }
+                    }, { quoted: mek });
 
-              await client.groupParticipantsUpdate(mek.key.remoteJid, [sender], "remove");
+                    await client.groupParticipantsUpdate(mek.key.remoteJid, [sender], "remove");
 
-              await client.sendMessage(mek.key.remoteJid, {
-                delete: {
-                  remoteJid: mek.key.remoteJid,
-                  fromMe: false,
-                  id: mek.key.id,
-                  participant: sender
+                    await client.sendMessage(mek.key.remoteJid, {
+                        delete: {
+                            remoteJid: mek.key.remoteJid,
+                            fromMe: false,
+                            id: mek.key.id,
+                            participant: sender
+                        }
+                    });
                 }
-              });
+                return;
             }
-            return;
-          }
         }
 
+        // autolike for statuses
         if (autolike && mek.key.remoteJid === "status@broadcast") {
-          if (!mek.status) {
-            await client.sendMessage(mek.key.remoteJid, {
-              react: { key: mek.key, text: reactEmoji }
-            });
-          }
+            if (!mek.status) {
+                await client.sendMessage(mek.key.remoteJid, {
+                    react: { key: mek.key, text: reactEmoji }
+                });
+            }
         }
 
+        // autoview/ autoread
         if (autoview && mek.key.remoteJid === "status@broadcast") {
-          await client.readMessages([mek.key]);
+            await client.readMessages([mek.key]);
         } else if (autoread && mek.key.remoteJid.endsWith('@s.whatsapp.net')) {
-          await client.readMessages([mek.key]);
+            await client.readMessages([mek.key]);
         }
 
+        // presence
         if (mek.key.remoteJid.endsWith('@s.whatsapp.net')) {
-          const Chat = mek.key.remoteJid;
-          if (presence === 'online') {
-            await client.sendPresenceUpdate("available", Chat);
-          } else if (presence === 'typing') {
-            await client.sendPresenceUpdate("composing", Chat);
-          } else if (presence === 'recording') {
-            await client.sendPresenceUpdate("recording", Chat);
-          } else {
-            await client.sendPresenceUpdate("unavailable", Chat);
-          }
+            const Chat = mek.key.remoteJid;
+            if (presence === 'online') {
+                await client.sendPresenceUpdate("available", Chat);
+            } else if (presence === 'typing') {
+                await client.sendPresenceUpdate("composing", Chat);
+            } else if (presence === 'recording') {
+                await client.sendPresenceUpdate("recording", Chat);
+            } else {
+                await client.sendPresenceUpdate("unavailable", Chat);
+            }
         }
 
+        // handle commands
         if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
         m = smsg(client, mek, store);
         require("./toxic")(client, m, chatUpdate, store);
-      } catch (err) {
-        console.error('Message processing error:', err);
-      }
-    });
+    } catch (err) {
+        console.log(err);
+    }
+});
 
-    const unhandledRejections = new Map();
-    process.on("unhandledRejection", (reason, promise) => {
-      unhandledRejections.set(promise, reason);
-      console.error("Unhandled Rejection at:", promise, "reason:", reason);
-    });
-    process.on("rejectionHandled", (promise) => {
-      unhandledRejections.delete(promise);
-    });
-    process.on("Something went wrong", function (err) {
-      console.error("Caught exception:", err);
-    });
+  // Handle error
+  const unhandledRejections = new Map();
+  process.on("unhandledRejection", (reason, promise) => {
+    unhandledRejections.set(promise, reason);
+    console.log("Unhandled Rejection at:", promise, "reason:", reason);
+  });
+  process.on("rejectionHandled", (promise) => {
+    unhandledRejections.delete(promise);
+  });
+  process.on("Something went wrong", function (err) {
+    console.log("Caught exception: ", err);
+  });
 
-    client.decodeJid = (jid) => {
-      if (!jid) return jid;
-      if (/:\d+@/gi.test(jid)) {
-        let decode = jidDecode(jid) || {};
-        return (decode.user && decode.server && decode.user + "@" + decode.server) || jid;
-      } else return jid;
-    };
+  // Setting
+  client.decodeJid = (jid) => {
+    if (!jid) return jid;
+    if (/:\d+@/gi.test(jid)) {
+      let decode = jidDecode(jid) || {};
+      return (decode.user && decode.server && decode.user + "@" + decode.server) || jid;
+    } else return jid;
+  };
 
-    client.getName = (jid, withoutContact = false) => {
-      id = client.decodeJid(jid);
-      withoutContact = client.withoutContact || withoutContact;
-      let v;
-      if (id.endsWith("@g.us"))
-        return new Promise(async (resolve) => {
-          v = store.contacts[id] || {};
-          if (!(v.name || v.subject)) v = client.groupMetadata(id) || {};
-          resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
-        });
-      else
-        v =
-          id === "0@s.whatsapp.net"
-            ? {
-                id,
-                name: "WhatsApp",
-              }
-            : id === client.decodeJid(client.user.id)
-            ? client.user
-            : store.contacts[id] || {};
-      return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
-    };
 
-    client.public = true;
+  client.getName = (jid, withoutContact = false) => {
+    id = client.decodeJid(jid);
+    withoutContact = client.withoutContact || withoutContact;
+    let v;
+    if (id.endsWith("@g.us"))
+      return new Promise(async (resolve) => {
+        v = store.contacts[id] || {};
+        if (!(v.name || v.subject)) v = client.groupMetadata(id) || {};
+        resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
+      });
+    else
+      v =
+        id === "0@s.whatsapp.net"
+          ? {
+              id,
+              name: "WhatsApp",
+            }
+          : id === client.decodeJid(client.user.id)
+          ? client.user
+          : store.contacts[id] || {};
+    return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
+  };
 
-    client.serializeM = (m) => smsg(client, m, store);
 
-    client.ev.on("group-participants.update", async (m) => {
-      groupEvents(client, m);
-      groupEvents2(client, m);
-    });
+  client.public = true;
 
-    client.ev.on("connection.update", async (update) => {
-      await connectionHandler(client, update, startToxic);
-    });
+  client.serializeM = (m) => smsg(client, m, store);
 
-    client.ev.on("creds.update", saveCreds);
+  client.ev.on("group-participants.update", async (m) => {
+    groupEvents(client, m);
+groupEvents2(client, m);
+  });
 
-    client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ ${text}`, ...options }, { quoted });
+client.ev.on("connection.update", async (update) => {
+  await connectionHandler(client, update, startDreaded);
+});
 
-    client.downloadMediaMessage = async (message) => {
-      let mime = (message.msg || message).mimetype || '';
-      let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
-      const stream = await downloadContentFromMessage(message, messageType);
-      let buffer = Buffer.from([]);
-      for await (const chunk of stream) {
-        buffer = Buffer.concat([buffer, chunk]);
-      }
-      return buffer;
-    };
 
-    client.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
-      let quoted = message.msg ? message.msg : message;
-      let mime = (message.msg || message).mimetype || '';
-      let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
-      const stream = await downloadContentFromMessage(quoted, messageType);
-      let buffer = Buffer.from([]);
-      for await (const chunk of stream) {
-        buffer = Buffer.concat([buffer, chunk]);
-      }
-      let type = await FileType.fromBuffer(buffer);
-      const trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
-      await fs.writeFileSync(trueFileName, buffer);
-      return trueFileName;
-    };
-  } catch (err) {
-    console.error('Startup error:', err);
-    process.exit(1);
-  }
+  client.ev.on("creds.update", saveCreds);
+
+
+  client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text: text, ...options }, { quoted });
+
+    client.downloadMediaMessage = async (message) => { 
+         let mime = (message.msg || message).mimetype || ''; 
+         let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0]; 
+         const stream = await downloadContentFromMessage(message, messageType); 
+         let buffer = Buffer.from([]); 
+         for await(const chunk of stream) { 
+             buffer = Buffer.concat([buffer, chunk]) 
+         } 
+
+         return buffer 
+      }; 
+
+
+
+
+ client.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => { 
+         let quoted = message.msg ? message.msg : message; 
+         let mime = (message.msg || message).mimetype || ''; 
+         let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0]; 
+         const stream = await downloadContentFromMessage(quoted, messageType); 
+         let buffer = Buffer.from([]); 
+         for await(const chunk of stream) { 
+             buffer = Buffer.concat([buffer, chunk]); 
+         } 
+         let type = await FileType.fromBuffer(buffer); 
+         const trueFileName = attachExtension ? (filename + '.' + type.ext) : filename; 
+         // save to file 
+         await fs.writeFileSync(trueFileName, buffer); 
+         return trueFileName; 
+     };
+
 }
+
+
+
+
 
 app.use(express.static('public'));
 
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+    res.sendFile(__dirname + '/index.html'); 
 });
+
 
 app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 
-startToxic();
+startDreaded();
 
-module.exports = startToxic;
+
+module.exports = startDreaded;
 
 let file = require.resolve(__filename);
 fs.watchFile(file, () => {
@@ -311,4 +347,4 @@ fs.watchFile(file, () => {
   console.log(chalk.redBright(`Update ${__filename}`));
   delete require.cache[file];
   require(file);
-});
+}); 
