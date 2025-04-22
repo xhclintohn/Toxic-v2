@@ -51,7 +51,8 @@ const toxicReplies = [
   "Messing with *Toxic Multidevice*? Big mistake, fam! 😎",
   "This chat belongs to *Toxic Multidevice*! Know your place! 🖤",
   "You’re out here testing me? *Toxic Multidevice* don’t play! 😈",
-  "What’s this trash energy? Get smoked, loser! 💨"
+  "What’s this trash energy? Get smoked, loser! 💨",
+  "Step into my domain and get humbled, fool! 😈💀"
 ];
 
 const getToxicReply = (text) => {
@@ -93,7 +94,7 @@ async function startDreaded() {
     }
   });
 
-  client.reconnectAttempts = 0; // Initialize reconnect attempts
+  client.reconnectAttempts = 0;
   store.bind(client.ev);
 
   setInterval(() => {
@@ -113,6 +114,7 @@ async function startDreaded() {
           `${botname || "Toxic Multidevice"} runs this game 24/7! 😈\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} - It's a ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}. Bow down! 💀`
         );
         await client.updateProfileStatus(status);
+        console.log(chalk.green("Auto-bio updated successfully! 😈"));
       } catch (err) {
         console.error(chalk.red("Failed to update auto-bio:", err));
       }
@@ -134,10 +136,7 @@ async function startDreaded() {
 
     try {
       await client.rejectCall(callId, callerJid);
-      await client.sendMessage(callerJid, {
-        text: getToxicReply("Calling *Toxic Multidevice*? You’re done, fool! Banned! 😈 Contact the owner if you got the guts. 💀")
-      });
-
+      await client.sendText(callerJid, "Calling *Toxic Multidevice*? You’re done, fool! Banned! 😈 Contact the owner if you got the guts. 💀", m);
       const bannedUsers = await getBannedUsers();
       if (!bannedUsers.includes(callerNumber)) {
         await banUser(callerNumber);
@@ -175,13 +174,8 @@ async function startDreaded() {
 
           if (!isBotAdmin) return;
           if (!isAdmin) {
-            await client.sendMessage(mek.key.remoteJid, {
-              text: getToxicReply(`🚫 @${sender.split("@")[0]}, links? You’re outta here, clown! 😈`),
-              contextInfo: { mentionedJid: [sender] }
-            }, { quoted: mek });
-
+            await client.sendText(mek.key.remoteJid, `🚫 @${sender.split("@")[0]}, links? You’re outta here, clown! 😈`, mek, { contextInfo: { mentionedJid: [sender] } });
             await client.groupParticipantsUpdate(mek.key.remoteJid, [sender], "remove");
-
             await client.sendMessage(mek.key.remoteJid, {
               delete: {
                 remoteJid: mek.key.remoteJid,
@@ -201,6 +195,7 @@ async function startDreaded() {
           await client.sendMessage(mek.key.remoteJid, {
             reaction: { text: reactEmoji || "😈", key: mek.key }
           });
+          console.log(chalk.green(`Auto-liked status from ${mek.key.participant || mek.key.remoteJid} with ${reactEmoji || "😈"} 😈`));
         } catch (err) {
           console.error(chalk.red("Failed to auto-like status:", err));
         }
@@ -322,7 +317,6 @@ async function startDreaded() {
 
   client.ev.on("creds.update", saveCreds);
 
-  // Override sendText to enforce toxic styling
   client.sendText = (jid, text, quoted = "", options) => {
     return client.sendMessage(jid, { text: getToxicReply(text) }, { quoted, ...options });
   };
