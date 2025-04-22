@@ -1,2 +1,8 @@
+# railway.toml
+[build]
+  command = "npm install && npm start"  # Adjust if using yarn/pnpm
+  watchPaths = ["package.json"]
+
 [variables]
-SESSION = { description = "Paste WhatsApp session here", required = true }
+  SESSION = { description = "Paste WhatsApp session here (get after QR scan)", required = true }
+  DATABASE_URL = { description = "PostgreSQL connection URL (optional)", required = false }
