@@ -17,7 +17,7 @@
     "environmentVariables": {
       "PORT": "10000",
       "SESSION": {
-        "description": "Enter your WhatsApp session ID or credentials for authentication",
+        "description": "Enter the WhatsApp session ID from the linking website",
         "required": true,
         "value": ""
       }
