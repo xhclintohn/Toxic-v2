@@ -56,7 +56,7 @@ async function startDreaded() {
 
     console.log('[Client] Creating Baileys client...');
     const client = dreadedConnect({
-      logger: pino({ level: 'debug' }), // Changed to debug for visibility
+      logger: pino({ level: 'debug' }), // Keep debug for visibility
       printQRInTerminal: true,
       version: [2, 3000, 1015901307],
       browser: [`TOXIC`, 'Safari', '3.0'],
@@ -123,16 +123,21 @@ async function startDreaded() {
     });
 
     client.ev.on("messages.upsert", async (chatUpdate) => {
-      let settings = await getSettings();
-      if (!settings) return;
-
-      const { autoread, autolike, autoview, presence, reactEmoji } = settings;
-
       try {
-        mek = chatUpdate.messages[0];
-        if (!mek.message) return;
+        let settings = await getSettings();
+        if (!settings) return;
 
-        mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
+        const { autoread, autolike, autoview, presence, reactEmoji } = settings;
+
+        let mek = chatUpdate.messages[0];
+        if (!mek || !mek.message) return;
+
+        try {
+          mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
+        } catch (error) {
+          console.error('[MessagesUpsert] Failed to process message type:', error.message);
+          return; // Skip invalid message
+        }
 
         const messageContent = mek.message.conversation || mek.message.extendedTextMessage?.text || "";
         const isGroup = mek.key.remoteJid.endsWith("@g.us");
@@ -211,7 +216,7 @@ async function startDreaded() {
         m = smsg(client, mek, store);
         require("./toxic")(client, m, chatUpdate, store);
       } catch (err) {
-        console.log(err);
+        console.error('[MessagesUpsert] Error processing message:', err.message);
       }
     });
 
