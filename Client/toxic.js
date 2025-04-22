@@ -17,17 +17,25 @@ const antidel = require('../Functions/antidelete');
 
 const { getSettings, getSudoUsers, getBannedUsers } = require('../Database/config');
 
-const { botname, mycode } = require('../Env tom/settings');
+let settingsModule;
+try {
+  settingsModule = require('../Env/settings');
+} catch (err) {
+  console.error(chalk.red("Failed to load settings module:", err));
+  settingsModule = { botname: "Toxic Multidevice", mycode: "" };
+}
+
+const { botname, mycode } = settingsModule;
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
   try {
-    const sudoUsers = await getSudoUsers();
-    const bannedUsers = await getBannedUsers();
+    const sudoUsers = await getSudoUsers() || [];
+    const bannedUsers = await getBannedUsers() || [];
 
     let settings = await getSettings();
     if (!settings) {
       console.error(chalk.red("Settings not found! Toxic Multidevice is crippled! 💀"));
-      return;
+      settings = { prefix: "!", mode: "public", gcpresence: false, antitag: false, antidelete: false, antilink: false, packname: "Toxic Multidevice", reactEmoji: "😈" };
     }
 
     const { prefix, mode, gcpresence, antitag, antidelete, antilink, packname, reactEmoji } = settings;
@@ -58,7 +66,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
     const path = require('path');
     const filePath = path.resolve(__dirname, '../toxic.jpg');
-    const pict = fs.readFileSync(filePath);
+    const pict = readFileSync(filePath);
 
     const commandName = body.startsWith(prefix) ? body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase() : null;
     const resolvedCommandName = aliases[commandName] || commandName;
@@ -150,7 +158,12 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
       getGroupAdmins,
       pict,
       Tag,
-      getToxicReply // Added for commands to use
+      getToxicReply
+    };
+
+    // Override m.reply for command compatibility
+    m.reply = async (text, options = {}) => {
+      return client.sendText(m.chat, text, m, options);
     };
 
     if (cmd) {
@@ -177,6 +190,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
   } catch (err) {
     console.error(chalk.red("Error in toxic.js:", util.format(err)));
+    await client.sendText(m.chat, "Something broke, fool! *Toxic Multidevice* is too wild for this. 😈 Try again later.", m);
   }
 };
 
