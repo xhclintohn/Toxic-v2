@@ -1,369 +1,192 @@
-const {
-  default: dreadedConnect,
-  useMultiFileAuthState,
-  DisconnectReason,
-  fetchLatestBaileysVersion,
-  makeInMemoryStore,
-  downloadContentFromMessage,
-  jidDecode,
-  proto,
-  getContentType,
-} = require("@whiskeysockets/baileys");
-
-const pino = require("pino");
-const { Boom } = require("@hapi/boom");
+const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType } = require("@whiskeysockets/baileys");
 const fs = require("fs");
-const FileType = require("file-type");
-const { exec, spawn, execSync } = require("child_process");
-const axios = require("axios");
+const util = require("util");
 const chalk = require("chalk");
-const figlet = require("figlet");
-const express = require("express");
-const app = express();
-const port = process.env.PORT || 10000;
-const _ = require("lodash");
-const PhoneNumber = require("awesome-phonenumber");
-const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
-const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
-const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
+const speed = require("performance-now");
+const { smsg, formatp, tanggal, formatDate, getTime, sleep, clockString, fetchJson, getBuffer, jsonformat, generateProfilePicture, parseMention, getRandom, fetchBuffer } = require('../lib/botFunctions.js');
+const { exec, spawn, execSync } = require("child_process");
+const { TelegraPh, UploadFileUgu } = require("../lib/toUrl");
+const uploadtoimgur = require('../lib/Imgur');
+const { readFileSync } = require('fs');
 
-const authenticationn = require('../Auth/auth.js');
-const { smsg } = require('../Handler/smsg');
-const { getSettings, getBannedUsers, banUser, getGroupSetting } = require("../Database/config");
+const { commands, aliases, totalCommands } = require('../Handler/commandHandler');
+const status_saver = require('../Functions/status_saver');
+const gcPresence = require('../Functions/gcPresence');
+const antitaggc = require('../Functions/antitag');
+const antidel = require('../Functions/antidelete');
 
-const { botname } = require('../Env/settings');
-const { DateTime } = require('luxon');
-const { commands, totalCommands } = require('../Handler/commandHandler');
-authenticationn();
+const { getSettings, getSudoUsers, getBannedUsers } = require('../Database/config');
 
-const path = require('path');
-const sessionName = path.join(__dirname, '..', 'Session');
+const { botname, mycode } = require('../Env tom/settings');
 
-const groupEvents = require("../Handler/eventHandler");
-const groupEvents2 = require("../Handler/eventHandler2");
-const connectionHandler = require('../Handler/connectionHandler');
+module.exports = toxic = async (client, m, chatUpdate, store) => {
+  try {
+    const sudoUsers = await getSudoUsers();
+    const bannedUsers = await getBannedUsers();
 
-// Utility for toxic, styled replies
-const toxicReplies = [
-  "Yo, you thought you could outsmart *Toxic Multidevice*? Think again, scrub! 😈",
-  "Bow to the chaos king, peasant! 💀 *Toxic Multidevice* runs this!",
-  "Weak vibes detected! Step up or get wrecked! 🔥",
-  "Messing with *Toxic Multidevice*? Big mistake, fam! 😎",
-  "This chat belongs to *Toxic Multidevice*! Know your place! 🖤",
-  "You’re out here testing me? *Toxic Multidevice* don’t play! 😈",
-  "What’s this trash energy? Get smoked, loser! 💨",
-  "Step into my domain and get humbled, fool! 😈💀"
-];
+    let settings = await getSettings();
+    if (!settings) {
+      console.error(chalk.red("Settings not found! Toxic Multidevice is crippled! 💀"));
+      return;
+    }
 
-const getToxicReply = (text) => {
-  const randomToxic = toxicReplies[Math.floor(Math.random() * toxicReplies.length)];
-  return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${randomToxic}\n│❒ ${text}\n◈━━━━━━━━━━━━━━━━◈`;
+    const { prefix, mode, gcpresence, antitag, antidelete, antilink, packname, reactEmoji } = settings;
+
+    // Import getToxicReply from index.js
+    const getToxicReply = require('../index').getToxicReply;
+
+    const body =
+      m.mtype === "conversation"
+        ? m.message.conversation
+        : m.mtype === "imageMessage"
+          ? m.message.imageMessage.caption
+          : m.mtype === "extendedTextMessage"
+            ? m.message.extendedTextMessage.text
+            : "";
+
+    const Tag =
+      m.mtype === "extendedTextMessage" &&
+      m.message.extendedTextMessage.contextInfo?.mentionedJid
+        ? m.message.extendedTextMessage.contextInfo.mentionedJid
+        : [];
+
+    const msgToxic = m.message.extendedTextMessage?.contextInfo?.quotedMessage || null;
+    const budy = typeof m.text === "string" ? m.text : "";
+
+    const timestamp = speed();
+    const toxicspeed = speed() - timestamp;
+
+    const path = require('path');
+    const filePath = path.resolve(__dirname, '../toxic.jpg');
+    const pict = fs.readFileSync(filePath);
+
+    const commandName = body.startsWith(prefix) ? body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase() : null;
+    const resolvedCommandName = aliases[commandName] || commandName;
+
+    const cmd = body.startsWith(prefix) && commands[resolvedCommandName];
+
+    const args = body.trim().split(/ +/).slice(1);
+    const pushname = m.pushName || "No Name";
+    const botNumber = await client.decodeJid(client.user.id);
+    const itsMe = m.sender === botNumber;
+    const text = args.join(" ");
+    const arg = budy.trim().substring(budy.indexOf(" ") + 1);
+    const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
+
+    const getGroupAdmins = (participants) => {
+      let admins = [];
+      for (let i of participants) {
+        if (i.admin === "superadmin" || i.admin === "admin") {
+          admins.push(i.id);
+        }
+      }
+      return admins;
+    };
+
+    const fortu = m.quoted || m;
+    const quoted = (fortu.mtype === 'buttonsMessage') ? fortu[Object.keys(fortu)[1]] :
+      (fortu.mtype === 'templateMessage') ? fortu.hydratedTemplate[Object.keys(fortu.hydratedTemplate)[1]] :
+      (fortu.mtype === 'product') ? fortu[Object.keys(fortu)[0]] : m.quoted || m;
+
+    const color = (text, color) => {
+      return !color ? chalk.green(text) : chalk.keyword(color)(text);
+    };
+
+    const mime = (quoted.msg || quoted).mimetype || "";
+    const qmsg = quoted.msg || quoted;
+
+    const DevToxic = Array.isArray(sudoUsers) ? sudoUsers : [];
+    const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
+
+    const groupMetadata = m.isGroup ? await client.groupMetadata(m.chat).catch((e) => ({})) : {};
+    const groupName = m.isGroup ? groupMetadata.subject || "" : "";
+    const participants = m.isGroup ? groupMetadata.participants || [] : [];
+    const groupAdmin = m.isGroup ? getGroupAdmins(participants) : [];
+    const isBotAdmin = m.isGroup ? groupAdmin.includes(botNumber) : false;
+    const isAdmin = m.isGroup ? groupAdmin.includes(m.sender) : false;
+    const IsGroup = m.chat?.endsWith("@g.us");
+
+    // Extended context with getToxicReply
+    const context = {
+      client,
+      m,
+      text,
+      Owner,
+      chatUpdate,
+      store,
+      isBotAdmin,
+      isAdmin,
+      IsGroup,
+      participants,
+      pushname,
+      body,
+      budy,
+      totalCommands,
+      args,
+      mime,
+      qmsg,
+      msgToxic,
+      botNumber,
+      itsMe,
+      packname,
+      generateProfilePicture,
+      groupMetadata,
+      toxicspeed,
+      mycode,
+      fetchJson,
+      exec,
+      getRandom,
+      UploadFileUgu,
+      TelegraPh,
+      prefix,
+      cmd,
+      botname,
+      mode,
+      gcpresence,
+      antitag,
+      antidelete,
+      fetchBuffer,
+      uploadtoimgur,
+      getGroupAdmins,
+      pict,
+      Tag,
+      getToxicReply // Added for commands to use
+    };
+
+    if (cmd) {
+      const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
+      if (bannedUsers.includes(senderNumber)) {
+        await client.sendText(m.chat, "❗ You’re banned, loser! No commands for you. 😈", m);
+        return;
+      }
+    }
+
+    if (cmd && mode === 'private' && !itsMe && !Owner && !sudoUsers.includes(m.sender)) {
+      await client.sendText(m.chat, "This bot’s in private mode, punk! Only the elite can use it. 😎", m);
+      return;
+    }
+
+    await antidel(client, m);
+    await status_saver(client, m, Owner, prefix);
+    await gcPresence(client, m);
+    await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
+
+    if (cmd && commands[resolvedCommandName]) {
+      await commands[resolvedCommandName](context);
+    }
+
+  } catch (err) {
+    console.error(chalk.red("Error in toxic.js:", util.format(err)));
+  }
 };
 
-async function startDreaded() {
-  let settingss = await getSettings();
-  if (!settingss) {
-    console.error(chalk.redBright("Failed to load settings! Toxic Multidevice is down! 💀"));
+process.on('uncaughtException', function (err) {
+  let e = String(err);
+  if (e.includes("conflict") || e.includes("not-authorized") || e.includes("Socket connection timeout") ||
+      e.includes("rate-overlimit") || e.includes("Connection Closed") || e.includes("Timed Out") ||
+      e.includes("Value not found")) {
+    console.warn(chalk.yellow(`Ignored error: ${e}`));
     return;
   }
-
-  const { autobio, mode, anticall } = settingss;
-
-  const { saveCreds, state } = await useMultiFileAuthState(sessionName);
-  const client = dreadedConnect({
-    logger: pino({ level: 'silent' }),
-    printQRInTerminal: true,
-    version: [2, 3000, 1015901307],
-    browser: [`Toxic Multidevice`, 'Safari', '3.0'],
-    fireInitQueries: false,
-    shouldSyncHistoryMessage: false,
-    downloadHistory: false,
-    syncFullHistory: false,
-    generateHighQualityLinkPreview: true,
-    markOnlineOnConnect: true,
-    keepAliveIntervalMs: 60_000,
-    auth: state,
-    maxRetries: 5,
-    connectTimeoutMs: 30_000,
-    getMessage: async (key) => {
-      if (store) {
-        const mssg = await store.loadMessage(key.remoteJid, key.id);
-        return mssg?.message || undefined;
-      }
-      return { conversation: "Toxic Multidevice was here 😈" };
-    }
-  });
-
-  client.reconnectAttempts = 0;
-  store.bind(client.ev);
-
-  setInterval(() => {
-    try {
-      store.writeToFile("store.json");
-    } catch (err) {
-      console.error(chalk.red("Failed to write store.json:", err));
-    }
-  }, 3000);
-
-  // Auto-bio with toxic flair
-  if (autobio) {
-    setInterval(async () => {
-      try {
-        const date = new Date();
-        const status = getToxicReply(
-          `${botname || "Toxic Multidevice"} runs this game 24/7! 😈\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} - It's a ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}. Bow down! 💀`
-        );
-        await client.updateProfileStatus(status);
-        console.log(chalk.green("Auto-bio updated successfully! 😈"));
-      } catch (err) {
-        console.error(chalk.red("Failed to update auto-bio:", err));
-      }
-    }, 10 * 1000);
-  }
-
-  // Enhanced anti-call system
-  const processedCalls = new Set();
-  client.ws.on('CB:call', async (json) => {
-    const settingszs = await getSettings();
-    if (!settingszs?.anticall) return;
-
-    const callId = json.content[0].attrs['call-id'];
-    const callerJid = json.content[0].attrs['call-creator'];
-    const callerNumber = callerJid.replace(/[@.a-z]/g, "");
-
-    if (processedCalls.has(callId)) return;
-    processedCalls.add(callId);
-
-    try {
-      await client.rejectCall(callId, callerJid);
-      await client.sendText(callerJid, "Calling *Toxic Multidevice*? You’re done, fool! Banned! 😈 Contact the owner if you got the guts. 💀", m);
-      const bannedUsers = await getBannedUsers();
-      if (!bannedUsers.includes(callerNumber)) {
-        await banUser(callerNumber);
-      }
-    } catch (error) {
-      console.error(chalk.red('Error handling call:', error));
-    }
-  });
-
-  // Message handling with toxic responses
-  client.ev.on("messages.upsert", async (chatUpdate) => {
-    let settings = await getSettings();
-    if (!settings) return;
-
-    const { autoread, autolike, autoview, presence, reactEmoji } = settings;
-
-    try {
-      let mek = chatUpdate.messages[0];
-      if (!mek || !mek.message) return;
-
-      mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
-
-      const messageContent = mek.message.conversation || mek.message.extendedTextMessage?.text || "";
-      const isGroup = mek.key.remoteJid.endsWith("@g.us");
-      const sender = mek.key.participant || mek.key.remoteJid;
-      const Myself = await client.decodeJid(client.user.id);
-
-      if (isGroup) {
-        const antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
-        if ((antilink === true || antilink === 'true') && messageContent.includes("https") && sender !== Myself) {
-          const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
-          const groupAdmins = groupMetadata.participants.filter(p => p.admin).map(p => p.id);
-          const isAdmin = groupAdmins.includes(sender);
-          const isBotAdmin = groupAdmins.includes(Myself);
-
-          if (!isBotAdmin) return;
-          if (!isAdmin) {
-            await client.sendText(mek.key.remoteJid, `🚫 @${sender.split("@")[0]}, links? You’re outta here, clown! 😈`, mek, { contextInfo: { mentionedJid: [sender] } });
-            await client.groupParticipantsUpdate(mek.key.remoteJid, [sender], "remove");
-            await client.sendMessage(mek.key.remoteJid, {
-              delete: {
-                remoteJid: mek.key.remoteJid,
-                fromMe: false,
-                id: mek.key.id,
-                participant: sender
-              }
-            });
-          }
-          return;
-        }
-      }
-
-      // Auto-like statuses
-      if (autolike && mek.key.remoteJid === "status@broadcast") {
-        try {
-          await client.sendMessage(mek.key.remoteJid, {
-            reaction: { text: reactEmoji || "😈", key: mek.key }
-          });
-          console.log(chalk.green(`Auto-liked status from ${mek.key.participant || mek.key.remoteJid} with ${reactEmoji || "😈"} 😈`));
-        } catch (err) {
-          console.error(chalk.red("Failed to auto-like status:", err));
-        }
-      }
-
-      // Auto-view/autoread
-      if (autoview && mek.key.remoteJid === "status@broadcast") {
-        await client.readMessages([mek.key]);
-      } else if (autoread && mek.key.remoteJid.endsWith('@s.whatsapp.net')) {
-        await client.readMessages([mek.key]);
-      }
-
-      // Presence
-      if (mek.key.remoteJid.endsWith('@s.whatsapp.net')) {
-        const Chat = mek.key.remoteJid;
-        if (presence === 'online') {
-          await client.sendPresenceUpdate("available", Chat);
-        } else if (presence === 'typing') {
-          await client.sendPresenceUpdate("composing", Chat);
-        } else if (presence === 'recording') {
-          await client.sendPresenceUpdate("recording", Chat);
-        } else {
-          await client.sendPresenceUpdate("unavailable", Chat);
-        }
-      }
-
-      // Handle commands
-      if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
-
-      m = smsg(client, mek, store);
-      require("./toxic")(client, m, chatUpdate, store);
-    } catch (err) {
-      console.error(chalk.red("Error in messages.upsert:", err));
-    }
-  });
-
-  // Enhanced connection handling
-  client.ev.on("connection.update", async (update) => {
-    const { connection, lastDisconnect } = update;
-    if (connection === "close") {
-      const reason = new Boom(lastDisconnect?.error)?.output.statusCode;
-      if (reason === DisconnectReason.loggedOut) {
-        console.log(chalk.redBright("Logged out! Restarting Toxic Multidevice... 😈"));
-        startDreaded();
-      } else if (reason === DisconnectReason.connectionClosed || reason === DisconnectReason.connectionLost) {
-        const backoff = Math.min(60_000, 1000 * Math.pow(2, client.reconnectAttempts || 0));
-        console.log(chalk.yellow(`Connection lost! Reconnecting in ${backoff / 1000}s... 💀`));
-        setTimeout(() => {
-          client.reconnectAttempts = (client.reconnectAttempts || 0) + 1;
-          startDreaded();
-        }, backoff);
-      } else if (reason === DisconnectReason.badSession || reason === DisconnectReason.restartRequired) {
-        console.log(chalk.redBright("Bad session or restart required! Rebooting... 😈"));
-        startDreaded();
-      } else {
-        console.log(chalk.redBright(`Unknown disconnect reason: ${reason}. Retrying... 💀`));
-        setTimeout(startDreaded, 5000);
-      }
-    } else if (connection === "open") {
-      console.log(chalk.greenBright("Toxic Multidevice is LIVE! Time to dominate! 😈💀"));
-      client.reconnectAttempts = 0;
-    }
-  });
-
-  // WebSocket close handler
-  client.ws.on('close', () => {
-    console.log(chalk.redBright("WebSocket closed! Kicking off reconnection... 😈"));
-    setTimeout(startDreaded, 5000);
-  });
-
-  // Error handling
-  const unhandledRejections = new Map();
-  process.on("unhandledRejection", (reason, promise) => {
-    unhandledRejections.set(promise, reason);
-    console.log(chalk.red("Unhandled Rejection at:", promise, "reason:", reason));
-  });
-  process.on("rejectionHandled", (promise) => {
-    unhandledRejections.delete(promise);
-  });
-  process.on("Something went wrong", function (err) {
-    console.log(chalk.red("Caught exception:", err));
-  });
-
-  client.decodeJid = (jid) => {
-    if (!jid) return jid;
-    if (/:\d+@/gi.test(jid)) {
-      let decode = jidDecode(jid) || {};
-      return (decode.user && decode.server && decode.user + "@" + decode.server) || jid;
-    } else return jid;
-  };
-
-  client.getName = (jid, withoutContact = false) => {
-    let id = client.decodeJid(jid);
-    withoutContact = client.withoutContact || withoutContact;
-    let v;
-    if (id.endsWith("@g.us"))
-      return new Promise(async (resolve) => {
-        v = store.contacts[id] || {};
-        if (!(v.name || v.subject)) v = await client.groupMetadata(id) || {};
-        resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
-      });
-    else
-      v =
-        id === "0@s.whatsapp.net"
-          ? { id, name: "WhatsApp" }
-          : id === client.decodeJid(client.user.id)
-          ? client.user
-          : store.contacts[id] || {};
-    return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international");
-  };
-
-  client.public = true;
-  client.serializeM = (m) => smsg(client, m, store);
-
-  client.ev.on("group-participants.update", async (m) => {
-    groupEvents(client, m);
-    groupEvents2(client, m);
-  });
-
-  client.ev.on("creds.update", saveCreds);
-
-  client.sendText = (jid, text, quoted = "", options) => {
-    return client.sendMessage(jid, { text: getToxicReply(text) }, { quoted, ...options });
-  };
-
-  client.downloadMediaMessage = async (message) => {
-    let mime = (message.msg || message).mimetype || '';
-    let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
-    const stream = await downloadContentFromMessage(message, messageType);
-    let buffer = Buffer.from([]);
-    for await (const chunk of stream) {
-      buffer = Buffer.concat([buffer, chunk]);
-    }
-    return buffer;
-  };
-
-  client.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
-    let quoted = message.msg ? message.msg : message;
-    let mime = (message.msg || message).mimetype || '';
-    let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
-    const stream = await downloadContentFromMessage(quoted, messageType);
-    let buffer = Buffer.from([]);
-    for await (const chunk of stream) {
-      buffer = Buffer.concat([buffer, chunk]);
-    }
-    let type = await FileType.fromBuffer(buffer);
-    const trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
-    await fs.writeFileSync(trueFileName, buffer);
-    return trueFileName;
-  };
-}
-
-app.use(express.static('public'));
-
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + '/index.html');
-});
-
-app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
-
-startDreaded();
-
-module.exports = startDreaded;
-
-let file = require.resolve(__filename);
-fs.watchFile(file, () => {
-  fs.unwatchFile(file);
-  console.log(chalk.redBright(`Update ${__filename}`));
-  delete require.cache[file];
-  require(file);
+  console.error(chalk.red('Caught exception:', util.format(err)));
 });
