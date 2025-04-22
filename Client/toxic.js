@@ -48,7 +48,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         ? m.message.conversation
         : m.mtype === "imageMessage"
           ? m.message.imageMessage.caption
-          : m.mtype === "extendedTextMessage"
+        : m.mtype === "extendedTextMessage"
             ? m.message.extendedTextMessage.text
             : "";
 
@@ -179,10 +179,11 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
       return;
     }
 
+    // Process status_saver after autolike
     await antidel(client, m);
-    await status_saver(client, m, Owner, prefix);
     await gcPresence(client, m);
     await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
+    await status_saver(client, m, Owner, prefix);
 
     if (cmd && commands[resolvedCommandName]) {
       await commands[resolvedCommandName](context);
