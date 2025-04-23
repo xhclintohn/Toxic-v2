@@ -170,6 +170,9 @@ async function startDreaded() {
         }
       }
 
+      // Debug log for all message JIDs
+      console.log(`Message JID: ${mek.key.remoteJid}`);
+
       // autolike for statuses
       if (autolike && mek.key.remoteJid === "status@broadcast") {
         console.log(`Status detected: ${JSON.stringify(mek.key)} | autolike: ${autolike} | reactEmoji: ${reactEmoji}`);
