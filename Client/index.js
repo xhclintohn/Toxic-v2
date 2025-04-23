@@ -212,7 +212,7 @@ async function startDreaded() {
       // handle commands
       if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
-      m = smsg(client, m, store);
+      m = smsg(client, mek, store);
       require("./toxic")(client, m, chatUpdate, store);
     } catch (err) {
       console.log(err);
