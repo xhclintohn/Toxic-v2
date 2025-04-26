@@ -67,18 +67,48 @@ async function createLogo(context, endpoint, effectName) {
     const { client, m, text, prefix } = context;
 
     try {
-        // Input validation
         if (!text || text.trim() === '') {
             return await client.sendMessage(m.chat, { 
                 text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Oi, you brain-dead fuck, where’s the text? Try *${prefix}${context.command} SomeText* or fuck off! 😡` 
             }, { quoted: m });
         }
 
-        // Clean input (limit to reasonable length)
-        const cleaned Anime (Truncated, due to exceeding maximum length) output = {
-  "result": {
-    "image_url": "https://e1.yotools.net/images/user_image/2025/04/680d36a5a735b.jpg",
-    "image_code": "2564.jpg"
-  }
+        const cleanedText = text.trim().slice(0, 50);
+        if (cleanedText.length < 3) {
+            return await client.sendMessage(m.chat, { 
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ What’s this weak-ass text, ${m.pushName}? At least 3 characters, dumbass! 🙄` 
+            }, { quoted: m });
+        }
+
+        const apiUrl = `https://api.giftedtech.web.id/api/ephoto360/${endpoint}?apikey=gifted&text=${encodeURIComponent(cleanedText)}`;
+        const response = await axios.get(apiUrl);
+
+        if (response.data.status !== 200 || !response.data.success || !response.data.result?.image_url) {
+            return await client.sendMessage(m.chat, { 
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit, the API fucked up! No ${effectName} logo for you, loser. Try again later. 😒\n\nPowered by *Even Toxic-MD*` 
+            }, { quoted: m });
+        }
+
+        const imageUrl = response.data.result.image_url;
+
+        const caption = `◈━━━━━━━━━━━━━━━━◈\n│❒ Here’s your damn *${effectName}* logo, ${m.pushName}! Don’t waste my time again, you prick! 😤\n` +
+                       `📸 *Text*: ${cleanedText}\n` +
+                       `🔗 *Source*: Even Toxic-MD’s magic, bitches!\n` +
+                       `◈━━━━━━━━━━━━━━━━◈\nPowered by *Even Toxic-MD*`;
+
+        await client.sendMessage(m.chat, { 
+            image: { url: imageUrl }, 
+            caption: caption 
+        }, { quoted: m });
+
+    } catch (error) {
+        console.error(`Error in ${context.command} command:`, error);
+        await client.sendMessage(m.chat, { 
+            text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, you broke it! Error: ${error.message}. Fix your shit and try again, you slacker! 😡\n` +
+                  `Check https://github.com/xhclintohn/Toxic-v2 for help.\n` +
+                  `◈━━━━━━━━━━━━━━━━◈\nPowered by *Even Toxic-MD*` 
+        }, { quoted: m });
+    }
 }
 
+module.exports = logoCommands;
