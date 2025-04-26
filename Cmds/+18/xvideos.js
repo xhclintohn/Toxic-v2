@@ -2,7 +2,9 @@ module.exports = async (context) => {
   const { client, m, text, botname, fetchJson } = context;
 
   if (!text || text.trim() === '') {
-    return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, horny moron, give me a search query! Use *!xvideos hot stuff* or fuck off! 😡`);
+    return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, horny moron, give me a search query! use */xvideos hot milf* 
+
+or fuck off! 😡`);
   }
 
   try {
