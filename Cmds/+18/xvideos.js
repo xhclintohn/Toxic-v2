@@ -2,7 +2,7 @@ module.exports = async (context) => {
   const { client, m, text, botname, fetchJson } = context;
 
   if (!text || text.trim() === '') {
-    return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, horny moron, give me a search query! Use *!xvideo hot stuff* or fuck off! 😡`);
+    return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, horny moron, give me a search query! Use *!xvideos hot stuff* or fuck off! 😡`);
   }
 
   try {
@@ -49,6 +49,6 @@ module.exports = async (context) => {
 
   } catch (error) {
     console.error('Xvideo command error:', error);
-    await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit hit the fan, ${m.pushName}! Error: ${error.message}. Bug off and try later, you filthy slacker! 😡\nCheck https://github.com/xhclintohn/Toxic-v2 for help.`);
+    await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit hit the fan, ${m.pushName}! Error: ${error.message}. Bug off and try later, you filthy slacker! 😡\nCheck https://github.com/xhclintohn/Toxic-MD for help.`);
   }
 };
