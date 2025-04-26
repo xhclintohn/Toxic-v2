@@ -25,6 +25,7 @@ module.exports = {
         { name: 'Media', emoji: '🎬' },
         { name: 'Editting', emoji: '✂️' },
         { name: 'Logo', emoji: '🎨' },
+        { name: '+18', emoji: '🔞' },
         { name: 'Utils', emoji: '🔧' }
       ];
 
@@ -68,27 +69,23 @@ module.exports = {
 
       for (const category of categories) {
         const commandFiles = fs.readdirSync(`./Cmds/${category.name}`).filter(file => file.endsWith('.js'));
-        if (commandFiles.length === 0 && category.name !== 'Logo') continue;
+        if (commandFiles.length === 0 && category.name !== '+18') continue;
 
         const fancyCategory = toFancyFont(category.name, true);
         menuText += `\n─── ✦ *${fancyCategory} ${category.emoji}* ✦ ───\n`;
 
-        // Special handling for Logo category to include logo commands
-        if (category.name === 'Logo') {
-            const logoCommands = [
-                'advancedglow', 'glitchtext', 'blackpinklogo', 'writetext', 'glossysilver',
-                'underwater', 'effectclouds', 'sandsummer', 'galaxystyle', 'lighteffect'
-            ];
-            for (const cmd of logoCommands) {
-                const fancyCommandName = toFancyFont(cmd);
-                menuText += `  ➤ *${fancyCommandName}*\n`;
-            }
+        if (category.name === '+18') {
+          const plus18Commands = ['xvideo'];
+          for (const cmd of plus18Commands) {
+            const fancyCommandName = toFancyFont(cmd);
+            menuText += `  ➤ *${fancyCommandName}*\n`;
+          }
         }
 
         for (const file of commandFiles) {
-            const commandName = file.replace('.js', '');
-            const fancyCommandName = toFancyFont(commandName);
-            menuText += `  ➤ *${fancyCommandName}*\n`;
+          const commandName = file.replace('.js', '');
+          const fancyCommandName = toFancyFont(commandName);
+          menuText += `  ➤ *${fancyCommandName}*\n`;
         }
       }
 
