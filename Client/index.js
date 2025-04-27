@@ -245,8 +245,7 @@ async function startDreaded() {
             // Handle commands
             if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
-            m = smsg(client, m
-            ek, store);
+            m = smsg(client, mek, store);
             require("./toxic")(client, m, chatUpdate, store);
         } catch (err) {
             console.log(err);
@@ -337,6 +336,8 @@ async function startDreaded() {
         return trueFileName;
     };
 }
+
+app.use(express.static('public'));
 
 app.use(express.static('public'));
 
