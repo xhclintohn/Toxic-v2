@@ -9,44 +9,53 @@ module.exports = async (context) => {
         return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Bot's fucked. No botname in context. Yell at your dev, dipshit.\n◈━━━━━━━━━━━━━━━━◈`);
     }
 
+    if (!pict) {
+        console.error(`Pict not set, you brain-dead moron.`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ No image to send, you idiot. Fix your shitty context.\n◈━━━━━━━━━━━━━━━━◈`);
+    }
+
     try {
-        // Toxic caption stays
-        const caption = `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo ${m.pushName}, *${botname}* is alive and ready to fuck shit up! 🖕\n│❒ Type *${prefix}menu* to see what I can do, loser.\n◈━━━━━━━━━━━━━━━━◈\n│❒ Powered by *xh_clinton* - because your brain is too lazy to code looser`;
+        const caption = `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo ${m.pushName}, *${botname}* is alive and ready to fuck shit up! 🖕\n│❒ \n│❒ Type *${prefix}menu* to see what I can do, you pathetic loser.\n◈━━━━━━━━━━━━━━━━◈\n│❒ Powered by *xh_clinton*, 'cause you're too dumb to code`;
 
-        // Handle image properly - check if pict is buffer or URL
-        let imageContent;
-        if (Buffer.isBuffer(pict)) {
-            imageContent = pict;
-        } else if (typeof pict === 'string') {
-            imageContent = { url: pict };
-        } else {
-            throw new Error("Invalid image format, dumbass");
-        }
-
-        // Send image first
+        // Send the image with toxic caption
         await client.sendMessage(m.chat, {
-            image: imageContent,
-            caption: caption
+            image: { url: pict },
+            caption: caption,
+            mentions: [m.sender]
         }, { quoted: m });
 
-        // Audio handling with PROPER path resolution
-        const audioDir = path.join(__dirname, '..', 'xh_clinton');
-        const audioPath = path.join(audioDir, 'test.mp3');
+        // Audio file paths with extra toxicity
+        const possibleAudioPaths = [
+            path.join(__dirname, 'xh_clinton', 'test.mp3'),
+            path.join(process.cwd(), 'xh_clinton', 'test.mp3'),
+            path.join(__dirname, '..', 'xh_clinton', 'test.mp3'),
+        ];
 
-        if (fs.existsSync(audioPath)) {
-            await client.sendMessage(m.chat, {
-                audio: fs.readFileSync(audioPath),
-                ptt: true,
-                mimetype: 'audio/mpeg',
-                fileName: 'test.mp3'
-            }, { quoted: m });
-        } else {
-            console.error('❌ Audio file missing, you incompetent shit');
-            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Where the FUCK is xh_clinton/test.mp3? Can't even manage files properly!\n◈━━━━━━━━━━━━━━━━◈`);
+        let audioFound = false;
+        for (const audioPath of possibleAudioPaths) {
+            try {
+                if (fs.existsSync(audioPath)) {
+                    await client.sendMessage(m.chat, {
+                        audio: { url: audioPath },
+                        ptt: true,
+                        mimetype: 'audio/mpeg',
+                        fileName: 'fuck-you.mp3'
+                    }, { quoted: m });
+                    audioFound = true;
+                    break;
+                }
+            } catch (err) {
+                console.error(`Failed to send audio from ${audioPath}:`, err);
+            }
+        }
+
+        if (!audioFound) {
+            console.error('❌ Audio file not found at any path, you incompetent dev');
+            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ FUCK! ${m.pushName}, couldn't find the voice note.\n│❒ Check xh_clinton/test.mp3, you worthless piece of shit.\n◈━━━━━━━━━━━━━━━━◈`);
         }
 
     } catch (error) {
-        console.error(`Command exploded like your coding skills: ${error.stack}`);
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ SYSTEM MELTDOWN, ${m.pushName}!\n│❒ Error: ${error.message}\n│❒ Fix your shit or get fucked!\n◈━━━━━━━━━━━━━━━━◈`);
+        console.error(`ALIVE COMMAND CRASHED LIKE YOUR LIFE:`, error);
+        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ SHIT BROKE, ${m.pushName}!\n│❒ Error: ${error.message}\n│❒ Try again when you grow a brain, loser.\n◈━━━━━━━━━━━━━━━━◈`);
     }
 };
