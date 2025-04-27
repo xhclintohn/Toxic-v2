@@ -24,8 +24,8 @@ const retryPromote = async (client, groupId, participant, maxRetries = 5, baseDe
 };
 
 // Admin check function
-const memberAdmin = (participants) => {
-  return participants.filter(m => m.admin != null).map(m => m.id);
+const getAdmins = (participants) => {
+  return participants.filter(p => p.admin != null).map(p => p.id);
 };
 
 // Generate unique promotion message
@@ -88,11 +88,11 @@ module.exports = {
       groupMetadata = await client.groupMetadata(m.chat);
     } catch (e) {
       console.log(`[DEBUG] Error fetching group metadata: ${e}`);
-      return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ SYSTEM’S FUCKED, ${userName}! 😤 Couldn’t get group data: ${e.message}. Fix this shit or I’m OUT! 🚫\n◈━━━━━━━━━━━━━━━━◈`);
+      return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ SYSTEM’S FUCKED, ${userName}! 😤 Couldn’t get group data: ${e.message}. Fix this or I’m OUT! 🚫\n◈━━━━━━━━━━━━━━━━◈`);
     }
 
     const members = groupMetadata.participants;
-    const admins = memberAdmin(members);
+    const admins = getAdmins(members);
     const botId = client.user.id;
     const botIsAdmin = admins.includes(botId);
     console.log(`[DEBUG] Bot admin check: botIsAdmin=${botIsAdmin}, botId=${botId}, admins=`, admins);
@@ -168,7 +168,7 @@ module.exports = {
       }
 
       // Check bot admin status
-      const admins = memberAdmin(members);
+      const admins = getAdmins(members);
       const botId = client.user.id;
       const botIsAdmin = admins.includes(botId);
       console.log(`[DEBUG] Auto-promote bot admin check: botIsAdmin=${botIsAdmin}, botId=${botId}, admins=`, admins);
