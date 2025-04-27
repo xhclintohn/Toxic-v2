@@ -120,7 +120,7 @@ async function startDreaded() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, autolike, autoview, presence, reactEmoji } = settings;
+        const { autoread, autolike, autoview, presence } = settings;
 
         try {
             let mek = chatUpdate.messages[0];
@@ -131,6 +131,8 @@ async function startDreaded() {
             const isGroup = mek.key.remoteJid.endsWith("@g.us");
             const sender = mek.key.participant || mek.key.remoteJid;
             const Myself = await client.decodeJid(client.user.id);
+
+            console.log(`[MESSAGE-DEBUG] Processing message in ${mek.key.remoteJid} from ${sender}`);
 
             if (isGroup) {
                 try {
@@ -173,7 +175,7 @@ async function startDreaded() {
 
                             // Silently delete the link message
                             try {
-                                await client.sendMessage(mek.key.remoteJid, {
+                                const deleteResult = await client.sendMessage(mek.key.remoteJid, {
                                     delete: {
                                         remoteJid: mek.key.remoteJid,
                                         fromMe: false,
@@ -181,7 +183,7 @@ async function startDreaded() {
                                         participant: sender
                                     }
                                 });
-                                console.log(`[ANTILINK-DEBUG] Deleted link message from ${sender} in ${mek.key.remoteJid}`);
+                                console.log(`[ANTILINK-DEBUG] Deleted link message from ${sender} in ${mek.key.remoteJid}, Result: ${JSON.stringify(deleteResult)}`);
                             } catch (deleteError) {
                                 console.error(`[ANTILINK-ERROR] Failed to delete link message: ${deleteError.stack}`);
                             }
@@ -196,18 +198,26 @@ async function startDreaded() {
                 }
             }
 
-            // Autolike for statuses
+            // Autolike for statuses with retries
             if (autolike && mek.key.remoteJid === "status@broadcast") {
-                try {
-                    await client.sendMessage(mek.key.remoteJid, {
-                        react: { key: mek.key, text: "❤️" }
-                    });
-                    console.log(`[AUTOLIKE-DEBUG] Reacted ❤️ to status in ${mek.key.remoteJid}`);
-                } catch (error) {
-                    console.error(`[AUTOLIKE-ERROR] Failed to react to status: ${error.message}`);
-                    await client.sendMessage(client.user.id, {
-                        text: `Error reacting to status: ${error.message || "Unknown error"}`
-                    }).catch(() => {});
+                let retries = 3;
+                while (retries > 0) {
+                    try {
+                        const reactResult = await client.sendMessage(mek.key.remoteJid, {
+                            react: { key: mek.key, text: "🌕" }
+                        });
+                        console.log(`[AUTOLIKE-DEBUG] Reacted 🌕 to status in ${mek.key.remoteJid}, Result: ${JSON.stringify(reactResult)}`);
+                        break;
+                    } catch (error) {
+                        retries--;
+                        console.error(`[AUTOLIKE-ERROR] Attempt ${4 - retries}/3 failed to react to status: ${error.message}`);
+                        if (retries === 0) {
+                            await client.sendMessage(client.user.id, {
+                                text: `Error reacting to status: ${error.message || "Unknown error"}`
+                            }).catch(() => {});
+                        }
+                        await sleep(1000); // Wait 1s before retry
+                    }
                 }
             }
 
@@ -235,7 +245,8 @@ async function startDreaded() {
             // Handle commands
             if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
-            m = smsg(client, mek, store);
+            m = smsg(client, m
+            ek, store);
             require("./toxic")(client, m, chatUpdate, store);
         } catch (err) {
             console.log(err);
