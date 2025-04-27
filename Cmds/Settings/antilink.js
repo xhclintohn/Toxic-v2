@@ -1,49 +1,34 @@
-const { getSettings, getGroupSetting, updateGroupSetting } = require('../../Database/config');
-const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
+const { updateGroupSetting } = require("../Database/config");
 
 module.exports = async (context) => {
-  await ownerMiddleware(context, async () => {
-    const { client, m, args, prefix } = context;
-    const value = args[0]?.toLowerCase();
-    const jid = m.chat;
+    const { client, m, text, botname } = context;
 
-    if (!jid.endsWith('@g.us')) {
-      return await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, dumbass, this command’s for groups only. Stop wasting my time.`);
+    if (!botname) {
+        console.error(`Botname not set, you useless fuck.`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Bot’s fucked. No botname in context. Yell at your dev, dipshit.\n◈━━━━━━━━━━━━━━━━◈`);
+    }
+
+    if (!m.isGroup) {
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ This command is for groups, you moron! Get out of my DMs.\n◈━━━━━━━━━━━━━━━━◈`);
+    }
+
+    const groupMetadata = await client.groupMetadata(m.chat);
+    const groupAdmins = groupMetadata.participants.filter(p => p.admin != null).map(p => p.id);
+    if (!groupAdmins.includes(m.sender)) {
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Only admins can fuck with antilink, @${m.sender.split("@")[0]}! 😤 Step up or shut up.\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
+    }
+
+    const arg = text.toLowerCase().trim();
+    if (!arg || !['on', 'off'].includes(arg)) {
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, use .antilink on/off, you brain-dead fuckwit!\n◈━━━━━━━━━━━━━━━━◈`);
     }
 
     try {
-      const settings = await getSettings();
-      if (!settings) {
-        return await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ No settings found, database is fucked. Fix it and try again.`);
-      }
-
-      let groupSettings = await getGroupSetting(jid);
-      let isEnabled = groupSettings?.antilink === true;
-
-      const Myself = await client.decodeJid(client.user.id);
-      const groupMetadata = await client.groupMetadata(m.chat);
-      const userAdmins = groupMetadata.participants.filter(p => p.admin !== null).map(p => p.id);
-      const isBotAdmin = userAdmins.includes(Myself);
-
-      if (value === 'on' || value === 'off') {
-        if (!isBotAdmin) {
-          return await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Make me an admin first, you clown. Can’t touch antilink without powers.`);
-        }
-
-        const action = value === 'on';
-
-        if (isEnabled === action) {
-          return await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Antilink’s already ${value.toUpperCase()}, genius. Stop repeating yourself.`);
-        }
-
-        await updateGroupSetting(jid, 'antilink', action);
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Antilink’s now ${value.toUpperCase()}. Post links and get yeeted, losers!`);
-      } else {
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Antilink’s ${isEnabled ? 'ON' : 'OFF'} in this group, dipshit.\n\nUse ${prefix}antilink on or ${prefix}antilink off to change it.`);
-      }
+        const value = arg === 'on';
+        await updateGroupSetting(m.chat, 'antilink', value);
+        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Antilink ${value ? 'ENABLED' : 'DISABLED'} by @${m.sender.split("@")[0]}! 😤 ${value ? 'Links get shredded now!' : 'Links are free, you soft losers.'}\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
     } catch (error) {
-      console.error('Error in antilink command:', error);
-      await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, couldn’t mess with antilink. Database or something’s fucked. Try later.`);
+        console.error(`[ANTILINK-ERROR] Failed to update antilink setting: ${error.stack}`);
+        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}! 😡 Couldn’t set antilink: ${error.message}. Try again, you twat.\n◈━━━━━━━━━━━━━━━━◈`);
     }
-  });
 };
