@@ -14,26 +14,25 @@ module.exports = async (context) => {
     }
 
     if (!text) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, you forgot the song name, you dumb fuck! Example: .lyrics Faded\n◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, you forgot the damn song, you tone-deaf fuck! Example: .lyrics Spectre\n◈━━━━━━━━━━━━━━━━◈`);
     }
 
     try {
         const encodedText = encodeURIComponent(text);
-        const apiUrl = `https://api.giftedtech.web.id/api/search/lyrics?apikey=gifted&query=${encodedText}`;
+        const apiUrl = `https://api.giftedtech.web.id/api/search/lyricsv2?apikey=gifted&query=${encodedText}`;
         const response = await fetch(apiUrl);
         const data = await response.json();
 
         if (!data.success || !data.result) {
-            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ No lyrics found for "${text}", you tone-deaf loser. Try a real song, ${m.pushName}.\n◈━━━━━━━━━━━━━━━━◈`);
+            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ No lyrics for "${text}", you musically illiterate loser. Try a real song, ${m.pushName}.\n◈━━━━━━━━━━━━━━━━◈`);
         }
 
-        // Assuming result is a string of lyrics; adjust if API returns an object
-        const lyrics = data.result;
-        const caption = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Song Lyrics, You Basic Bitch*\n\n` +
+        const lyrics = data.result.replace(/:\n/g, '').trim(); // Clean up weird formatting
+        const caption = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Lyrics for You, You Basic Bitch*\n\n` +
                        `📜 *Title*: ${text}\n` +
-                       `🎤 *Artist*: Unknown (API’s too shitty to tell)\n\n` +
+                       `🎤 *Artist*: Unknown (API’s too dumb to say)\n\n` +
                        `${lyrics}\n\n` +
-                       `│❒ Powered by *${botname}*, ‘cause ${m.pushName}’s too dumb to Google lyrics\n◈━━━━━━━━━━━━━━━━◈`;
+                       `│❒ Powered by *${botname}*, ‘cause ${m.pushName}’s too stupid to find lyrics\n◈━━━━━━━━━━━━━━━━◈`;
 
         await client.sendMessage(m.chat, {
             image: { url: pict },
@@ -41,6 +40,6 @@ module.exports = async (context) => {
         }, { quoted: m });
     } catch (error) {
         console.error(`Lyrics API fucked up: ${error.stack}`);
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}. Couldn’t get lyrics for "${text}". API’s trash or you’re cursed. Try later.\n◈━━━━━━━━━━━━━━━━◈`);
+        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}. Couldn’t get lyrics for "${text}". API’s garbage or you’re jinxed. Try later.\n◈━━━━━━━━━━━━━━━━◈`);
     }
 };
