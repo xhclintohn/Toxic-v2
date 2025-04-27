@@ -18,28 +18,18 @@ module.exports = async (context) => {
             return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ You think I’m bailing on your pathetic DMs? This is for groups, you idiot.\n◈━━━━━━━━━━━━━━━━◈`);
         }
 
-        const maxMentions = 50;
-        const mentions = participants.slice(0, maxMentions).map(a => a.id);
-        await client.sendMessage(m.chat, { 
-            text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, you sure you want ${botname} to ditch these worthless losers? Reply 'yes' to confirm, you spineless fuck.\n◈━━━━━━━━━━━━━━━━◈`, 
-            mentions: [m.sender] 
-        }, { quoted: m });
-
-        // Hypothetical waitForReply helper (code it yourself, you lazy shit)
-        const response = await client.waitForReply(m.chat, m.sender, 30);
-        if (!response || response.text.toLowerCase() !== 'yes') {
-            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Pussy move, ${m.pushName}. I’m stuck with these clowns ‘cause of you.\n◈━━━━━━━━━━━━━━━━◈`);
-        }
-
         try {
+            const maxMentions = 50;
+            const mentions = participants.slice(0, maxMentions).map(a => a.id);
             await client.sendMessage(m.chat, { 
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Fuck this shithole 🖕 ${botname} is out! Good luck rotting without me, you nobodies. ${mentions.length < participants.length ? 'Too many losers to tag, pathetic.' : ''}\n◈━━━━━━━━━━━━━━━━◈`, 
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Fuck this shithole 🖕 ${botname} is OUT! Good luck rotting without me, you nobodies. ${mentions.length < participants.length ? 'Too many losers to tag, pathetic.' : ''}\n◈━━━━━━━━━━━━━━━━◈`, 
                 mentions 
             }, { quoted: m });
+            console.log(`[LEAVE-DEBUG] Leaving group ${m.chat}, mentioned ${mentions.length} participants`);
             await client.groupLeave(m.chat);
         } catch (error) {
-            console.error(`Couldn’t ditch the group, you useless fuck: ${error.stack}`);
-            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke. Can’t escape this dumpster fire. Try again, loser.\n◈━━━━━━━━━━━━━━━━◈`);
+            console.error(`[LEAVE-ERROR] Couldn’t ditch the group: ${error.stack}`);
+            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}! 😡 Can’t escape this dumpster fire: ${error.message}. Try again, loser.\n◈━━━━━━━━━━━━━━━━◈`);
         }
     });
 };
