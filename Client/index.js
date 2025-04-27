@@ -47,27 +47,26 @@ const connectionHandler = require('../Handler/connectionHandler');
 // Block process.exit globally
 process.on('exit', (code) => {
     console.log(`[DEBUG] Attempted process.exit with code ${code}, blocking to keep process alive`);
-    // Keep process alive by not exiting
 });
 
 // Retry wrapper to catch all failures
 async function runWithRetry() {
     let retries = 0;
     const maxRetries = 10;
-    console.log(`[DEBUG] Toxic-MD V3 Starting - Version 2025-04-27-fix4`);
+    console.log(`[DEBUG] Toxic-MD V3 Starting - Version 2025-04-27-fix5`);
 
-    while (true) { // Infinite loop to prevent process exit
+    while (true) {
         try {
             console.log(`[DEBUG] Starting Toxic-MD V3, attempt ${retries + 1}`);
             await startDreaded();
             console.log(`[DEBUG] Toxic-MD V3 running successfully`);
-            break; // Exit loop if successful
+            break;
         } catch (err) {
             console.error(`[DEBUG] StartDreaded failed: ${err.stack}`);
             retries++;
             if (retries >= maxRetries) {
-                console.error(`[DEBUG] Max retries reached, continuing to retry to keep process alive`);
-                retries = 0; // Reset retries to keep trying
+                console.error(`[DEBUG] Max retries reached, continuing to retry`);
+                retries = 0;
             }
             console.log(`[DEBUG] Retrying in 10 seconds...`);
             await new Promise(resolve => setTimeout(resolve, 10000));
@@ -184,12 +183,14 @@ async function startDreaded() {
                 try {
                     let antilink;
                     try {
-                        antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
+                        const setting = await getGroupSetting(mek.key.remoteJid, "antilink");
+                        // Handle object or boolean
+                        antilink = typeof setting === 'object' && setting ? setting.antilink || setting.enabled || false : setting;
                     } catch (dbError) {
                         console.error(`[DEBUG] Failed to get antilink setting: ${dbError}`);
-                        antilink = false; // Fallback to disabled
+                        antilink = false; // Fallback
                     }
-                    console.log(`[DEBUG] Antilink setting for ${mek.key.remoteJid}: ${antilink}`);
+                    console.log(`[DEBUG] Antilink setting for ${mek.key.remoteJid}: ${JSON.stringify(antilink)}`);
 
                     // Robust link detection
                     const urlRegex = /(https?:\/\/|www\.|bit\.ly|t\.me|chat\.whatsapp\.com)[\S]+/i;
@@ -204,10 +205,10 @@ async function startDreaded() {
 
                     if ((antilink === true || antilink === 'true') && urlRegex.test(messageContent) && sender !== Myself) {
                         const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
-                        // Normalize admin IDs to handle :1 suffixes
+                        // Normalize admin IDs
                         const groupAdmins = groupMetadata.participants
                             .filter(p => p.admin != null)
-                            .map(p => p.id.replace(/:\d+@/, '@')); // Strip :1 suffix
+                            .map(p => p.id.replace(/:\d+@/, '@'));
                         const normalizedMyself = Myself.replace(/:\d+@/, '@');
                         const normalizedSender = sender.replace(/:\d+@/, '@');
                         const isAdmin = groupAdmins.includes(normalizedSender);
@@ -256,7 +257,7 @@ async function startDreaded() {
                             console.log(`[DEBUG] Sender ${sender} is admin, ignoring link`);
                         }
                     } else if (antilink !== true && antilink !== 'true') {
-                        console.log(`[DEBUG] Antilink disabled or invalid for ${mek.key.remoteJid}: ${antilink}`);
+                        console.log(`[DEBUG] Antilink disabled or invalid for ${mek.key.remoteJid}: ${JSON.stringify(antilink)}`);
                     }
                 } catch (error) {
                     console.error(`[DEBUG] Antilink error in ${mek.key.remoteJid}: ${error.stack}`);
@@ -300,13 +301,17 @@ async function startDreaded() {
             if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
             m = smsg(client, mek, store);
-            require("./toxic")(client, m, chatUpdate, store);
+            try {
+                require("./toxic")(client, m, chatUpdate, store);
+            } catch (err) {
+                console.error(`[DEBUG] Failed to load ./toxic in messages.upsert: ${err.stack}`);
+            }
         } catch (err) {
             console.error(`[DEBUG] Messages upsert error: ${err.stack}`);
         }
     });
 
-    // Connection update handler to log and retry
+    // Connection update handler
     client.ev.on("connection.update", async (update) => {
         const { connection, lastDisconnect } = update;
         console.log(`[DEBUG] Connection update: ${connection}, Last disconnect: ${lastDisconnect?.error?.message || 'None'}`);
@@ -339,7 +344,6 @@ async function startDreaded() {
             console.log(`[DEBUG] Connection state: ${connection}`);
         }
 
-        // Call original connectionHandler in a try-catch
         try {
             await connectionHandler(client, update, startDreaded);
         } catch (err) {
@@ -378,6 +382,14 @@ async function startDreaded() {
         return trueFileName;
     };
 }
+
+// Mock toxic module for eventHandler.js
+module.exports.toxic = {
+    // Minimal mock to satisfy eventHandler.js
+    handle: (client, m, chatUpdate, store) => {
+        console.log(`[DEBUG] Mock toxic handler called`);
+    }
+};
 
 // Start with retry wrapper
 runWithRetry();
