@@ -137,7 +137,7 @@ async function startDreaded() {
                     const antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
                     console.log(`[ANTILINK-DEBUG] Antilink: ${antilink} for ${mek.key.remoteJid}`);
 
-                    if (antilink === true) {
+                    if (antilink === 'true') {
                         // Robust link detection
                         const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
                         const messageContent = (
