@@ -44,11 +44,42 @@ const groupEvents = require("../Handler/eventHandler");
 const groupEvents2 = require("../Handler/eventHandler2");
 const connectionHandler = require('../Handler/connectionHandler');
 
+// Block process.exit globally
+process.on('exit', (code) => {
+    console.log(`[DEBUG] Attempted process.exit with code ${code}, blocking to keep process alive`);
+    // Keep process alive by not exiting
+});
+
+// Retry wrapper to catch all failures
+async function runWithRetry() {
+    let retries = 0;
+    const maxRetries = 10;
+    console.log(`[DEBUG] Toxic-MD V3 Starting - Version 2025-04-27-fix4`);
+
+    while (true) { // Infinite loop to prevent process exit
+        try {
+            console.log(`[DEBUG] Starting Toxic-MD V3, attempt ${retries + 1}`);
+            await startDreaded();
+            console.log(`[DEBUG] Toxic-MD V3 running successfully`);
+            break; // Exit loop if successful
+        } catch (err) {
+            console.error(`[DEBUG] StartDreaded failed: ${err.stack}`);
+            retries++;
+            if (retries >= maxRetries) {
+                console.error(`[DEBUG] Max retries reached, continuing to retry to keep process alive`);
+                retries = 0; // Reset retries to keep trying
+            }
+            console.log(`[DEBUG] Retrying in 10 seconds...`);
+            await new Promise(resolve => setTimeout(resolve, 10000));
+        }
+    }
+}
+
 async function startDreaded() {
     let settingss = await getSettings();
     if (!settingss) {
         console.error(`[DEBUG] Failed to load settings, database issue`);
-        return;
+        throw new Error("Database settings failure");
     }
 
     const { autobio, mode, anticall } = settingss;
@@ -80,14 +111,24 @@ async function startDreaded() {
 
     store.bind(client.ev);
 
-    setInterval(() => { store.writeToFile("store.json"); }, 3000);
+    setInterval(() => {
+        try {
+            store.writeToFile("store.json");
+        } catch (err) {
+            console.error(`[DEBUG] Failed to write store.json: ${err}`);
+        }
+    }, 3000);
 
     if (autobio) {
         setInterval(() => {
             const date = new Date();
-            client.updateProfileStatus(
-                `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.`
-            );
+            try {
+                client.updateProfileStatus(
+                    `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.`
+                );
+            } catch (err) {
+                console.error(`[DEBUG] Failed to update profile status: ${err}`);
+            }
         }, 10 * 1000);
     }
 
@@ -141,7 +182,13 @@ async function startDreaded() {
 
             if (isGroup) {
                 try {
-                    const antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
+                    let antilink;
+                    try {
+                        antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
+                    } catch (dbError) {
+                        console.error(`[DEBUG] Failed to get antilink setting: ${dbError}`);
+                        antilink = false; // Fallback to disabled
+                    }
                     console.log(`[DEBUG] Antilink setting for ${mek.key.remoteJid}: ${antilink}`);
 
                     // Robust link detection
@@ -157,10 +204,15 @@ async function startDreaded() {
 
                     if ((antilink === true || antilink === 'true') && urlRegex.test(messageContent) && sender !== Myself) {
                         const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
-                        const groupAdmins = groupMetadata.participants.filter(p => p.admin != null).map(p => p.id);
-                        const isAdmin = groupAdmins.includes(sender);
-                        const isBotAdmin = groupAdmins.includes(Myself);
-                        console.log(`[DEBUG] Bot admin check: isBotAdmin=${isBotAdmin}, Myself=${Myself}, Admins=${JSON.stringify(groupAdmins)}`);
+                        // Normalize admin IDs to handle :1 suffixes
+                        const groupAdmins = groupMetadata.participants
+                            .filter(p => p.admin != null)
+                            .map(p => p.id.replace(/:\d+@/, '@')); // Strip :1 suffix
+                        const normalizedMyself = Myself.replace(/:\d+@/, '@');
+                        const normalizedSender = sender.replace(/:\d+@/, '@');
+                        const isAdmin = groupAdmins.includes(normalizedSender);
+                        const isBotAdmin = groupAdmins.includes(normalizedMyself);
+                        console.log(`[DEBUG] Bot admin check: isBotAdmin=${isBotAdmin}, Myself=${Myself}, Normalized=${normalizedMyself}, Sender=${sender}, NormalizedSender=${normalizedSender}, Admins=${JSON.stringify(groupAdmins)}`);
 
                         if (!isBotAdmin) {
                             console.log(`[DEBUG] Bot is not admin in ${mek.key.remoteJid}, skipping antilink`);
@@ -254,7 +306,7 @@ async function startDreaded() {
         }
     });
 
-    // Override connection.update to prevent crashes
+    // Connection update handler to log and retry
     client.ev.on("connection.update", async (update) => {
         const { connection, lastDisconnect } = update;
         console.log(`[DEBUG] Connection update: ${connection}, Last disconnect: ${lastDisconnect?.error?.message || 'None'}`);
@@ -265,17 +317,21 @@ async function startDreaded() {
 
             if (reason === DisconnectReason.connectionReplaced) {
                 console.log(`[DEBUG] Connection replaced, delaying reconnect...`);
-                setTimeout(() => startDreaded(), 5000); // Delay to avoid rapid restarts
+                await new Promise(resolve => setTimeout(resolve, 10000));
+                throw new Error("Connection replaced, trigger retry");
             } else if (reason === DisconnectReason.loggedOut) {
                 console.log(`[DEBUG] Logged out, clearing session...`);
                 await client.logout();
-                setTimeout(() => startDreaded(), 5000);
+                await new Promise(resolve => setTimeout(resolve, 10000));
+                throw new Error("Logged out, trigger retry");
             } else if (reason === DisconnectReason.restartRequired) {
                 console.log(`[DEBUG] Restart required, restarting...`);
-                setTimeout(() => startDreaded(), 5000);
+                await new Promise(resolve => setTimeout(resolve, 10000));
+                throw new Error("Restart required, trigger retry");
             } else {
                 console.log(`[DEBUG] Unknown disconnect, retrying...`);
-                setTimeout(() => startDreaded(), 5000);
+                await new Promise(resolve => setTimeout(resolve, 10000));
+                throw new Error("Unknown disconnect, trigger retry");
             }
         } else if (connection === "open") {
             console.log(`[DEBUG] Connection established, Toxic-MD V3 online`);
@@ -283,11 +339,12 @@ async function startDreaded() {
             console.log(`[DEBUG] Connection state: ${connection}`);
         }
 
-        // Call original connectionHandler but prevent it from exiting
+        // Call original connectionHandler in a try-catch
         try {
             await connectionHandler(client, update, startDreaded);
         } catch (err) {
             console.error(`[DEBUG] Connection handler error: ${err.stack}`);
+            throw new Error("Connection handler failed, trigger retry");
         }
     });
 
@@ -322,6 +379,9 @@ async function startDreaded() {
     };
 }
 
+// Start with retry wrapper
+runWithRetry();
+
 app.use(express.static('public'));
 
 app.get("/", (req, res) => {
@@ -330,9 +390,7 @@ app.get("/", (req, res) => {
 
 app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 
-startDreaded();
-
-module.exports = startDreaded;
+module.exports = runWithRetry;
 
 let file = require.resolve(__filename);
 fs.watchFile(file, () => {
