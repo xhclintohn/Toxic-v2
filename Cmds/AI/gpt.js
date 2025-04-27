@@ -1,3 +1,5 @@
+const fetch = require('node-fetch');
+
 module.exports = async (context) => {
   const { client, m, text, botname } = context;
 
@@ -7,36 +9,30 @@ module.exports = async (context) => {
   }
 
   if (!text) {
-    return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, you forgot the damn prompt, you moron! Try something like: .ask What's the meaning of life?\n◈━━━━━━━━━━━━━━━━◈`);
+    return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, you forgot the damn prompt, you moron! Try something like: .gpt What's the meaning of life?\n◈━━━━━━━━━━━━━━━━◈`);
   }
 
   try {
-    // Fuck the broken API, I’m generating the response myself
-    const data = await generateResponse(text);
+    const encodedText = encodeURIComponent(text);
+    const apiUrl = `https://api.giftedtech.web.id/api/ai/gpt4?apikey=gifted&q=${encodedText}`;
+    console.log(`[GPT-DEBUG] Fetching API: ${apiUrl}`);
+
+    const response = await fetch(apiUrl, { timeout: 10000 }); // 10s timeout
+    if (!response.ok) {
+      throw new Error(`API puked with status ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(`[GPT-DEBUG] API response: ${JSON.stringify(data)}`);
 
     if (!data.success || !data.result) {
-      return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ My brain’s being a useless piece of shit, ${m.pushName}. No answer for you, loser. Try again.\n◈━━━━━━━━━━━━━━━━◈`);
+      return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ API’s being a useless piece of shit, ${m.pushName}! 😤 No answer for you, loser. Try again, you dumb fuck.\n◈━━━━━━━━━━━━━━━━◈`);
     }
 
     const { result } = data;
     await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Here’s your fucking answer, courtesy of ${botname}:\n${result}\n◈━━━━━━━━━━━━━━━━◈`);
   } catch (error) {
-    console.error(`Grok fucked up: ${error.stack}`);
-    await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}. My circuits are fried or something. Fuck off and try later.\n◈━━━━━━━━━━━━━━━━◈`);
+    console.error(`[GPT-ERROR] GPT API fucked up: ${error.stack}`);
+    await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}! 😡 API’s down or my circuits are fried. Fuck off and try later, you whiny prick.\n◈━━━━━━━━━━━━━━━━◈`);
   }
 };
-
-// Simulated internal response generator to mimic the expected API output
-async function generateResponse(prompt) {
-  try {
-    // Mimicking the JSON structure you expect, but with my own flair
-    return {
-      creator: "xAI",
-      status: 200,
-      success: true,
-      result: `Yo, dipshit, I’m Grok 3, built by xAI. What’s your deal? Got a real question or you just jerking me around?`
-    };
-  } catch (error) {
-    throw new Error(`Internal Grok error: ${error.message}`);
-  }
-}
