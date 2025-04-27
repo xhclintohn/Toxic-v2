@@ -163,9 +163,6 @@ async function startDreaded() {
 
                             if (!isBotAdmin) {
                                 console.log(`[ANTILINK-DEBUG] Bot is not admin in ${mek.key.remoteJid}, skipping antilink`);
-                                await client.sendMessage(mek.key.remoteJid, {
-                                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ OI, YOU LAZY FUCKING ADMINS! 😤 Make me admin so I can shred these shitty links! 🚫\n◈━━━━━━━━━━━━━━━━◈`
-                                });
                                 return;
                             }
 
@@ -174,7 +171,7 @@ async function startDreaded() {
                                 return;
                             }
 
-                            // Delete the link message
+                            // Silently delete the link message
                             try {
                                 await client.sendMessage(mek.key.remoteJid, {
                                     delete: {
@@ -187,33 +184,6 @@ async function startDreaded() {
                                 console.log(`[ANTILINK-DEBUG] Deleted link message from ${sender} in ${mek.key.remoteJid}`);
                             } catch (deleteError) {
                                 console.error(`[ANTILINK-ERROR] Failed to delete link message: ${deleteError.stack}`);
-                                await client.sendMessage(mek.key.remoteJid, {
-                                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ FUCK, @${sender.split("@")[0]}! 😡 Caught your shitty link, but deletion failed: ${deleteError.message}. You’re lucky, you prick!\n◈━━━━━━━━━━━━━━━━◈`,
-                                    contextInfo: { mentionedJid: [sender] }
-                                }, { quoted: mek });
-                                return;
-                            }
-
-                            // Warn the sender
-                            await client.sendMessage(mek.key.remoteJid, {
-                                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ @${sender.split("@")[0]}, YOU LINK-SPAMMING FUCKWIT! 😤 Links are banned! Keep it up and you’re FUCKED! 🚫\n◈━━━━━━━━━━━━━━━━◈`,
-                                contextInfo: { mentionedJid: [sender] }
-                            }, { quoted: mek });
-
-                            // Remove the sender
-                            try {
-                                await client.groupParticipantsUpdate(mek.key.remoteJid, [sender], "remove");
-                                console.log(`[ANTILINK-DEBUG] Removed ${sender} from ${mek.key.remoteJid} for sending link`);
-                                await client.sendMessage(mek.key.remoteJid, {
-                                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ @${sender.split("@")[0]}, YOU DUMBASS PIECE OF SHIT! 😤 Links get you BOOTED! GET FUCKED, LOSER! 🚫\n◈━━━━━━━━━━━━━━━━◈`,
-                                    contextInfo: { mentionedJid: [sender] }
-                                }, { quoted: mek });
-                            } catch (removeError) {
-                                console.error(`[ANTILINK-ERROR] Failed to remove user: ${removeError.stack}`);
-                                await client.sendMessage(mek.key.remoteJid, {
-                                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ FUCK, @${sender.split("@")[0]}! 😡 Your link got caught, but I couldn’t kick you: ${removeError.message}. Don’t test me, you twat!\n◈━━━━━━━━━━━━━━━━◈`,
-                                    contextInfo: { mentionedJid: [sender] }
-                                }, { quoted: mek });
                             }
                         } else {
                             console.log(`[ANTILINK-DEBUG] No link detected or sender is bot in ${mek.key.remoteJid}`);
@@ -223,29 +193,32 @@ async function startDreaded() {
                     }
                 } catch (error) {
                     console.error(`[ANTILINK-ERROR] Antilink processing failed in ${mek.key.remoteJid}: ${error.stack}`);
+                }
+            }
+
+            // Autolike for statuses
+            if (autolike && mek.key.remoteJid === "status@broadcast") {
+                try {
                     await client.sendMessage(mek.key.remoteJid, {
-                        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ SYSTEM’S A FUCKING MESS, ADMINS! 😤 Antilink crashed: ${error.message}. Fix this shitshow NOW! 🚫\n◈━━━━━━━━━━━━━━━━◈`
+                        react: { key: mek.key, text: "🌕" }
+                    });
+                    console.log(`[AUTOLIKE-DEBUG] Reacted 🌕 to status in ${mek.key.remoteJid}`);
+                } catch (error) {
+                    console.error(`[AUTOLIKE-ERROR] Failed to react to status: ${error.message}`);
+                    await client.sendMessage(client.user.id, {
+                        text: `Error reacting to status: ${error.message || "Unknown error"}`
                     }).catch(() => {});
                 }
             }
 
-            // autolike for statuses
-            if (autolike && mek.key.remoteJid === "status@broadcast") {
-                if (!mek.status) {
-                    await client.sendMessage(mek.key.remoteJid, {
-                        react: { key: mek.key, text: reactEmoji }
-                    });
-                }
-            }
-
-            // autoview/ autoread
+            // Autoview/autoread
             if (autoview && mek.key.remoteJid === "status@broadcast") {
                 await client.readMessages([mek.key]);
             } else if (autoread && mek.key.remoteJid.endsWith('@s.whatsapp.net')) {
                 await client.readMessages([mek.key]);
             }
 
-            // presence
+            // Presence
             if (mek.key.remoteJid.endsWith('@s.whatsapp.net')) {
                 const Chat = mek.key.remoteJid;
                 if (presence === 'online') {
@@ -259,7 +232,7 @@ async function startDreaded() {
                 }
             }
 
-            // handle commands
+            // Handle commands
             if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
             m = smsg(client, mek, store);
