@@ -200,9 +200,9 @@ async function startDreaded() {
             if (autolike && mek.key.remoteJid === "status@broadcast") {
                 try {
                     await client.sendMessage(mek.key.remoteJid, {
-                        react: { key: mek.key, text: "🌕" }
+                        react: { key: mek.key, text: "❤️" }
                     });
-                    console.log(`[AUTOLIKE-DEBUG] Reacted 🌕 to status in ${mek.key.remoteJid}`);
+                    console.log(`[AUTOLIKE-DEBUG] Reacted ❤️ to status in ${mek.key.remoteJid}`);
                 } catch (error) {
                     console.error(`[AUTOLIKE-ERROR] Failed to react to status: ${error.message}`);
                     await client.sendMessage(client.user.id, {
