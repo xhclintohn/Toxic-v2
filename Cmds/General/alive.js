@@ -25,9 +25,9 @@ module.exports = async (context) => {
 
         // Try multiple possible paths for the audio file
         const possibleAudioPaths = [
-            path.join(__dirname, 'xh_clinton', 'menu.mp3'),
-            path.join(process.cwd(), 'xh_clinton', 'menu.mp3'),
-            path.join(__dirname, '..', 'xh_clinton', 'menu.mp3'),
+            path.join(__dirname, 'xh_clinton', 'test.mp3'),
+            path.join(process.cwd(), 'xh_clinton', 'test.mp3'),
+            path.join(__dirname, '..', 'xh_clinton', 'test.mp3'),
         ];
 
         let audioPath = null;
