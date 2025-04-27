@@ -44,57 +44,9 @@ const groupEvents = require("../Handler/eventHandler");
 const groupEvents2 = require("../Handler/eventHandler2");
 const connectionHandler = require('../Handler/connectionHandler');
 
-// Neutered process.exit to prevent connectionHandler.js crashes
-process.exit = () => {
-    console.log(`[DEBUG] process.exit called, ignoring to keep process alive`);
-};
-
-// Block process.exit attempts
-process.on('exit', (code) => {
-    console.log(`[DEBUG] Attempted process.exit with code ${code}, blocking to keep process alive`);
-});
-
-// Catch uncaught exceptions
-process.on('uncaughtException', (err) => {
-    console.error(`[DEBUG] Uncaught exception: ${err.stack}`);
-});
-
-// Catch unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-    console.error(`[DEBUG] Unhandled rejection at ${promise}: ${reason.stack || reason}`);
-});
-
-// Retry wrapper to catch all failures
-async function runWithRetry() {
-    let retries = 0;
-    const maxRetries = 10;
-    console.log(`[DEBUG] Toxic-MD V3 Starting - Version 2025-04-27-fix7`);
-
-    while (true) {
-        try {
-            console.log(`[DEBUG] Starting Toxic-MD V3, attempt ${retries + 1}`);
-            await startDreaded();
-            console.log(`[DEBUG] Toxic-MD V3 running successfully`);
-            break;
-        } catch (err) {
-            console.error(`[DEBUG] StartDreaded failed: ${err.stack}`);
-            retries++;
-            if (retries >= maxRetries) {
-                console.error(`[DEBUG] Max retries reached, continuing to retry`);
-                retries = 0;
-            }
-            console.log(`[DEBUG] Retrying in 5 seconds...`);
-            await new Promise(resolve => setTimeout(resolve, 5000));
-        }
-    }
-}
-
 async function startDreaded() {
     let settingss = await getSettings();
-    if (!settingss) {
-        console.error(`[DEBUG] Failed to load settings, database issue`);
-        throw new Error("Database settings failure");
-    }
+    if (!settingss) return;
 
     const { autobio, mode, anticall } = settingss;
 
@@ -125,24 +77,14 @@ async function startDreaded() {
 
     store.bind(client.ev);
 
-    setInterval(() => {
-        try {
-            store.writeToFile("store.json");
-        } catch (err) {
-            console.error(`[DEBUG] Failed to write store.json: ${err}`);
-        }
-    }, 3000);
+    setInterval(() => { store.writeToFile("store.json"); }, 3000);
 
     if (autobio) {
         setInterval(() => {
             const date = new Date();
-            try {
-                client.updateProfileStatus(
-                    `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.`
-                );
-            } catch (err) {
-                console.error(`[DEBUG] Failed to update profile status: ${err}`);
-            }
+            client.updateProfileStatus(
+                `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.`
+            );
         }, 10 * 1000);
     }
 
@@ -170,16 +112,13 @@ async function startDreaded() {
                 await banUser(callerNumber);
             }
         } catch (error) {
-            console.error('[DEBUG] Error handling call:', error);
+            console.error('Error handling call:', error);
         }
     });
 
     client.ev.on("messages.upsert", async (chatUpdate) => {
         let settings = await getSettings();
-        if (!settings) {
-            console.error(`[DEBUG] Failed to load settings in messages.upsert, database issue`);
-            return;
-        }
+        if (!settings) return;
 
         const { autoread, autolike, autoview, presence, reactEmoji } = settings;
 
@@ -196,16 +135,8 @@ async function startDreaded() {
 
             if (isGroup) {
                 try {
-                    let antilink;
-                    try {
-                        const setting = await getGroupSetting(mek.key.remoteJid, "antilink");
-                        // Handle object or boolean
-                        antilink = typeof setting === 'object' && setting ? setting.antilink || setting.enabled || false : setting;
-                    } catch (dbError) {
-                        console.error(`[DEBUG] Failed to get antilink setting: ${dbError}`);
-                        antilink = false;
-                    }
-                    console.log(`[DEBUG] Antilink setting for ${mek.key.remoteJid}: ${JSON.stringify(antilink)}`);
+                    const antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
+                    console.log(`[DEBUG] Antilink setting for ${mek.key.remoteJid}: ${antilink}`);
 
                     // Robust link detection
                     const urlRegex = /(https?:\/\/|www\.|bit\.ly|t\.me|chat\.whatsapp\.com)[\S]+/i;
@@ -220,15 +151,10 @@ async function startDreaded() {
 
                     if ((antilink === true || antilink === 'true') && urlRegex.test(messageContent) && sender !== Myself) {
                         const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
-                        // Normalize admin IDs
-                        const groupAdmins = groupMetadata.participants
-                            .filter(p => p.admin != null)
-                            .map(p => p.id.replace(/:\d+@/, '@'));
-                        const normalizedMyself = Myself.replace(/:\d+@/, '@');
-                        const normalizedSender = sender.replace(/:\d+@/, '@');
-                        const isAdmin = groupAdmins.includes(normalizedSender);
-                        const isBotAdmin = groupAdmins.includes(normalizedMyself);
-                        console.log(`[DEBUG] Bot admin check: isBotAdmin=${isBotAdmin}, Myself=${Myself}, Normalized=${normalizedMyself}, Sender=${sender}, NormalizedSender=${normalizedSender}, Admins=${JSON.stringify(groupAdmins)}`);
+                        const groupAdmins = groupMetadata.participants.filter(p => p.admin != null).map(p => p.id);
+                        const isAdmin = groupAdmins.includes(sender);
+                        const isBotAdmin = groupAdmins.includes(Myself);
+                        console.log(`[DEBUG] Bot admin check: isBotAdmin=${isBotAdmin}, Myself=${Myself}, Admins=${JSON.stringify(groupAdmins)}`);
 
                         if (!isBotAdmin) {
                             console.log(`[DEBUG] Bot is not admin in ${mek.key.remoteJid}, skipping antilink`);
@@ -272,7 +198,7 @@ async function startDreaded() {
                             console.log(`[DEBUG] Sender ${sender} is admin, ignoring link`);
                         }
                     } else if (antilink !== true && antilink !== 'true') {
-                        console.log(`[DEBUG] Antilink disabled or invalid for ${mek.key.remoteJid}: ${JSON.stringify(antilink)}`);
+                        console.log(`[DEBUG] Antilink disabled or invalid for ${mek.key.remoteJid}: ${antilink}`);
                     }
                 } catch (error) {
                     console.error(`[DEBUG] Antilink error in ${mek.key.remoteJid}: ${error.stack}`);
@@ -316,64 +242,64 @@ async function startDreaded() {
             if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
             m = smsg(client, mek, store);
-            try {
-                require("./toxic")(client, m, chatUpdate, store);
-            } catch (err) {
-                console.error(`[DEBUG] Failed to load ./toxic in messages.upsert: ${err.stack}`);
-            }
+            require("./toxic")(client, m, chatUpdate, store);
         } catch (err) {
-            console.error(`[DEBUG] Messages upsert error: ${err.stack}`);
+            console.log(err);
         }
     });
 
-    // Connection update handler
+    // Handle error
+    const unhandledRejections = new Map();
+    process.on("unhandledRejection", (reason, promise) => {
+        unhandledRejections.set(promise, reason);
+        console.log("Unhandled Rejection at:", promise, "reason:", reason);
+    });
+    process.on("rejectionHandled", (promise) => {
+        unhandledRejections.delete(promise);
+    });
+    process.on("Something went wrong", function (err) {
+        console.log("Caught exception: ", err);
+    });
+
+    // Setting
+    client.decodeJid = (jid) => {
+        if (!jid) return jid;
+        if (/:\d+@/gi.test(jid)) {
+            let decode = jidDecode(jid) || {};
+            return (decode.user && decode.server && decode.user + "@" + decode.server) || jid;
+        } else return jid;
+    };
+
+    client.getName = (jid, withoutContact = false) => {
+        id = client.decodeJid(jid);
+        withoutContact = client.withoutContact || withoutContact;
+        let v;
+        if (id.endsWith("@g.us"))
+            return new Promise(async (resolve) => {
+                v = store.contacts[id] || {};
+                if (!(v.name || v.subject)) v = client.groupMetadata(id) || {};
+                resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
+            });
+        else
+            v = id === "0@s.whatsapp.net"
+                ? { id, name: "WhatsApp" }
+                : id === client.decodeJid(client.user.id)
+                ? client.user
+                : store.contacts[id] || {};
+        return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
+    };
+
+    client.public = true;
+
+    client.serializeM = (m) => smsg(client, m, store);
+
+    client.ev.on("group-participants.update", async (m) => {
+        groupEvents(client, m);
+        groupEvents2(client, m);
+    });
+
     client.ev.on("connection.update", async (update) => {
-        const { connection, lastDisconnect } = update;
-        console.log(`[DEBUG] Connection update: ${connection}, Last disconnect: ${lastDisconnect?.error?.message || 'None'}`);
-
-        if (connection === "close") {
-            const reason = lastDisconnect?.error?.output?.statusCode;
-            console.log(`[DEBUG] Disconnected with reason: ${DisconnectReason[reason] || reason}`);
-
-            if (reason === DisconnectReason.connectionReplaced) {
-                console.log(`[DEBUG] Connection replaced, delaying reconnect...`);
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                throw new Error("Connection replaced, trigger retry");
-            } else if (reason === DisconnectReason.loggedOut) {
-                console.log(`[DEBUG] Logged out, clearing session...`);
-                await client.logout();
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                throw new Error("Logged out, trigger retry");
-            } else if (reason === DisconnectReason.restartRequired) {
-                console.log(`[DEBUG] Restart required, restarting...`);
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                throw new Error("Restart required, trigger retry");
-            } else if (reason === DisconnectReason.badSession) {
-                console.log(`[DEBUG] Bad session, clearing session...`);
-                await client.logout();
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                throw new Error("Bad session, trigger retry");
-            } else if (reason === DisconnectReason.timedOut) {
-                console.log(`[DEBUG] Timed out, retrying...`);
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                throw new Error("Timed out, trigger retry");
-            } else {
-                console.log(`[DEBUG] Unknown disconnect, retrying...`);
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                throw new Error("Unknown disconnect, trigger retry");
-            }
-        } else if (connection === "open") {
-            console.log(`[DEBUG] Connection established, Toxic-MD V3 online`);
-        } else {
-            console.log(`[DEBUG] Connection state: ${connection}`);
-        }
-
-        try {
-            await connectionHandler(client, update, startDreaded);
-        } catch (err) {
-            console.error(`[DEBUG] Connection handler error: ${err.stack}`);
-            throw new Error("Connection handler failed, trigger retry");
-        }
+        await connectionHandler(client, update, startDreaded);
     });
 
     client.ev.on("creds.update", saveCreds);
@@ -407,16 +333,6 @@ async function startDreaded() {
     };
 }
 
-// Mock toxic module for eventHandler.js
-module.exports.toxic = {
-    handle: (client, m, chatUpdate, store) => {
-        console.log(`[DEBUG] Mock toxic handler called`);
-    }
-};
-
-// Start with retry wrapper
-runWithRetry();
-
 app.use(express.static('public'));
 
 app.get("/", (req, res) => {
@@ -425,7 +341,9 @@ app.get("/", (req, res) => {
 
 app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 
-module.exports = runWithRetry;
+startDreaded();
+
+module.exports = startDreaded;
 
 let file = require.resolve(__filename);
 fs.watchFile(file, () => {
