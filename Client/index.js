@@ -29,7 +29,7 @@ const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
-const { getSettings, getBannedUsers, banUser, getGroupSetting } = require("../Database/config");
+const { getSettings, getBannedUsers, banUser } = require("../Database/config");
 
 const { botname } = require('../Env/settings');
 const { DateTime } = require('luxon');
@@ -134,83 +134,50 @@ async function startDreaded() {
 
             if (isGroup) {
                 try {
-                    const antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
-                    console.log(`[ANTILINK-DEBUG] Antilink: ${antilink} for ${mek.key.remoteJid}`);
+                    // Robust link detection
+                    const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
+                    const messageContent = (
+                        mek.message.conversation ||
+                        mek.message.extendedTextMessage?.text ||
+                        mek.message.imageMessage?.caption ||
+                        mek.message.videoMessage?.caption ||
+                        mek.message.documentMessage?.caption ||
+                        mek.message.buttonsResponseMessage?.selectedButtonId ||
+                        mek.message.templateButtonReplyMessage?.selectedId ||
+                        ""
+                    ).toLowerCase();
 
-                    if (antilink === 'true') {
-                        // Robust link detection
-                        const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
-                        const messageContent = (
-                            mek.message.conversation ||
-                            mek.message.extendedTextMessage?.text ||
-                            mek.message.imageMessage?.caption ||
-                            mek.message.videoMessage?.caption ||
-                            mek.message.documentMessage?.caption ||
-                            mek.message.buttonsResponseMessage?.selectedButtonId ||
-                            mek.message.templateButtonReplyMessage?.selectedId ||
-                            ""
-                        ).toLowerCase();
+                    if (urlRegex.test(messageContent)) {
+                        const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
+                        const groupAdmins = groupMetadata.participants.filter(p => p.admin != null).map(p => p.id);
+                        const isBotAdmin = groupAdmins.includes(Myself);
 
-                        if (urlRegex.test(messageContent) && sender !== Myself) {
-                            console.log(`[ANTILINK-DEBUG] Link detected from ${sender} in ${mek.key.remoteJid}`);
-                            const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
-                            const groupAdmins = groupMetadata.participants.filter(p => p.admin != null).map(p => p.id);
-                            const isAdmin = groupAdmins.includes(sender);
-                            const isBotAdmin = groupAdmins.includes(Myself);
-
-                            if (!isBotAdmin) {
-                                console.log(`[ANTILINK-DEBUG] Skipped: Bot is not admin in ${mek.key.remoteJid}`);
-                                return;
-                            }
-
-                            if (isAdmin) {
-                                console.log(`[ANTILINK-DEBUG] Skipped: Sender ${sender} is admin`);
-                                return;
-                            }
-
+                        if (isBotAdmin) {
                             // Silently delete the link message
-                            try {
-                                const deleteResult = await client.sendMessage(mek.key.remoteJid, {
-                                    delete: {
-                                        remoteJid: mek.key.remoteJid,
-                                        fromMe: false,
-                                        id: mek.key.id,
-                                        participant: sender
-                                    }
-                                });
-                                console.log(`[ANTILINK-DEBUG] Deleted link from ${sender} in ${mek.key.remoteJid}`);
-                            } catch (deleteError) {
-                                console.error(`[ANTILINK-ERROR] Failed to delete link: ${deleteError.stack}`);
-                            }
+                            await client.sendMessage(mek.key.remoteJid, {
+                                delete: {
+                                    remoteJid: mek.key.remoteJid,
+                                    fromMe: false,
+                                    id: mek.key.id,
+                                    participant: sender
+                                }
+                            });
                         }
-                    } else {
-                        console.log(`[ANTILINK-DEBUG] Skipped: Antilink is off for ${mek.key.remoteJid}`);
                     }
                 } catch (error) {
-                    console.error(`[ANTILINK-ERROR] Antilink processing failed: ${error.stack}`);
+                    // Silent error handling
                 }
             }
 
-            // Autolike for statuses with retries
+            // Autolike for statuses
             if (autolike && mek.key.remoteJid === "status@broadcast" && mek.key.id) {
-                let retries = 3;
-                while (retries > 0) {
-                    try {
-                        const reactResult = await client.sendMessage(mek.key.remoteJid, {
-                            react: { key: mek.key, text: "🌕" }
-                        });
-                        console.log(`[AUTOLIKE-DEBUG] Reacted 🌕 to status in ${mek.key.remoteJid}`);
-                        break;
-                    } catch (error) {
-                        retries--;
-                        console.error(`[AUTOLIKE-ERROR] Attempt ${4 - retries}/3 failed: ${error.message}`);
-                        if (retries === 0) {
-                            await client.sendMessage(client.user.id, {
-                                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Error reacting to status: ${error.message || "Unknown error"}\n◈━━━━━━━━━━━━━━━━◈`
-                            }).catch(() => {});
-                        }
-                        await sleep(1000); // Wait 1s before retry
-                    }
+                try {
+                    await client.sendMessage(mek.key.remoteJid, {
+                        react: { key: mek.key, text: "❤️" }
+                    });
+                    console.log(`[AUTOLIKE-DEBUG] Reacted ❤️ to status in ${mek.key.remoteJid}`);
+                } catch (error) {
+                    // Silent error handling
                 }
             }
 
@@ -241,7 +208,7 @@ async function startDreaded() {
             m = smsg(client, mek, store);
             require("./toxic")(client, m, chatUpdate, store);
         } catch (err) {
-            console.error(`[ERROR] Message processing failed: ${err.stack}`);
+            // Silent error handling
         }
     });
 
