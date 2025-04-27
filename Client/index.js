@@ -128,7 +128,6 @@ async function startDreaded() {
 
             mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
-            const messageContent = mek.message.conversation || mek.message.extendedTextMessage?.text || "";
             const isGroup = mek.key.remoteJid.endsWith("@g.us");
             const sender = mek.key.participant || mek.key.remoteJid;
             const Myself = await client.decodeJid(client.user.id);
@@ -136,26 +135,31 @@ async function startDreaded() {
             if (isGroup) {
                 try {
                     const antilink = await getGroupSetting(mek.key.remoteJid, "antilink");
-                    console.log(`[ANTILINK-DEBUG] Antilink setting for ${mek.key.remoteJid}: ${antilink}`);
+                    console.log(`[ANTILINK-DEBUG] Antilink setting for ${mek.key.remoteJid}: ${antilink} (type: ${typeof antilink})`);
 
                     // Robust link detection
-                    const urlRegex = /(https?:\/\/|www\.|bit\.ly|t\.me|chat\.whatsapp\.com)[\S]+/i;
+                    const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
                     const messageContent = (
                         mek.message.conversation ||
                         mek.message.extendedTextMessage?.text ||
                         mek.message.imageMessage?.caption ||
                         mek.message.videoMessage?.caption ||
                         mek.message.documentMessage?.caption ||
+                        mek.message.buttonsResponseMessage?.selectedButtonId ||
+                        mek.message.templateButtonReplyMessage?.selectedId ||
                         ""
                     ).toLowerCase();
 
+                    console.log(`[ANTILINK-DEBUG] Message content: ${messageContent}, Link detected: ${urlRegex.test(messageContent)}`);
+
                     if (antilink === true) {
                         if (urlRegex.test(messageContent) && sender !== Myself) {
+                            console.log(`[ANTILINK-DEBUG] Processing link from ${sender} in ${mek.key.remoteJid}`);
                             const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
                             const groupAdmins = groupMetadata.participants.filter(p => p.admin != null).map(p => p.id);
                             const isAdmin = groupAdmins.includes(sender);
                             const isBotAdmin = groupAdmins.includes(Myself);
-                            console.log(`[ANTILINK-DEBUG] Bot admin check: isBotAdmin=${isBotAdmin}, Myself=${Myself}, Admins=${JSON.stringify(groupAdmins)}`);
+                            console.log(`[ANTILINK-DEBUG] Bot admin: ${isBotAdmin}, Sender admin: ${isAdmin}, Admins: ${JSON.stringify(groupAdmins)}`);
 
                             if (!isBotAdmin) {
                                 console.log(`[ANTILINK-DEBUG] Bot is not admin in ${mek.key.remoteJid}, skipping antilink`);
@@ -211,6 +215,8 @@ async function startDreaded() {
                                     contextInfo: { mentionedJid: [sender] }
                                 }, { quoted: mek });
                             }
+                        } else {
+                            console.log(`[ANTILINK-DEBUG] No link detected or sender is bot in ${mek.key.remoteJid}`);
                         }
                     } else {
                         console.log(`[ANTILINK-DEBUG] Antilink is off for ${mek.key.remoteJid}: ${antilink}, ignoring link`);
