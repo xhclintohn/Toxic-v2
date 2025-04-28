@@ -4,10 +4,10 @@ const path = require('path');
 
 module.exports = {
   name: 'menu',
-  aliases: ['help', 'h', 'list'],
+  aliases: ['help', 'commands', 'list'],
   description: 'Displays the bot command menu with a voice note',
   run: async (context) => {
-    const { client, m, totalCommands, mode, prefix, pict, botname } = context;
+    const { client, m, totalCommands, prefix, pict, botname } = context;
 
     if (!botname) {
       console.error(`Botname not set, you useless fuck.`);
@@ -29,18 +29,18 @@ module.exports = {
       }
 
       const categories = [
-        { name: 'General', emoji: '📜' },
-        { name: 'Settings', emoji: '🛠️' },
-        { name: 'Owner', emoji: '👑' },
-        { name: 'Heroku', emoji: '☁️' },
-        { name: 'Wa-Privacy', emoji: '🔒' },
-        { name: 'Groups', emoji: '👥' },
-        { name: 'AI', emoji: '🧠' },
-        { name: 'Media', emoji: '🎬' },
-        { name: 'Editting', emoji: '✂️' },
-        { name: 'Logo', emoji: '🎨' },
-        { name: '+18', emoji: '🔞' },
-        { name: 'Utils', emoji: '🔧' }
+        { name: 'General', emoji: '📜', commands: ['ping', 'menu'] },
+        { name: 'Settings', emoji: '🛠️', commands: ['settings'] },
+        { name: 'Owner', emoji: '👑', commands: [] },
+        { name: 'Heroku', emoji: '☁️', commands: [] },
+        { name: 'Wa-Privacy', emoji: '🔒', commands: [] },
+        { name: 'Groups', emoji: '👥', commands: ['del'] },
+        { name: 'AI', emoji: '🧠', commands: [] },
+        { name: 'Media', emoji: '🎬', commands: ['video'] },
+        { name: 'Editting', emoji: '✂️', commands: [] },
+        { name: 'Logo', emoji: '🎨', commands: [] },
+        { name: '+18', emoji: '🔞', commands: ['xvideo'] },
+        { name: 'Utils', emoji: '🔧', commands: ['gaycheck'] }
       ];
 
       const getGreeting = () => {
@@ -51,43 +51,98 @@ module.exports = {
         return 'Good Night, moonwalker! 🌌';
       };
 
-      // Build menu
-      let menuText = `◈━━━━━━━━━━━━━━━━◈\n*Welcome to ${botname}!* 🌟\n\n`;
-      menuText += `${getGreeting()}, @${userNumber}!\n`;
-      menuText += `Explore ${totalCommands} commands with *${prefix}* (e.g., *${prefix}video music*).\n`;
-      menuText += `Don’t mess it up! 😈\n`;
-      menuText += `\n*📖 Command Menu*\n`;
+      // Load commands from Cmds folder
+      const cmdsPath = path.join(__dirname, '..', 'Cmds');
+      let allCommands = [];
 
-      for (const category of categories) {
-        const categoryPath = path.join(__dirname, '..', 'Cmds', category.name);
-        let commands = [];
-
-        // Check if category folder exists
-        try {
-          if (fs.existsSync(categoryPath)) {
-            commands = fs.readdirSync(categoryPath)
-              .filter(file => file.endsWith('.js'))
-              .map(file => {
+      try {
+        if (fs.existsSync(cmdsPath)) {
+          console.log(`Scanning Cmds folder: ${cmdsPath}`);
+          allCommands = fs.readdirSync(cmdsPath)
+            .filter(file => file.endsWith('.js'))
+            .map(file => {
+              try {
+                const commandModule = require(path.join(cmdsPath, file));
                 const commandName = file.replace('.js', '');
-                const commandModule = require(path.join(categoryPath, file));
+                console.log(`Loaded command: ${commandName}`);
                 return {
                   name: commandName,
                   description: commandModule.description || 'No description available'
                 };
-              })
-              .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+              } catch (error) {
+                console.error(`Error loading command ${file}: ${error.message}`);
+                return null;
+              }
+            })
+            .filter(cmd => cmd !== null)
+            .sort((a, b) => a.name.localeCompare(b.name));
+        } else {
+          console.error(`Cmds folder not found at: ${cmdsPath}`);
+        }
+      } catch (error) {
+        console.error(`Error scanning Cmds folder: ${error.message}`);
+      }
+
+      // Build menu
+      let menuText = `◈━━━━━━━━━━━━━━━━◈\n*Welcome to ${botname}!* 🌟\n\n`;
+      menuText += `${getGreeting()}, @${userNumber}!\n`;
+      menuText += `Explore ${totalCommands || allCommands.length} commands with *${prefix}* (e.g., *${prefix}video music*).\n`;
+      menuText += `Don’t mess it up! 😈\n`;
+      menuText += `\n*📖 Command Menu*\n`;
+
+      // Map commands to categories
+      for (const category of categories) {
+        let commands = [];
+
+        // Include predefined commands
+        commands = category.commands
+          .map(cmdName => {
+            const cmd = allCommands.find(c => c.name === cmdName);
+            return cmd ? { name: cmd.name, description: cmd.description } : { name: cmdName, description: 'No description available' };
+          });
+
+        // Add commands from Cmds folder that match category
+        const folderPath = path.join(cmdsPath, category.name);
+        if (fs.existsSync(folderPath)) {
+          try {
+            const folderCommands = fs.readdirSync(folderPath)
+              .filter(file => file.endsWith('.js'))
+              .map(file => {
+                const commandName = file.replace('.js', '');
+                const commandModule = require(path.join(folderPath, file));
+                console.log(`Loaded ${category.name} command: ${commandName}`);
+                return {
+                  name: commandName,
+                  description: commandModule.description || 'No description available'
+                };
+              });
+            commands = [...commands, ...folderCommands];
+          } catch (error) {
+            console.error(`Error reading category folder ${category.name}: ${error.message}`);
           }
-        } catch (error) {
-          console.error(`Error reading category ${category.name}: ${error.message}`);
-          continue;
         }
 
-        if (commands.length === 0) continue;
+        // Sort and deduplicate commands
+        commands = [...new Set(commands.map(c => c.name))].map(name => commands.find(c => c.name === name))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        if (commands.length === 0) {
+          console.log(`No commands for category: ${category.name}`);
+          continue;
+        }
 
         menuText += `\n${category.emoji} *${category.name}*\n`;
         for (const cmd of commands) {
           menuText += `  • ${prefix}${cmd.name}: ${cmd.description}\n`;
         }
+      }
+
+      // Fallback if no commands loaded
+      if (!menuText.includes('•')) {
+        menuText += `\nNo commands loaded, you slacker! Try these:\n`;
+        menuText += `  • ${prefix}ping: Check bot response time\n`;
+        menuText += `  • ${prefix}video: Download a YouTube video\n`;
+        menuText += `  • ${prefix}gaycheck: Test your vibe 😈\n`;
       }
 
       menuText += `\n◈━━━━━━━━━━━━━━━━◈\n`;
