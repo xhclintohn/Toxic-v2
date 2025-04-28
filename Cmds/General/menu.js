@@ -7,7 +7,7 @@ module.exports = {
   aliases: ['help', 'commands', 'list'],
   description: 'Displays the bot command menu with a voice note',
   run: async (context) => {
-    const { client, m, totalCommands, prefix, pict, botname } = context;
+    const { client, m, totalCommands, prefix, pict, botname, text } = context;
 
     if (!botname) {
       console.error(`Botname not set, you useless fuck.`);
@@ -24,23 +24,23 @@ module.exports = {
       const userNumber = m.sender.split('@')[0];
 
       // Handle extra text
-      if (context.text) {
+      if (text) {
         return m.reply(`◈━━━━━━━━━━━━━━━━◈\nNo extra nonsense needed, @${userNumber}! Just use ${prefix}menu, you slacker. 😈\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
       }
 
       const categories = [
-        { name: 'General', emoji: '📜', commands: ['ping', 'menu'] },
-        { name: 'Settings', emoji: '🛠️', commands: ['settings'] },
-        { name: 'Owner', emoji: '👑', commands: [] },
-        { name: 'Heroku', emoji: '☁️', commands: [] },
-        { name: 'Wa-Privacy', emoji: '🔒', commands: [] },
-        { name: 'Groups', emoji: '👥', commands: ['del'] },
-        { name: 'AI', emoji: '🧠', commands: [] },
-        { name: 'Media', emoji: '🎬', commands: ['video'] },
-        { name: 'Editting', emoji: '✂️', commands: [] },
-        { name: 'Logo', emoji: '🎨', commands: [] },
-        { name: '+18', emoji: '🔞', commands: ['xvideo'] },
-        { name: 'Utils', emoji: '🔧', commands: ['gaycheck'] }
+        { name: 'General', emoji: '📜' },
+        { name: 'Settings', emoji: '🛠️' },
+        { name: 'Owner', emoji: '👑' },
+        { name: 'Heroku', emoji: '☁️' },
+        { name: 'Wa-Privacy', emoji: '🔒' },
+        { name: 'Groups', emoji: '👥' },
+        { name: 'AI', emoji: '🧠' },
+        { name: 'Media', emoji: '🎬' },
+        { name: 'Editting', emoji: '✂️' },
+        { name: 'Logo', emoji: '🎨' },
+        { name: '+18', emoji: '🔞' },
+        { name: 'Utils', emoji: '🔧' }
       ];
 
       const getGreeting = () => {
@@ -51,98 +51,46 @@ module.exports = {
         return 'Good Night, moonwalker! 🌌';
       };
 
-      // Load commands from Cmds folder
-      const cmdsPath = path.join(__dirname, '..', 'Cmds');
-      let allCommands = [];
-
-      try {
-        if (fs.existsSync(cmdsPath)) {
-          console.log(`Scanning Cmds folder: ${cmdsPath}`);
-          allCommands = fs.readdirSync(cmdsPath)
-            .filter(file => file.endsWith('.js'))
-            .map(file => {
-              try {
-                const commandModule = require(path.join(cmdsPath, file));
-                const commandName = file.replace('.js', '');
-                console.log(`Loaded command: ${commandName}`);
-                return {
-                  name: commandName,
-                  description: commandModule.description || 'No description available'
-                };
-              } catch (error) {
-                console.error(`Error loading command ${file}: ${error.message}`);
-                return null;
-              }
-            })
-            .filter(cmd => cmd !== null)
-            .sort((a, b) => a.name.localeCompare(b.name));
-        } else {
-          console.error(`Cmds folder not found at: ${cmdsPath}`);
-        }
-      } catch (error) {
-        console.error(`Error scanning Cmds folder: ${error.message}`);
-      }
+      const toFancyFont = (text, isUpperCase = false) => {
+        const fonts = {
+          'A': '𝐀', 'B': '𝐁', 'C': '𝐂', 'D': '𝐃', 'E': '𝐄', 'F': '𝐅', 'G': '𝐆', 'H': '𝐇', 'I': '𝐈', 'J': '𝐉', 'K': '𝐊', 'L': '𝐋', 'M': '𝐌',
+          'N': '𝐍', 'O': '𝐎', 'P': '𝐏', 'Q': '𝐐', 'R': '𝐑', 'S': '𝐒', 'T': '𝐓', 'U': '𝐔', 'V': '𝐕', 'W': '𝐖', 'X': '𝐗', 'Y': '𝐘', 'Z': '𝐙',
+          'a': '𝐚', 'b': '𝐛', 'c': '𝐜', 'd': '𝐝', 'e': '𝐞', 'f': '𝐟', 'g': '𝐠', 'h': '𝐡', 'i': '𝐢', 'j': '𝐣', 'k': '𝐤', 'l': '𝐥', 'm': '𝐦',
+          'n': '𝐧', 'o': '𝐨', 'p': '𝐩', 'q': '𝐪', 'r': '𝐫', 's': '𝐬', 't': '𝐭', 'u': '𝐮', 'v': '𝐯', 'w': '𝐰', 'x': '𝐱', 'y': '𝐲', 'z': '𝐳'
+        };
+        return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
+          .split('')
+          .map(char => fonts[char] || char)
+          .join('');
+      };
 
       // Build menu
       let menuText = `◈━━━━━━━━━━━━━━━━◈\n*Welcome to ${botname}!* 🌟\n\n`;
       menuText += `${getGreeting()}, @${userNumber}!\n`;
-      menuText += `Explore ${totalCommands || allCommands.length} commands with *${prefix}* (e.g., *${prefix}video music*).\n`;
+      menuText += `Explore ${totalCommands || 'many'} commands with *${prefix}* (e.g., *${prefix}video music*).\n`;
       menuText += `Don’t mess it up! 😈\n`;
       menuText += `\n*📖 Command Menu*\n`;
 
-      // Map commands to categories
       for (const category of categories) {
-        let commands = [];
+        const commandFiles = fs.readdirSync(`./Cmds/${category.name}`).filter(file => file.endsWith('.js'));
+        if (commandFiles.length === 0 && category.name !== '+18') continue;
 
-        // Include predefined commands
-        commands = category.commands
-          .map(cmdName => {
-            const cmd = allCommands.find(c => c.name === cmdName);
-            return cmd ? { name: cmd.name, description: cmd.description } : { name: cmdName, description: 'No description available' };
-          });
+        const fancyCategory = toFancyFont(category.name, true);
+        menuText += `\n${category.emoji} *${fancyCategory}*\n`;
 
-        // Add commands from Cmds folder that match category
-        const folderPath = path.join(cmdsPath, category.name);
-        if (fs.existsSync(folderPath)) {
-          try {
-            const folderCommands = fs.readdirSync(folderPath)
-              .filter(file => file.endsWith('.js'))
-              .map(file => {
-                const commandName = file.replace('.js', '');
-                const commandModule = require(path.join(folderPath, file));
-                console.log(`Loaded ${category.name} command: ${commandName}`);
-                return {
-                  name: commandName,
-                  description: commandModule.description || 'No description available'
-                };
-              });
-            commands = [...commands, ...folderCommands];
-          } catch (error) {
-            console.error(`Error reading category folder ${category.name}: ${error.message}`);
+        if (category.name === '+18') {
+          const plus18Commands = ['xvideo'];
+          for (const cmd of plus18Commands) {
+            const fancyCommandName = toFancyFont(cmd);
+            menuText += `  • *${fancyCommandName}*\n`;
           }
         }
 
-        // Sort and deduplicate commands
-        commands = [...new Set(commands.map(c => c.name))].map(name => commands.find(c => c.name === name))
-          .sort((a, b) => a.name.localeCompare(b.name));
-
-        if (commands.length === 0) {
-          console.log(`No commands for category: ${category.name}`);
-          continue;
+        for (const file of commandFiles) {
+          const commandName = file.replace('.js', '');
+          const fancyCommandName = toFancyFont(commandName);
+          menuText += `  • *${fancyCommandName}*\n`;
         }
-
-        menuText += `\n${category.emoji} *${category.name}*\n`;
-        for (const cmd of commands) {
-          menuText += `  • ${prefix}${cmd.name}: ${cmd.description}\n`;
-        }
-      }
-
-      // Fallback if no commands loaded
-      if (!menuText.includes('•')) {
-        menuText += `\nNo commands loaded, you slacker! Try these:\n`;
-        menuText += `  • ${prefix}ping: Check bot response time\n`;
-        menuText += `  • ${prefix}video: Download a YouTube video\n`;
-        menuText += `  • ${prefix}gaycheck: Test your vibe 😈\n`;
       }
 
       menuText += `\n◈━━━━━━━━━━━━━━━━◈\n`;
