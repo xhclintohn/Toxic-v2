@@ -115,26 +115,35 @@ const connectionHandler = async (client, update, startBot) => {
           const welcomeMsg = `◈━━━━━━━━━━━━━━━━◈
 │❒ ${getGreeting()}
 │❒ Yo, you're plugged into *${botname}*! 📡
-│❒ 
-│❒ *Bot Info*
+
+     *Bot Info*
+
 │❒ ✨ *Name*: ${botname}
+
 │❒ 🔧 *Mode*: ${settings.mode}
+
 │❒ ➡️ *Prefix*: ${settings.prefix}
+
 │❒ 📋 *Commands*: ${totalCommands}
+
 │❒ 🕒 *Time*: ${getTime()}
+
 │❒ 💾 *Database*: Postgres SQL
+
 │❒ 📚 *Library*: Baileys
-│❒ 
+
 │❒ *New Connection*
 │❒ 😎 You've been added as a *sudo user*! This gives you full control.
+
 │❒ 🔐 Use *${settings.prefix}settings* to tweak the bot.
 │❒ 📖 Check *${settings.prefix}menu* for all commands.
-│❒ 
-│❒ *Quick Start*
-│❒ 🚀 Try *${settings.prefix}video music* for a random YouTube video.
-│❒ 🛠️ Enable features with *${settings.prefix}settings*.
-│❒ 
-│❒ *Credits*
+
+       *Quick Start*
+
+│❒ 🛠️ Enable or modify features with *${settings.prefix}settings*.
+
+     *Credits*
+
 │❒ 🗿 Powered by *xh_clinton*
 │❒ 📞 Developed by xh_clinton (${defaultSudoNumber})
 ◈━━━━━━━━━━━━━━━━◈`;
@@ -148,22 +157,32 @@ const connectionHandler = async (client, update, startBot) => {
         const welcomeBackMsg = `◈━━━━━━━━━━━━━━━━◈
 │❒ ${getGreeting()}
 │❒ Welcome back to *${botname}*! 📡
-│❒ 
+
 │❒ *Bot Info*
+
 │❒ ✨ *Name*: ${botname}
+
 │❒ 🔧 *Mode*: ${settings.mode}
+
 │❒ ➡️ *Prefix*: ${settings.prefix}
+
 │❒ 📋 *Commands*: ${totalCommands}
+
 │❒ 🕒 *Time*: ${getTime()}
+
 │❒ 💾 *Database*: Postgres SQL
+
 │❒ 📚 *Library*: Baileys
-│❒ 
-│❒ *Quick Start*
+
+    *Quick Start*
+
 │❒ 📖 *${settings.prefix}menu* for all commands.
-│❒ 🚀 *${settings.prefix}video music* for a random video.
+
+
 │❒ 🛠️ *${settings.prefix}settings* to customize.
-│❒ 
-│❒ *Credits*
+
+      *Credits*
+
 │❒ 🗿 Powered by *xh_clinton*
 │❒ 📞 Developed by xh_clinton (${defaultSudoNumber})
 ◈━━━━━━━━━━━━━━━━◈`;
