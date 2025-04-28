@@ -48,7 +48,7 @@ module.exports = {
         const gifUrl = results[i].media_formats.gif.url;
 
         const stickerMess = new Sticker(gifUrl, {
-          pack: v,
+          pack: botname,
           author: '𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
           type: StickerTypes.FULL,
           categories: ['🤩', '🎉'],
