@@ -124,15 +124,16 @@ async function startDreaded() {
 
         try {
             let mek = chatUpdate.messages[0];
-            if (!mek.message || !mek.key) return;
+            if (!mek || !mek.key || !mek.message) return;
 
             mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
-            const isGroup = mek.key.remoteJid.endsWith("@g.us");
-            const sender = mek.key.participant || mek.key.remoteJid;
-            const Myself = await client.decodeJid(client.user.id);
+            const remoteJid = mek.key.remoteJid;
+            const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
+            const Myself = client.decodeJid(client.user.id);
 
-            if (isGroup) {
+            // Antilink logic
+            if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
                 try {
                     // Robust link detection
                     const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
@@ -147,50 +148,56 @@ async function startDreaded() {
                         ""
                     ).toLowerCase();
 
+                    // Skip if sender is the bot
+                    if (sender === Myself) return;
+
                     if (urlRegex.test(messageContent)) {
-                        const groupMetadata = await client.groupMetadata(mek.key.remoteJid);
-                        const groupAdmins = groupMetadata.participants.filter(p => p.admin != null).map(p => p.id);
+                        const groupMetadata = await client.groupMetadata(remoteJid);
+                        const groupAdmins = groupMetadata.participants
+                            .filter(p => p.admin != null)
+                            .map(p => client.decodeJid(p.id));
                         const isBotAdmin = groupAdmins.includes(Myself);
 
                         if (isBotAdmin) {
                             // Silently delete the link message
-                            await client.sendMessage(mek.key.remoteJid, {
+                            await client.sendMessage(remoteJid, {
                                 delete: {
-                                    remoteJid: mek.key.remoteJid,
+                                    remoteJid: remoteJid,
                                     fromMe: false,
                                     id: mek.key.id,
                                     participant: sender
                                 }
                             });
+                            console.log(`[ANTILINK] Deleted link from ${sender} in ${remoteJid}`);
                         }
                     }
                 } catch (error) {
-                    // Silent error handling
+                    console.error(`[ANTILINK] Error processing link: ${error.message}`);
                 }
             }
 
             // Autolike for statuses
-            if (autolike && mek.key.remoteJid === "status@broadcast" && mek.key.id) {
+            if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
                 try {
-                    await client.sendMessage(mek.key.remoteJid, {
+                    await client.sendMessage(remoteJid, {
                         react: { key: mek.key, text: "❤️" }
                     });
-                    console.log(`[AUTOLIKE-DEBUG] Reacted ❤️ to status in ${mek.key.remoteJid}`);
+                    console.log(`[AUTOLIKE-DEBUG] Reacted ❤️ to status in ${remoteJid}`);
                 } catch (error) {
                     // Silent error handling
                 }
             }
 
             // Autoview/autoread
-            if (autoview && mek.key.remoteJid === "status@broadcast") {
+            if (autoview && remoteJid === "status@broadcast") {
                 await client.readMessages([mek.key]);
-            } else if (autoread && mek.key.remoteJid.endsWith('@s.whatsapp.net')) {
+            } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
                 await client.readMessages([mek.key]);
             }
 
             // Presence
-            if (mek.key.remoteJid.endsWith('@s.whatsapp.net')) {
-                const Chat = mek.key.remoteJid;
+            if (remoteJid.endsWith('@s.whatsapp.net')) {
+                const Chat = remoteJid;
                 if (presence === 'online') {
                     await client.sendPresenceUpdate("available", Chat);
                 } else if (presence === 'typing') {
