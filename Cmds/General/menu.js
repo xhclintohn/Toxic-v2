@@ -4,16 +4,30 @@ const path = require('path');
 
 module.exports = {
   name: 'menu',
-  aliases: ['help', 'commands', 'list'],
+  aliases: ['help', 'h', 'list'],
   description: 'Displays the bot command menu with a voice note',
   run: async (context) => {
-    const { client, m, totalCommands, mode, prefix, pict, botname, text } = context;
+    const { client, m, totalCommands, mode, prefix, pict, botname } = context;
 
-    if (text) {
-      return client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, what’s with the extra bullshit? Just say ${prefix}menu, moron.` }, { quoted: m });
+    if (!botname) {
+      console.error(`Botname not set, you useless fuck.`);
+      return m.reply(`◈━━━━━━━━━━━━━━━━◈\nBot’s down, no botname found! Yell at the dev, slacker.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`);
     }
 
     try {
+      // Validate m.sender
+      if (!m.sender || typeof m.sender !== 'string' || !m.sender.includes('@s.whatsapp.net')) {
+        console.error(`Invalid m.sender: ${JSON.stringify(m.sender)}`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nCan’t read your number, genius! Try again.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`);
+      }
+
+      const userNumber = m.sender.split('@')[0];
+
+      // Handle extra text
+      if (context.text) {
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nNo extra nonsense needed, @${userNumber}! Just use ${prefix}menu, you slacker. 😈\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
+      }
+
       const categories = [
         { name: 'General', emoji: '📜' },
         { name: 'Settings', emoji: '🛠️' },
@@ -30,77 +44,64 @@ module.exports = {
       ];
 
       const getGreeting = () => {
-        const currentHour = DateTime.now().setZone('Africa/Nairobi').hour;
-        if (currentHour >= 5 && currentHour < 12) return 'Good Morning, you early bird! 🌞';
-        if (currentHour >= 12 && currentHour < 18) return 'Good Afternoon, slacker! 🌞';
-        if (currentHour >= 18 && currentHour < 22) return 'Good Evening, night owl! 🌙';
-        return 'Good Night, you insomniac! 🌌';
+        const hour = DateTime.now().setZone('Africa/Nairobi').hour;
+        if (hour >= 5 && hour < 12) return 'Good Morning, early riser! 🌞';
+        if (hour >= 12 && hour < 18) return 'Good Afternoon, champ! 🌟';
+        if (hour >= 18 && hour < 22) return 'Good Evening, night crawler! 🌙';
+        return 'Good Night, moonwalker! 🌌';
       };
 
-      const getCurrentTimeInNairobi = () => {
-        return DateTime.now().setZone('Africa/Nairobi').toLocaleString(DateTime.TIME_SIMPLE);
-      };
-
-      const toFancyFont = (text, isUpperCase = false) => {
-        const fonts = {
-          'A': '𝐀', 'B': '𝐁', 'C': '𝐂', 'D': '𝐃', 'E': '𝐄', 'F': '𝐅', 'G': '𝐆', 'H': '𝐇', 'I': '𝐈', 'J': '𝐉', 'K': '𝐊', 'L': '𝐋', 'M': '𝐌',
-          'N': '𝐍', 'O': '𝐎', 'P': '𝐏', 'Q': '𝐐', 'R': '𝐑', 'S': '𝐒', 'T': '𝐓', 'U': '𝐔', 'V': '𝐕', 'W': '𝐖', 'X': '𝐗', 'Y': '𝐘', 'Z': '𝐙',
-          'a': '𝐚', 'b': '𝐛', 'c': '𝐜', 'd': '𝐝', 'e': '𝐞', 'f': '𝐟', 'g': '𝐠', 'h': '𝐡', 'i': '𝐢', 'j': '𝐣', 'k': '𝐤', 'l': '𝐥', 'm': '𝐦',
-          'n': '𝐧', 'o': '𝐨', 'p': '𝐩', 'q': '𝐪', 'r': '𝐫', 's': '𝐬', 't': '𝐭', 'u': '𝐮', 'v': '𝐯', 'w': '𝐰', 'x': '𝐱', 'y': '𝐲', 'z': '𝐳'
-        };
-        return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
-          .split('')
-          .map(char => fonts[char] || char)
-          .join('');
-      };
-
-      let menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, Bitches!* 🌟\n\n`;
-      menuText += `${getGreeting()}, *${m.pushName}!*\n\n`;
-      menuText += `👤 *User*: ${m.pushName} (you’re nobody special)\n`;
-      menuText += `🤖 *Bot*: ${botname} (bow down)\n`;
-      menuText += `📋 *Total Commands*: ${totalCommands} (don’t fuck it up)\n`;
-      menuText += `🕒 *Time*: ${getCurrentTimeInNairobi()} (Nairobi vibes)\n`;
-      menuText += `🔣 *Prefix*: ${prefix} (learn it, dumbass)\n`;
-      menuText += `🌐 *Mode*: ${mode} (deal with it)\n`;
-      menuText += `📚 *Library*: Baileys (the good shit)\n`;
-      menuText += `\n◈━━━━━━━━━━━━━━━━◈\n\n`;
-
-      menuText += `*📖 Command Menu (Pick Your Poison)*\n`;
+      // Build menu
+      let menuText = `◈━━━━━━━━━━━━━━━━◈\n*Welcome to ${botname}!* 🌟\n\n`;
+      menuText += `${getGreeting()}, @${userNumber}!\n`;
+      menuText += `Explore ${totalCommands} commands with *${prefix}* (e.g., *${prefix}video music*).\n`;
+      menuText += `Don’t mess it up! 😈\n`;
+      menuText += `\n*📖 Command Menu*\n`;
 
       for (const category of categories) {
-        const commandFiles = fs.readdirSync(`./Cmds/${category.name}`).filter(file => file.endsWith('.js'));
-        if (commandFiles.length === 0 && category.name !== '+18') continue;
+        const categoryPath = path.join(__dirname, '..', 'Cmds', category.name);
+        let commands = [];
 
-        const fancyCategory = toFancyFont(category.name, true);
-        menuText += `\n─── ✦ *${fancyCategory} ${category.emoji}* ✦ ───\n`;
-
-        if (category.name === '+18') {
-          const plus18Commands = ['xvideo'];
-          for (const cmd of plus18Commands) {
-            const fancyCommandName = toFancyFont(cmd);
-            menuText += `  ➤ *${fancyCommandName}*\n`;
+        // Check if category folder exists
+        try {
+          if (fs.existsSync(categoryPath)) {
+            commands = fs.readdirSync(categoryPath)
+              .filter(file => file.endsWith('.js'))
+              .map(file => {
+                const commandName = file.replace('.js', '');
+                const commandModule = require(path.join(categoryPath, file));
+                return {
+                  name: commandName,
+                  description: commandModule.description || 'No description available'
+                };
+              })
+              .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
           }
+        } catch (error) {
+          console.error(`Error reading category ${category.name}: ${error.message}`);
+          continue;
         }
 
-        for (const file of commandFiles) {
-          const commandName = file.replace('.js', '');
-          const fancyCommandName = toFancyFont(commandName);
-          menuText += `  ➤ *${fancyCommandName}*\n`;
+        if (commands.length === 0) continue;
+
+        menuText += `\n${category.emoji} *${category.name}*\n`;
+        for (const cmd of commands) {
+          menuText += `  • ${prefix}${cmd.name}: ${cmd.description}\n`;
         }
       }
 
       menuText += `\n◈━━━━━━━━━━━━━━━━◈\n`;
-      menuText += `*Feel the power of ${botname}, or get lost!*\n`;
-      menuText += `🍁🌬️\n`;
+      menuText += `Powered by *${botname}* 🗿\n`;
 
+      // Send menu with contextInfo
       await client.sendMessage(m.chat, {
         text: menuText,
         contextInfo: {
           externalAdReply: {
             showAdAttribution: false,
-            title: `${botname}`,
-            body: `Yo, ${m.pushName}! Ready to fuck shit up?`,
-            thumbnail: pict,
+            title: `Hey, @${userNumber}! Ready to rock ${botname}?`,
+            body: `Use ${prefix}menu to explore commands!`,
+            thumbnail: pict || null,
             sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
             mediaType: 1,
             renderLargerThumbnail: true
@@ -108,21 +109,9 @@ module.exports = {
         }
       }, { quoted: m });
 
-      const possibleAudioPaths = [
-        path.join(__dirname, 'xh_clinton', 'menu.mp3'),
-        path.join(process.cwd(), 'xh_clinton', 'menu.mp3'),
-        path.join(__dirname, '..', 'xh_clinton', 'menu.mp3'),
-      ];
-
-      let audioPath = null;
-      for (const possiblePath of possibleAudioPaths) {
-        if (fs.existsSync(possiblePath)) {
-          audioPath = possiblePath;
-          break;
-        }
-      }
-
-      if (audioPath) {
+      // Send voice note
+      const audioPath = path.join(__dirname, '..', 'xh_clinton', 'menu.mp3');
+      if (fs.existsSync(audioPath)) {
         console.log(`✅ Found audio file at: ${audioPath}`);
         await client.sendMessage(m.chat, {
           audio: { url: audioPath },
@@ -131,17 +120,13 @@ module.exports = {
           fileName: 'menu.mp3'
         }, { quoted: m });
       } else {
-        console.error('❌ Audio file not found at any of the following paths:', possibleAudioPaths);
-        await client.sendMessage(m.chat, {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit, couldn’t find the menu voice note. Check if xh_clinton/menu.mp3 exists, you slacker.\n\nPowered by *${botname}*`
-        }, { quoted: m });
+        console.error(`❌ Audio file not found at: ${audioPath}`);
+        await m.reply(`◈━━━━━━━━━━━━━━━━◈\nNo voice note today, @${userNumber}! Menu’s still here, so don’t whine. 😈\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
       }
 
     } catch (error) {
-      console.error('Error generating menu or sending voice note:', error);
-      await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, something fucked up the menu or voice note. Try again later, loser.\n\nPowered by *${botname}*`
-      }, { quoted: m });
+      console.error(`Menu command fucked up: ${error.stack}`);
+      await m.reply(`◈━━━━━━━━━━━━━━━━◈\nSomething broke the menu, @${userNumber}! Try again, you slacker.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
     }
   }
 };
