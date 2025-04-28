@@ -113,29 +113,30 @@ const connectionHandler = async (client, update, startBot) => {
           }
 
           const welcomeMsg = `◈━━━━━━━━━━━━━━━━◈
-│ ${getGreeting()}
-│
-│ Yo, you're plugged into *${botname}*! 📡
-│
-├─ Bot Info
-│ ✨ *Name*: ${botname}
-│ 🔧 *Mode*: ${settings.mode}
-│ ➡️ *Prefix*: ${settings.prefix}
-│ 📋 *Commands*: ${totalCommands}
-│ 🕒 *Time*: ${getTime()}
-│ 💾 *Database*: Postgres SQL
-│ 📚 *Library*: Baileys
-│
-├─ New Connection
-│ 😎 You've been added as a *sudo user*! This gives you full control.
-│ 🔐 Use *${settings.prefix}settings* to tweak the bot.
-│ 📖 Check *${settings.prefix}menu* for all commands.
-│
-├─ Quick Start
-│ 🚀 Try *${settings.prefix}video music* for a random YouTube video.
-│ 🛠️ Enable features with *${settings.prefix}settings*.
-│
-│ *Credits*: Powered by 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 🗿
+│❒ ${getGreeting()}
+│❒ Yo, you're plugged into *${botname}*! 📡
+│❒ 
+│❒ *Bot Info*
+│❒ ✨ *Name*: ${botname}
+│❒ 🔧 *Mode*: ${settings.mode}
+│❒ ➡️ *Prefix*: ${settings.prefix}
+│❒ 📋 *Commands*: ${totalCommands}
+│❒ 🕒 *Time*: ${getTime()}
+│❒ 💾 *Database*: Postgres SQL
+│❒ 📚 *Library*: Baileys
+│❒ 
+│❒ *New Connection*
+│❒ 😎 You've been added as a *sudo user*! This gives you full control.
+│❒ 🔐 Use *${settings.prefix}settings* to tweak the bot.
+│❒ 📖 Check *${settings.prefix}menu* for all commands.
+│❒ 
+│❒ *Quick Start*
+│❒ 🚀 Try *${settings.prefix}video music* for a random YouTube video.
+│❒ 🛠️ Enable features with *${settings.prefix}settings*.
+│❒ 
+│❒ *Credits*
+│❒ 🗿 Powered by *xh_clinton*
+│❒ 📞 Developed by xh_clinton (${defaultSudoNumber})
 ◈━━━━━━━━━━━━━━━━◈`;
 
           await client.sendMessage(client.user.id, { text: welcomeMsg });
@@ -145,25 +146,26 @@ const connectionHandler = async (client, update, startBot) => {
         }
       } else {
         const welcomeBackMsg = `◈━━━━━━━━━━━━━━━━◈
-│ ${getGreeting()}
-│
-│ Welcome back to *${botname}*! 📡
-│
-├─ Bot Info
-│ ✨ *Name*: ${botname}
-│ 🔧 *Mode*: ${settings.mode}
-│ ➡️ *Prefix*: ${settings.prefix}
-│ 📋 *Commands*: ${totalCommands}
-│ 🕒 *Time*: ${getTime()}
-│ 💾 *Database*: Postgres SQL
-│ 📚 *Library*: Baileys
-│
-├─ Quick Start
-│ 📖 *${settings.prefix}menu* for all commands.
-│ 🚀 *${settings.prefix}video music* for a random video.
-│ 🛠️ *${settings.prefix}settings* to customize.
-│
-│ *Credits*: Powered by 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 🗿
+│❒ ${getGreeting()}
+│❒ Welcome back to *${botname}*! 📡
+│❒ 
+│❒ *Bot Info*
+│❒ ✨ *Name*: ${botname}
+│❒ 🔧 *Mode*: ${settings.mode}
+│❒ ➡️ *Prefix*: ${settings.prefix}
+│❒ 📋 *Commands*: ${totalCommands}
+│❒ 🕒 *Time*: ${getTime()}
+│❒ 💾 *Database*: Postgres SQL
+│❒ 📚 *Library*: Baileys
+│❒ 
+│❒ *Quick Start*
+│❒ 📖 *${settings.prefix}menu* for all commands.
+│❒ 🚀 *${settings.prefix}video music* for a random video.
+│❒ 🛠️ *${settings.prefix}settings* to customize.
+│❒ 
+│❒ *Credits*
+│❒ 🗿 Powered by *xh_clinton*
+│❒ 📞 Developed by xh_clinton (${defaultSudoNumber})
 ◈━━━━━━━━━━━━━━━━◈`;
 
         await client.sendMessage(client.user.id, { text: welcomeBackMsg });
