@@ -12,6 +12,12 @@ module.exports = {
     }
 
     try {
+      // Validate m.sender
+      if (!m.sender || typeof m.sender !== 'string' || !m.sender.includes('@s.whatsapp.net')) {
+        console.error(`Invalid m.sender: ${JSON.stringify(m.sender)}`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nShit’s broken, can’t read your number! Try again, you dumbass.\nCheck https://github.com/xhclintohn/Toxic-MD for help.\n◈━━━━━━━━━━━━━━━━◈`);
+      }
+
       const userNumber = m.sender.split('@')[0];
       const isOwner = userNumber === ownerNumber;
 
@@ -34,7 +40,7 @@ module.exports = {
         roast = 'Full-on rainbow explosion, you fabulous fuck! 🌈';
       }
 
-      // Build result message
+      // Build result message (no Credits section)
       const resultMsg = `◈━━━━━━━━━━━━━━━━◈
 *Gay Meter Results* 📊
 User: @${userNumber}
@@ -43,7 +49,6 @@ Status: ${roast}
 
 *Note*
 This is just for shits and giggles, don’t cry, you sensitive loser! 😈
-
 ◈━━━━━━━━━━━━━━━━◈`;
 
       await client.sendMessage(m.chat, {
@@ -53,7 +58,7 @@ This is just for shits and giggles, don’t cry, you sensitive loser! 😈
 
     } catch (error) {
       console.error(`Gaycheck command fucked up: ${error.stack}`);
-      await m.reply(`◈━━━━━━━━━━━━━━━━◈\nShit broke, @${m.sender.split('@')[0]}! Couldn’t check your gay meter. Try again, you dumbass.\nCheck https://github.com/xhclintohn/Toxic-MD for help.\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
+      await m.reply(`◈━━━━━━━━━━━━━━━━◈\nShit broke, can’t check your gay meter! Try again, you dumbass.\nCheck https://github.com/xhclintohn/Toxic-MD for help.\n◈━━━━━━━━━━━━━━━━◈`);
     }
   }
 };
