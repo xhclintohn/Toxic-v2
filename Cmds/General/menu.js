@@ -11,21 +11,21 @@ module.exports = {
 
     if (!botname) {
       console.error(`Botname not set, you useless fuck.`);
-      return m.reply(`◈━━━━━━━━━━━━━━━━◈\nBot’s down, no botname found! Yell at the dev, slacker.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`);
+      return m.reply(`◈━━━━━━━━━━━━━━━━◈\nBot’s toast, no botname found! Yell at the dev, you legend.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`);
     }
 
     try {
       // Validate m.sender
       if (!m.sender || typeof m.sender !== 'string' || !m.sender.includes('@s.whatsapp.net')) {
         console.error(`Invalid m.sender: ${JSON.stringify(m.sender)}`);
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nCan’t read your number, genius! Try again.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nCan’t read your number, you beast! Try again.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`);
       }
 
       const userNumber = m.sender.split('@')[0];
 
       // Handle extra text
       if (text) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nNo extra nonsense needed, @${userNumber}! Just use ${prefix}menu, you slacker. 😈\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nCut the crap, @${userNumber}! Just use ${prefix}menu, you legend. 😈\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
       }
 
       const categories = [
@@ -45,16 +45,16 @@ module.exports = {
 
       const getGreeting = () => {
         const hour = DateTime.now().setZone('Africa/Nairobi').hour;
-        if (hour >= 5 && hour < 12) return 'Good Morning, early riser! 🌞';
-        if (hour >= 12 && hour < 18) return 'Good Afternoon, champ! 🌟';
-        if (hour >= 18 && hour < 22) return 'Good Evening, night crawler! 🌙';
-        return 'Good Night, moonwalker! 🌌';
+        if (hour >= 5 && hour < 12) return 'Morning, you early savage! 🌞';
+        if (hour >= 12 && hour < 18) return 'Afternoon, you epic beast! 🌟';
+        if (hour >= 18 && hour < 22) return 'Evening, you night slayer! 🌙';
+        return 'Night, you moonlit rebel! 🌌';
       };
 
       const toFancyFont = (text, isUpperCase = false) => {
         const fonts = {
           'A': '𝐀', 'B': '𝐁', 'C': '𝐂', 'D': '𝐃', 'E': '𝐄', 'F': '𝐅', 'G': '𝐆', 'H': '𝐇', 'I': '𝐈', 'J': '𝐉', 'K': '𝐊', 'L': '𝐋', 'M': '𝐌',
-          'N': '𝐍', 'O': '𝐎', 'P': '𝐏', 'Q': '𝐐', 'R': '𝐑', 'S': '𝐒', 'T': '𝐓', 'U': '𝐔', 'V': '𝐕', 'W': '𝐖', 'X': '𝐗', 'Y': '𝐘', 'Z': '𝐙',
+          'N': '𝐍', 'O': '𝐎', 'P': '𝐏', 'Q': '𝐐', 'R': '𝐑', 'S': '𝐒', 'T': '𝐓', 'U': '𝐔', 'V': '𝐕', 'W': '𝐖', 'X': '𝐗', 'Y': '𝐘', 'Z': '�{Z}',
           'a': '𝐚', 'b': '𝐛', 'c': '𝐜', 'd': '𝐝', 'e': '𝐞', 'f': '𝐟', 'g': '𝐠', 'h': '𝐡', 'i': '𝐢', 'j': '𝐣', 'k': '𝐤', 'l': '𝐥', 'm': '𝐦',
           'n': '𝐧', 'o': '𝐨', 'p': '𝐩', 'q': '𝐪', 'r': '𝐫', 's': '𝐬', 't': '𝐭', 'u': '𝐮', 'v': '𝐯', 'w': '𝐰', 'x': '𝐱', 'y': '𝐲', 'z': '𝐳'
         };
@@ -65,10 +65,10 @@ module.exports = {
       };
 
       // Build menu
-      let menuText = `◈━━━━━━━━━━━━━━━━◈\n*Welcome to ${botname}!* 🌟\n\n`;
+      let menuText = `◈━━━━━━━━━━━━━━━━◈\n*Unleash ${botname}, you legend!* 🌟\n\n`;
       menuText += `${getGreeting()}, @${userNumber}!\n`;
-      menuText += `Explore ${totalCommands || 'many'} commands with *${prefix}* (e.g., *${prefix}video music*).\n`;
-      menuText += `Don’t mess it up! 😈\n`;
+      menuText += `Master ${totalCommands || 'tons of'} commands with *${prefix}* (e.g., *${prefix}video music*).\n`;
+      menuText += `Don’t choke, rock this shit! 🔥\n`;
       menuText += `\n*📖 Command Menu*\n`;
 
       for (const category of categories) {
@@ -76,7 +76,7 @@ module.exports = {
         if (commandFiles.length === 0 && category.name !== '+18') continue;
 
         const fancyCategory = toFancyFont(category.name, true);
-        menuText += `\n${category.emoji} *${fancyCategory}*\n`;
+        menuText += `\n✦═════ ✦\n${category.emoji} *${fancyCategory}*\n`;
 
         if (category.name === '+18') {
           const plus18Commands = ['xvideo'];
@@ -91,6 +91,7 @@ module.exports = {
           const fancyCommandName = toFancyFont(commandName);
           menuText += `  • *${fancyCommandName}*\n`;
         }
+        menuText += `✦═════ ✦\n`;
       }
 
       menuText += `\n◈━━━━━━━━━━━━━━━━◈\n`;
@@ -102,8 +103,8 @@ module.exports = {
         contextInfo: {
           externalAdReply: {
             showAdAttribution: false,
-            title: `Hey, @${userNumber}! Ready to rock ${botname}?`,
-            body: `Use ${prefix}menu to explore commands!`,
+            title: `Yo, @${userNumber}! Time to slay with ${botname}!`,
+            body: `Drop ${prefix}menu to own the game!`,
             thumbnail: pict || null,
             sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
             mediaType: 1,
@@ -124,12 +125,12 @@ module.exports = {
         }, { quoted: m });
       } else {
         console.error(`❌ Audio file not found at: ${audioPath}`);
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\nNo voice note today, @${userNumber}! Menu’s still here, so don’t whine. 😈\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
+        await m.reply(`◈━━━━━━━━━━━━━━━━◈\nNo voice note, @${userNumber}! Menu’s still fire, so don’t slack. 🔥\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
       }
 
     } catch (error) {
       console.error(`Menu command fucked up: ${error.stack}`);
-      await m.reply(`◈━━━━━━━━━━━━━━━━◈\nSomething broke the menu, @${userNumber}! Try again, you slacker.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
+      await m.reply(`◈━━━━━━━━━━━━━━━━◈\nMenu’s fucked, @${userNumber}! Try again, you legend.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
     }
   }
 };
