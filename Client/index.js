@@ -148,17 +148,20 @@ async function startDreaded() {
                         ""
                     ).toLowerCase();
 
-                    // Skip if sender is the bot
+                    // Skip if sender is the bot or an admin
                     if (sender === Myself) return;
 
                     if (urlRegex.test(messageContent)) {
                         const groupMetadata = await client.groupMetadata(remoteJid);
+                        if (!groupMetadata || !groupMetadata.participants) return;
+
                         const groupAdmins = groupMetadata.participants
                             .filter(p => p.admin != null)
                             .map(p => client.decodeJid(p.id));
                         const isBotAdmin = groupAdmins.includes(Myself);
+                        const isSenderAdmin = groupAdmins.includes(sender);
 
-                        if (isBotAdmin) {
+                        if (isBotAdmin && !isSenderAdmin) {
                             // Silently delete the link message
                             await client.sendMessage(remoteJid, {
                                 delete: {
@@ -168,7 +171,6 @@ async function startDreaded() {
                                     participant: sender
                                 }
                             });
-                            console.log(`[ANTILINK] Deleted link from ${sender} in ${remoteJid}`);
                         }
                     }
                 } catch (error) {
@@ -182,7 +184,6 @@ async function startDreaded() {
                     await client.sendMessage(remoteJid, {
                         react: { key: mek.key, text: "❤️" }
                     });
-                    console.log(`[AUTOLIKE-DEBUG] Reacted ❤️ to status in ${remoteJid}`);
                 } catch (error) {
                     // Silent error handling
                 }
