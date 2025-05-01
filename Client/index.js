@@ -46,15 +46,19 @@ const connectionHandler = require('../Handler/connectionHandler');
 
 async function startDreaded() {
     let settingss = await getSettings();
-    if (!settingss) return;
+    if (!settingss) {
+        console.error("Failed to load settings");
+        return;
+    }
 
     const { autobio, mode, anticall } = settingss;
 
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
+    const { version } = await fetchLatestBaileysVersion();
     const client = dreadedConnect({
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
-        version: [2, 3000, 1015901307],
+        version,
         browser: [`TOXIC`, 'Safari', '3.0'],
         fireInitQueries: false,
         shouldSyncHistoryMessage: false,
@@ -91,7 +95,7 @@ async function startDreaded() {
     const processedCalls = new Set();
 
     client.ws.on('CB:call', async (json) => {
-        const settingszs = await getSettings();
+        const settingszs,
         if (!settingszs?.anticall) return;
 
         const callId = json.content[0].attrs['call-id'];
@@ -116,182 +120,165 @@ async function startDreaded() {
         }
     });
 
+    // Track processed message IDs to prevent duplicates
+    const processedMessages = new Set();
+
+    // Log settings once at startup
+    console.log(`Settings at startup: autolike=${settingss.autolike}, autoview=${settingss.autoview}`);
+
     client.ev.on("messages.upsert", async (chatUpdate) => {
         let settings = await getSettings();
-        if (!settings) return;
+        if (!settings) {
+            console.error("Failed to load settings");
+            return;
+        }
 
         const { autoread, autolike, autoview, presence } = settings;
 
         try {
-            let mek = chatUpdate.messages[0];
-            if (!mek || !mek.key || !mek.message) return;
+            for (const msg of chatUpdate.messages) {
+                if (!msg || !msg.key || !msg.message) continue;
 
-            mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
+                // Skip if already processed
+                const messageId = msg.key.id;
+                if (processedMessages.has(messageId)) {
+                    console.log(`Skipping duplicate message: ID=${messageId}`);
+                    continue;
+                }
+                processedMessages.add(messageId);
 
-            const remoteJid = mek.key.remoteJid;
-            const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
-            const Myself = client.decodeJid(client.user.id);
+                // Handle ephemeral messages
+                msg.message = Object.keys(msg.message)[0] === "ephemeralMessage" ? msg.message.ephemeralMessage.message : msg.message;
 
-            // Antilink logic
-            if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
-                try {
-                    // Robust link detection
-                    const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
-                    const messageContent = (
-                        mek.message.conversation ||
-                        mek.message.extendedTextMessage?.text ||
-                        mek.message.imageMessage?.caption ||
-                        mek.message.videoMessage?.caption ||
-                        mek.message.documentMessage?.caption ||
-                        mek.message.buttonsResponseMessage?.selectedButtonId ||
-                        mek.message.templateButtonReplyMessage?.selectedId ||
-                        ""
-                    ).toLowerCase();
+                const remoteJid = msg.key.remoteJid;
+                const sender = client.decodeJid(msg.key.participant || msg.key.remoteJid);
+                const Myself = client.decodeJid(client.user.id);
 
-                    // Skip if sender is the bot or an admin
-                    if (sender === Myself) return;
+                // Antilink logic
+                if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
+                    try {
+                        // Robust link detection
+                        const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
+                        const messageContent = (
+                            msg.message.conversation ||
+                            msg.message.extendedTextMessage?.text ||
+                            msg.message.imageMessage?.caption ||
+                            msg.message.videoMessage?.caption ||
+                            msg.message.documentMessage?.caption ||
+                            msg.message.buttonsResponseMessage?.selectedButtonId ||
+                            msg.message.templateButtonReplyMessage?.selectedId ||
+                            ""
+                        ).toLowerCase();
 
-                    if (urlRegex.test(messageContent)) {
-                        const groupMetadata = await client.groupMetadata(remoteJid);
-                        if (!groupMetadata || !groupMetadata.participants) return;
+                        // Skip if sender is the bot or an admin
+                        if (sender === Myself) continue;
 
-                        const groupAdmins = groupMetadata.participants
-                            .filter(p => p.admin != null)
-                            .map(p => client.decodeJid(p.id));
-                        const isBotAdmin = groupAdmins.includes(Myself);
-                        const isSenderAdmin = groupAdmins.includes(sender);
+                        if (urlRegex.test(messageContent)) {
+                            const groupMetadata = await client.groupMetadata(remoteJid);
+                            if (!groupMetadata || !groupMetadata.participants) continue;
 
-                        if (isBotAdmin && !isSenderAdmin) {
-                            // Silently delete the link message
-                            await client.sendMessage(remoteJid, {
-                                delete: {
-                                    remoteJid: remoteJid,
-                                    fromMe: false,
-                                    id: mek.key.id,
-                                    participant: sender
-                                }
-                            });
+                            const groupAdmins = groupMetadata.participants
+                                .filter(p => p.admin != null)
+                                .map(p => client.decodeJid(p.id));
+                            const isBotAdmin = groupAdmins.includes(Myself);
+                            const isSenderAdmin = groupAdmins.includes(sender);
+
+                            if (isBotAdmin && !isSenderAdmin) {
+                                // Silently delete the link message
+                                await client.sendMessage(remoteJid, {
+                                    delete: {
+                                        remoteJid: remoteJid,
+                                        fromMe: false,
+                                        id: msg.key.id,
+                                        participant: sender
+                                    }
+                                });
+                            }
                         }
+                    } catch (error) {
+                        console.error(`[ANTILINK] Error processing link: ${error.message}`);
                     }
-                } catch (error) {
-                    console.error(`[ANTILINK] Error processing link: ${error.message}`);
                 }
-            }
 
-            // Track processed message IDs to prevent duplicates
-const processedMessages = new Set();
+                // Log status messages
+                if (remoteJid === "status@broadcast") {
+                    console.log(`Processing status: ID=${messageId}`);
+                }
 
-// Log settings once at startup
-console.log(`Settings at startup: autolike=${settings.autolike}, autoview=${settings.autoview}`);
-
-// Messages upsert event handler
-client.ev.on("messages.upsert", async (chatUpdate) => {
-    let settings = await getSettings();
-    if (!settings) {
-        console.error("Failed to load settings");
-        return;
-    }
-
-    const { autoread, autolike, autoview, presence } = settings;
-
-    try {
-        for (const msg of chatUpdate.messages) {
-            if (!msg || !msg.key || !msg.message) continue;
-
-            // Skip if already processed
-            const messageId = msg.key.id;
-            if (processedMessages.has(messageId)) {
-                console.log(`Skipping duplicate message: ID=${messageId}`);
-                continue;
-            }
-            processedMessages.add(messageId);
-
-            // Handle ephemeral messages
-            msg.message = Object.keys(msg.message)[0] === "ephemeralMessage" ? msg.message.ephemeralMessage.message : msg.message;
-
-            const remoteJid = msg.key.remoteJid;
-            const sender = client.decodeJid(msg.key.participant || msg.key.remoteJid);
-            const Myself = client.decodeJid(client.user.id);
-
-            // Log status messages
-            if (remoteJid === "status@broadcast") {
-                console.log(`Processing status: ID=${messageId}`);
-            }
-
-            // Autolike for statuses
-            if (autolike && remoteJid === "status@broadcast" && messageId) {
-                console.log(`Starting auto-like for status ID=${messageId}`);
-                try {
-                    // Reduced emoji set to prevent overload
-                    const emojis = ['🗿', '⌚️', '💠', '👣', '🤍', '❤️‍🔥', '🔥'];
-                    for (const emoji of emojis) {
-                        await client.sendMessage(remoteJid, {
-                            react: { key: msg.key, text: emoji }
-                        });
-                        await new Promise(resolve => setTimeout(resolve, 200));
+                // Autolike for statuses
+                if (autolike && remoteJid === "status@broadcast" && messageId) {
+                    console.log(`Starting auto-like for status ID=${messageId}`);
+                    try {
+                        // Reduced emoji set to prevent overload
+                        const emojis = ['🗿', '⌚️', '💠', '👣', '🤍', '❤️‍🔥', '🔥'];
+                        for (const emoji of emojis) {
+                            await client.sendMessage(remoteJid, {
+                                react: { key: msg.key, text: emoji }
+                            });
+                            await new Promise(resolve => setTimeout(resolve, 200));
+                        }
+                        console.log(`Completed auto-like for status ID=${messageId}`);
+                    } catch (error) {
+                        console.error(`Auto-like failed for status ID=${messageId}: ${error.message}`);
                     }
-                    console.log(`Completed auto-like for status ID=${messageId}`);
-                } catch (error) {
-                    console.error(`Auto-like failed for status ID=${messageId}: ${error.message}`);
                 }
-            }
 
-            // Autoview for statuses
-            if (autoview && remoteJid === "status@broadcast") {
-                console.log(`Attempting to auto-view status ID=${messageId}`);
-                try {
-                    await client.readMessages([msg.key]);
-                    console.log(`Viewed status ID=${messageId}`);
-                } catch (error) {
-                    console.error(`Auto-view failed for status ID=${messageId}: ${error.message}`);
-                }
-            }
-
-            // Autoread for private chats
-            if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-                try {
-                    await client.readMessages([msg.key]);
-                } catch (error) {
-                    console.error(`Auto-read failed for message ID=${messageId}: ${error.message}`);
-                }
-            }
-
-            // Presence
-            if (remoteJid.endsWith('@s.whatsapp.net')) {
-                const Chat = remoteJid;
-                try {
-                    if (presence === 'online') {
-                        await client.sendPresenceUpdate("available", Chat);
-                    } else if (presence === 'typing') {
-                        await client.sendPresenceUpdate("composing", Chat);
-                    } else if (presence === 'recording') {
-                        await client.sendPresenceUpdate("recording", Chat);
-                    } else {
-                        await client.sendPresenceUpdate("unavailable", Chat);
+                // Autoview for statuses
+                if (autoview && remoteJid === "status@broadcast") {
+                    console.log(`Attempting to auto-view status ID=${messageId}`);
+                    try {
+                        await client.readMessages([msg.key]);
+                        console.log(`Viewed status ID=${messageId}`);
+                    } catch (error) {
+                        console.error(`Auto-view failed for status ID=${messageId}: ${error.message}`);
                     }
-                } catch (error) {
-                    console.error(`Presence update failed for ${Chat}: ${error.message}`);
                 }
+
+                // Autoread for private chats
+                if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+                    try {
+                        await client.readMessages([msg.key]);
+                    } catch (error) {
+                        console.error(`Auto-read failed for message ID=${messageId}: ${error.message}`);
+                    }
+                }
+
+                // Presence
+                if (remoteJid.endsWith('@s.whatsapp.net')) {
+                    const Chat = remoteJid;
+                    try {
+                        if (presence === 'online') {
+                            await client.sendPresenceUpdate("available", Chat);
+                        } else if (presence === 'typing') {
+                            await client.sendPresenceUpdate("composing", Chat);
+                        } else if (presence === 'recording') {
+                            await client.sendPresenceUpdate("recording", Chat);
+                        } else {
+                            await client.sendPresenceUpdate("unavailable", Chat);
+                        }
+                    } catch (error) {
+                        console.error(`Presence update failed for ${Chat}: ${error.message}`);
+                    }
+                }
+
+                // Handle commands
+                if (!client.public && !msg.key.fromMe && chatUpdate.type === "notify") continue;
+
+                const m = smsg(client, msg, store);
+                require("./toxic")(client, m, chatUpdate, store);
+
+                // Delay to reduce load
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
-
-            // Handle commands
-            if (!client.public && !msg.key.fromMe && chatUpdate.type === "notify") continue;
-
-            const m = smsg(client, msg, store);
-            require("./toxic")(client, m, chatUpdate, store);
-
-            // Delay to reduce load
-            await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (err) {
+            console.error(`Error in messages.upsert: ${err.message}`);
         }
-    } catch (err) {
-        console.error(`Error in messages.upsert: ${err.message}`);
-    }
 
-    // Clean up old message IDs to prevent memory growth
-    if (processedMessages.size > 1000) {
-        processedMessages.clear();
-    }
-});
+        // Clean up old message IDs to prevent memory growth
+        if (processedMessages.size > 1000) {
+            processedMessages.clear();
+        }
+    });
 
     // Handle error
     const unhandledRejections = new Map();
