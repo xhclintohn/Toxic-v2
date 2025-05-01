@@ -95,7 +95,7 @@ async function startDreaded() {
     const processedCalls = new Set();
 
     client.ws.on('CB:call', async (json) => {
-        const settingszs,
+        const settingszs = await getSettings();
         if (!settingszs?.anticall) return;
 
         const callId = json.content[0].attrs['call-id'];
@@ -349,7 +349,7 @@ async function startDreaded() {
         return buffer;
     };
 
-    client.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
+    client.downloadAndSaveMediaMessage = async (message, filename, attach rattachExtension = true) => {
         let quoted = message.msg ? message.msg : message;
         let mime = (message.msg || message).mimetype || '';
         let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
