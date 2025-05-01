@@ -179,15 +179,23 @@ async function startDreaded() {
             }
 
             // Autolike for statuses
-            if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
-                try {
-                    await client.sendMessage(remoteJid, {
-                        react: { key: mek.key, text: "❤️" }
-                    });
-                } catch (error) {
-                    // Silent error handling
+if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
+    try {
+        const emojis = ['🗿', '⌚️', '💠', '👣', '🍆', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '🐒', '💗', '❤️‍🔥', '👁️', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😒'];
+        
+        for (const emoji of emojis) {
+            await client.sendMessage(remoteJid, {
+                react: { 
+                    key: mek.key, 
+                    text: emoji 
                 }
-            }
+            });
+            await new Promise(resolve => setTimeout(resolve, 200)); // Small delay
+        }
+    } catch (error) {
+        // Silent error handling
+    }
+}
 
             // Autoview/autoread
             if (autoview && remoteJid === "status@broadcast") {
