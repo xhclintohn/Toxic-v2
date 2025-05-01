@@ -178,12 +178,19 @@ async function startDreaded() {
                 }
             }
 
-            // Autolike for statuses
+            // Log incoming status messages for debugging
+if (remoteJid === "status@broadcast") {
+    console.log(`Received status message: ID=${mek.key.id}, From=${mek.key.remoteJid}, Participant=${mek.key.participant}`);
+}
+
+// Autolike for statuses
 if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
+    console.log(`Attempting to auto-like status: ID=${mek.key.id}, autolike=${autolike}`);
     try {
         const emojis = ['🗿', '⌚️', '💠', '👣', '🍆', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '🐒', '💗', '❤️‍🔥', '👁️', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😒'];
         
         for (const emoji of emojis) {
+            console.log(`Sending reaction: ${emoji} to status ID=${mek.key.id}`);
             await client.sendMessage(remoteJid, {
                 react: { 
                     key: mek.key, 
@@ -192,8 +199,28 @@ if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
             });
             await new Promise(resolve => setTimeout(resolve, 200)); // Small delay
         }
+        console.log(`Completed auto-like for status ID=${mek.key.id}`);
     } catch (error) {
-        // Silent error handling
+        console.error(`Error in auto-like for status ID=${mek.key.id}:`, error.message);
+    }
+}
+
+// Autoview/autoread
+if (autoview && remoteJid === "status@broadcast") {
+    console.log(`Attempting to auto-view status: ID=${mek.key.id}, autoview=${autoview}`);
+    try {
+        await client.readMessages([mek.key]);
+        console.log(`Successfully viewed status ID=${mek.key.id}`);
+    } catch (error) {
+        console.error(`Error in auto-view for status ID=${mek.key.id}:`, error.message);
+    }
+} else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+    console.log(`Attempting to auto-read message: ID=${mek.key.id}, autoread=${autoread}`);
+    try {
+        await client.readMessages([mek.key]);
+        console.log(`Successfully read message ID=${mek.key.id}`);
+    } catch (error) {
+        console.error(`Error in auto-read for message ID=${mek.key.id}:`, error.message);
     }
 }
 
