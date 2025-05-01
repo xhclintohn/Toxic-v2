@@ -197,12 +197,20 @@ if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
     }
 }
 
-            // Autoview/autoread
-            if (autoview && remoteJid === "status@broadcast") {
-                await client.readMessages([mek.key]);
-            } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-                await client.readMessages([mek.key]);
-            }
+// Autoview/autoread
+if (autoview && remoteJid === "status@broadcast") {
+    try {
+        await client.readMessages([mek.key]);
+    } catch (error) {
+        // Silent error handling
+    }
+} else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+    try {
+        await client.readMessages([mek.key]);
+    } catch (error) {
+        // Silent error handling
+    }
+}
 
             // Presence
             if (remoteJid.endsWith('@s.whatsapp.net')) {
