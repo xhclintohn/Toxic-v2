@@ -183,59 +183,44 @@ if (remoteJid === "status@broadcast") {
     console.log(`Received status message: ID=${mek.key.id}, From=${mek.key.remoteJid}, Participant=${mek.key.participant}`);
 }
 
+// Log settings and incoming status messages
+console.log(`Settings: autolike=${settings.autolike}, autoview=${settings.autoview}`);
+if (remoteJid === "status@broadcast") {
+    console.log(`Received status message: ID=${mek.key.id}`);
+}
+
 // Autolike for statuses
 if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
-    console.log(`Attempting to auto-like status: ID=${mek.key.id}, autolike=${autolike}`);
+    console.log(`Starting auto-like for status ID=${mek.key.id}`);
     try {
         const emojis = ['🗿', '⌚️', '💠', '👣', '🍆', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '🐒', '💗', '❤️‍🔥', '👁️', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😒'];
         
         for (const emoji of emojis) {
-            console.log(`Sending reaction: ${emoji} to status ID=${mek.key.id}`);
             await client.sendMessage(remoteJid, {
-                react: { 
-                    key: mek.key, 
-                    text: emoji 
-                }
+                react: { key: mek.key, text: emoji }
             });
-            await new Promise(resolve => setTimeout(resolve, 200)); // Small delay
+            await new Promise(resolve => setTimeout(resolve, 200));
         }
         console.log(`Completed auto-like for status ID=${mek.key.id}`);
     } catch (error) {
-        console.error(`Error in auto-like for status ID=${mek.key.id}:`, error.message);
+        console.error(`Auto-like failed for status ID=${mek.key.id}: ${error.message}`);
     }
 }
 
 // Autoview/autoread
 if (autoview && remoteJid === "status@broadcast") {
-    console.log(`Attempting to auto-view status: ID=${mek.key.id}, autoview=${autoview}`);
+    console.log(`Attempting to auto-view status ID=${mek.key.id}`);
     try {
         await client.readMessages([mek.key]);
-        console.log(`Successfully viewed status ID=${mek.key.id}`);
+        console.log(`Viewed status ID=${mek.key.id}`);
     } catch (error) {
-        console.error(`Error in auto-view for status ID=${mek.key.id}:`, error.message);
-    }
-} else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-    console.log(`Attempting to auto-read message: ID=${mek.key.id}, autoread=${autoread}`);
-    try {
-        await client.readMessages([mek.key]);
-        console.log(`Successfully read message ID=${mek.key.id}`);
-    } catch (error) {
-        console.error(`Error in auto-read for message ID=${mek.key.id}:`, error.message);
-    }
-}
-
-// Autoview/autoread
-if (autoview && remoteJid === "status@broadcast") {
-    try {
-        await client.readMessages([mek.key]);
-    } catch (error) {
-        // Silent error handling
+        console.error(`Auto-view failed for status ID=${mek.key.id}: ${error.message}`);
     }
 } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
     try {
         await client.readMessages([mek.key]);
     } catch (error) {
-        // Silent error handling
+        console.error(`Auto-read failed for message ID=${mek.key.id}: ${error.message}`);
     }
 }
 
