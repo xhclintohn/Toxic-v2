@@ -1,5 +1,5 @@
-# Toxic-v2
+# Toxic-MDz🗿
 
 
-
-[https://dashboard.heroku.com/new?template=https://github.com/xhclintohn/Toxic-v2]
+Don't Steal Lol🤣
+or go ahead 😼
