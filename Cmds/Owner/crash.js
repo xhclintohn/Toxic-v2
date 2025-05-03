@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { WAProto, generateWAMessageFromContent } = require('@whatsappy/baileys');
+const { WAProto, generateWAMessageFromContent } = require('@whiskeysockets/baileys');
 
 module.exports = {
   name: 'crash',
@@ -13,7 +13,7 @@ module.exports = {
       let target = text.split(' ')[0] || m.quoted?.sender || m.mentionedJid?.[0];
       if (!target) {
         return client.sendMessage(m.chat, {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, dumbass😠, give me a target! Use ${prefix}crash <number> or mention someone, moron.\n\nPowered by *${botname}*`
+          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, dumbass, give me a target! Use ${prefix}crash <number> or mention someone, moron.\n\nPowered by *${botname}*`
         }, { quoted: m });
       }
       // Convert to JID format if needed (e.g., 123456789 → 123456789@s.whatsapp.net)
