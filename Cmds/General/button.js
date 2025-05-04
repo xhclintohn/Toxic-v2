@@ -6,7 +6,7 @@ module.exports = {
     const { client, m } = context;
 
     try {
-      const buttonMessage = {
+      await client.sendMessage(m.chat, {
         text: 'Choose an option below:',
         footer: 'Toxic-MD Bot',
         buttons: [
@@ -15,16 +15,10 @@ module.exports = {
           { buttonId: 'info', buttonText: { displayText: 'ℹ Info' }, type: 1 }
         ],
         headerType: 1
-      };
-
-      await client.sendMessage(m.chat, buttonMessage, { quoted: m });
+      }, { quoted: m });
 
     } catch (error) {
       console.error(`Button command error: ${error.stack}`);
-      await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\nSomething went wrong, @${m.sender.split('@')[0]}! Try again.\n◈━━━━━━━━━━━━━━━━◈`,
-        mentions: [m.sender]
-      }, { quoted: m });
     }
   }
 };
