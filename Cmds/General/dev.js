@@ -3,7 +3,7 @@ const { getSettings } = require('../../Database/config');
 module.exports = {
   name: 'dev',
   aliases: ['developer', 'contact'],
-  description: 'Sends the developer’s contact with a link to message them',
+  description: 'Sends the developer’s contact as a vCard',
   run: async (context) => {
     const { client, m, botname } = context;
 
@@ -15,19 +15,20 @@ module.exports = {
         return;
       }
 
-      const waLink = `https://wa.me/254735342808?text=Yo,%20Toxic%20Dev!`;
+      const devContact = {
+        phoneNumber: '+254735342808',
+        firstName: 'Toxic',
+        lastName: 'Dev'
+      };
 
-      const contactText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Want to reach the ${botname} developer?* 🖤\n\n`;
-      contactText += `📩 *Tap the link below to message me!*\n\n`;
-      contactText += `🔗 ${waLink}\n`;
-      contactText += `◈━━━━━━━━━━━━━━━━◈`;
-
-      // Send message with clickable link
+      // Send vCard contact
       await client.sendMessage(m.chat, {
-        text: contactText,
-        footer: `Powered by ${botname}`,
-        headerType: 1,
-        viewOnce: true
+        contacts: {
+          displayName: `${devContact.firstName} ${devContact.lastName}`,
+          contacts: [{
+            vcard: `BEGIN:VCARD\nVERSION:3.0\nFN:${devContact.firstName} ${devContact.lastName}\nTEL;TYPE=CELL:${devContact.phoneNumber}\nEND:VCARD`
+          }]
+        }
       }, { quoted: m });
 
     } catch (error) {
