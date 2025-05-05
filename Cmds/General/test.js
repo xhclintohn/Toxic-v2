@@ -35,7 +35,6 @@ module.exports = {
           mimetype: 'audio/mpeg',
           fileName: 'test.mp3'
         }, { quoted: m });
-        await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ There’s your test audio, ${m.pushName}. Don’t waste my time again, loser.` }, { quoted: m });
       } else {
         console.error('❌ Audio file not found at any of the following paths:', possibleAudioPaths);
         await client.sendMessage(m.chat, {
