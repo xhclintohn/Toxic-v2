@@ -14,7 +14,7 @@ module.exports = {
         return;
       }
 
-      // Developer's contact details
+      
       const devContact = {
         phoneNumber: '254735342808',
         fullName: 'Toxic Dev'
@@ -28,7 +28,7 @@ TEL;waid=${devContact.phoneNumber}:${devContact.phoneNumber}
 END:VCARD
 `;
 
-      // Send vCard properly formatted
+     
       await client.sendMessage(m.chat, {
         contacts: {
           displayName: devContact.fullName,
