@@ -1,3 +1,5 @@
+const { default: makeWASocket } = require('baileys-elite');
+
 module.exports = {
   name: 'button',
   aliases: ['btn'],
