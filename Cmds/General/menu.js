@@ -73,8 +73,8 @@ module.exports = {
         }
       }, { quoted: m });
 
-      // Use the Google Drive direct download link
-      const audioUrl = 'https://drive.google.com/uc?export=download&id=1IqltgwS1bTuaFi0sGH36TxXOV7Zjyv8i';
+      // Use the new Google Drive direct download link
+      const audioUrl = 'https://drive.google.com/uc?export=download&id=1ECttvHFrrzAsQK_6fGFJcf1Uu35CfMYc';
 
       try {
         console.log(`✅ Fetching audio from Google Drive`);
