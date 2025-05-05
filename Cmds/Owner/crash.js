@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { WAProto, generateWAMessageFromContent } = require('@whiskeysockets/baileys');
+const { WAProto, generateWAMessageFromContent } = require('baileys-elite');
 
 module.exports = {
   name: 'crash',
