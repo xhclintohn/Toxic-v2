@@ -7,7 +7,7 @@ module.exports = {
 
     try {
       const devContact = {
-        phoneNumber: '254735342808',
+        phoneNumber: '+254735342808',
         fullName: 'Toxic Dev'
       };
 
