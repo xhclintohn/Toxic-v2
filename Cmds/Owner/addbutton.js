@@ -1,4 +1,4 @@
-const { getSettings } = require("../Database/config");
+const { getSettings } = require("../../Database/config");
 
 module.exports = {
   name: 'addbutton',
