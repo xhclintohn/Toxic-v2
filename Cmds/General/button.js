@@ -16,7 +16,8 @@ module.exports = {
           { buttonId: 'ping', buttonText: { displayText: '🏓 Ping' }, type: 1 },
           { buttonId: 'info', buttonText: { displayText: 'ℹ Info' }, type: 1 }
         ],
-        headerType: 1
+        headerType: 1,
+        viewOnce: true
       }, { quoted: m });
 
     } catch (error) {
