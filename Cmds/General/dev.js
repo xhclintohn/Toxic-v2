@@ -1,23 +1,38 @@
+const { getSettings } = require('../../Database/config');
+
 module.exports = {
   name: 'dev',
   aliases: ['developer', 'contact'],
-  description: 'Sends the developer’s contact in a normal vCard format',
+  description: 'Sends the developer’s contact as a vCard',
   run: async (context) => {
     const { client, m } = context;
 
     try {
+      const settings = await getSettings();
+      if (!settings) {
+        await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Error: Couldn’t load settings.` }, { quoted: m });
+        return;
+      }
+
+      // Developer's contact details
       const devContact = {
-        phoneNumber: '+254735342808',
+        phoneNumber: '254735342808',
         fullName: 'Toxic Dev'
       };
 
-      // Ensure the vCard is structured properly
-      const vCard = `BEGIN:VCARD\nVERSION:3.0\nFN:${devContact.fullName}\nTEL;TYPE=VOICE,MSG,SMS:${devContact.phoneNumber}\nEND:VCARD`;
+      const vcard = `
+BEGIN:VCARD
+VERSION:3.0
+FN:${devContact.fullName}
+TEL;waid=${devContact.phoneNumber}:${devContact.phoneNumber}
+END:VCARD
+`;
 
+      // Send vCard properly formatted
       await client.sendMessage(m.chat, {
         contacts: {
           displayName: devContact.fullName,
-          contacts: [{ vcard: vCard }]
+          contacts: [{ vcard }]
         }
       }, { quoted: m });
 
