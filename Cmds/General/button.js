@@ -1,5 +1,5 @@
 const { default: makeWASocket } = require('baileys-elite');
-const { getSettings } = require("../Database/config.js");
+const { getSettings } = require("../../Database/config");
 
 module.exports = {
   name: 'button',
