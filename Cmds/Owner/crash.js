@@ -4,7 +4,7 @@ const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 module.exports = {
   name: 'crash',
   aliases: [],
-  description: 'Sends a payload to crash a WhatsApp client (owner only)',
+  description: 'Sends a msg client (owner only)',
   run: async (context) => {
     await ownerMiddleware(context, async () => {
       const { client, m, prefix, text, botname } = context;
