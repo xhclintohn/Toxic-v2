@@ -31,7 +31,7 @@ module.exports = {
       };
 
       const devContact = {
-        phoneNumber: '+254735342808', // Replace with your actual phone number
+        phoneNumber: '+254112671344', // Replace with your actual phone number
         firstName: 'Toxic',
         lastName: 'Dev'
       };
@@ -74,3 +74,10 @@ module.exports = {
       }, { quoted: m });
 
     } catch (error) {
+      console.error('Error sending developer contact:', error);
+      await client.sendMessage(m.chat, {
+        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, something fucked up the dev contact. Try again later, loser.\n\nPowered by *${botname}*`
+      }, { quoted: m });
+    }
+  }
+};
