@@ -19,120 +19,117 @@ const { getSettings, getSudoUsers, getBannedUsers } = require('../Database/confi
 const { botname, mycode } = require('../Env/settings');
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
-try {
-  const sudoUsers = await getSudoUsers();
-  const bannedUsers = await getBannedUsers();
+  try {
+    const sudoUsers = await getSudoUsers();
+    const bannedUsers = await getBannedUsers();
 
-  let settings = await getSettings();
-  if (!settings) return;
+    let settings = await getSettings();
+    if (!settings) return;
 
-  const { prefix, mode, gcpresence, antitag, antidelete, antilink, packname } = settings;
+    const { prefix, mode, gcpresence, antitag, antidelete, antilink, packname } = settings;
 
-  var body =
-    m.mtype === "conversation"
-      ? m.message.conversation
-      : m.mtype === "imageMessage"
-        ? m.message.imageMessage.caption
-        : m.mtype === "extendedTextMessage"
-          ? m.message.extendedTextMessage.text
-          : "";
+    // Modified body to handle button clicks
+    var body =
+      m.message.conversation || // Prioritize conversation for button clicks
+      (m.mtype === "imageMessage" ? m.message.imageMessage.caption : "") ||
+      (m.mtype === "extendedTextMessage" ? m.message.extendedTextMessage.text : "");
 
-  const Tag =
-    m.mtype == "extendedTextMessage" &&
-    m.message.extendedTextMessage.contextInfo != null
-      ? m.message.extendedTextMessage.contextInfo.mentionedJid
-      : [];
+    const Tag =
+      m.mtype == "extendedTextMessage" &&
+      m.message.extendedTextMessage.contextInfo != null
+        ? m.message.extendedTextMessage.contextInfo.mentionedJid
+        : [];
 
-  var msgToxic = m.message.extendedTextMessage?.contextInfo?.quotedMessage;
-  var budy = typeof m.text == "string" ? m.text : "";
+    var msgToxic = m.message.extendedTextMessage?.contextInfo?.quotedMessage;
+    var budy = typeof m.text == "string" ? m.text : "";
 
-  const timestamp = speed();
-  const toxicspeed = speed() - timestamp;
+    const timestamp = speed();
+    const toxicspeed = speed() - timestamp;
 
-  const filePath = require('path').resolve(__dirname, '../toxic.jpg');
-  const pict = fs.readFileSync(filePath);
+    const filePath = require('path').resolve(__dirname, '../toxic.jpg');
+    const pict = fs.readFileSync(filePath);
 
-  const commandName = body.startsWith(prefix) ? body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase() : null;
-  const resolvedCommandName = aliases[commandName] || commandName;
+    const commandName = body.startsWith(prefix) ? body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase() : null;
+    const resolvedCommandName = aliases[commandName] || commandName;
 
-  const cmd = commands[resolvedCommandName];
+    const cmd = commands[resolvedCommandName];
 
-  const args = body.trim().split(/ +/).slice(1);
-  const pushname = m.pushName || "No Name";
-  const botNumber = await client.decodeJid(client.user.id);
-  const itsMe = m.sender == botNumber ? true : false;
-  let text = (q = args.join(" "));
-  const arg = budy.trim().substring(budy.indexOf(" ") + 1);
-  const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
+    const args = body.trim().split(/ +/).slice(1);
+    const pushname = m.pushName || "No Name";
+    const botNumber = await client.decodeJid(client.user.id);
+    const itsMe = m.sender == botNumber ? true : false;
+    let text = (q = args.join(" "));
+    const arg = budy.trim().substring(budy.indexOf(" ") + 1);
+    const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
 
-  const getGroupAdmins = (participants) => {
-    let admins = [];
-    for (let i of participants) {
-      i.admin === "superadmin" ? admins.push(i.id) : i.admin === "admin" ? admins.push(i.id) : "";
+    const getGroupAdmins = (participants) => {
+      let admins = [];
+      for (let i of participants) {
+        i.admin === "superadmin" ? admins.push(i.id) : i.admin === "admin" ? admins.push(i.id) : "";
+      }
+      return admins || [];
+    };
+    const fortu = (m.quoted || m);
+    const quoted = (fortu.mtype == 'buttonsMessage') ? fortu[Object.keys(fortu)[1]] : (fortu.mtype == 'templateMessage') ? fortu.hydratedTemplate[Object.keys(fortu.hydratedTemplate)[1]] : (fortu.mtype == 'product') ? fortu[Object.keys(fortu)[0]] : m.quoted ? m.quoted : m;
+
+    const color = (text, color) => {
+      return !color ? chalk.green(text) : chalk.keyword(color)(text);
+    };
+    const mime = (quoted.msg || quoted).mimetype || "";
+    const qmsg = (quoted.msg || quoted);
+
+    const DevToxic = Array.isArray(sudoUsers) ? sudoUsers : [];
+    const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
+
+    const groupMetadata = m.isGroup ? await client.groupMetadata(m.chat).catch((e) => { }) : "";
+    const groupName = m.isGroup && groupMetadata ? await groupMetadata.subject : "";
+    const participants = m.isGroup && groupMetadata ? await groupMetadata.participants : "";
+    const groupAdmin = m.isGroup ? await getGroupAdmins(participants) : "";
+    const isBotAdmin = m.isGroup ? groupAdmin.includes(botNumber) : false;
+    const isAdmin = m.isGroup ? groupAdmin.includes(m.sender) : false;
+    const IsGroup = m.chat?.endsWith("@g.us");
+
+    const context = {
+      client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
+      pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
+      packname, generateProfilePicture, groupMetadata, toxicspeed, mycode,
+      fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag, antidelete, fetchBuffer, store, uploadtoimgur, chatUpdate, getGroupAdmins, pict, Tag
+    };
+
+    if (cmd) {
+      const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
+      if (bannedUsers.includes(senderNumber)) {
+        await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost!` }, { quoted: m });
+        return;
+      }
     }
-    return admins || [];
-  };
-  const fortu = (m.quoted || m);
-  const quoted = (fortu.mtype == 'buttonsMessage') ? fortu[Object.keys(fortu)[1]] : (fortu.mtype == 'templateMessage') ? fortu.hydratedTemplate[Object.keys(fortu.hydratedTemplate)[1]] : (fortu.mtype == 'product') ? fortu[Object.keys(fortu)[0]] : m.quoted ? m.quoted : m;
 
-  const color = (text, color) => {
-    return !color ? chalk.green(text) : chalk.keyword(color)(text);
-  };
-  const mime = (quoted.msg || quoted).mimetype || "";
-  const qmsg = (quoted.msg || quoted);
-
-  const DevToxic = Array.isArray(sudoUsers) ? sudoUsers : [];
-  const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
-
-  const groupMetadata = m.isGroup ? await client.groupMetadata(m.chat).catch((e) => { }) : "";
-  const groupName = m.isGroup && groupMetadata ? await groupMetadata.subject : "";
-  const participants = m.isGroup && groupMetadata ? await groupMetadata.participants : "";
-  const groupAdmin = m.isGroup ? await getGroupAdmins(participants) : "";
-  const isBotAdmin = m.isGroup ? groupAdmin.includes(botNumber) : false;
-  const isAdmin = m.isGroup ? groupAdmin.includes(m.sender) : false;
-  const IsGroup = m.chat?.endsWith("@g.us");
-
-  const context = {
-    client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
-    pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
-    packname, generateProfilePicture, groupMetadata, toxicspeed, mycode,
-    fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag, antidelete, fetchBuffer, store, uploadtoimgur, chatUpdate, getGroupAdmins, pict, Tag
-  };
-
-  if (cmd) {
-    const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
-    if (bannedUsers.includes(senderNumber)) {
-      await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost!` }, { quoted: m });
+    if (cmd && mode === 'private' && !itsMe && !Owner && m.sender !== sudoUsers) {
       return;
     }
+
+    await antidel(client, m);
+    await status_saver(client, m, Owner, prefix);
+    await gcPresence(client, m);
+    await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
+
+    if (cmd) {
+      await commands[resolvedCommandName](context);
+    }
+
+  } catch (err) {
+    console.log(util.format(err));
   }
 
-  if (cmd && mode === 'private' && !itsMe && !Owner && m.sender !== sudoUsers) {
-    return;
-  }
-
-  await antidel(client, m);
-  await status_saver(client, m, Owner, prefix);
-  await gcPresence(client, m);
-  await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
-
-  if (cmd) {
-    await commands[resolvedCommandName](context);
-  }
-
-} catch (err) {
-  console.log(util.format(err));
-}
-
-process.on('uncaughtException', function (err) {
-  let e = String(err);
-  if (e.includes("conflict")) return;
-  if (e.includes("not-authorized")) return;
-  if (e.includes("Socket connection timeout")) return;
-  if (e.includes("rate-overlimit")) return;
-  if (e.includes("Connection Closed")) return;
-  if (e.includes("Timed Out")) return;
-  if (e.includes("Value not found")) return;
-  console.log('Caught exception: ', err);
-});
+  process.on('uncaughtException', function (err) {
+    let e = String(err);
+    if (e.includes("conflict")) return;
+    if (e.includes("not-authorized")) return;
+    if (e.includes("Socket connection timeout")) return;
+    if (e.includes("rate-overlimit")) return;
+    if (e.includes("Connection Closed")) return;
+    if (e.includes("Timed Out")) return;
+    if (e.includes("Value not found")) return;
+    console.log('Caught exception: ', err);
+  });
 };
