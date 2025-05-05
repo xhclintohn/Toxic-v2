@@ -9,12 +9,12 @@ module.exports = {
 
     try {
       await client.sendMessage(m.chat, {
-        text: 'Choose an option below:',
-        footer: 'Toxic-MD Bot',
+        text: '𝑪𝑯𝑶𝑶𝑺𝑬 𝑨𝑵 𝑶𝑷𝑻𝑰𝑶𝑵 :',
+        footer: 'TPσɯҽɾҽԃ Ⴆყ Tσxιƈ-MD',
         buttons: [
-          { buttonId: 'help', buttonText: { displayText: '📌 Help' }, type: 1 },
-          { buttonId: 'ping', buttonText: { displayText: '🏓 Ping' }, type: 1 },
-          { buttonId: 'info', buttonText: { displayText: 'ℹ Info' }, type: 1 }
+          { buttonId: '.help', buttonText: { displayText: '📌 𝙈𝙀𝙉𝙐' }, type: 1 },
+          { buttonId: '.ping', buttonText: { displayText: '🏓 𝙋𝙄𝙉𝙂' }, type: 1 },
+          { buttonId: '.owner', buttonText: { displayText: '𝙊𝙒𝙉𝙀𝙍🖤 ' }, type: 1 }
         ],
         headerType: 1,
         viewOnce: true
