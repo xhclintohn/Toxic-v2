@@ -1,7 +1,7 @@
 const { DateTime } = require('luxon');
 const fs = require('fs');
 const path = require('path');
-const { getSettings } = require("../../Database/config");
+const { getSettings } = require('../../Database/config'); // Correct import path
 
 module.exports = {
   name: 'menu',
@@ -15,14 +15,14 @@ module.exports = {
     }
 
     try {
-      
+      // Retrieve settings to get the current prefix
       const settings = await getSettings();
       if (!settings) {
         await client.sendMessage(m.chat, { text: '◈━━━━━━━━━━━━━━━━◈\n│❒ Error: Couldn’t load settings, you dumb fuck.' }, { quoted: m });
         return;
       }
 
-      const effectivePrefix = settings.prefix || ''; 
+      const effectivePrefix = settings.prefix || ''; // Use empty string for prefixless mode
 
       const getGreeting = () => {
         const currentHour = DateTime.now().setZone('Africa/Nairobi').hour;
@@ -38,19 +38,22 @@ module.exports = {
 
       const toFancyFont = (text, isUpperCase = false) => {
         const fonts = {
-          'A': '𝐀', 'B': '𝐁', 'C': '𝐂', 'D': '𝐃', 'E': '𝐄', 'F': '𝐅', 'G': '𝐆', 'H': '𝐇', 'I': '𝐈', 'J': '𝐉', 'K': '𝐊', 'L': '𝐋', 'M': '𝐌',
-          'N': '𝐍', 'O': '𝐎', 'P': '𝐏', 'Q': '𝐐', 'R': '𝐑', 'S': '𝐒', 'T': '𝐓', 'U': '𝐔', 'V': '𝐕', 'W': '𝐖', 'X': '𝐗', 'Y': '𝐘', 'Z': '𝐙',
-          'a': '𝐚', 'b': '𝐛', 'c': '𝐜', 'd': '𝐝', 'e': '𝐞', 'f': '𝐟', 'g': '𝐠', 'h': '𝐡', 'i': '𝐢', 'j': '𝐣', 'k': '𝐤', 'l': '𝐥', 'm': '𝐦',
-          'n': '𝐧', 'o': '𝐨', 'p': '𝐩', 'q': '𝐪', 'r': '𝐫', 's': '𝐬', 't': '𝐭', 'u': '𝐮', 'v': '𝐯', 'w': '𝐰', 'x': '𝐱', 'y': '𝐲', 'z': '𝐳'
+          // Uppercase letters
+          'A': '𝘼', 'B': '𝘽', 'C': '𝘾', 'D': '𝘿', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
+          'N': '𝙉', 'O': '𝙊', 'P': '𝙋', 'Q': '𝙌', 'R': '𝙍', 'S': '𝙎', 'T': '𝙏', 'U': '𝙐', 'V': '𝙑', 'W': '𝙒', 'X': '𝙓', 'Y': '𝙔', 'Z': '𝙕',
+          // Lowercase letters
+          'a': '𝙖', 'b': '𝙗', 'c': '𝙘', 'd': '𝙙', 'e': '𝙚', 'f': '𝙛', 'g': '𝙜', 'h': '𝙝', 'i': '𝙞', 'j': '𝙟', 'k': '𝙠', 'l': '𝙡', 'm': '𝙢',
+          'n': '𝙣', 'o': '𝙤', 'p': '𝙥', 'q': '𝙦', 'r': '𝙧', 's': '𝙨', 't': '𝙩', 'u': '𝙪', 'v': '𝙫', 'w': '𝙬', 'x': '𝙭', 'y': '𝙮', 'z': '𝙯'
         };
-        return (isUpperCase ? text.toUpperCase() : text.toLower_synced
+        return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
+          .split('')
           .map(char => fonts[char] || char)
           .join('');
       };
 
       // Define button commands with toxic emojis
       const buttonCommands = [
-        { id: 'list', display: toFancyFont('FULLMENU'), emoji: '🔥' },
+        { id: 'fullmenu', display: toFancyFont('FULLMENU'), emoji: '🔥' },
         { id: 'dev', display: toFancyFont('DEV'), emoji: '💀' },
         { id: 'ping', display: toFancyFont('PING'), emoji: '🏓' },
         { id: 'uptime', display: toFancyFont('UPTIME'), emoji: '⏰' }
