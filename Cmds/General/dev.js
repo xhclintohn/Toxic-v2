@@ -3,12 +3,12 @@ const { getSettings } = require('../../Database/config');
 module.exports = {
   name: 'dev',
   aliases: ['developer', 'contact'],
-  description: 'Sends the developer’s contact with a button to message them',
+  description: 'Sends the developer’s contact with a link to message them',
   run: async (context) => {
-    const { client, m, pict, botname } = context;
+    const { client, m, botname } = context;
 
     try {
-      // Retrieve settings to get the current prefix
+      // Retrieve settings
       const settings = await getSettings();
       if (!settings) {
         await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Error: Couldn’t load settings.` }, { quoted: m });
@@ -17,17 +17,15 @@ module.exports = {
 
       const waLink = `https://wa.me/254735342808?text=Yo,%20Toxic%20Dev!`;
 
-      let contactText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Want to reach the ${botname} developer?* 🖤\n\n`;
-      contactText += `📩 *Tap the button below to message me!* 😈\n`;
+      const contactText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Want to reach the ${botname} developer?* 🖤\n\n`;
+      contactText += `📩 *Tap the link below to message me!*\n\n`;
+      contactText += `🔗 ${waLink}\n`;
       contactText += `◈━━━━━━━━━━━━━━━━◈`;
 
-      // Send button with direct WhatsApp link
+      // Send message with clickable link
       await client.sendMessage(m.chat, {
         text: contactText,
         footer: `Powered by ${botname}`,
-        buttons: [
-          { buttonId: 'contact_dev', buttonText: { displayText: '📩 Contact Me' }, type: 2, url: waLink }
-        ],
         headerType: 1,
         viewOnce: true
       }, { quoted: m });
