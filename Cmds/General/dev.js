@@ -1,23 +1,23 @@
 module.exports = {
   name: 'dev',
   aliases: ['developer', 'contact'],
-  description: 'Sends the developer’s contact in vCard format',
+  description: 'Sends the developer’s contact in a normal vCard format',
   run: async (context) => {
     const { client, m } = context;
 
     try {
       const devContact = {
-        phoneNumber: '+254735342808',
+        phoneNumber: '254735342808',
         fullName: 'Toxic Dev'
       };
 
-      // Send vCard in proper contact format
+      // Ensure the vCard is structured properly
+      const vCard = `BEGIN:VCARD\nVERSION:3.0\nFN:${devContact.fullName}\nTEL;TYPE=VOICE,MSG,SMS:${devContact.phoneNumber}\nEND:VCARD`;
+
       await client.sendMessage(m.chat, {
         contacts: {
           displayName: devContact.fullName,
-          contacts: [{
-            vcard: `BEGIN:VCARD\nVERSION:3.0\nFN:${devContact.fullName}\nTEL;TYPE=CELL:${devContact.phoneNumber}\nEND:VCARD`
-          }]
+          contacts: [{ vcard: vCard }]
         }
       }, { quoted: m });
 
