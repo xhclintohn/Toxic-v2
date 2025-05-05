@@ -1,14 +1,13 @@
-const { DateTime } = require('luxon');
 const fs = require('fs');
 const path = require('path');
-const { getSettings } = require('../../Database/config'); // Correct import path
+const { getSettings } = require('../../Database/config');
 
 module.exports = {
   name: 'menu',
   aliases: ['help', 'commands', 'list'],
-  description: 'Displays the bot command menu with buttons and a voice note',
+  description: 'Displays a simplified bot command menu with buttons and a voice note',
   run: async (context) => {
-    const { client, m, totalCommands, mode, prefix, pict, botname, text } = context;
+    const { client, m, mode, pict, botname, text } = context;
 
     if (text) {
       return client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, what’s with the extra bullshit? Just say ${prefix}menu, moron.` }, { quoted: m });
@@ -24,24 +23,10 @@ module.exports = {
 
       const effectivePrefix = settings.prefix || ''; // Use empty string for prefixless mode
 
-      const getGreeting = () => {
-        const currentHour = DateTime.now().setZone('Africa/Nairobi').hour;
-        if (currentHour >= 5 && currentHour < 12) return 'Good Morning, you early bird! 🌞';
-        if (currentHour >= 12 && currentHour < 18) return 'Good Afternoon, slacker! 🌞';
-        if (currentHour >= 18 && currentHour < 22) return 'Good Evening, night owl! 🌙';
-        return 'Good Night, you insomniac! 🌌';
-      };
-
-      const getCurrentTimeInNairobi = () => {
-        return DateTime.now().setZone('Africa/Nairobi').toLocaleString(DateTime.TIME_SIMPLE);
-      };
-
       const toFancyFont = (text, isUpperCase = false) => {
         const fonts = {
-          // Uppercase letters
           'A': '𝘼', 'B': '𝘽', 'C': '𝘾', 'D': '𝘿', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
           'N': '𝙉', 'O': '𝙊', 'P': '𝙋', 'Q': '𝙌', 'R': '𝙍', 'S': '𝙎', 'T': '𝙏', 'U': '𝙐', 'V': '𝙑', 'W': '𝙒', 'X': '𝙓', 'Y': '𝙔', 'Z': '𝙕',
-          // Lowercase letters
           'a': '𝙖', 'b': '𝙗', 'c': '𝙘', 'd': '𝙙', 'e': '𝙚', 'f': '𝙛', 'g': '𝙜', 'h': '𝙝', 'i': '𝙞', 'j': '𝙟', 'k': '𝙠', 'l': '𝙡', 'm': '𝙢',
           'n': '𝙣', 'o': '𝙤', 'p': '𝙥', 'q': '𝙦', 'r': '𝙧', 's': '𝙨', 't': '𝙩', 'u': '𝙪', 'v': '𝙫', 'w': '𝙬', 'x': '𝙭', 'y': '𝙮', 'z': '𝙯'
         };
@@ -59,15 +44,10 @@ module.exports = {
         { id: 'uptime', display: toFancyFont('UPTIME'), emoji: '⏰' }
       ];
 
-      let menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, Bitches!* 🌟\n\n`;
-      menuText += `${getGreeting()}, *${m.pushName}!*\n\n`;
-      menuText += `👤 *User*: ${m.pushName} (you’re nobody special)\n`;
+      let menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botname} Menu, Bitches!* 😈\n\n`;
       menuText += `🤖 *Bot*: ${botname} (bow down)\n`;
-      menuText += `📋 *Total Commands*: ${totalCommands} (don’t fuck it up)\n`;
-      menuText += `🕒 *Time*: ${getCurrentTimeInNairobi()} (Nairobi vibes)\n`;
       menuText += `🔣 *Prefix*: ${effectivePrefix || 'None'} (learn it, dumbass)\n`;
       menuText += `🌐 *Mode*: ${mode} (deal with it)\n`;
-      menuText += `📚 *Library*: Baileys (the good shit)\n`;
       menuText += `\n◈━━━━━━━━━━━━━━━━◈\n\n`;
       menuText += `*Pick Your Poison Below, Loser!* 😈\n`;
 
