@@ -14,7 +14,6 @@ module.exports = {
     }
 
     try {
-     
       const settings = await getSettings();
       if (!settings) {
         await client.sendMessage(m.chat, { text: '◈━━━━━━━━━━━━━━━━◈\n│❒ Error: Couldn’t load settings, you dumb fuck.' }, { quoted: m });
@@ -74,32 +73,21 @@ module.exports = {
         }
       }, { quoted: m });
 
-      const possibleAudioPaths = [
-        path.join(__dirname, 'xh_clinton', 'menu.mp3'),
-        path.join(process.cwd(), 'xh_clinton', 'menu.mp3'),
-        path.join(__dirname, '..', 'xh_clinton', 'menu.mp3'),
-      ];
+      // Use the Google Drive direct download link
+      const audioUrl = 'https://drive.google.com/uc?export=download&id=1IqltgwS1bTuaFi0sGH36TxXOV7Zjyv8i';
 
-      let audioPath = null;
-      for (const possiblePath of possibleAudioPaths) {
-        if (fs.existsSync(possiblePath)) {
-          audioPath = possiblePath;
-          break;
-        }
-      }
-
-      if (audioPath) {
-        console.log(`✅ Found audio`);
+      try {
+        console.log(`✅ Fetching audio from Google Drive`);
         await client.sendMessage(m.chat, {
-          audio: { url: audioPath },
+          audio: { url: audioUrl },
           ptt: true,
           mimetype: 'audio/mpeg',
           fileName: 'menu.mp3'
         }, { quoted: m });
-      } else {
-        console.error('❌ Audio file not found at any of the following paths:', possibleAudioPaths);
+      } catch (error) {
+        console.error('❌ Error fetching or sending audio from Google Drive:', error);
         await client.sendMessage(m.chat, {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit, couldn’t find the menu voice note. Check if xh_clinton/menu.mp3 exists, you slacker.\n\nPowered by *${botname}*`
+          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit, couldn’t fetch the menu voice note from Google Drive. Check the link, you slacker.\n\nPowered by *${botname}*`
         }, { quoted: m });
       }
 
