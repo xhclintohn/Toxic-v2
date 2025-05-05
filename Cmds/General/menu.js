@@ -5,73 +5,54 @@ const { getSettings } = require('../../Database/config');
 module.exports = {
   name: 'menu',
   aliases: ['help', 'commands', 'list'],
-  description: 'Displays a simplified bot command menu with buttons and a voice note',
+  description: 'Displays a fully styled bot command menu with fancy font and voice note',
   run: async (context) => {
     const { client, m, mode, pict, botname, text } = context;
 
     if (text) {
-      return client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, what’s with the extra bullshit? Just say ${prefix}menu, moron.` }, { quoted: m });
+      return client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, just say ${prefix}menu, no extra nonsense!` }, { quoted: m });
     }
 
     try {
-      // Retrieve settings to get the current prefix
       const settings = await getSettings();
-      if (!settings) {
-        await client.sendMessage(m.chat, { text: '◈━━━━━━━━━━━━━━━━◈\n│❒ Error: Couldn’t load settings, you dumb fuck.' }, { quoted: m });
-        return;
-      }
+      if (!settings) return;
 
-      const effectivePrefix = settings.prefix || ''; // Use empty string for prefixless mode
+      const effectivePrefix = settings.prefix || '';
 
-      const toFancyFont = (text, isUpperCase = false) => {
+      const toFancyFont = (text) => {
         const fonts = {
-          'A': '𝘼', 'B': '𝘽', 'C': '𝘾', 'D': '𝘿', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
-          'N': '𝙉', 'O': '𝙊', 'P': '𝙋', 'Q': '𝙌', 'R': '𝙍', 'S': '𝙎', 'T': '𝙏', 'U': '𝙐', 'V': '𝙑', 'W': '𝙒', 'X': '𝙓', 'Y': '𝙔', 'Z': '𝙕',
-          'a': '𝙖', 'b': '𝙗', 'c': '𝙘', 'd': '𝙙', 'e': '𝙚', 'f': '𝙛', 'g': '𝙜', 'h': '𝙝', 'i': '𝙞', 'j': '𝙟', 'k': '𝙠', 'l': '𝙡', 'm': '𝙢',
-          'n': '𝙣', 'o': '𝙤', 'p': '𝙥', 'q': '𝙦', 'r': '𝙧', 's': '𝙨', 't': '𝙩', 'u': '𝙪', 'v': '𝙫', 'w': '𝙬', 'x': '𝙭', 'y': '𝙮', 'z': '𝙯'
+          'A': '𝗔', 'B': '𝗕', 'C': '𝗖', 'D': '𝗗', 'E': '𝗘', 'F': '𝗙', 'G': '𝗚', 'H': '𝗛', 'I': '𝗜', 'J': '𝗝', 'K': '𝗞', 'L': '𝗟', 'M': '𝗠',
+          'N': '𝗡', 'O': '𝗢', 'P': '𝗣', 'Q': '𝗤', 'R': '𝗥', 'S': '𝗦', 'T': '𝗧', 'U': '𝗨', 'V': '𝗩', 'W': '𝗪', 'X': '𝗫', 'Y': '𝗬', 'Z': '𝗭',
+          'a': '𝗮', 'b': '𝗯', 'c': '𝗰', 'd': '𝗱', 'e': '𝗲', 'f': '𝗳', 'g': '𝗴', 'h': '𝗵', 'i': '𝗶', 'j': '𝗷', 'k': '𝗸', 'l': '𝗹', 'm': '𝗺',
+          'n': '𝗻', 'o': '𝗼', 'p': '𝗽', 'q': '𝗾', 'r': '𝗿', 's': '𝘀', 't': '𝘁', 'u': '𝘂', 'v': '𝘃', 'w': '𝘄', 'x': '𝘅', 'y': '𝘆', 'z': '𝘇'
         };
-        return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
-          .split('')
-          .map(char => fonts[char] || char)
-          .join('');
+        return text.split('').map(char => fonts[char] || char).join('');
       };
 
-      // Define button commands with toxic emojis
       const buttonCommands = [
-        { id: 'fullmenu', display: toFancyFont('FULLMENU'), emoji: '🔥' },
-        { id: 'dev', display: toFancyFont('DEV'), emoji: '💀' },
+        { id: 'fullmenu', display: toFancyFont('FULL MENU'), emoji: '🔥' },
+        { id: 'dev', display: toFancyFont('DEVELOPER'), emoji: '💀' },
         { id: 'ping', display: toFancyFont('PING'), emoji: '🏓' },
         { id: 'uptime', display: toFancyFont('UPTIME'), emoji: '⏰' }
       ];
 
-      let menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botname} Menu, Bitches!* 😈\n\n`;
-      menuText += `🤖 *Bot*: ${botname} (bow down)\n`;
-      menuText += `🔣 *Prefix*: ${effectivePrefix || 'None'} (learn it, dumbass)\n`;
-      menuText += `🌐 *Mode*: ${mode} (deal with it)\n`;
-      menuText += `\n◈━━━━━━━━━━━━━━━━◈\n\n`;
-      menuText += `*Pick Your Poison Below, Loser!* 😈\n`;
+      const menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ ${toFancyFont(botname)} ${toFancyFont('MENU')} 😈\n\n`;
+      menuText += `🤖 ${toFancyFont('Bot')}: ${botname}\n`;
+      menuText += `🔣 ${toFancyFont('Prefix')}: ${effectivePrefix || 'None'}\n`;
+      menuText += `🌐 ${toFancyFont('Mode')}: ${mode}\n\n`;
+      menuText += `◈━━━━━━━━━━━━━━━━◈\n\n`;
+      menuText += `${toFancyFont('Choose an option below!')}`;
 
       await client.sendMessage(m.chat, {
         text: menuText,
-        footer: `TPσɯҽɾҽԃ Ⴆყ ${botname}`,
+        footer: `Powered by ${botname}`,
         buttons: buttonCommands.map(cmd => ({
           buttonId: `${effectivePrefix}${cmd.id}`,
           buttonText: { displayText: `${cmd.emoji} ${cmd.display}` },
           type: 1
         })),
         headerType: 1,
-        viewOnce: true,
-        contextInfo: {
-          externalAdReply: {
-            showAdAttribution: false,
-            title: `${botname}`,
-            body: `Yo, ${m.pushName}! Ready to fuck shit up?`,
-            thumbnail: pict,
-            sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
-            mediaType: 1,
-            renderLargerThumbnail: true
-          }
-        }
+        viewOnce: true
       }, { quoted: m });
 
       const possibleAudioPaths = [
@@ -80,33 +61,21 @@ module.exports = {
         path.join(__dirname, '..', 'xh_clinton', 'menu.mp3'),
       ];
 
-      let audioPath = null;
       for (const possiblePath of possibleAudioPaths) {
         if (fs.existsSync(possiblePath)) {
-          audioPath = possiblePath;
+          await client.sendMessage(m.chat, {
+            audio: { url: possiblePath },
+            ptt: true,
+            mimetype: 'audio/mpeg',
+            fileName: 'menu.mp3'
+          }, { quoted: m });
           break;
         }
       }
 
-      if (audioPath) {
-        console.log(`✅ Found audio file at: ${audioPath}`);
-        await client.sendMessage(m.chat, {
-          audio: { url: audioPath },
-          ptt: true,
-          mimetype: 'audio/mpeg',
-          fileName: 'menu.mp3'
-        }, { quoted: m });
-      } else {
-        console.error('❌ Audio file not found at any of the following paths:', possibleAudioPaths);
-        await client.sendMessage(m.chat, {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit, couldn’t find the menu voice note. Check if xh_clinton/menu.mp3 exists, you slacker.\n\nPowered by *${botname}*`
-        }, { quoted: m });
-      }
-
-    } catch (error) {
-      console.error('Error generating button menu or sending voice note:', error);
+    } catch {
       await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, something fucked up the menu or voice note. Try again later, loser.\n\nPowered by *${botname}*`
+        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Something went wrong. Try again later.\n\nPowered by *${botname}*`
       }, { quoted: m });
     }
   }
