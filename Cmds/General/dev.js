@@ -1,32 +1,22 @@
-const { getSettings } = require('../../Database/config');
-
 module.exports = {
   name: 'dev',
   aliases: ['developer', 'contact'],
-  description: 'Sends the developer’s contact as a vCard',
+  description: 'Sends the developer’s contact in vCard format',
   run: async (context) => {
-    const { client, m, botname } = context;
+    const { client, m } = context;
 
     try {
-      // Retrieve settings
-      const settings = await getSettings();
-      if (!settings) {
-        await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Error: Couldn’t load settings.` }, { quoted: m });
-        return;
-      }
-
       const devContact = {
         phoneNumber: '+254735342808',
-        firstName: 'Toxic',
-        lastName: 'Dev'
+        fullName: 'Toxic Dev'
       };
 
-      // Send vCard contact
+      // Send vCard in proper contact format
       await client.sendMessage(m.chat, {
         contacts: {
-          displayName: `${devContact.firstName} ${devContact.lastName}`,
+          displayName: devContact.fullName,
           contacts: [{
-            vcard: `BEGIN:VCARD\nVERSION:3.0\nFN:${devContact.firstName} ${devContact.lastName}\nTEL;TYPE=CELL:${devContact.phoneNumber}\nEND:VCARD`
+            vcard: `BEGIN:VCARD\nVERSION:3.0\nFN:${devContact.fullName}\nTEL;TYPE=CELL:${devContact.phoneNumber}\nEND:VCARD`
           }]
         }
       }, { quoted: m });
@@ -34,7 +24,7 @@ module.exports = {
     } catch (error) {
       console.error('Error sending developer contact:', error);
       await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Oops! Something went wrong. Try again later.\n\nPowered by *${botname}*`
+        text: `Oops! Something went wrong. Try again later.`
       }, { quoted: m });
     }
   }
