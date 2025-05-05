@@ -80,15 +80,27 @@ module.exports = {
         console.log(`✅ Fetching audio from Google Drive`);
         await client.sendMessage(m.chat, {
           audio: { url: audioUrl },
-          ptt: true,
-          mimetype: 'audio/mpeg',
-          fileName: 'menu.mp3'
+          ptt: true, // Ensures voice note interface
+          mimetype: 'audio/ogg; codecs=opus', // Try OGG/Opus for voice note compatibility
+          fileName: 'menu.ogg' // Use .ogg extension for consistency
         }, { quoted: m });
       } catch (error) {
-        console.error('❌ Error fetching or sending audio from Google Drive:', error);
-        await client.sendMessage(m.chat, {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit, couldn’t fetch the menu voice note from Google Drive. Check the link, you slacker.\n\nPowered by *${botname}*`
-        }, { quoted: m });
+        console.error('❌ Error fetching or sending voice note from Google Drive:', error);
+        // Fallback to audio/mpeg if OGG fails
+        try {
+          console.log(`⚠️ Retrying with audio/mpeg mimetype`);
+          await client.sendMessage(m.chat, {
+            audio: { url: audioUrl },
+            ptt: true,
+            mimetype: 'audio/mpeg',
+            fileName: 'menu.mp3'
+          }, { quoted: m });
+        } catch (fallbackError) {
+          console.error('❌ Fallback failed:', fallbackError);
+          await client.sendMessage(m.chat, {
+            text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit, couldn’t fetch the menu voice note from Google Drive. Check the link or file format, you slacker.\n\nPowered by *${botname}*`
+          }, { quoted: m });
+        }
       }
 
     } catch (error) {
