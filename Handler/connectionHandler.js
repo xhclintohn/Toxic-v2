@@ -26,6 +26,19 @@ const connectionHandler = async (_0x218261, _0x461fdf, _0xd50ec0) => {
     return DateTime.now().setZone("Africa/Nairobi").toLocaleString(DateTime.TIME_SIMPLE);
   };
 
+  const toFancyFont = (text, isUpperCase = false) => {
+    const fonts = {
+      'A': '𝘼', 'B': '𝘽', 'C': '𝘾', 'D': '𝘿', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
+      'N': '𝙉', 'O': '𝙊', 'P': '𝙋', 'Q': '𝙌', 'R': '𝙍', 'S': '𝙎', 'T': '𝙏', 'U': '𝙐', 'V': '𝙑', 'W': '𝙒', 'X': '𝙓', 'Y': '𝙔', 'Z': '𝙕',
+      'a': '𝙖', 'b': '𝙗', 'c': '𝙘', 'd': '𝙙', 'e': '𝙚', 'f': '𝙛', 'g': '𝙜', 'h': '𝙝', 'i': '𝙞', 'j': '𝙟', 'k': '𝙠', 'l': '𝙡', 'm': '𝙢',
+      'n': '𝙣', 'o': '𝙤', 'p': '𝙥', 'q': '𝙦', 'r': '𝙧', 's': '𝙨', 't': '𝙩', 'u': '𝙪', 'v': '𝙫', 'w': '𝙬', 'x': '𝙭', 'y': '𝙮', 'z': '𝙯'
+    };
+    return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
+      .split('')
+      .map(char => fonts[char] || char)
+      .join('');
+  };
+
   if (_0x115a4c === "connecting") {
     console.log("📈 Connecting to WhatsApp and database...");
   }
@@ -75,49 +88,70 @@ const connectionHandler = async (_0x218261, _0x461fdf, _0xd50ec0) => {
         await addSudoUser(_0x531909);
       }
 
-      let _0x55d08c = `◈━━━━━━━━━━━━━━━━◈
-│❒ *${_0x166fc0()}*
-│❒ Yo, you're plugged into *${botname}*! 📡
-│❒ ✨ *Bot Name*: ${botname}
-│❒ 🔧 *Mode*: ${_0x316865.mode}
-│❒ ➡️ *Prefix*: ${_0x316865.prefix}
-│❒ 📋 *Commands*: ${totalCommands}
-│❒ 🕒 *Time*: ${_0x53a446()}
-│❒ 💾 *Database*: Postgres SQL
-│❒ 📚 *Library*: Baileys
+      let _0x55d08c = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${_0x166fc0()}*\n│❒ Yo, you're plugged into *${botname}*! 📡\n\n`;
+      _0x55d08c += `✨ *Bot Name*: ${botname}\n`;
+      _0x55d08c += `🔧 *Mode*: ${_0x316865.mode}\n`;
+      _0x55d08c += `➡️ *Prefix*: ${_0x316865.prefix}\n`;
+      _0x55d08c += `📋 *Commands*: ${totalCommands}\n`;
+      _0x55d08c += `🕒 *Time*: ${_0x53a446()}\n`;
+      _0x55d08c += `💾 *Database*: Postgres SQL\n`;
+      _0x55d08c += `📚 *Library*: Baileys\n\n`;
+      _0x55d08c += `│❒ *New Connection Alert!* First time here? We've added you to the sudo crew! 😎\n\n`;
+      _0x55d08c += `│❒ 🚀 *Get Started*:\n`;
+      _0x55d08c += `│❒ - Customize bot with *${_0x316865.prefix}settings*\n`;
+      _0x55d08c += `│❒ - Hit the button below for commands! 👇\n\n`;
+      _0x55d08c += `│❒ *Credits*: Powered by 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 🗿\n◈━━━━━━━━━━━━━━━━◈`;
 
-│❒ *New Connection Alert!* First time here? We've added you to the sudo crew! 😎
-
-│❒ 🚀 *Get Started*:
-│❒ - Customize bot with *${_0x316865.prefix}settings*
-│❒ - Explore commands with *${_0x316865.prefix}menu*
-
-│❒ *Credits*: Powered by 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 🗿
-◈━━━━━━━━━━━━━━━━◈`;
-
-      const _0x47c4ef = { text: _0x55d08c };
-      await _0x218261.sendMessage(_0x218261.user.id, _0x47c4ef);
+      await _0x218261.sendMessage(_0x218261.user.id, {
+        text: _0x55d08c,
+        footer: `TPσɯҽɾҽԃ Ⴆყ ${botname}`,
+        buttons: [
+          { buttonId: `${_0x316865.prefix || ''}menu`, buttonText: { displayText: `📖 ${toFancyFont('MENU')}` }, type: 1 }
+        ],
+        headerType: 1,
+        viewOnce: true,
+        contextInfo: {
+          externalAdReply: {
+            showAdAttribution: false,
+            title: `${botname}`,
+            body: `Yo! Don’t fuck this up.`,
+            sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
+            mediaType: 1,
+            renderLargerThumbnail: true
+          }
+        }
+      });
     } else {
-      let _0x24abe8 = `◈━━━━━━━━━━━━━━━━◈
-│❒ *${_0x166fc0()}*
+      let _0x24abe8 = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${_0x166fc0()}*\n│❒ Welcome back to *${botname}*! 📡\n\n`;
+      _0x24abe8 += `✨ *Bot Name*: ${botname}\n`;
+      _0x24abe8 += `🔧 *Mode*: ${_0x316865.mode}\n`;
+      _0x24abe8 += `➡️ *Prefix*: ${_0x316865.prefix}\n`;
+      _0x24abe8 += `📋 *Commands*: ${totalCommands}\n`;
+      _0x24abe8 += `🕒 *Time*: ${_0x53a446()}\n`;
+      _0x24abe8 += `💾 *Database*: Postgres SQL\n`;
+      _0x24abe8 += `📚 *Library*: Baileys\n\n`;
+      _0x24abe8 += `│❒ Ready to dive in? Hit the button below for commands! 😎\n\n`;
+      _0x24abe8 += `│❒ *Credits*: Powered by 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 🗿\n◈━━━━━━━━━━━━━━━━◈`;
 
-│❒ Welcome back to *${botname}*! 📡
-
-│❒ ✨ *Bot Name*: ${botname}
-│❒ 🔧 *Mode*: ${_0x316865.mode}
-│❒ ➡️ *Prefix*: ${_0x316865.prefix}
-│❒ 📋 *Commands*: ${totalCommands}
-│❒ 🕒 *Time*: ${_0x53a446()}
-│❒ 💾 *Database*: Postgres SQL
-│❒ 📚 *Library*: Baileys
-
-│❒ Ready to dive in? Hit *${_0x316865.prefix}menu* for the full command list! 😎
-
-│❒ *Credits*: Powered by 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 🗿
-◈━━━━━━━━━━━━━━━━◈`;
-
-      const _0x2ca63a = { text: _0x24abe8 };
-      await _0x218261.sendMessage(_0x218261.user.id, _0x2ca63a);
+      await _0x218261.sendMessage(_0x218261.user.id, {
+        text: _0x24abe8,
+        footer: `TPσɯҽɾҽԃ Ⴆყ ${botname}`,
+        buttons: [
+          { buttonId: `${_0x316865.prefix || ''}menu`, buttonText: { displayText: `📖 ${toFancyFont('MENU')}` }, type: 1 }
+        ],
+        headerType: 1,
+        viewOnce: true,
+        contextInfo: {
+          externalAdReply: {
+            showAdAttribution: false,
+            title: `${botname}`,
+            body: `Yo! Don’t fuck this up.`,
+            sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
+            mediaType: 1,
+            renderLargerThumbnail: true
+          }
+        }
+      });
     }
     console.log("✅ Connection to WhatsApp and database successful\nLoaded " + totalCommands + " commands.\nToxic-MD V3 is active!");
   }
