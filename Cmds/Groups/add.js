@@ -4,7 +4,7 @@ module.exports = async (context) => {
     await middleware(context, async () => {
         const { client, m, participants, botname, groupMetadata, text, pushname } = context;
 
-        const { getBinaryNodeChild, getBinaryNodeChildren } = require('@whiskeysockets/baileys');
+        const { getBinaryNodeChild, getBinaryNodeChildren } = require('baileys-elite');
 
         if (!text) return m.reply("provide number to be added in this format.\n\nadd 254735342808");
 
