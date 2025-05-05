@@ -3,7 +3,7 @@ const { getSettings } = require('../../Database/config');
 module.exports = {
   name: 'dev',
   aliases: ['developer', 'contact'],
-  description: 'Sends the developer’s contact with message and add options',
+  description: 'Sends the developer’s contact with a button to message them',
   run: async (context) => {
     const { client, m, pict, botname } = context;
 
@@ -39,9 +39,10 @@ module.exports = {
       let contactText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Meet the ${botname} Mastermind!* 💀\n\n`;
       contactText += `👤 *Name*: ${devContact.firstName} ${devContact.lastName}\n`;
       contactText += `📱 *Contact*: ${devContact.phoneNumber}\n`;
-      contactText += `\n*Don’t waste my time, loser!* 😈\n`;
+      contactText += `\n*Hit the button to DM me, loser!* 😈\n`;
       contactText += `◈━━━━━━━━━━━━━━━━◈\n`;
 
+      // Send vCard
       await client.sendMessage(m.chat, {
         contacts: {
           displayName: `${devContact.firstName} ${devContact.lastName}`,
@@ -51,12 +52,12 @@ module.exports = {
         }
       }, { quoted: m });
 
+      // Send button to initiate DM
       await client.sendMessage(m.chat, {
         text: contactText,
         footer: `TPσɯҽɾҽԃ Ⴆყ ${botname}`,
         buttons: [
-          { buttonId: `${effectivePrefix}message_dev`, buttonText: { displayText: `💬 ${toFancyFont('MESSAGE')}` }, type: 1 },
-          { buttonId: `${effectivePrefix}add_contact`, buttonText: { displayText: `➕ ${toFancyFont('ADD TO CONTACTS')}` }, type: 1 }
+          { buttonId: `${effectivePrefix}contact_dev`, buttonText: { displayText: `📩 ${toFancyFont('CONTACT')}` }, type: 1 }
         ],
         headerType: 1,
         viewOnce: true,
@@ -64,9 +65,9 @@ module.exports = {
           externalAdReply: {
             showAdAttribution: false,
             title: `${botname}`,
-            body: `Yo, ${m.pushName}! Don’t fuck this up.`,
+            body: `Yo, ${m.pushName}! Don’t waste my time.`,
             thumbnail: pict,
-            sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
+            sourceUrl: `https://wa.me/${devContact.phoneNumber.replace('+', '')}?text=Yo,%20Toxic%20Dev!.`,
             mediaType: 1,
             renderLargerThumbnail: true
           }
