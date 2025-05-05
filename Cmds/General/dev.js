@@ -31,7 +31,7 @@ module.exports = {
       };
 
       const devContact = {
-        phoneNumber: '+254112671344', // Replace with your actual phone number
+        phoneNumber: '+254735342808',
         firstName: 'Toxic',
         lastName: 'Dev'
       };
