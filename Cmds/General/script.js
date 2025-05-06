@@ -46,8 +46,7 @@ module.exports = async (context) => {
                      `🕒 *Lαʂƚ Uρԃαƚҽԃ*: ${lastUpdateDate} (still fresh)\n` +
                      `👤 *Oɯɳҽɾ*: ${repoInfo.owner} (that’s me)\n` +
                      `🔍 *Vιʂιƚ*: ${repoInfo.htmlUrl} (check the repo)\n\n` +
-                     `│❒ Wanna know the genius behind this? Hit the button below!\n\n` +
-                     `Pσɯҽɾҽԃ Ⴆყ *${botname}*`;
+                     `│❒ Wanna know the genius behind this? Hit the button below!`;
 
     await client.sendMessage(m.chat, {
       text: replyText,
