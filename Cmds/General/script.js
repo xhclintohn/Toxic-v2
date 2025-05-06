@@ -40,15 +40,14 @@ module.exports = async (context) => {
     const createdDate = new Date(repoInfo.createdAt).toLocaleDateString('en-GB');
     const lastUpdateDate = new Date(repoInfo.lastUpdate).toLocaleDateString('en-GB');
 
-    const replyText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botname} Repo, Bitches*\n\n` +
-                     `🌟 *Stars*: ${repoInfo.stars} (y’all better star this shit)\n` +
-                     `🔗 *Forks*: ${repoInfo.forks} (steal it, I dare you)\n` +
-                     `📅 *Created*: ${createdDate} (born to rule)\n` +
+    const replyText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botname} Repo*\n\n` +
+                     `🌟 *Sƚαɾʂ*: ${repoInfo.stars} (y’all better star)\n` +
+                     `🔗 *Fσɾƙʂ*: ${repoInfo.forks} (do fork)\n` +
+                     `📅 *Cɾҽαƚҽԃ *: ${createdDate} (born to rule)\n` +
                      `🕒 *Last Updated*: ${lastUpdateDate} (still fresh)\n` +
-                     `👤 *Owner*: ${repoInfo.owner} (that’s me, bow down)\n` +
-                     `🔍 *Visit*: ${repoInfo.htmlUrl} (check my empire)\n\n` +
-                     `│❒ Wanna know the genius behind this? Hit the button below! 👇\n\n` +
-                     `Powered by *${botname}*`;
+                     `👤 *Oɯɳҽɾ*: ${repoInfo.owner} (that’s me)\n` +
+                     `🔍 *Vιʂιƚ *: ${repoInfo.htmlUrl} (check the repo)\n\n` +
+                     `│❒ Wanna know the genius behind this? Hit the button below!
 
     await client.sendMessage(m.chat, {
       text: replyText,
