@@ -31,6 +31,7 @@ const { commandFiles, totalCommands } = findAllCommandFiles(cmdsDir);
 const commands = {};
 const aliases = {
     speed: "ping",
+    p: "ping",
     kick: "remove",
     mute: "close",
     unmute: "open",
