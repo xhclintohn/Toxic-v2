@@ -48,7 +48,7 @@ async function startDreaded() {
   let settingss = await getSettings();
   if (!settingss) return;
 
-  const { autobio, mode, anticall } = settingss;
+  const { autobio, mode, anticall, autolike, autoview, autoread, presence } = settingss;
 
   const { saveCreds, state } = await useMultiFileAuthState(sessionName);
   const client = dreadedConnect({
@@ -176,18 +176,27 @@ async function startDreaded() {
       }
 
       // Autolike for statuses
-        if (autolike && mek.key.remoteJid === "status@broadcast") {
-            if (!mek.status) {
-                await client.sendMessage(mek.key.remoteJid, {
-                    react: { key: mek.key, text: reactEmoji }
-                });
-            }
+      if (autolike && mek.key.remoteJid === "status@broadcast") {
+        const messageType = getContentType(mek.message);
+        if (['conversation', 'extendedTextMessage', 'imageMessage', 'videoMessage'].includes(messageType)) {
+          await client.sendMessage(mek.key.remoteJid, {
+            react: { key: mek.key, text: settings.reactEmoji || '👍' }
+          });
+          console.log(`[AUTOLIKE] Reacted to status from ${mek.key.participant || mek.key.remoteJid}`);
         }
+      }
 
-      // Autoview/autoread
-      if (autoview && remoteJid === "status@broadcast") {
-        await client.readMessages([mek.key]);
-      } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+      // Autoview for statuses
+      if (autoview && mek.key.remoteJid === "status@broadcast") {
+        const messageType = getContentType(mek.message);
+        if (['conversation', 'extendedTextMessage', 'imageMessage', 'videoMessage'].includes(messageType)) {
+          await client.readMessages([mek.key]);
+          console.log(`[AUTOVIEW] Viewed status from ${mek.key.participant || mek.key.remoteJid}`);
+        }
+      }
+
+      // Autoread for private chats
+      if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
         await client.readMessages([mek.key]);
       }
 
@@ -209,7 +218,6 @@ async function startDreaded() {
       if (mek.message.buttonsResponseMessage) {
         const buttonId = mek.message.buttonsResponseMessage.selectedButtonId;
         if (buttonId) {
-          
           mek.message.conversation = buttonId; 
         }
       }
@@ -220,7 +228,7 @@ async function startDreaded() {
       m = smsg(client, mek, store);
       require("./toxic")(client, m, chatUpdate, store);
     } catch (err) {
-     
+      console.error('[MESSAGES.UPSERT] Error:', err);
     }
   });
 
