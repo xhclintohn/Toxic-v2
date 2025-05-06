@@ -1,7 +1,6 @@
 module.exports = async (context) => {
   const { client, m, text, botname, prefix = '' } = context;
 
-  
   const toFancyFont = (text, isUpperCase = false) => {
     const fonts = {
       'A': '𝘼', 'B': '𝘽', 'C': '𝘾', 'D': '𝘿', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
@@ -43,11 +42,12 @@ module.exports = async (context) => {
     const replyText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botname} Repo*\n\n` +
                      `🌟 *Sƚαɾʂ*: ${repoInfo.stars} (y’all better star)\n` +
                      `🔗 *Fσɾƙʂ*: ${repoInfo.forks} (do fork)\n` +
-                     `📅 *Cɾҽαƚҽԃ *: ${createdDate} (born to rule)\n` +
-                     `🕒 *Last Updated*: ${lastUpdateDate} (still fresh)\n` +
+                     `📅 *Cɾҽαƚҽԃ*: ${createdDate} (born to rule)\n` +
+                     `🕒 *Lαʂƚ Uρԃαƚҽԃ*: ${lastUpdateDate} (still fresh)\n` +
                      `👤 *Oɯɳҽɾ*: ${repoInfo.owner} (that’s me)\n` +
-                     `🔍 *Vιʂιƚ *: ${repoInfo.htmlUrl} (check the repo)\n\n` +
-                     `│❒ Wanna know the genius behind this? Hit the button below!
+                     `🔍 *Vιʂιƚ*: ${repoInfo.htmlUrl} (check the repo)\n\n` +
+                     `│❒ Wanna know the genius behind this? Hit the button below!\n\n` +
+                     `Pσɯҽɾҽԃ Ⴆყ *${botname}*`;
 
     await client.sendMessage(m.chat, {
       text: replyText,
