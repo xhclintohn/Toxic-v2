@@ -37,9 +37,9 @@ module.exports = {
 
       // Define button commands with toxic emojis
       const buttonCommands = [
-        { id: 'fullmenu', display: toFancyFont('FULLMENU'), emoji: '🔥' },
-        { id: 'dev', display: toFancyFont('DEV'), emoji: '💀' },
-        { id: 'ping', display: toFancyFont('PING'), emoji: '🏓' },
+        { id: 'fullmenu', display: toFancyFont('FULLMENU'), emoji: '📃' },
+        { id: 'dev', display: toFancyFont('DEV'), emoji: '🪽' },
+        { id: 'ping', display: toFancyFont('PING'), emoji: '⏩' },
         { id: 'uptime', display: toFancyFont('UPTIME'), emoji: '⏰' }
       ];
 
