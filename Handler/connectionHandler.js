@@ -107,7 +107,7 @@ const connectionHandler = async (_0x218261, _0x461fdf, _0xd50ec0) => {
         _0x55d08c += `│❒ 🚀 *Get Started*:\n`;
         _0x55d08c += `│❒ - Customize bot with *${_0x316865.prefix}settings*\n`;
         _0x55d08c += `│❒ - Hit the button below for commands! 👇\n\n`;
-        _0x55d08c += `│❒ *Credits*: Powered by 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 🗿\n◈━━━━━━━━━━━━━━━━◈`;
+        _0x55d08c += `│❒ *Credits*: xh_clinton 🗿\n◈━━━━━━━━━━━━━━━━◈`;
 
         try {
           await _0x218261.sendMessage(_0x218261.user.id, {
@@ -143,7 +143,7 @@ const connectionHandler = async (_0x218261, _0x461fdf, _0xd50ec0) => {
         _0x24abe8 += `💾 *Database*: Postgres SQL\n`;
         _0x24abe8 += `📚 *Library*: Baileys\n\n`;
         _0x24abe8 += `│❒ Ready to dive in? Hit the button below for commands! 😎\n\n`;
-        _0x24abe8 += `│❒ *Credits*: Powered by 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 🗿\n◈━━━━━━━━━━━━━━━━◈`;
+        _0x24abe8 += `│❒ *Credits*: xh_clinton 🗿\n◈━━━━━━━━━━━━━━━━◈`;
 
         try {
           await _0x218261.sendMessage(_0x218261.user.id, {
