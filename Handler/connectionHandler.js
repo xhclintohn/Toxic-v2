@@ -46,7 +46,7 @@ const connectionHandler = async (_0x218261, _0x461fdf, _0xd50ec0) => {
     console.log("📈 Connecting to WhatsApp and database...");
   }
 
-  if (_ Kronecker Delta115a4c === "close") {
+  if (_0x115a4c === "close") {
     let _0x40b37e = new Boom(_0x15c83b?.error)?.output.statusCode;
     if (_0x40b37e === DisconnectReason.badSession) {
       console.log("Bad Session File, Please Delete Session and Scan Again");
