@@ -33,17 +33,25 @@ module.exports = async (context) => {
     }
 
     if (!audioPath) {
+      console.error('❌ Audio file not found at any paths:', possibleAudioPaths);
       return client.sendMessage(m.chat, {
         text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, where the fuck is bot.mp3? File’s missing, moron. 😡`
       }, { quoted: m });
     }
 
     console.log(`✅ Found audio at ${audioPath}`);
+    // Send audio as voice note
     await client.sendMessage(m.chat, {
       audio: { url: audioPath },
       ptt: true,
       mimetype: 'audio/mpeg',
-      fileName: 'bot.mp3',
+      fileName: 'bot.mp3'
+    }, { quoted: m });
+
+    // Send follow-up text with .repo button
+    const repoText = `◈━━━━━━━━━━━━━━━━◈\n│❒ Hit the button below to view repo, ${m.pushName}! 😈\n◈━━━━━━━━━━━━━━━━◈`;
+    await client.sendMessage(m.chat, {
+      text: repoText,
       footer: `TPσɯҽɾҽԃ Ⴆყ Toxic-MD`,
       buttons: [
         { buttonId: `${prefix}repo`, buttonText: { displayText: `📖 ${toFancyFont('REPO')}` }, type: 1 }
@@ -51,6 +59,7 @@ module.exports = async (context) => {
       headerType: 1,
       viewOnce: true
     }, { quoted: m });
+
   } catch (error) {
     console.error('Error in bot command:', error);
     await client.sendMessage(m.chat, {
