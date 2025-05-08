@@ -1,5 +1,6 @@
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 const { getSudoUsers, addSudoUser } = require('../../Database/config');
+
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { m, args } = context;
@@ -15,17 +16,30 @@ module.exports = async (context) => {
     }
 
     if (!numberToAdd || !/^\d+$/.test(numberToAdd)) {
-      return await m.reply('❌ Please provide a valid number or quote a user.');
+      return await m.reply(
+        `◈━━━━━━━━━━━━━━━━◈\n` +
+        `│❒ Pathetic attempt, moron! 😈\n` +
+        `│❒ Give me a valid number or quote a user, fool!\n` +
+        `┗━━━━━━━━━━━━━━━┛`
+      );
     }
 
-    
     const sudoUsers = await getSudoUsers();
     if (sudoUsers.includes(numberToAdd)) {
-      return await m.reply('⚠️ This number is already a sudo user.');
+      return await m.reply(
+        `◈━━━━━━━━━━━━━━━━◈\n` +
+        `│❒ Already a sudo user, you clueless twit! 🥶\n` +
+        `│❒ ${numberToAdd} is already in the elite ranks.\n` +
+        `┗━━━━━━━━━━━━━━━┛`
+      );
     }
 
-    
     await addSudoUser(numberToAdd);
-    await m.reply(`✅ ${numberToAdd} is now a Sudo User!`);
+    await m.reply(
+      `◈━━━━━━━━━━━━━━━━◈\n` +
+      `│❒ Bow down! 🔥\n` +
+      `│❒ ${numberToAdd} is now a Sudo King! 😈\n` +
+      `┗━━━━━━━━━━━━━━━┛`
+    );
   });
 };
