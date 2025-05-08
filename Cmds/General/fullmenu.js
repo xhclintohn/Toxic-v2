@@ -18,6 +18,7 @@ module.exports = {
       // Retrieve settings to get the current prefix
       const settings = await getSettings();
       if (!settings) {
+        console.error('Failed to load settings');
         await client.sendMessage(m.chat, { text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Oops, couldn't load settings. Try again later!` }, { quoted: m });
         return;
       }
@@ -25,18 +26,18 @@ module.exports = {
       const effectivePrefix = settings.prefix || ''; // Use empty string for prefixless mode
 
       const categories = [
-        { name: 'General', emoji: '📜' },
-        { name: 'Settings', emoji: '🛠️' },
-        { name: 'Owner', emoji: '👑' },
-        { name: 'Heroku', emoji: '☁️' },
-        { name: 'Wa-Privacy', emoji: '🔒' },
-        { name: 'Groups', emoji: '👥' },
-        { name: 'AI', emoji: '🧠' },
-        { name: 'Media', emoji: '🎬' },
-        { name: 'Editting', emoji: '✂️' },
-        { name: 'Logo', emoji: '🎨' },
-        { name: '+18', emoji: '🔞' },
-        { name: 'Utils', emoji: '🔧' }
+        { name: 'General', display: 'Gҽɳҽɾαʅ', emoji: '📜' },
+        { name: 'Settings', display: 'Sҽƚƚιɳɠʂ', emoji: '🛠️' },
+        { name: 'Owner', display: 'Oɯɳҽɾ', emoji: '👑' },
+        { name: 'Heroku', display: 'Hҽɾσƙυ', emoji: '☁️' },
+        { name: 'Wa-Privacy', display: 'Wα-Pɾιʋαƈყ', emoji: '🔒' },
+        { name: 'Groups', display: 'Gɾσυρʂ', emoji: '👥' },
+        { name: 'AI', display: 'AI', emoji: '🧠' },
+        { name: 'Media', display: 'Mҽԃια', emoji: '🎬' },
+        { name: 'Editting', display: 'Eԃιƚƚιɳɠ', emoji: '✂️' },
+        { name: 'Logo', display: 'Lσɠσ', emoji: '🎨' },
+        { name: '+18', display: '+18', emoji: '🔞' },
+        { name: 'Utils', display: 'Uƚιʅʂ', emoji: '🔧' }
       ];
 
       const getGreeting = () => {
@@ -64,38 +65,32 @@ module.exports = {
           .join('');
       };
 
-      const toCustomFont = (text, isUpperCase = false) => {
-        const fonts = {
-          'A': 'A', 'B': 'Ⴆ', 'C': 'ƈ', 'D': 'ԃ', 'E': 'ҽ', 'F': 'ϝ', 'G': 'ɠ', 'H': 'ԋ', 'I': 'ι', 'J': 'ʝ', 'K': 'ƙ', 'L': 'ʅ', 'M': 'ɱ',
-          'N': 'ɳ', 'O': 'σ', 'P': 'ρ', 'Q': 'ϙ', 'R': 'ɾ', 'S': 'ʂ', 'T': 'ƚ', 'U': 'υ', 'V': 'ʋ', 'W': 'ɯ', 'X': 'x', 'Y': 'ყ', 'Z': 'ȥ',
-          'a': 'α', 'b': 'Ⴆ', 'c': 'ƈ', 'd': 'ԃ', 'e': 'ҽ', 'f': 'ϝ', 'g': 'ɠ', 'h': 'ԋ', 'i': 'ι', 'j': 'ʝ', 'k': 'ƙ', 'l': 'ʅ', 'm': 'ɱ',
-          'n': 'ɳ', 'o': 'σ', 'p': 'ρ', 'q': 'ϙ', 'r': 'ɾ', 's': 'ʂ', 't': 'ƚ', 'u': 'υ', 'v': 'ʋ', 'w': 'ɯ', 'x': 'x', 'y': 'ყ', 'z': 'ȥ'
-        };
-        return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
-          .split('')
-          .map(char => fonts[char] || char)
-          .join('');
-      };
-
       let menuText = `❦━━━━━━━━━━━━━━━━❦\n│☆ *Welcome to ${toFancyFont(botname)}!* ☢\n\n`;
       menuText += `${getGreeting()} @${m.sender.split('@')[0]}\n\n`;
-      menuText += `👤 *${toCustomFont('User')}*: @${m.sender.split('@')[0]}\n`;
-      menuText += `🤖 *${toCustomFont('Bot')}*: ${toFancyFont(botname)}\n`;
-      menuText += `📋 *${toCustomFont('Total Commands')}*: ${totalCommands}\n`;
-      menuText += `🕒 *${toCustomFont('Time')}*: ${getCurrentTimeInNairobi()}\n`;
-      menuText += `🔣 *${toCustomFont('Prefix')}*: ${effectivePrefix || 'None'}\n`;
-      menuText += `🌐 *${toCustomFont('Mode')}*: ${mode}\n`;
-      menuText += `📚 *${toCustomFont('Library')}*: Baileys\n`;
+      menuText += `👤 *Uʂҽɾ*: @${m.sender.split('@')[0]}\n`;
+      menuText += `🤖 *Bσƚ*: ${toFancyFont(botname)}\n`;
+      menuText += `📋 *Tσƚαʅ Cσɱɱαɳԃʂ*: ${totalCommands}\n`;
+      menuText += `🕒 *Tιɱҽ*: ${getCurrentTimeInNairobi()}\n`;
+      menuText += `🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'}\n`;
+      menuText += `🌐 *Mσԃҽ*: ${mode}\n`;
+      menuText += `📚 *LιႦɾαɾყ*: Baileys\n`;
       menuText += `\n❦━━━━━━━━━━━━━━━━❦\n\n`;
 
       menuText += `*📖 Full Command Menu ☠*\n`;
 
       for (const category of categories) {
-        const commandFiles = fs.readdirSync(`./Cmds/${category.name}`).filter(file => file.endsWith('.js'));
+        let commandFiles;
+        try {
+          commandFiles = fs.readdirSync(`./Cmds/${category.name}`).filter(file => file.endsWith('.js'));
+          console.log(`[DEBUG] Category ${category.name}: Found ${commandFiles.length} command files`);
+        } catch (error) {
+          console.error(`[DEBUG] Error reading directory ./Cmds/${category.name}: ${error.message}`);
+          commandFiles = [];
+        }
+
         if (commandFiles.length === 0 && category.name !== '+18') continue;
 
-        const fancyCategory = toCustomFont(category.name, true);
-        menuText += `\n❲${fancyCategory} ${category.emoji}❳\n`;
+        menuText += `\n❲${category.display} ${category.emoji}❳\n`;
 
         if (category.name === '+18') {
           const plus18Commands = ['xvideo'];
