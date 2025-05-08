@@ -7,11 +7,16 @@ module.exports = {
   aliases: ['allmenu', 'commandslist'],
   description: 'Displays the full bot command menu by category',
   run: async (context) => {
-    const { client, m, totalCommands, mode, pict, botname } = context;
+    const { client, m, totalCommands, mode, botname } = context;
 
     // Handle invalid input
     if (context.text) {
-      return client.sendMessage(m.chat, { text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Please use *${context.prefix}fullmenu* without extra text. Let's keep it simple! 😊` }, { quoted: m });
+      try {
+        await client.sendMessage(m.chat, { text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Please use *${context.prefix}fullmenu* without extra text. Let's keep it simple! 😊` }, { quoted: m });
+      } catch (error) {
+        console.error(`[DEBUG] Error sending invalid input message: ${error.message}`);
+      }
+      return;
     }
 
     try {
@@ -19,7 +24,11 @@ module.exports = {
       const settings = await getSettings();
       if (!settings) {
         console.error('Failed to load settings');
-        await client.sendMessage(m.chat, { text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Oops, couldn't load settings. Try again later!` }, { quoted: m });
+        try {
+          await client.sendMessage(m.chat, { text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Oops, couldn't load settings. Try again later!` }, { quoted: m });
+        } catch (error) {
+          console.error(`[DEBUG] Error sending settings error message: ${error.message}`);
+        }
         return;
       }
 
@@ -66,8 +75,8 @@ module.exports = {
       };
 
       let menuText = `❦━━━━━━━━━━━━━━━━❦\n│☆ *Welcome to ${toFancyFont(botname)}!* ☢\n\n`;
-      menuText += `${getGreeting()} @${m.sender.split('@')[0]}\n\n`;
-      menuText += `👤 *Uʂҽɾ*: @${m.sender.split('@')[0]}\n`;
+      menuText += `${getGreeting()} ${m.pushName}\n\n`;
+      menuText += `👤 *Uʂҽɾ*: ${m.pushName}\n`;
       menuText += `🤖 *Bσƚ*: ${toFancyFont(botname)}\n`;
       menuText += `📋 *Tσƚαʅ Cσɱɱαɳԃʂ*: ${totalCommands}\n`;
       menuText += `🕒 *Tιɱҽ*: ${getCurrentTimeInNairobi()}\n`;
@@ -123,39 +132,24 @@ module.exports = {
 
       // Send the message
       try {
-        await client.sendMessage(m.chat, {
-          text: menuText,
-          footer: `Powered by Toxic-MD`,
-          buttons: [
-            { buttonId: `${effectivePrefix}repo`, buttonText: { displayText: `📂 ${toFancyFont('REPO')}` }, type: 1 }
-          ],
-          headerType: 1,
-          contextInfo: {
-            externalAdReply: {
-              showAdAttribution: false,
-              title: `${botname}`,
-              body: `Ready to explore, @${m.sender.split('@')[0]}?`,
-              thumbnail: pict,
-              sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
-              mediaType: 1,
-              renderLargerThumbnail: true
-            },
-            mentionedJid: [m.sender] // Mention the user
-          }
-        }, { quoted: m });
+        await client.sendMessage(m.chat, { text: menuText }, { quoted: m });
         console.log(`[DEBUG] Menu sent successfully to ${m.chat}`);
       } catch (error) {
         console.error(`[DEBUG] Error sending menu: ${error.message}`);
-        await client.sendMessage(m.chat, {
-          text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Sorry, couldn't send the menu. Try again later!\n\nPowered by Toxic-MD`
-        }, { quoted: m });
+        try {
+          await client.sendMessage(m.chat, { text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Sorry, couldn't send the menu. Try again later!\n\nPowered by Toxic-MD` }, { quoted: m });
+        } catch (fallbackError) {
+          console.error(`[DEBUG] Error sending fallback message: ${fallbackError.message}`);
+        }
       }
 
     } catch (error) {
       console.error('Error generating full menu:', error);
-      await client.sendMessage(m.chat, {
-        text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Sorry, something went wrong with the menu. Try again later!\n\nPowered by Toxic-MD`
-      }, { quoted: m });
+      try {
+        await client.sendMessage(m.chat, { text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Sorry, something went wrong with the menu. Try again later!\n\nPowered by Toxic-MD` }, { quoted: m });
+      } catch (fallbackError) {
+        console.error(`[DEBUG] Error sending error message: ${fallbackError.message}`);
+      }
     }
   }
 };
