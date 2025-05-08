@@ -134,16 +134,19 @@ async function startToxic() {
 
             // Handle button messages
             let buttonId = null;
-            if (mek.message.buttonsResponseMessage) {
+            if (mek.message?.buttonsResponseMessage?.selectedButtonId) {
                 buttonId = mek.message.buttonsResponseMessage.selectedButtonId;
-            } else if (mek.message.templateButtonReplyMessage) {
+                console.log(`[BUTTON] Detected buttonsResponseMessage: ${buttonId}`);
+            } else if (mek.message?.templateButtonReplyMessage?.selectedId) {
                 buttonId = mek.message.templateButtonReplyMessage.selectedId;
+                console.log(`[BUTTON] Detected templateButtonReplyMessage: ${buttonId}`);
+            } else {
+                console.log('[BUTTON] No button message detected:', Object.keys(mek.message || {}));
             }
 
             // Antilink logic
             if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
                 try {
-                    // Robust link detection
                     const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
                     const messageContent = (
                         mek.message.conversation ||
@@ -151,11 +154,10 @@ async function startToxic() {
                         mek.message.imageMessage?.caption ||
                         mek.message.videoMessage?.caption ||
                         mek.message.documentMessage?.caption ||
-                        buttonId || // Include buttonId in antilink check
+                        buttonId ||
                         ""
                     ).toLowerCase();
 
-                    // Skip if sender is the bot or an admin
                     if (sender === Myself) return;
 
                     if (urlRegex.test(messageContent)) {
@@ -169,7 +171,6 @@ async function startToxic() {
                         const isSenderAdmin = groupAdmins.includes(sender);
 
                         if (isBotAdmin && !isSenderAdmin) {
-                            // Silently delete the link message
                             await client.sendMessage(remoteJid, {
                                 delete: {
                                     remoteJid: remoteJid,
@@ -191,9 +192,7 @@ async function startToxic() {
                     await client.sendMessage(remoteJid, {
                         react: { key: mek.key, text: "❤️" }
                     });
-                } catch (error) {
-                    // Silent error handling
-                }
+                } catch (error) {}
             }
 
             // Autoview/autoread
@@ -221,10 +220,13 @@ async function startToxic() {
             if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify" && !buttonId) return;
 
             m = smsg(client, mek, store);
-            // Pass buttonId as text if present
             if (buttonId) {
-                m.text = buttonId;
-                m.isButton = true; // Flag for toxic.js to handle
+                // Normalize buttonId (e.g., remove prefix for command lookup)
+                const cmdText = buttonId.startsWith(settings.prefix || '.') ? buttonId.slice((settings.prefix || '.').length) : buttonId;
+                m.text = buttonId; // Keep full ID (e.g., '.repo') for toxic.js
+                m.cmd = cmdText; // Command name (e.g., 'repo') for lookup
+                m.isButton = true;
+                console.log(`[BUTTON] Processing command: ${m.text}, cmd: ${m.cmd}`);
             }
             require("./toxic")(client, m, chatUpdate, store);
         } catch (err) {
@@ -232,7 +234,6 @@ async function startToxic() {
         }
     });
 
-    // Handle error
     const unhandledRejections = new Map();
     process.on("unhandledRejection", (reason, promise) => {
         unhandledRejections.set(promise, reason);
@@ -245,7 +246,6 @@ async function startToxic() {
         console.log("Caught exception: ", err);
     });
 
-    // Setting
     client.decodeJid = (jid) => {
         if (!jid) return jid;
         if (/:\d+@/gi.test(jid)) {
