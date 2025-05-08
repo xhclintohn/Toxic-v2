@@ -13,7 +13,7 @@ module.exports = {
     // Handle invalid input
     if (context.text) {
       try {
-        await client.sendMessage(m.chat, { text: `═════ ✦ ═════\n│❒ Please use *${context.prefix}fullmenu* without extra text.` }, { quoted: m });
+        await client.sendMessage(m.chat, { text: `╭─❒ 「 Error 」\n│ ❒ Please use *${context.prefix}fullmenu* without extra text.\n╰─────────────` }, { quoted: m });
       } catch (error) {
         console.error(`[DEBUG] Error sending invalid input message: ${error.message}`);
       }
@@ -26,7 +26,7 @@ module.exports = {
       if (!settings) {
         console.error('Failed to load settings');
         try {
-          await client.sendMessage(m.chat, { text: `═════ ✦ ═════\n│❒ Unable to load settings. Please try again later.` }, { quoted: m });
+          await client.sendMessage(m.chat, { text: `╭─❒ 「 Error 」\n│ ❒ Unable to load settings. Please try again later.\n╰─────────────` }, { quoted: m });
         } catch (error) {
           console.error(`[DEBUG] Error sending settings error message: ${error.message}`);
         }
@@ -36,18 +36,18 @@ module.exports = {
       const effectivePrefix = settings.prefix || ''; // Use empty string for prefixless mode
 
       const categories = [
-        { name: 'General', display: 'Gҽɳҽɾαʅ', emoji: '📜' },
-        { name: 'Settings', display: 'Sҽƚƚιɳɠʂ', emoji: '🛠️' },
-        { name: 'Owner', display: 'Oɯɳҽɾ', emoji: '👑' },
-        { name: 'Heroku', display: 'Hҽɾσƙυ', emoji: '☁️' },
-        { name: 'Wa-Privacy', display: 'Wα-Pɾιʋαƈყ', emoji: '🔒' },
-        { name: 'Groups', display: 'Gɾσυρʂ', emoji: '👥' },
+        { name: 'General', display: 'GEᑎEᖇᗩᒪ', emoji: '📜' },
+        { name: 'Settings', display: 'SETTINGS', emoji: '🛠️' },
+        { name: 'Owner', display: 'OWNER', emoji: '👑' },
+        { name: 'Heroku', display: 'HEROKU', emoji: '☁️' },
+        { name: 'Wa-Privacy', display: 'PRIVACY', emoji: '🔒' },
+        { name: 'Groups', display: 'GROUPS', emoji: '👥' },
         { name: 'AI', display: 'AI', emoji: '🧠' },
-        { name: 'Media', display: 'Mҽԃια', emoji: '🎬' },
-        { name: 'Editting', display: 'Eԃιƚƚιɳɠ', emoji: '✂️' },
-        { name: 'Logo', display: 'Lσɠσ', emoji: '🎨' },
+        { name: 'Media', display: 'MEDIA', emoji: '🎬' },
+        { name: 'Editting', display: 'EDITING', emoji: '✂️' },
+        { name: 'Logo', display: 'LOGO', emoji: '🎨' },
         { name: '+18', display: '+18', emoji: '🔞' },
-        { name: 'Utils', display: 'Uƚιʅʂ', emoji: '🔧' }
+        { name: 'Utils', display: 'UTILS', emoji: '🔧' }
       ];
 
       const getGreeting = () => {
@@ -75,18 +75,19 @@ module.exports = {
           .join('');
       };
 
-      let menuText = `═════ ✦ ═════\n*${botname} Command Menu*\n\n`;
-      menuText += `Greetings, ${m.pushName}\n\n`;
-      menuText += `👤 *Uʂҽɾ*: ${m.pushName}\n`;
-      menuText += `🤖 *Bσƚ*: ${botname}\n`;
-      menuText += `📋 *Tσƚαʅ Cσɱɱαɳԃʂ*: ${totalCommands}\n`;
-      menuText += `🕒 *Tιɱҽ*: ${getCurrentTimeInNairobi()}\n`;
-      menuText += `🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'}\n`;
-      menuText += `🌐 *Mσԃҽ*: ${mode}\n`;
-      menuText += `📚 *LιႦɾαɾყ*: Baileys\n`;
-      menuText += `\n═════ ✦ ═════\n\n`;
+      let menuText = `╭─❒ 「 ${botname} Command Menu 」\n`;
+      menuText += `│ Greetings, ${m.pushName}\n`;
+      menuText += `│\n`;
+      menuText += `│ 👤 *Uʂҽɾ*: ${m.pushName}\n`;
+      menuText += `│ 🤖 *Bσƚ*: ${botname}\n`;
+      menuText += `│ 📋 *Tσƚαʅ Cσɱɱαɳԃʂ*: ${totalCommands}\n`;
+      menuText += `│ 🕒 *Tιɱҽ*: ${getCurrentTimeInNairobi()}\n`;
+      menuText += `│ 🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'}\n`;
+      menuText += `│ 🌐 *Mσԃҽ*: ${mode}\n`;
+      menuText += `│ 📚 *LιႦɾαɾყ*: Baileys\n`;
+      menuText += `╰─────────────\n\n`;
 
-      menuText += `*Command Registry ✦*\n`;
+      menuText += `*Command Registry ✦*\n\n`;
 
       let commandCount = 0;
       for (const category of categories) {
@@ -101,13 +102,13 @@ module.exports = {
 
         if (commandFiles.length === 0 && category.name !== '+18') continue;
 
-        menuText += `\n✦━ 〘${category.display} ${category.emoji}〙 ━✦\n`;
+        menuText += `╭─❒ 「 ${category.display} ${category.emoji} 」\n`;
 
         if (category.name === '+18') {
           const plus18Commands = ['xvideo'];
           for (const cmd of plus18Commands) {
             const fancyCommandName = toFancyFont(cmd);
-            menuText += `  ✘ *${fancyCommandName}*\n`;
+            menuText += `│ ✘ *${fancyCommandName}*\n`;
             commandCount++;
           }
         }
@@ -115,14 +116,16 @@ module.exports = {
         for (const file of commandFiles) {
           const commandName = file.replace('.js', '');
           const fancyCommandName = toFancyFont(commandName);
-          menuText += `  ✘ *${fancyCommandName}*\n`;
+          menuText += `│ ✘ *${fancyCommandName}*\n`;
           commandCount++;
         }
+
+        menuText += `╰─────────────\n\n`;
       }
 
-      menuText += `\n═════ ✦ ═════\n`;
-      menuText += `*Explore ${botname}*\n`;
-      menuText += `Powered by Toxic-MD ✧\n`;
+      menuText += `╭─❒ 「 Powered by Toxic-MD 」\n`;
+      menuText += `│ ✧ Explore ${botname}\n`;
+      menuText += `╰─────────────`;
 
       // Debug: Log menuText length and preview
       console.log(`[DEBUG] menuText length: ${menuText.length} characters`);
@@ -151,7 +154,7 @@ module.exports = {
       } catch (error) {
         console.error(`[DEBUG] Error sending menu: ${error.message}`);
         try {
-          await client.sendMessage(m.chat, { text: `═════ ✦ ═════\n│❒ Unable to display the menu. Please try again later.\n\nPowered by Toxic-MD` }, { quoted: m });
+          await client.sendMessage(m.chat, { text: `╭─❒ 「 Error 」\n│ ❒ Unable to display the menu. Please try again later.\n╰─────────────` }, { quoted: m });
         } catch (fallbackError) {
           console.error(`[DEBUG] Error sending fallback message: ${fallbackError.message}`);
         }
@@ -160,7 +163,7 @@ module.exports = {
     } catch (error) {
       console.error('Error generating full menu:', error);
       try {
-        await client.sendMessage(m.chat, { text: `═════ ✦ ═════\n│❒ Unable to generate the menu. Please try again later.\n\nPowered by Toxic-MD` }, { quoted: m });
+        await client.sendMessage(m.chat, { text: `╭─❒ 「 Error 」\n│ ❒ Unable to generate the menu. Please try again later.\n╰─────────────` }, { quoted: m });
       } catch (fallbackError) {
         console.error(`[DEBUG] Error sending error message: ${fallbackError.message}`);
       }
