@@ -132,6 +132,14 @@ async function startToxic() {
             const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
             const Myself = client.decodeJid(client.user.id);
 
+            // Handle button messages
+            let buttonId = null;
+            if (mek.message.buttonsResponseMessage) {
+                buttonId = mek.message.buttonsResponseMessage.selectedButtonId;
+            } else if (mek.message.templateButtonReplyMessage) {
+                buttonId = mek.message.templateButtonReplyMessage.selectedId;
+            }
+
             // Antilink logic
             if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
                 try {
@@ -143,8 +151,7 @@ async function startToxic() {
                         mek.message.imageMessage?.caption ||
                         mek.message.videoMessage?.caption ||
                         mek.message.documentMessage?.caption ||
-                        mek.message.buttonsResponseMessage?.selectedButtonId ||
-                        mek.message.templateButtonReplyMessage?.selectedId ||
+                        buttonId || // Include buttonId in antilink check
                         ""
                     ).toLowerCase();
 
@@ -210,13 +217,18 @@ async function startToxic() {
                 }
             }
 
-            // Handle commands
-            if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
+            // Handle commands (including buttons)
+            if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify" && !buttonId) return;
 
             m = smsg(client, mek, store);
+            // Pass buttonId as text if present
+            if (buttonId) {
+                m.text = buttonId;
+                m.isButton = true; // Flag for toxic.js to handle
+            }
             require("./toxic")(client, m, chatUpdate, store);
         } catch (err) {
-            // Silent error handling
+            console.error('[MESSAGES.UPSERT] Error:', err);
         }
     });
 
