@@ -5,17 +5,16 @@ module.exports = async (context) => {
 
   const settings = await getSettings();
   if (!settings) {
-    return await client.sendMessage(m.chat, {
-      text: 
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Yo, no settings found in the database! 😈\n` +
-        `│❒ Fix it and try again, champ! 🥶\n` +
-        `┗━━━━━━━━━━━━━━━┛`
-    }, { quoted: m });
+    return await m.reply(
+      `◈━━━━━━━━━━━━━━━━◈\n` +
+      `│❒ Yo, no settings found in the database! 😈\n` +
+      `│❒ Fix it and try again, champ! 🥶\n` +
+      `┗━━━━━━━━━━━━━━━┛`
+    );
   }
 
   const prefix = settings.prefix || '.';
-  const botName = process.env.BOTNAME || settings.botname || 'Unknown';
+  const botName = process.env.BOTNAME || settings.botname || 'Toxic-MD';
   const sudoUsers = await getSudoUsers();
   const bannedUsers = await getBannedUsers();
   const groups = await client.groupFetchAllParticipating();
@@ -101,42 +100,41 @@ module.exports = async (context) => {
 
     `◈━━━━━━━━━━━━━━━━◈\n` +
     `│❒ Having issues with settings? Hit the button below! 🪽\n` +
-    `┗━━━━━━━━━━━━━━━┛\n\n` +
-
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ Powered by Toxic-MD 😈\n` +
     `┗━━━━━━━━━━━━━━━┛`;
 
   try {
-    console.log('[SETTINGS] Sending response:', response);
-    await client.sendMessage(m.chat, {
+    console.log('[SETTINGS] Response type:', typeof response, 'Length:', response.length);
+    await m.reply({
       text: response,
+      footer: `Pσɯҽɾҽԃ Ⴆყ ${botName}`,
       buttons: [
         {
           buttonId: `${prefix}dev`,
-          buttonText: { displayText: 'DEV' },
+          buttonText: { displayText: `🪽 DEV` },
           type: 1
         }
       ],
+      headerType: 1,
+      viewOnce: true,
       contextInfo: {
         externalAdReply: {
+          showAdAttribution: false,
           title: 'Toxic-MD',
           body: m.pushName,
           previewType: 'PHOTO',
-          thumbnailUrl: 'https://i.ibb.co/7JcYBD5Y/cbb9f804644ae8c4.jpg',
+          thumbnailUrl: 'https://i.ibb.co/7JcYBD5/cbb9f804644ae8c4.jpg',
           thumbnail: require('fs').readFileSync(require('path').resolve(__dirname, '../../toxic.jpg')),
           sourceUrl: 'https://github.com/xhclintohn/Toxic-MD'
         }
       }
-    }, { quoted: m });
+    });
   } catch (err) {
     console.error('[SETTINGS] Error sending message:', err);
-    await client.sendMessage(m.chat, {
-      text: 
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Oops, something broke! 😈\n` +
-        `│❒ Try again or hit the DEV button, champ! 🥶\n` +
-        `┗━━━━━━━━━━━━━━━┛`
-    }, { quoted: m });
+    await m.reply(
+      `◈━━━━━━━━━━━━━━━━◈\n` +
+      `│❒ Oops, something broke! 😈\n` +
+      `│❒ Try again or hit the DEV button, champ! 🥶\n` +
+      `┗━━━━━━━━━━━━━━━┛`
+    );
   }
 };
