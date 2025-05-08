@@ -1,5 +1,5 @@
 const {
-  default: dreadedConnect,
+  default: toxicConnect,
   useMultiFileAuthState,
   DisconnectReason,
   fetchLatestBaileysVersion,
@@ -119,12 +119,12 @@ m.reply = (text, chatId = m.chat, options = {}) => {
       text: text,
       contextInfo: {
         externalAdReply: {
-          title: `Toxic V3`,
+          title: `Toxic-MD`,
           body: m.pushName,
           previewType: "PHOTO",
           thumbnailUrl: 'https://i.ibb.co/7JcYBD5Y/cbb9f804644ae8c4.jpg', 
           thumbnail: kali, 
-          sourceUrl: 'https://github.com/xhclintohn/Toxic-v2'
+          sourceUrl: 'https://github.com/xhclintohn/Toxic-MD'
         }
       }
     }, 
