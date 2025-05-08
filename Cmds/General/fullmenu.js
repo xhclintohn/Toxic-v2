@@ -7,12 +7,12 @@ module.exports = {
   aliases: ['allmenu', 'commandslist'],
   description: 'Displays the full bot command menu by category',
   run: async (context) => {
-    const { client, m, totalCommands, mode, botname } = context;
+    const { client, m, totalCommands, mode, pict, botname } = context;
 
     // Handle invalid input
     if (context.text) {
       try {
-        await client.sendMessage(m.chat, { text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Please use *${context.prefix}fullmenu* without extra text. Let's keep it simple! 😊` }, { quoted: m });
+        await client.sendMessage(m.chat, { text: `═══════ ✦ ═══════\n│❒ Please use *${context.prefix}fullmenu* without extra text. Let's keep it simple! 😊` }, { quoted: m });
       } catch (error) {
         console.error(`[DEBUG] Error sending invalid input message: ${error.message}`);
       }
@@ -25,7 +25,7 @@ module.exports = {
       if (!settings) {
         console.error('Failed to load settings');
         try {
-          await client.sendMessage(m.chat, { text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Oops, couldn't load settings. Try again later!` }, { quoted: m });
+          await client.sendMessage(m.chat, { text: `═══════ ✦ ═══════\n│❒ Oops, couldn't load settings. Try again later!` }, { quoted: m });
         } catch (error) {
           console.error(`[DEBUG] Error sending settings error message: ${error.message}`);
         }
@@ -74,18 +74,18 @@ module.exports = {
           .join('');
       };
 
-      let menuText = `❦━━━━━━━━━━━━━━━━❦\n│☆ *Welcome to ${toFancyFont(botname)}!* ☢\n\n`;
-      menuText += `${getGreeting()} ${m.pushName}\n\n`;
-      menuText += `👤 *Uʂҽɾ*: ${m.pushName}\n`;
+      let menuText = `═══════ ✦ ═══════\n│☆ *Welcome to ${toFancyFont(botname)}!* ☢\n\n`;
+      menuText += `${getGreeting()} @${m.sender.split('@')[0]}\n\n`;
+      menuText += `👤 *Uʂҽɾ*: @${m.sender.split('@')[0]}\n`;
       menuText += `🤖 *Bσƚ*: ${toFancyFont(botname)}\n`;
       menuText += `📋 *Tσƚαʅ Cσɱɱαɳԃʂ*: ${totalCommands}\n`;
       menuText += `🕒 *Tιɱҽ*: ${getCurrentTimeInNairobi()}\n`;
       menuText += `🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'}\n`;
       menuText += `🌐 *Mσԃҽ*: ${mode}\n`;
       menuText += `📚 *LιႦɾαɾყ*: Baileys\n`;
-      menuText += `\n❦━━━━━━━━━━━━━━━━❦\n\n`;
+      menuText += `\n═══════ ✦ ═══════\n\n`;
 
-      menuText += `*📖 Full Command Menu ☠*\n`;
+      menuText += `*📜 Command Codex ☠*\n`;
 
       let commandCount = 0;
       for (const category of categories) {
@@ -100,7 +100,7 @@ module.exports = {
 
         if (commandFiles.length === 0 && category.name !== '+18') continue;
 
-        menuText += `\n❲${category.display} ${category.emoji}❳\n`;
+        menuText += `\n━ 《${category.display} ${category.emoji}》 ━\n`;
 
         if (category.name === '+18') {
           const plus18Commands = ['xvideo'];
@@ -119,10 +119,10 @@ module.exports = {
         }
       }
 
-      menuText += `\n❦━━━━━━━━━━━━━━━━❦\n`;
-      menuText += `*Explore the power of ${toFancyFont(botname)}! ☆*\n`;
+      menuText += `\n═══════ ✦ ═══════\n`;
+      menuText += `*Unleash the power of ${toFancyFont(botname)}! ☆*\n`;
       menuText += `Powered by Toxic-MD\n`;
-      menuText += `❦☠☆☢\n`;
+      menuText += `❦ ✦ ☆ ☢\n`;
 
       // Debug: Log menuText length and preview
       console.log(`[DEBUG] menuText length: ${menuText.length} characters`);
@@ -132,12 +132,31 @@ module.exports = {
 
       // Send the message
       try {
-        await client.sendMessage(m.chat, { text: menuText }, { quoted: m });
+        await client.sendMessage(m.chat, {
+          text: menuText,
+          footer: `Powered by Toxic-MD`,
+          buttons: [
+            { buttonId: `${effectivePrefix}repo`, buttonText: { displayText: `📜 ${toFancyFont('REPO')}` }, type: 1 }
+          ],
+          headerType: 1,
+          contextInfo: {
+            externalAdReply: {
+              showAdAttribution: false,
+              title: `${botname} Repository`,
+              body: `Explore the source of ${botname}!`,
+              thumbnail: pict,
+              sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
+              mediaType: 1,
+              renderLargerThumbnail: true
+            },
+            mentionedJid: [m.sender]
+          }
+        }, { quoted: m });
         console.log(`[DEBUG] Menu sent successfully to ${m.chat}`);
       } catch (error) {
         console.error(`[DEBUG] Error sending menu: ${error.message}`);
         try {
-          await client.sendMessage(m.chat, { text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Sorry, couldn't send the menu. Try again later!\n\nPowered by Toxic-MD` }, { quoted: m });
+          await client.sendMessage(m.chat, { text: `═══════ ✦ ═══════\n│❒ Sorry, couldn't send the menu. Try again later!\n\nPowered by Toxic-MD` }, { quoted: m });
         } catch (fallbackError) {
           console.error(`[DEBUG] Error sending fallback message: ${fallbackError.message}`);
         }
@@ -146,7 +165,7 @@ module.exports = {
     } catch (error) {
       console.error('Error generating full menu:', error);
       try {
-        await client.sendMessage(m.chat, { text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Sorry, something went wrong with the menu. Try again later!\n\nPowered by Toxic-MD` }, { quoted: m });
+        await client.sendMessage(m.chat, { text: `═══════ ✦ ═══════\n│❒ Sorry, something went wrong with the menu. Try again later!\n\nPowered by Toxic-MD` }, { quoted: m });
       } catch (fallbackError) {
         console.error(`[DEBUG] Error sending error message: ${fallbackError.message}`);
       }
