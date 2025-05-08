@@ -221,12 +221,9 @@ async function startToxic() {
 
             m = smsg(client, mek, store);
             if (buttonId) {
-                // Normalize buttonId (e.g., remove prefix for command lookup)
-                const cmdText = buttonId.startsWith(settings.prefix || '.') ? buttonId.slice((settings.prefix || '.').length) : buttonId;
-                m.text = buttonId; // Keep full ID (e.g., '.repo') for toxic.js
-                m.cmd = cmdText; // Command name (e.g., 'repo') for lookup
+                m.text = buttonId; // Set full button ID (e.g., '.repo')
                 m.isButton = true;
-                console.log(`[BUTTON] Processing command: ${m.text}, cmd: ${m.cmd}`);
+                console.log(`[BUTTON] Set m.text: ${m.text}, isButton: ${m.isButton}`);
             }
             require("./toxic")(client, m, chatUpdate, store);
         } catch (err) {
