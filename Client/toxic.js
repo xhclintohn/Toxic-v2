@@ -74,8 +74,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
       }
       return admins || [];
     };
-    const fortu = (m.quoted || m);
-    const quoted = (fortu.mtype == 'buttonsMessage') ? fortu[Object.keys(fortu)[1]] : (fortu.mtype == 'templateMessage') ? fortu.hydratedTemplate[Object.keys(fortu.hydratedTemplate)[1]] : (fortu.mtype == 'product') ? fortu[Object.keys(fortu)[0]] : m.quoted ? m.quoted : m;
+    const clint = (m.quoted || m);
+    const quoted = (clint.mtype == 'buttonsMessage') ? clint[Object.keys(clint)[1]] : (clint.mtype == 'templateMessage') ? clint.hydratedTemplate[Object.keys(clint.hydratedTemplate)[1]] : (clint.mtype == 'product') ? clint[Object.keys(clint)[0]] : m.quoted ? m.quoted : m;
 
     const color = (text, color) => {
       return !color ? chalk.green(text) : chalk.keyword(color)(text);
@@ -119,7 +119,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
 
     if (cmd) {
-      console.log(`[COMMAND] ${resolvedCommandName} from ${pushname}${m.mtype === 'buttonsResponseMessage' ? ' (button)' : ''}`);
       await commands[resolvedCommandName](context);
     }
 
