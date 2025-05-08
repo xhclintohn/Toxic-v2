@@ -5,12 +5,13 @@ module.exports = async (context) => {
 
   const settings = await getSettings();
   if (!settings) {
-    return await m.reply(
-      `◈━━━━━━━━━━━━━━━━◈\n` +
-      `│❒ Yo, no settings found in the database! 😈\n` +
-      `│❒ Fix it and try again, champ! 🥶\n` +
-      `┗━━━━━━━━━━━━━━━┛`
-    );
+    return await client.sendMessage(m.chat, {
+      text: 
+        `◈━━━━━━━━━━━━━━━━◈\n` +
+        `│❒ Yo, no settings found in the database! 😈\n` +
+        `│❒ Fix it and try again, champ! 🥶\n` +
+        `┗━━━━━━━━━━━━━━━┛`
+    }, { quoted: m });
   }
 
   const prefix = settings.prefix || '.';
@@ -100,20 +101,42 @@ module.exports = async (context) => {
 
     `◈━━━━━━━━━━━━━━━━◈\n` +
     `│❒ Having issues with settings? Hit the button below! 🪽\n` +
-    `💫\n\n` +
+    `┗━━━━━━━━━━━━━━━┛\n\n` +
 
     `◈━━━━━━━━━━━━━━━━◈\n` +
     `│❒ Powered by Toxic-MD 😈\n` +
     `┗━━━━━━━━━━━━━━━┛`;
 
-  await m.reply({
-    text: response,
-    buttons: [
-      {
-        buttonId: `${prefix}dev`,
-        buttonText: { displayText: 'DEV' },
-        type: 1
+  try {
+    console.log('[SETTINGS] Sending response:', response);
+    await client.sendMessage(m.chat, {
+      text: response,
+      buttons: [
+        {
+          buttonId: `${prefix}dev`,
+          buttonText: { displayText: 'DEV' },
+          type: 1
+        }
+      ],
+      contextInfo: {
+        externalAdReply: {
+          title: 'Toxic-MD',
+          body: m.pushName,
+          previewType: 'PHOTO',
+          thumbnailUrl: 'https://i.ibb.co/7JcYBD5Y/cbb9f804644ae8c4.jpg',
+          thumbnail: require('fs').readFileSync(require('path').resolve(__dirname, '../../toxic.jpg')),
+          sourceUrl: 'https://github.com/xhclintohn/Toxic-MD'
+        }
       }
-    ]
-  });
+    }, { quoted: m });
+  } catch (err) {
+    console.error('[SETTINGS] Error sending message:', err);
+    await client.sendMessage(m.chat, {
+      text: 
+        `◈━━━━━━━━━━━━━━━━◈\n` +
+        `│❒ Oops, something broke! 😈\n` +
+        `│❒ Try again or hit the DEV button, champ! 🥶\n` +
+        `┗━━━━━━━━━━━━━━━┛`
+    }, { quoted: m });
+  }
 };
