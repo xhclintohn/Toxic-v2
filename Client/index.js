@@ -140,8 +140,6 @@ async function startToxic() {
             } else if (mek.message?.templateButtonReplyMessage?.selectedId) {
                 buttonId = mek.message.templateButtonReplyMessage.selectedId;
                 console.log(`[BUTTON] Detected templateButtonReplyMessage: ${buttonId}`);
-            } else {
-                console.log('[BUTTON] No button message detected:', Object.keys(mek.message || {}));
             }
 
             // Antilink logic
@@ -217,13 +215,12 @@ async function startToxic() {
             }
 
             // Handle commands (including buttons)
-            if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify" && !buttonId) return;
+            if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
             m = smsg(client, mek, store);
             if (buttonId) {
-                m.text = buttonId; // Set full button ID (e.g., '.repo')
-                m.isButton = true;
-                console.log(`[BUTTON] Set m.text: ${m.text}, isButton: ${m.isButton}`);
+                m.text = buttonId;
+                console.log(`[BUTTON] Set m.text: ${buttonId}`);
             }
             require("./toxic")(client, m, chatUpdate, store);
         } catch (err) {
