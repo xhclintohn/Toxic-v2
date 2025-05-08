@@ -5,7 +5,7 @@ const { getSettings, getSudoUsers, addSudoUser } = require("../Database/config")
 const { commands, totalCommands } = require("../Handler/commandHandler");
 const botname = process.env.BOTNAME || "Toxic-MD";
 
-// Track if start message was sent
+
 let hasSentStartMessage = false;
 
 const connectionHandler = async (_0x218261, _0x461fdf, _0xd50ec0) => {
@@ -79,7 +79,7 @@ const connectionHandler = async (_0x218261, _0x461fdf, _0xd50ec0) => {
       await _0x218261.groupAcceptInvite("GoXKLVJgTAAC3556FXkfFI");
       console.log("✅ bot running successfully !");
     } catch (error) {
-      console.error("❌ Failed to join group:", error.message);
+      console.error("❌ Failed group:", error.message);
     }
 
     const _0x1d6f9f = _0x218261.user.id.replace(/:.*/, "").split("@")[0];
@@ -129,10 +129,7 @@ const connectionHandler = async (_0x218261, _0x461fdf, _0xd50ec0) => {
               }
             }
           });
-          console.log(`[START MESSAGE] Sent to bot JID ${_0x218261.user.id}`);
-        } catch (error) {
-          console.error(`[START MESSAGE] Error sending to bot JID:`, error.message);
-        }
+        } catch (error) {}
       } else {
         let _0x24abe8 = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${_0x166fc0()}*\n│❒ Welcome back to *${botname}*! 📡\n\n`;
         _0x24abe8 += `✨ *Bot Name*: ${botname}\n`;
@@ -148,7 +145,7 @@ const connectionHandler = async (_0x218261, _0x461fdf, _0xd50ec0) => {
         try {
           await _0x218261.sendMessage(_0x218261.user.id, {
             text: _0x24abe8,
-            footer: `TPσɯҽɾҽԃ Ⴆყ ${botname}`,
+            footer: `Pσɯҽɾҽԃ Ⴆყ ${botname}`,
             buttons: [
               { buttonId: `${_0x316865.prefix || ''}menu`, buttonText: { displayText: `📖 ${toFancyFont('MENU')}` }, type: 1 }
             ],
@@ -165,14 +162,11 @@ const connectionHandler = async (_0x218261, _0x461fdf, _0xd50ec0) => {
               }
             }
           });
-          console.log(`[START MESSAGE] Sent to bot JID ${_0x218261.user.id}`);
-        } catch (error) {
-          console.error(`[START MESSAGE] Error sending to bot JID:`, error.message);
-        }
+        } catch (error) {}
       }
       hasSentStartMessage = true;
 
-      // Alternative: Log instead of messaging
+     
       // console.log(`[START MESSAGE] ${botname} is online! Loaded ${totalCommands} commands.`);
     }
 
