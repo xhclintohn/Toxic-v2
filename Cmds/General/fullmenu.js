@@ -100,7 +100,7 @@ module.exports = {
 
         if (commandFiles.length === 0 && category.name !== '+18') continue;
 
-        menuText += `\n✦━ 《${category.display} ${category.emoji}》 ━✦\n`;
+        menuText += `\n✦━ 〘${category.display} ${category.emoji}〙 ━✦\n`;
 
         if (category.name === '+18') {
           const plus18Commands = ['xvideo'];
@@ -135,10 +135,6 @@ module.exports = {
         await client.sendMessage(m.chat, {
           text: menuText,
           footer: `Powered by Toxic-MD`,
-          buttons: [
-            { buttonId: `${effectivePrefix}repo`, buttonText: { displayText: `📜 ${toFancyFont('REPOSITORY')}` }, type: 1 }
-          ],
-          headerType: 1,
           contextInfo: {
             externalAdReply: {
               showAdAttribution: false,
