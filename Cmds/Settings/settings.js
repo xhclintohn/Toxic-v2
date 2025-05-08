@@ -5,12 +5,13 @@ module.exports = async (context) => {
 
   const settings = await getSettings();
   if (!settings) {
-    return await m.reply(
-      `◈━━━━━━━━━━━━━━━━◈\n` +
-      `│❒ Yo, no settings found in the database! 😈\n` +
-      `│❒ Fix it and try again, champ! 🥶\n` +
-      `┗━━━━━━━━━━━━━━━┛`
-    );
+    return await client.sendMessage(m.chat, {
+      text: 
+        `◈━━━━━━━━━━━━━━━━◈\n` +
+        `│❒ Yo, no settings found in the database! 😈\n` +
+        `│❒ Fix it and try again, champ! 🥶\n` +
+        `┗━━━━━━━━━━━━━━━┛`
+    }, { quoted: m });
   }
 
   const prefix = settings.prefix || '.';
@@ -103,17 +104,16 @@ module.exports = async (context) => {
     `┗━━━━━━━━━━━━━━━┛`;
 
   try {
-    console.log('[SETTINGS] Response type:', typeof response, 'Length:', response.length);
-    await m.reply({
+    console.log('[SETTINGS] Sending response:', { text: response.slice(0, 100) + '...', footer: `Pσɯҽɾҽԃ Ⴆყ ${botName}`, buttonId: `${prefix}dev` });
+    await client.sendButtonMessage(m.chat, [
+      {
+        buttonId: `${prefix}dev`,
+        buttonText: { displayText: `🪽 DEV` },
+        type: 1
+      }
+    ], {
       text: response,
       footer: `Pσɯҽɾҽԃ Ⴆყ ${botName}`,
-      buttons: [
-        {
-          buttonId: `${prefix}dev`,
-          buttonText: { displayText: `🪽 DEV` },
-          type: 1
-        }
-      ],
       headerType: 1,
       viewOnce: true,
       contextInfo: {
@@ -127,14 +127,15 @@ module.exports = async (context) => {
           sourceUrl: 'https://github.com/xhclintohn/Toxic-MD'
         }
       }
-    });
+    }, { quoted: m });
   } catch (err) {
     console.error('[SETTINGS] Error sending message:', err);
-    await m.reply(
-      `◈━━━━━━━━━━━━━━━━◈\n` +
-      `│❒ Oops, something broke! 😈\n` +
-      `│❒ Try again or hit the DEV button, champ! 🥶\n` +
-      `┗━━━━━━━━━━━━━━━┛`
-    );
+    await client.sendMessage(m.chat, {
+      text: 
+        `◈━━━━━━━━━━━━━━━━◈\n` +
+        `│❒ Oops, something broke! 😈\n` +
+        `│❒ Try again or contact the dev, champ! 🥶\n` +
+        `┗━━━━━━━━━━━━━━━┛`
+    }, { quoted: m });
   }
 };
