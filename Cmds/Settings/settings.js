@@ -50,7 +50,7 @@ module.exports = async (context) => {
     `┗━━━━━━━━━━━━━━━┛\n` +
 
     `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Autolike Status*: ${settings.autolike ? '✅ ON, liking stories 😘' : '❌ OFF, no likes'}\n` +
+    `│❒ *Autolike Status*: ${settings.autolike ? '✅ ON, liking stories ' : '❌ OFF, no likes'}\n` +
     `│❒ Auto-like statuses or stay cold!\n` +
     `│❒ Ex: ${prefix}autolike on\n` +
     `┗━━━━━━━━━━━━━━━┛\n` +
