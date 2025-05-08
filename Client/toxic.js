@@ -29,12 +29,15 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     const { prefix, mode, gcpresence, antitag, antidelete, antilink, packname } = settings;
 
     // Use m.body for commands, including button clicks
-    var body = m.bodyexploration
+    var body =
       m.body ||
-      (m.mtype === "imageMessage" ? m.message.imageMessage.caption : "") ||
-      (m.mtype === "extendedTextMessage" ? m.message.extendedTextMessage.text : "") ||
+      (m.mtype === "imageMessage" && m.message.imageMessage.caption) ||
+      (m.mtype === "extendedTextMessage" && m.message.extendedTextMessage.text) ||
       (m.mtype === "buttonsResponseMessage" && m.message.buttonsResponseMessage?.selectedButtonId) ||
       "";
+
+    // Ensure body is a string
+    body = typeof body === 'string' ? body : '';
 
     const Tag =
       m.mtype == "extendedTextMessage" &&
@@ -51,7 +54,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     const filePath = require('path').resolve(__dirname, '../toxic.jpg');
     const pict = fs.readFileSync(filePath);
 
-    const commandName = body.startsWith(prefix) ? body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase() : null;
+    const commandName = body && body.startsWith(prefix) ? body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase() : null;
     const resolvedCommandName = aliases[commandName] || commandName;
 
     const cmd = commands[resolvedCommandName];
@@ -116,7 +119,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
 
     if (cmd) {
-      console.log(`[COMMAND] ${resolvedCommandName} from ${pushname}${m.isButton ? ' (button)' : ''}`);
+      console.log(`[COMMAND] ${resolvedCommandName} from ${pushname}${m.mtype === 'buttonsResponseMessage' ? ' (button)' : ''}`);
       await commands[resolvedCommandName](context);
     }
 
