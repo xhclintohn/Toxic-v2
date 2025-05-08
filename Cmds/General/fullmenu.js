@@ -7,12 +7,13 @@ module.exports = {
   aliases: ['allmenu', 'commandslist'],
   description: 'Displays the full bot command menu by category',
   run: async (context) => {
-    const { client, m, totalCommands, mode, pict, botname } = context;
+    const { client, m, totalCommands, mode, pict } = context;
+    const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃'; // Constant bot name in Unicode bold
 
     // Handle invalid input
     if (context.text) {
       try {
-        await client.sendMessage(m.chat, { text: `╠══════ ✦ ══════╣\n│❒ Please use *${context.prefix}fullmenu* without extra text. Let's keep it simple! 😊` }, { quoted: m });
+        await client.sendMessage(m.chat, { text: `═════ ✦ ═════\n│❒ Please use *${context.prefix}fullmenu* without extra text.` }, { quoted: m });
       } catch (error) {
         console.error(`[DEBUG] Error sending invalid input message: ${error.message}`);
       }
@@ -25,7 +26,7 @@ module.exports = {
       if (!settings) {
         console.error('Failed to load settings');
         try {
-          await client.sendMessage(m.chat, { text: `╠══════ ✦ ══════╣\n│❒ Oops, couldn't load settings. Try again later!` }, { quoted: m });
+          await client.sendMessage(m.chat, { text: `═════ ✦ ═════\n│❒ Unable to load settings. Please try again later.` }, { quoted: m });
         } catch (error) {
           console.error(`[DEBUG] Error sending settings error message: ${error.message}`);
         }
@@ -51,10 +52,10 @@ module.exports = {
 
       const getGreeting = () => {
         const currentHour = DateTime.now().setZone('Africa/Nairobi').hour;
-        if (currentHour >= 5 && currentHour < 12) return 'Good Morning, early riser! 🌞';
-        if (currentHour >= 12 && currentHour < 18) return 'Good Afternoon, sunshine! 🌞';
-        if (currentHour >= 18 && currentHour < 22) return 'Good Evening, star gazer! 🌙';
-        return 'Good Night, moon chaser! 🌌';
+        if (currentHour >= 5 && currentHour < 12) return 'Good Morning';
+        if (currentHour >= 12 && currentHour < 18) return 'Good Afternoon';
+        if (currentHour >= 18 && currentHour < 22) return 'Good Evening';
+        return 'Good Night';
       };
 
       const getCurrentTimeInNairobi = () => {
@@ -74,18 +75,18 @@ module.exports = {
           .join('');
       };
 
-      let menuText = `╠══════ ✦ ══════╣\n│☆ *Welcome to ${toFancyFont(botname)}!* ☢\n\n`;
-      menuText += `${getGreeting()} ${m.pushName}\n\n`;
+      let menuText = `═════ ✦ ═════\n*${botname} Command Menu*\n\n`;
+      menuText += `Greetings, ${m.pushName}\n\n`;
       menuText += `👤 *Uʂҽɾ*: ${m.pushName}\n`;
-      menuText += `🤖 *Bσƚ*: ${toFancyFont(botname)}\n`;
+      menuText += `🤖 *Bσƚ*: ${botname}\n`;
       menuText += `📋 *Tσƚαʅ Cσɱɱαɳԃʂ*: ${totalCommands}\n`;
       menuText += `🕒 *Tιɱҽ*: ${getCurrentTimeInNairobi()}\n`;
       menuText += `🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'}\n`;
       menuText += `🌐 *Mσԃҽ*: ${mode}\n`;
       menuText += `📚 *LιႦɾαɾყ*: Baileys\n`;
-      menuText += `\n╠══════ ✦ ══════╣\n\n`;
+      menuText += `\n═════ ✦ ═════\n\n`;
 
-      menuText += `*📖 Codex of Commands ✦*\n`;
+      menuText += `*Command Registry ✦*\n`;
 
       let commandCount = 0;
       for (const category of categories) {
@@ -106,7 +107,7 @@ module.exports = {
           const plus18Commands = ['xvideo'];
           for (const cmd of plus18Commands) {
             const fancyCommandName = toFancyFont(cmd);
-            menuText += `  ➤ *${fancyCommandName}*\n`;
+            menuText += `  ✘ *${fancyCommandName}*\n`;
             commandCount++;
           }
         }
@@ -114,15 +115,14 @@ module.exports = {
         for (const file of commandFiles) {
           const commandName = file.replace('.js', '');
           const fancyCommandName = toFancyFont(commandName);
-          menuText += `  ➤ *${fancyCommandName}*\n`;
+          menuText += `  ✘ *${fancyCommandName}*\n`;
           commandCount++;
         }
       }
 
-      menuText += `\n╠══════ ✦ ══════╣\n`;
-      menuText += `*Unleash the power of ${toFancyFont(botname)}! ☆*\n`;
-      menuText += `Powered by Toxic-MD\n`;
-      menuText += `❦ ✦ ☆ ☢ ✧\n`;
+      menuText += `\n═════ ✦ ═════\n`;
+      menuText += `*Explore ${botname}*\n`;
+      menuText += `Powered by Toxic-MD ✧\n`;
 
       // Debug: Log menuText length and preview
       console.log(`[DEBUG] menuText length: ${menuText.length} characters`);
@@ -138,8 +138,8 @@ module.exports = {
           contextInfo: {
             externalAdReply: {
               showAdAttribution: false,
-              title: `${botname} Repository`,
-              body: `Explore the source of ${botname}!`,
+              title: `Toxic-MD Source`,
+              body: `View the source code of ${botname}`,
               thumbnail: pict,
               sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
               mediaType: 1,
@@ -151,7 +151,7 @@ module.exports = {
       } catch (error) {
         console.error(`[DEBUG] Error sending menu: ${error.message}`);
         try {
-          await client.sendMessage(m.chat, { text: `╠══════ ✦ ══════╣\n│❒ Sorry, couldn't send the menu. Try again later!\n\nPowered by Toxic-MD` }, { quoted: m });
+          await client.sendMessage(m.chat, { text: `═════ ✦ ═════\n│❒ Unable to display the menu. Please try again later.\n\nPowered by Toxic-MD` }, { quoted: m });
         } catch (fallbackError) {
           console.error(`[DEBUG] Error sending fallback message: ${fallbackError.message}`);
         }
@@ -160,7 +160,7 @@ module.exports = {
     } catch (error) {
       console.error('Error generating full menu:', error);
       try {
-        await client.sendMessage(m.chat, { text: `╠══════ ✦ ══════╣\n│❒ Sorry, something went wrong with the menu. Try again later!\n\nPowered by Toxic-MD` }, { quoted: m });
+        await client.sendMessage(m.chat, { text: `═════ ✦ ═════\n│❒ Unable to generate the menu. Please try again later.\n\nPowered by Toxic-MD` }, { quoted: m });
       } catch (fallbackError) {
         console.error(`[DEBUG] Error sending error message: ${fallbackError.message}`);
       }
