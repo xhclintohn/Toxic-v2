@@ -53,9 +53,6 @@ function smsg(conn, m, store) {
       m.msg.selectedDisplayText || 
       m.msg.title || 
       "";
-    if (m.mtype == "buttonsResponseMessage") {
-      console.log(`[SMSG] Button ID: ${m.msg.selectedButtonId}, m.body: ${m.body}, m.text: ${m.text}`);
-    }
 
     let quoted = (m.quoted = m.msg.contextInfo ? m.msg.contextInfo.quotedMessage : null);
     m.mentionedJid = m.msg.contextInfo ? m.msg.contextInfo.mentionedJid : [];
