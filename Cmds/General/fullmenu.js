@@ -53,7 +53,7 @@ module.exports = {
         .join('');
     };
 
-    let menuText = `╭─❒ 「 ${botname} Command Menu 」\n`;
+    let menuText = `╭─❒ 「 ${botname} Command Menu ⚠ 」\n`;
     menuText += `│ Greetings, @${m.pushName}\n`;
     menuText += `│\n`;
     menuText += `│ 🤖 *Bσƚ*: ${botname}\n`;
@@ -64,7 +64,7 @@ module.exports = {
     menuText += `│ 📚 *LιႦɾαɾყ*: Baileys\n`;
     menuText += `╰─────────────\n\n`;
 
-    menuText += `*Command Registry ✦*\n\n`;
+    menuText += `*COMMANDS REGISTRY ☑*\n\n`;
 
     let commandCount = 0;
     for (const category of categories) {
