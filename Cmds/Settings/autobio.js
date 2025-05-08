@@ -1,31 +1,54 @@
 const { getSettings, updateSetting } = require('../../Database/config');
-
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
-    await ownerMiddleware(context, async () => {
-        const { m, args } = context;
-        const value = args[0]?.toLowerCase();
+  await ownerMiddleware(context, async () => {
+    const { m, args } = context;
+    const value = args[0]?.toLowerCase();
 
-        const settings = await getSettings();
-        const prefix = settings.prefix;
+    const settings = await getSettings();
+    const prefix = settings.prefix;
+    const isEnabled = settings.autobio === true;
 
-        const isEnabled = settings.autobio === true;
-
-        if (value === 'on') {
-            if (isEnabled) {
-                return await m.reply('✅ Autobio is already ON.');
-            }
-            await updateSetting('autobio', 'true');
-            await m.reply('✅ Autobio has been turned ON. The bot will auto-update its about section every 10 seconds.');
-        } else if (value === 'off') {
-            if (!isEnabled) {
-                return await m.reply('✅ Autobio is already OFF.');
-            }
-            await updateSetting('autobio', 'false');
-            await m.reply('❌ Autobio has been turned OFF.');
-        } else {
-            await m.reply(`📄 Current autobio setting: ${isEnabled ? 'ON' : 'OFF'}\n\nUse _${prefix}autobio on_ or _${prefix}autobio off_ to change it.`);
-        }
-    });
+    if (value === 'on') {
+      if (isEnabled) {
+        return await m.reply(
+          `◈━━━━━━━━━━━━━━━━◈\n` +
+          `│❒ Autobio is already ON, you brain-dead fool! 😈\n` +
+          `│❒ My status is already flexing! 🥶\n` +
+          `┗━━━━━━━━━━━━━━━┛`
+        );
+      }
+      await updateSetting('autobio', 'true');
+      await m.reply(
+        `◈━━━━━━━━━━━━━━━━◈\n` +
+        `│❒ Autobio ON! 🔥\n` +
+        `│❒ My status will update every 10 seconds, bow down! 😈\n` +
+        `┗━━━━━━━━━━━━━━━┛`
+      );
+    } else if (value === 'off') {
+      if (!isEnabled) {
+        return await m.reply(
+          `◈━━━━━━━━━━━━━━━━◈\n` +
+          `│❒ Autobio is already OFF, moron! 😈\n` +
+          `│❒ Why you wasting my time? 🖕\n` +
+          `┗━━━━━━━━━━━━━━━┛`
+        );
+      }
+      await updateSetting('autobio', 'false');
+      await m.reply(
+        `◈━━━━━━━━━━━━━━━━◈\n` +
+        `│❒ Autobio OFF! 💀\n` +
+        `│❒ No more status flexing for now.\n` +
+        `┗━━━━━━━━━━━━━━━┛`
+      );
+    } else {
+      await m.reply(
+        `◈━━━━━━━━━━━━━━━━◈\n` +
+        `│❒ Autobio Status: ${isEnabled ? 'ON 🥶' : 'OFF 😴'}\n` +
+        `│❒ Use "${prefix}autobio on" or "${prefix}autobio off", you noob!\n` +
+        `┗━━━━━━━━━━━━━━━┛`
+      );
+    }
+  });
 };
