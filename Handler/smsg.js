@@ -16,8 +16,6 @@ const path = require('path');
 const filePath = path.resolve(__dirname, '../toxic.jpg'); 
 const kali = readFileSync(filePath);
 
-
-
 function smsg(conn, m, store) {
   if (!m) return m;
   let M = proto.WebMessageInfo;
@@ -43,7 +41,21 @@ function smsg(conn, m, store) {
       (m.mtype == "listResponseMessage" && m.msg && m.msg.singleSelectReply && m.msg.singleSelectReply.selectedRowId) ||
       (m.mtype == "buttonsResponseMessage" && m.msg && m.msg.selectedButtonId) ||
       (m.mtype == "viewOnceMessage" && m.msg && m.msg.caption) ||
-      m.text;
+      m.text ||
+      "";
+
+    m.text = 
+      (m.mtype == "buttonsResponseMessage" && m.msg && m.msg.selectedButtonId) ||
+      m.msg.text || 
+      m.msg.caption || 
+      m.message.conversation || 
+      m.msg.contentText || 
+      m.msg.selectedDisplayText || 
+      m.msg.title || 
+      "";
+    if (m.mtype == "buttonsResponseMessage") {
+      console.log(`[SMSG] Button ID: ${m.msg.selectedButtonId}`);
+    }
 
     let quoted = (m.quoted = m.msg.contextInfo ? m.msg.contextInfo.quotedMessage : null);
     m.mentionedJid = m.msg.contextInfo ? m.msg.contextInfo.mentionedJid : [];
@@ -81,73 +93,33 @@ function smsg(conn, m, store) {
         ...(m.isGroup ? { participant: m.quoted.sender } : {}),
       }));
 
-      /**
-       *
-       * @returns
-       */
       m.quoted.delete = () => conn.sendMessage(m.quoted.chat, { delete: vM.key });
-
-      /**
-       *
-       * @param {*} jid
-       * @param {*} forceForward
-       * @param {*} options
-       * @returns
-       */
       m.quoted.copyNForward = (jid, forceForward = false, options = {}) => conn.copyNForward(jid, vM, forceForward, options);
-
-      /**
-       *
-       * @returns
-       */
       m.quoted.download = () => conn.downloadMediaMessage(m.quoted);
     }
   }
   if (m.msg.url) m.download = () => conn.downloadMediaMessage(m.msg);
-  m.text = m.msg.text || m.msg.caption || m.message.conversation || m.msg.contentText || m.msg.selectedDisplayText || m.msg.title || "";
-  /**
-   * Reply to this message
-   * @param {String|Object} text
-   * @param {String|false} chatId
-   * @param {Object} options
-   */
-
-
-m.reply = (text, chatId = m.chat, options = {}) => {
-  return conn.sendMessage(chatId, 
-    {
-      text: text,
-      contextInfo: {
-        externalAdReply: {
-          title: `Toxic-MD`,
-          body: m.pushName,
-          previewType: "PHOTO",
-          thumbnailUrl: 'https://i.ibb.co/7JcYBD5Y/cbb9f804644ae8c4.jpg', 
-          thumbnail: kali, 
-          sourceUrl: 'https://github.com/xhclintohn/Toxic-MD'
+  m.text = m.text || m.body || "";
+  m.reply = (text, chatId = m.chat, options = {}) => {
+    return conn.sendMessage(chatId, 
+      {
+        text: text,
+        contextInfo: {
+          externalAdReply: {
+            title: `Toxic-MD`,
+            body: m.pushName,
+            previewType: "PHOTO",
+            thumbnailUrl: 'https://i.ibb.co/7JcYBD5Y/cbb9f804644ae8c4.jpg', 
+            thumbnail: kali, 
+            sourceUrl: 'https://github.com/xhclintohn/Toxic-MD'
+          }
         }
-      }
-    }, 
-    { quoted: m, ...options }
-  );
-};
-
-
-
-  /**
-   * Copy this message
-   */
+      }, 
+      { quoted: m, ...options }
+    );
+  };
   m.copy = () => exports.smsg(conn, M.fromObject(M.toObject(m)));
-
-  /**
-   *
-   * @param {*} jid
-   * @param {*} forceForward
-   * @param {*} options
-   * @returns
-   */
   m.copyNForward = (jid = m.chat, forceForward = false, options = {}) => conn.copyNForward(jid, m, forceForward, options);
-
   return m;
 }
 
