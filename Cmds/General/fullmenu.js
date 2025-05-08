@@ -78,6 +78,7 @@ module.exports = {
 
       menuText += `*📖 Full Command Menu ☠*\n`;
 
+      let commandCount = 0;
       for (const category of categories) {
         let commandFiles;
         try {
@@ -97,6 +98,7 @@ module.exports = {
           for (const cmd of plus18Commands) {
             const fancyCommandName = toFancyFont(cmd);
             menuText += `  ➤ *${fancyCommandName}*\n`;
+            commandCount++;
           }
         }
 
@@ -104,6 +106,7 @@ module.exports = {
           const commandName = file.replace('.js', '');
           const fancyCommandName = toFancyFont(commandName);
           menuText += `  ➤ *${fancyCommandName}*\n`;
+          commandCount++;
         }
       }
 
@@ -112,26 +115,41 @@ module.exports = {
       menuText += `Powered by Toxic-MD\n`;
       menuText += `❦☠☆☢\n`;
 
-      await client.sendMessage(m.chat, {
-        text: menuText,
-        footer: `Powered by Toxic-MD`,
-        buttons: [
-          { buttonId: `${effectivePrefix}repo`, buttonText: { displayText: `📂 ${toFancyFont('REPO')}` }, type: 1 }
-        ],
-        headerType: 1,
-        contextInfo: {
-          externalAdReply: {
-            showAdAttribution: false,
-            title: `${botname}`,
-            body: `Ready to explore, @${m.sender.split('@')[0]}?`,
-            thumbnail: pict,
-            sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
-            mediaType: 1,
-            renderLargerThumbnail: true
-          },
-          mentionedJid: [m.sender] // Mention the user
-        }
-      }, { quoted: m });
+      // Debug: Log menuText length and preview
+      console.log(`[DEBUG] menuText length: ${menuText.length} characters`);
+      console.log(`[DEBUG] menuText preview: ${menuText.substring(0, 200)}...`);
+      console.log(`[DEBUG] Total commands added: ${commandCount}`);
+      console.log(`[DEBUG] Sending to chat: ${m.chat}`);
+
+      // Send the message
+      try {
+        await client.sendMessage(m.chat, {
+          text: menuText,
+          footer: `Powered by Toxic-MD`,
+          buttons: [
+            { buttonId: `${effectivePrefix}repo`, buttonText: { displayText: `📂 ${toFancyFont('REPO')}` }, type: 1 }
+          ],
+          headerType: 1,
+          contextInfo: {
+            externalAdReply: {
+              showAdAttribution: false,
+              title: `${botname}`,
+              body: `Ready to explore, @${m.sender.split('@')[0]}?`,
+              thumbnail: pict,
+              sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
+              mediaType: 1,
+              renderLargerThumbnail: true
+            },
+            mentionedJid: [m.sender] // Mention the user
+          }
+        }, { quoted: m });
+        console.log(`[DEBUG] Menu sent successfully to ${m.chat}`);
+      } catch (error) {
+        console.error(`[DEBUG] Error sending menu: ${error.message}`);
+        await client.sendMessage(m.chat, {
+          text: `❦━━━━━━━━━━━━━━━━❦\n│❒ Sorry, couldn't send the menu. Try again later!\n\nPowered by Toxic-MD`
+        }, { quoted: m });
+      }
 
     } catch (error) {
       console.error('Error generating full menu:', error);
