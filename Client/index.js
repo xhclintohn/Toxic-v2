@@ -111,7 +111,9 @@ async function startToxic() {
             if (!bannedUsers.includes(callerNumber)) {
                 await banUser(callerNumber);
             }
-        } catch (error) {}
+        } catch (error) {
+            console.error('Error handling call:', error);
+        }
     });
 
     client.ev.on("messages.upsert", async (chatUpdate) => {
@@ -198,9 +200,7 @@ async function startToxic() {
             if (remoteJid.endsWith('@s.whatsapp.net')) {
                 const Chat = remoteJid;
                 if (presence === 'online') {
-                    await client.sendPresenceUpdate("available
-
-", Chat);
+                    await client.sendPresenceUpdate("available", Chat);
                 } else if (presence === 'typing') {
                     await client.sendPresenceUpdate("composing", Chat);
                 } else if (presence === 'recording') {
@@ -218,17 +218,22 @@ async function startToxic() {
                 m.text = buttonId;
             }
             require("./toxic")(client, m, chatUpdate, store);
-        } catch (err) {}
+        } catch (err) {
+            console.error('[MESSAGES.UPSERT] Error:', err);
+        }
     });
 
     const unhandledRejections = new Map();
     process.on("unhandledRejection", (reason, promise) => {
         unhandledRejections.set(promise, reason);
+        console.log("Unhandled Rejection at:", promise, "reason:", reason);
     });
     process.on("rejectionHandled", (promise) => {
         unhandledRejections.delete(promise);
     });
-    process.on("Something went wrong", function (err) {});
+    process.on("Something went wrong", function (err) {
+        console.log("Caught exception: ", err);
+    });
 
     client.decodeJid = (jid) => {
         if (!jid) return jid;
@@ -307,7 +312,7 @@ app.get("/", (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-app.listen(port, () => {});
+app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 
 startToxic();
 
@@ -316,6 +321,7 @@ module.exports = startToxic;
 let file = require.resolve(__filename);
 fs.watchFile(file, () => {
     fs.unwatchFile(file);
+    console.log(chalk.redBright(`Update ${__filename}`));
     delete require.cache[file];
     require(file);
 });
