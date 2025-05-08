@@ -28,11 +28,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
     const { prefix, mode, gcpresence, antitag, antidelete, antilink, packname } = settings;
 
-    // Modified body to handle button clicks
-    var body =
-      m.message.conversation || // Prioritize conversation for button clicks
+    // Use m.body for commands, including button clicks
+    var body = m.bodyexploration
+      m.body ||
       (m.mtype === "imageMessage" ? m.message.imageMessage.caption : "") ||
-      (m.mtype === "extendedTextMessage" ? m.message.extendedTextMessage.text : "");
+      (m.mtype === "extendedTextMessage" ? m.message.extendedTextMessage.text : "") ||
+      (m.mtype === "buttonsResponseMessage" && m.message.buttonsResponseMessage?.selectedButtonId) ||
+      "";
 
     const Tag =
       m.mtype == "extendedTextMessage" &&
@@ -114,6 +116,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
 
     if (cmd) {
+      console.log(`[COMMAND] ${resolvedCommandName} from ${pushname}${m.isButton ? ' (button)' : ''}`);
       await commands[resolvedCommandName](context);
     }
 
