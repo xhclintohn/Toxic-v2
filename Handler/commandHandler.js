@@ -32,6 +32,8 @@ const commands = {};
 const aliases = {
     speed: "ping",
     p: "ping",
+    xvideo: "xvideos",
+    porn: "xvideos",
     bug: "crash",
     developer: "dev",
     cmd: "getcmd",
