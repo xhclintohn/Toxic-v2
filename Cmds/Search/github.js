@@ -23,7 +23,7 @@ module.exports = async (context) => {
         "│ ❒ ERROR\n" +
         "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
         "│ ❌ User not found. Please check the username and try again.\n" +
-        "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━�“
+        "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈"
       );
       return;
     }
