@@ -18,25 +18,15 @@
 
 ---
 
-### Fancy Animation (Optional)
+### Fancy Animation
 
-If you want to add a fancy animation, consider using HTML/CSS for a web version. Here’s a simple example you can use in an HTML file:
-
-```html
 <div style="text-align: center; margin-top: 20px;">
-    <h2 style="animation: bounce 2s infinite;">✨ Thank you for visiting! ✨</h2>
+    <h2 style="animation: fade 3s infinite;">✨ Thank you for visiting! ✨</h2>
 </div>
 
 <style>
-@keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {
-        transform: translateY(0);
-    }
-    40% {
-        transform: translateY(-30px);
-    }
-    60% {
-        transform: translateY(-15px);
-    }
+@keyframes fade {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
 }
 </style>
