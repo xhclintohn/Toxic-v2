@@ -2,15 +2,13 @@
 
 ---
 
-**> Toxic-MD 
-
-`Source Code` Credits to:** 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 
+**Toxic-MD `Source Code` Credits to:** 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 
 
 ---
 
 ### Contact Developer
 
-[![Contact Developer](https://img.shields.io/badge/Contact%20Developer-+254735342808-brightgreen?style=for-the-badge&logo=whatsapp&logoColor=white)](https://api.whatsapp.com/send?phone=254735342808)
+[![Contact Developer](https://img.shields.io/badge/Contact%20Developer-Click here-brightgreen?style=for-the-badge&logo=whatsapp&logoColor=white)](https://api.whatsapp.com/send?phone=254735342808)
 
 ---
 
