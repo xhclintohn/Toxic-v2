@@ -1,8 +1,10 @@
-# Welcome to Toxic-MD
+# Hello🪽
 
 ---
 
-✨ **Source Code Credits to:** 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 ✨
+**> Toxic-MD 
+
+`Source Code` Credits to:** 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 
 
 ---
 
@@ -18,15 +20,10 @@
 
 ---
 
-### Fancy Animation
+### Go to Main Repository
 
-<div style="text-align: center; margin-top: 20px;">
-    <h2 style="animation: fade 3s infinite;">✨ Thank you for visiting! ✨</h2>
-</div>
+Tap the button below to go to the main repo for deployment/installation instructions.
 
-<style>
-@keyframes fade {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 1; }
-}
-</style>
+[![View Main Repo](https://img.shields.io/badge/VIEW%20MAIN%20REPO-Click%20Here-brightblue?style=for-the-badge)](https://github.com/xhclintohn/Toxic-MD)
+
+---
