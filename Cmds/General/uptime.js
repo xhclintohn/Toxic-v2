@@ -21,7 +21,7 @@ module.exports = async (context) => {
     };
 
     const uptimeText = formatUptime(process.uptime());
-    const replyText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botname} Uptime, Bitches*\n\nI’ve been awake for *${uptimeText}*, running shit like a boss.\n\nPowered by *${botname}*`;
+    const replyText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botname} Uptime, Bitches*\n\nI’ve been awake for *${uptimeText}*, running shit like a boss.\n\n> ρσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
 
     await client.sendMessage(m.chat, { text: replyText }, { quoted: m });
   } catch (error) {
