@@ -4,7 +4,7 @@ const commandQueue = queue(async (task, callback) => {
     try {
         await task.run(task.context);
     } catch (error) {
-        console.error(`Play error: ${error.message}`);
+        console.error(`Play queue error: ${error.message}`);
     }
     callback();
 }, 1); // 1 at a time
@@ -22,7 +22,7 @@ module.exports = {
 
         if (!botname) {
             console.error('Botname not set.');
-            return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Bot’s down! No botname set. Contact the dev.\n◈━━━━━━━━━━━━━━━━◈');
+            return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Toxic-MD’s down! No botname set. Contact the dev.\n◈━━━━━━━━━━━━━━━━◈');
         }
 
         // Rate limiting check
@@ -47,7 +47,15 @@ module.exports = {
 
             // Search YouTube
             const encodedQuery = encodeURIComponent(cleanedQuery);
-            const searchData = await fetchJson(`https://api.giftedtech.web.id/api/search/yts?apikey=gifted&query=${encodedQuery}`);
+            const searchUrl = `https://api.giftedtech.web.id/api/search/yts?apikey=gifted&query=${encodedQuery}`;
+            let searchData;
+            try {
+                searchData = await fetchJson(searchUrl, { timeout: 10000 });
+                console.log(`Search API response for "${cleanedQuery}":`, JSON.stringify(searchData, null, 2));
+            } catch (searchError) {
+                console.error(`Search API error for "${cleanedQuery}": ${searchError.message}`);
+                return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Sorry, ${m.pushName}! Search API failed for "${cleanedQuery}". It might be down or the query’s off. Try another song!\n◈━━━━━━━━━━━━━━━━◈`);
+            }
 
             if (!searchData || !searchData.success || !searchData.results || searchData.results.length === 0) {
                 return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ No songs found for "${cleanedQuery}", ${m.pushName}. Try another query!\n◈━━━━━━━━━━━━━━━━◈`);
@@ -75,12 +83,33 @@ module.exports = {
                 }
             }
 
-            // Download the audio
+            // Validate YouTube URL
+            const urlPattern = /(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+            if (!urlPattern.test(selectedVideo.url)) {
+                console.error(`Invalid YouTube URL from search: ${selectedVideo.url}`);
+                return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Oops, ${m.pushName}! The song link for "${cleanedQuery}" is invalid. Try another query!\n◈━━━━━━━━━━━━━━━━◈`);
+            }
+
+            // Download the audio with retry
             const encodedUrl = encodeURIComponent(selectedVideo.url);
-            const downloadData = await fetchJson(`https://api.shizo.top/download/ytmp3?apikey=shizo&url=${encodedUrl}`);
+            const downloadUrl = `https://api.shizo.top/download/ytmp3?apikey=shizo&url=${encodedUrl}`;
+            let downloadData;
+            for (let attempt = 1; attempt <= 2; attempt++) {
+                try {
+                    downloadData = await fetchJson(downloadUrl, { timeout: 10000 });
+                    console.log(`Download API response for "${selectedVideo.url}", attempt ${attempt}:`, JSON.stringify(downloadData, null, 2));
+                    break;
+                } catch (downloadError) {
+                    console.error(`Download API error for "${selectedVideo.url}", attempt ${attempt}: ${downloadError.message}`);
+                    if (attempt === 2) {
+                        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Couldn’t download "${selectedVideo.title}", ${m.pushName}. Download API’s acting up. Try another query!\n◈━━━━━━━━━━━━━━━━◈`);
+                    }
+                }
+            }
 
             if (!downloadData || !downloadData.status || !downloadData.result || !downloadData.result.download_url) {
-                return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Couldn’t download "${selectedVideo.title}", ${m.pushName}. API’s acting up or link’s busted. Try another query!\n◈━━━━━━━━━━━━━━━━◈`);
+                console.error(`Invalid download response for "${selectedVideo.url}":`, JSON.stringify(downloadData, null, 2));
+                return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Couldn’t download "${selectedVideo.title}", ${m.pushName}. Invalid response from download API. Try another query!\n◈━━━━━━━━━━━━━━━━◈`);
             }
 
             // Send audio
@@ -99,7 +128,7 @@ module.exports = {
 
             userLastUsed.set(m.sender, Date.now()); // Update last used time
         } catch (error) {
-            console.error(`Play command error: ${error.stack}`);
+            console.error(`Play command error for "${text}": ${error.message}\nStack: ${error.stack}`);
             await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Oops, ${m.pushName}! Couldn’t get the audio for "${text}". API’s down or something’s off. Try another query.\n❒ Check https://github.com/xhclintohn/Toxic-MD for help.\n◈━━━━━━━━━━━━━━━━◈`);
         }
     }
