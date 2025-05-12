@@ -42,7 +42,7 @@ module.exports = {
     menuText += `🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'} (learn it, dumbass)\n`;
     menuText += `🌐 *Mσԃҽ*: ${mode} (deal with it)\n`;
     menuText += `\n◈━━━━━━━━━━━━━━━━◈\n\n`;
-    menuText += `*Tap an option Below, Loser!* 😈\n`;
+    menuText += `*Tap an option Below, Loser.* 😈\n`;
 
     await client.sendMessage(m.chat, {
       text: menuText,
