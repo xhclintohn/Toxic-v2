@@ -1,20 +1,19 @@
-//weather.js
-
-
 module.exports = async (context) => {
-        const { m, text} = context;
+    const { m, text } = context;
 
+    try {
+        if (!text) {
+            return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Provide a city/town name.\n◈━━━━━━━━━━━━━━━━◈');
+        }
 
+        const response = await fetch(
+            `http://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(text)}&units=metric&appid=1ad47ec6172f19dfaf89eb3307f74785`
+        );
+        if (!response.ok) {
+            throw new Error('Location not found');
+        }
 
-try {
-
-if (!text) return m.reply("provide a city/town name");
-
-const response = await fetch(`http://api.openweathermap.org/data/2.5/weather?q=${text}&units=metric&appid=1ad47ec6172f19dfaf89eb3307f74785`);
         const data = await response.json();
-
-console.log("Weather data:",data);
-
 
         const cityName = data.name;
         const temperature = data.main.temp;
@@ -26,22 +25,31 @@ console.log("Weather data:",data);
         const windSpeed = data.wind.speed;
         const rainVolume = data.rain ? data.rain['1h'] : 0;
         const cloudiness = data.clouds.all;
-        const sunrise = new Date(data.sys.sunrise * 1000);
-        const sunset = new Date(data.sys.sunset * 1000);
+        const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString();
+        const sunset = new Date(data.sys.sunset * 1000).toLocaleTimeString();
 
-
-
-await m.reply(`❄️ Weather in ${cityName}
-
-🌡️ Temperature: ${temperature}°C
-📝 Description: ${description}
-❄️ Humidity: ${humidity}%
-🌀 Wind Speed: ${windSpeed} m/s
-🌧️ Rain Volume (last hour): ${rainVolume} mm
-☁️ Cloudiness: ${cloudiness}%
-🌄 Sunrise: ${sunrise.toLocaleTimeString()}
-🌅 Sunset: ${sunset.toLocaleTimeString()}`);
-
-
-} catch (e) { m.reply("Unable to find that location.") }
-}
+        await m.reply(
+            `◈━━━━━━━━━━━━━━━━◈\n` +
+            `❒ Weather in ${cityName}\n\n` +
+            `🌡️ Temperature: ${temperature}°C (Feels like: ${feelsLike}°C)\n` +
+            `──────────\n` +
+            `📝 Description: ${description}\n` +
+            `──────────\n` +
+            `💧 Humidity: ${humidity}%\n` +
+            `──────────\n` +
+            `🌀 Wind Speed: ${windSpeed} m/s\n` +
+            `──────────\n` +
+            `🌧️ Rain (1h): ${rainVolume} mm\n` +
+            `──────────\n` +
+            `☁️ Cloudiness: ${cloudiness}%\n` +
+            `──────────\n` +
+            `🌄 Sunrise: ${sunrise}\n` +
+            `──────────\n` +
+            `🌅 Sunset: ${sunset}\n` +
+            `◈━━━━━━━━━━━━━━━━◈`
+        );
+    } catch (error) {
+        console.error(`Weather error: ${error.message}`);
+        await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Unable to find that location.\n◈━━━━━━━━━━━━━━━━◈');
+    }
+};
