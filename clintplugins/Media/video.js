@@ -16,7 +16,7 @@ const RATE_LIMIT_MS = 30000; // 30 seconds cooldown per user
 module.exports = {
     name: 'video',
     aliases: ['vid', 'youtube', 'yt'],
-    description: 'Downloads a YouTube video from a provided URL',
+    description: 'Downloads the YouTube video for "Alone"',
     run: async (context) => {
         const { client, m, text, botname, fetchJson } = context;
 
@@ -32,25 +32,24 @@ module.exports = {
             return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Chill, ${m.pushName}! Wait ${Math.ceil((RATE_LIMIT_MS - (now - lastUsed)) / 1000)} seconds before trying again.\n◈━━━━━━━━━━━━━━━━◈`);
         }
 
-        if (!text || text.trim() === '') {
-            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Yo, ${m.pushName}, give me a YouTube URL! Example: .video https://www.youtube.com/watch?v=60ItHLz5WEA\n◈━━━━━━━━━━━━━━━━◈`);
-        }
-
-        // Validate YouTube URL
-        const urlPattern = /(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
-        if (!urlPattern.test(text.trim())) {
-            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ That’s not a valid YouTube URL, ${m.pushName}! Try something like https://www.youtube.com/watch?v=60ItHLz5WEA\n◈━━━━━━━━━━━━━━━━◈`);
+        // Check for "Alone" query (case-insensitive)
+        const query = text ? text.trim().toLowerCase() : '';
+        if (query !== 'alone') {
+            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Yo, ${m.pushName}, this command only works for ".video Alone"! Try that instead.\n◈━━━━━━━━━━━━━━━━◈`);
         }
 
         try {
-            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ A moment, Toxic-MD is downloading your video...\n◈━━━━━━━━━━━━━━━━◈`);
+            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ A moment, Toxic-MD is downloading Alone...\n◈━━━━━━━━━━━━━━━━◈`);
+
+            // Hardcoded YouTube URL for "Alone" (Alan Walker)
+            const youtubeUrl = 'https://www.youtube.com/watch?v=1-xGerv5FOk';
+            const encodedUrl = encodeURIComponent(youtubeUrl);
 
             // Download the video
-            const encodedUrl = encodeURIComponent(text.trim());
             const downloadData = await fetchJson(`https://api.giftedtech.web.id/api/download/dlmp4?apikey=gifted&url=${encodedUrl}`);
 
             if (!downloadData || !downloadData.success || !downloadData.result || !downloadData.result.download_url) {
-                return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Couldn’t download the video, ${m.pushName}. Invalid URL or API’s acting up. Check the link and try again!\n◈━━━━━━━━━━━━━━━━◈`);
+                return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Couldn’t download Alone, ${m.pushName}. API’s acting up. Try again later!\n◈━━━━━━━━━━━━━━━━◈`);
             }
 
             // Check duration if provided (max 5 minutes)
@@ -62,12 +61,12 @@ module.exports = {
                         ? durationParts[0] * 60 + durationParts[1]
                         : durationParts[0];
                 if (seconds > 300) {
-                    return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Video "${downloadData.result.title}" is too long (${downloadData.result.duration}), ${m.pushName}. Pick a shorter one (under 5 minutes)!\n◈━━━━━━━━━━━━━━━━◈`);
+                    return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Video "${downloadData.result.title}" is too long (${downloadData.result.duration}), ${m.pushName}. Can’t send it!\n◈━━━━━━━━━━━━━━━━◈`);
                 }
             }
 
             // Send video
-            const caption = `◈━━━━━━━━━━━━━━━━◈\n❒ Here’s *${downloadData.result.title}*, ${m.pushName}! Enjoy the vibes! 😈\n` +
+            const caption = `◈━━━━━━━━━━━━━━━━◈\n❒ Here’s *${downloadData.result.title}*, ${m.pushName}! Rock it! 😈\n` +
                            `📹 *Source*: YouTube\n` +
                            (downloadData.result.quality ? `🎥 *Quality*: ${downloadData.result.quality}\n` : '') +
                            (downloadData.result.duration ? `⏱️ *Duration*: ${downloadData.result.duration}\n` : '') +
@@ -82,7 +81,7 @@ module.exports = {
             userLastUsed.set(m.sender, Date.now()); // Update last used time
         } catch (error) {
             console.error(`Video command error: ${error.stack}`);
-            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Oops, ${m.pushName}! Couldn’t download the video for "${text}". API’s down or the link’s busted. Try another URL.\n❒ Check https://github.com/xhclintohn/Toxic-MD for help.\n◈━━━━━━━━━━━━━━━━◈`);
+            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Oops, ${m.pushName}! Couldn’t download Alone. API’s down or something’s off. Try later.\n❒ Check https://github.com/xhclintohn/Toxic-MD for help.\n◈━━━━━━━━━━━━━━━━◈`);
         }
     }
 };
