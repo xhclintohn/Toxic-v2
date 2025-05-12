@@ -8,7 +8,7 @@ module.exports = {
   description: 'Displays the full bot command menu by category',
   run: async (context) => {
     const { client, m, totalCommands, mode, pict } = context;
-    const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃'; // Constant bot name in Unicode bold
+    const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃'; 
 
     const settings = await getSettings();
     const effectivePrefix = settings.prefix || ''; // Use empty string for prefixless mode
@@ -68,7 +68,7 @@ module.exports = {
 
     let commandCount = 0;
     for (const category of categories) {
-      let commandFiles = fs.readdirSync(`./Cmds/${category.name}`).filter(file => file.endsWith('.js'));
+      let commandFiles = fs.readdirSync(`./clintplugins/${category.name}`).filter(file => file.endsWith('.js'));
 
       if (commandFiles.length === 0 && category.name !== '+18') continue;
 
