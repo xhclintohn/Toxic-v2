@@ -12,9 +12,9 @@
 
 ---
 
-### Note
+### ⚠️Note⚠️
 
-**Don't steal! Lol🤣**
+**Don't steal❌! Lol🤣**
 
 ---
 
