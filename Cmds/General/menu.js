@@ -5,7 +5,7 @@ const { getSettings } = require('../../Database/config');
 module.exports = {
   name: 'menu',
   aliases: ['help', 'commands', 'list'],
-  description: 'Displays a simplified bot command menu with interactive buttons',
+  description: 'Displays a simplified bot command menu with buttons and a voice note',
   run: async (context) => {
     const { client, m, mode, pict, botname, text } = context;
 
@@ -32,17 +32,17 @@ module.exports = {
     // Define button commands with toxic emojis
     const buttonCommands = [
       { id: 'fullmenu', display: toFancyFont('FULLMENU'), emoji: '📃' },
-      { id: 'dev', display: toFancyFont('DEV'), emoji: '🪽' },
-      { id: 'ping', display: toFancyFont('PING'), emoji: '⏩' },
+      { id: 'dev', display: toFancyFont('DEV'), emoji: '👤' },
+      { id: 'ping', display: toFancyFont('PING'), emoji: '🚨' },
       { id: 'uptime', display: toFancyFont('UPTIME'), emoji: '⏰' }
     ];
 
-    let menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, !* 😈\n\n`;
-    menuText += `🤖 `Bσƚ`: ${botname} (bow down)\n`;
-    menuText += `🔣 `Pɾҽϝιx`: ${effectivePrefix || 'None'} (learn it, dumbass)\n`;
-    menuText += `🌐 `Mσԃҽ`: ${mode} (deal with it)\n`;
+    let menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, B*tches!* 😈\n\n`;
+    menuText += `🤖 *Bσƚ*: ${botname} (bow down)\n`;
+    menuText += `🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'} (learn it, dumbass)\n`;
+    menuText += `🌐 *Mσԃҽ*: ${mode} (deal with it)\n`;
     menuText += `\n◈━━━━━━━━━━━━━━━━◈\n\n`;
-    menuText += `*Pick an option Below, Loser!* ⚠️\n`;
+    menuText += `*Tap an option Below, Loser!* 😈\n`;
 
     await client.sendMessage(m.chat, {
       text: menuText,
