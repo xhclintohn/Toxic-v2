@@ -1,37 +1,42 @@
-//vcf.js
-
-       
+const fs = require('fs');
 
 module.exports = async (context) => {
+    const { client, m, participants } = context;
 
- const { client, m, participants, text } = context;
+    if (!m.isGroup) {
+        return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Command meant for groups.\n◈━━━━━━━━━━━━━━━━◈');
+    }
 
-if (!m.isGroup) return m.reply("Command meant for groups");
+    try {
+        const gcdata = await client.groupMetadata(m.chat);
+        const vcard = gcdata.participants
+            .map((a, i) => {
+                const number = a.id.split('@')[0];
+                return `BEGIN:VCARD\nVERSION:3.0\nFN:[${i}] +${number}\nTEL;type=CELL;type=VOICE;waid=${number}:+${number}\nEND:VCARD`;
+            })
+            .join('\n');
 
-const fs = require("fs");
-let gcdata = await client.groupMetadata(m.chat)
-let gcmem = participants.map(a => a.id)
+        const cont = './contacts.vcf';
 
-let vcard = ''
-let noPort = 0
+        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ A moment, Toxic-MD is compiling ${gcdata.participants.length} contacts into a VCF...\n◈━━━━━━━━━━━━━━━━◈`);
 
-for (let a of gcdata.participants) {
-    vcard += `BEGIN:VCARD\nVERSION:3.0\nFN:[${noPort++}] +${a.id.split("@")[0]}\nTEL;type=CELL;type=VOICE;waid=${a.id.split("@")[0]}:+${a.id.split("@")[0]}\nEND:VCARD\n`
-}
+        await fs.promises.writeFile(cont, vcard);
+        await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Import this VCF in a separate email account to avoid messing with your contacts...\n◈━━━━━━━━━━━━━━━━◈');
 
-let cont = './contacts.vcf'
+        await client.sendMessage(
+            m.chat,
+            {
+                document: fs.readFileSync(cont),
+                mimetype: 'text/vcard',
+                fileName: 'Group contacts.vcf',
+                caption: `VCF for ${gcdata.subject}\n${gcdata.participants.length} contacts`
+            },
+            { ephemeralExpiration: 86400, quoted: m }
+        );
 
-await m.reply('A moment, dreaded is compiling '+gcdata.participants.length+' contacts into a vcf...');
-
-
-
-await fs.writeFileSync(cont, vcard.trim())
-await m.reply("Import this vcf in a separate email account to avoid messing with your contacts...");
-
-await client.sendMessage(m.chat, {
-    document: fs.readFileSync(cont), mimetype: 'text/vcard', fileName: 'Group contacts.vcf', caption: 'VCF for '+gcdata.subject+'\n'+gcdata.participants.length+' contacts'
-}, {ephemeralExpiration: 86400, quoted: m})
-fs.unlinkSync(cont)
-
-
-}
+        await fs.promises.unlink(cont);
+    } catch (error) {
+        console.error(`VCF error: ${error.message}`);
+        await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Failed to generate VCF. Try again later.\n◈━━━━━━━━━━━━━━━━◈');
+    }
+};
