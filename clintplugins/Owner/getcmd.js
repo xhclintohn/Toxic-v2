@@ -35,7 +35,7 @@ module.exports = async (context) => {
         const commandName = text.endsWith('.js') ? text.slice(0, -3) : text;
 
         for (const category of categories) {
-            const filePath = `./Cmds/${category.name}/${commandName}.js`;
+            const filePath = `./clintplugins/${category.name}/${commandName}.js`;
 
             try {
                 const data = await fs.readFile(filePath, 'utf8');
