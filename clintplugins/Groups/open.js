@@ -5,6 +5,6 @@ module.exports = async (context) => {
         const { client, m } = context;
 
         await client.groupSettingUpdate(m.chat, 'not_announcement');
-        m.reply('Group opened.');
+        m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Group opened.\n◈━━━━━━━━━━━━━━━━◈');
     });
 };
