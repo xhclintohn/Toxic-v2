@@ -1,7 +1,7 @@
 const { default: makeWASocket } = require('baileys-elite');
 
 module.exports = {
-  name: 'button',
+  name: 'buttonz',
   aliases: ['btn'],
   description: 'Displays a list selection menu',
   run: async (context) => {
