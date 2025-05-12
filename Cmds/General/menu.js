@@ -5,7 +5,7 @@ const { getSettings } = require('../../Database/config');
 module.exports = {
   name: 'menu',
   aliases: ['help', 'commands', 'list'],
-  description: 'Displays a simplified bot command menu with buttons and a voice note',
+  description: 'Displays a simplified bot command menu with interactive buttons',
   run: async (context) => {
     const { client, m, mode, pict, botname, text } = context;
 
@@ -37,12 +37,12 @@ module.exports = {
       { id: 'uptime', display: toFancyFont('UPTIME'), emoji: '⏰' }
     ];
 
-    let menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, Bitches!* 😈\n\n`;
-    menuText += `🤖 *Bσƚ*: ${botname} (bow down)\n`;
-    menuText += `🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'} (learn it, dumbass)\n`;
-    menuText += `🌐 *Mσԃҽ*: ${mode} (deal with it)\n`;
+    let menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, !* 😈\n\n`;
+    menuText += `🤖 `Bσƚ`: ${botname} (bow down)\n`;
+    menuText += `🔣 `Pɾҽϝιx`: ${effectivePrefix || 'None'} (learn it, dumbass)\n`;
+    menuText += `🌐 `Mσԃҽ`: ${mode} (deal with it)\n`;
     menuText += `\n◈━━━━━━━━━━━━━━━━◈\n\n`;
-    menuText += `*Pick an option Below, Loser!* 😈\n`;
+    menuText += `*Pick an option Below, Loser!* ⚠️\n`;
 
     await client.sendMessage(m.chat, {
       text: menuText,
