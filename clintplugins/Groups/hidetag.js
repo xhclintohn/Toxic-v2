@@ -9,7 +9,7 @@ module.exports = async (context) => {
 
 
 
-client.sendMessage(m.chat, { text : text ? text : '☞︎︎︎ TAGGED ☜︎︎︎' , mentions: participants.map(a => a.id)}, { quoted: m });
+client.sendMessage(m.chat, { text : text ? text : 'ᅠᅠᅠᅠ' , mentions: participants.map(a => a.id)}, { quoted: m });
 
 });
 
