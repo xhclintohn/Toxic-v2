@@ -1,33 +1,59 @@
 const { Sticker, createSticker, StickerTypes } = require('wa-sticker-formatter');
+const fs = require('fs').promises;
+const path = require('path');
+const { queue } = require('async');
+
+const commandQueue = queue(async (task, callback) => {
+    try {
+        await task.run(task.context);
+    } catch (error) {
+        console.error(`Sticker error: ${error.message}`);
+    }
+    callback();
+}, 1); // 1 at a time
 
 module.exports = async (context) => {
+    const { client, m, mime, packname, author } = context;
 
-const { client, m, packname, author, msgDreaded } = context;
+    if (!m.sender.includes('your-owner-number@s.whatsapp.net')) {
+        return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Only owners can use this command.\n◈━━━━━━━━━━━━━━━━◈');
+    }
 
-if(!msgDreaded) { m.reply('Quote an image or a short video.') ; return } ;
-let media;
-if (msgDreaded.imageMessage) {
-     media = msgDreaded.imageMessage
-  } else if(msgDreaded.videoMessage) {
-media = msgDreaded.videoMessage
-  } 
- else {
-    m.reply('That is neither an image nor a short video! '); return
-  } ;
+    commandQueue.push({
+        context,
+        run: async ({ client, m, mime, packname, author }) => {
+            try {
+                if (!m.quoted) {
+                    return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Quote an image or a short video.\n◈━━━━━━━━━━━━━━━━◈');
+                }
 
-var result = await client.downloadAndSaveMediaMessage(media);
+                if (!/image|video/.test(mime)) {
+                    return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ That is neither an image nor a short video!\n◈━━━━━━━━━━━━━━━━◈');
+                }
 
-let stickerResult = new Sticker(result, {
-            pack: packname,
-            author: author,
-            type: StickerTypes.FULL,
-            categories: ["🤩", "🎉"],
-            id: "12345",
-            quality: 70,
-            background: "transparent",
-          });
-const Buffer = await stickerResult.toBuffer();
-          client.sendMessage(m.chat, { sticker: Buffer }, { quoted: m });
+                const tempFile = path.join(__dirname, `temp-sticker-${Date.now()}.${/image/.test(mime) ? 'jpg' : 'mp4'}`);
+                await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ A moment, Toxic-MD is creating the sticker...\n◈━━━━━━━━━━━━━━━━◈');
 
-}
+                const media = await client.downloadAndSaveMediaMessage(m.quoted, tempFile);
 
+                const stickerResult = new Sticker(media, {
+                    pack: packname || 'Toxic-MD Pack',
+                    author: author || 'Toxic-MD',
+                    type: StickerTypes.FULL,
+                    categories: ['🤩', '🎉'],
+                    id: '12345',
+                    quality: 50, // Lower quality to reduce memory
+                    background: 'transparent'
+                });
+
+                const buffer = await stickerResult.toBuffer();
+                await client.sendMessage(m.chat, { sticker: buffer }, { quoted: m });
+
+                await fs.unlink(tempFile).catch(() => console.warn('Failed to delete temp file'));
+            } catch (error) {
+                console.error(`Sticker error: ${error.message}`);
+                await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ An error occurred while creating the sticker. Please try again.\n◈━━━━━━━━━━━━━━━━◈');
+            }
+        }
+    });
+};
