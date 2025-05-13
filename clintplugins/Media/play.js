@@ -55,7 +55,7 @@ module.exports = {
 
             // Download the audio with retry
             const encodedUrl = encodeURIComponent(video.url);
-            const downloadUrl = `https://api.giftedtech.web.id/api/download/dlmp3?apikey=gifted&url=${encodedUrl}`;
+            const downloadUrl = `https://api.shizo.top/download/ytmp3?apikey=shizo&url=${encodedUrl}`;
             let downloadData;
             for (let attempt = 1; attempt <= 2; attempt++) {
                 try {
