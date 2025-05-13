@@ -1,5 +1,5 @@
 const { queue } = require('async');
-const yts = require('yt-search');
+const yts = require('yt-search'); // Lightweight YouTube search
 
 const commandQueue = queue(async (task, callback) => {
     try {
@@ -34,7 +34,7 @@ module.exports = {
         }
 
         if (!text || text.trim() === '') {
-            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Yo, ${m.pushName}, give me a song to search! Example: .play Alone ft Ava Max\n◈━━━━━━━━━━━━━━━━◈`);
+            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Yo, ${m.pushName}, give me a song to search! Example: .play Alone ft Ava Max\n◈━━━━━━━━━━━━━━━━◈');
         }
 
         try {
@@ -53,36 +53,45 @@ module.exports = {
                 return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ No songs found for "${cleanedQuery}", ${m.pushName}. Try another query!\n◈━━━━━━━━━━━━━━━━◈`);
             }
 
-            // Download the audio with retry
-            const encodedUrl = encodeURIComponent(video.url);
+            // Normalize YouTube URL to short format (youtu.be)
+            const videoId = video.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)?.[1];
+            const normalizedUrl = videoId ? `https://youtu.be/${videoId}` : video.url;
+
+            // Download the audio
+            const encodedUrl = encodeURIComponent(normalizedUrl);
             const downloadUrl = `https://api.shizo.top/download/ytmp3?apikey=shizo&url=${encodedUrl}`;
             let downloadData;
-            for (let attempt = 1; attempt <= 2; attempt++) {
-                try {
-                    downloadData = await fetchJson(downloadUrl, { timeout: 10000 });
-                    console.log(`Download API response for "${video.url}", attempt ${attempt}:`, JSON.stringify(downloadData, null, 2));
-                    break;
-                } catch (downloadError) {
-                    console.error(`Download API error for "${video.url}", attempt ${attempt}: ${downloadError.message}`);
-                    if (attempt === 2) {
-                        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Couldn’t download "${video.title}", ${m.pushName}. Download API’s acting up. Try another query!\n◈━━━━━━━━━━━━━━━━◈`);
-                    }
-                }
+            try {
+                console.log(`Calling API: ${downloadUrl}`);
+                downloadData = await fetchJson(downloadUrl, { timeout: 15000 });
+                console.log(`Download API response for "${normalizedUrl}":`, JSON.stringify(downloadData, null, 2));
+            } catch (downloadError) {
+                console.error(`Download API error for "${normalizedUrl}": ${downloadError.message}, URL: ${downloadUrl}`);
+                return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Couldn’t download "${video.title}", ${m.pushName}. The download API’s acting up or the song’s unavailable. Try another query!\n◈━━━━━━━━━━━━━━━━◈`);
             }
 
-            if (!downloadData || !downloadData.success || !downloadData.result || !downloadData.result.download_url) {
-                console.error(`Invalid download response for "${video.url}":`, JSON.stringify(downloadData, null, 2));
-                return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Couldn’t download "${video.title}", ${m.pushName}. Invalid response from download API. Try another query!\n◈━━━━━━━━━━━━━━━━◈`);
+            if (!downloadData) {
+                console.error(`No download response for "${normalizedUrl}":`, JSON.stringify(downloadData, null, 2));
+                return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Couldn’t download "${video.title}", ${m.pushName}. Got nothing from the API. Try another query!\n◈━━━━━━━━━━━━━━━━◈`);
             }
 
-            // Send audio
-            const caption = `◈━━━━━━━━━━━━━━━━◈\n❒ Here’s *${downloadData.result.title}*, ${m.pushName}! Jam out! 🎶\n` +
+            // Send audio with whatever URL the API provides
+            const audioUrl = downloadData.result?.download_url || downloadData.download_url || downloadData.url;
+            if (!audioUrl) {
+                console.error(`No audio URL in response for "${normalizedUrl}":`, JSON.stringify(downloadData, null, 2));
+                return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Couldn’t download "${video.title}", ${m.pushName}. No audio link from the API. Try another query!\n◈━━━━━━━━━━━━━━━━◈`);
+            }
+
+            const title = downloadData.result?.title || video.title || cleanedQuery;
+            const quality = downloadData.result?.quality || '';
+
+            const caption = `◈━━━━━━━━━━━━━━━━◈\n❒ Here’s *${title}*, ${m.pushName}! Jam out! 🎶\n` +
                            `🎵 *Source*: YouTube\n` +
-                           (downloadData.result.quality ? `🔊 *Quality*: ${downloadData.result.quality}\n` : '') +
+                           (quality ? `🔊 *Quality*: ${quality}\n` : '') +
                            `◈━━━━━━━━━━━━━━━━◈\nPowered by *${botname}*`;
 
             await client.sendMessage(m.chat, {
-                audio: { url: downloadData.result.download_url },
+                audio: { url: audioUrl },
                 mimetype: 'audio/mpeg',
                 caption: caption
             }, { quoted: m });
@@ -90,7 +99,7 @@ module.exports = {
             userLastUsed.set(m.sender, Date.now()); // Update last used time
         } catch (error) {
             console.error(`Play command error for "${text}": ${error.message}\nStack: ${error.stack}`);
-            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Oops, ${m.pushName}! Couldn’t get the audio for "${text}". API’s down or something’s off. Try another query.\n❒ Check https://github.com/xhclintohn/Toxic-MD for help.\n◈━━━━━━━━━━━━━━━━◈`);
+            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Oops, ${m.pushName}! Couldn’t get the audio for "${text}". Something’s off with the API or search. Try another query.\n❒ Check https://github.com/xhclintohn/Toxic-MD for help.\n◈━━━━━━━━━━━━━━━━◈`);
         }
     }
 };
