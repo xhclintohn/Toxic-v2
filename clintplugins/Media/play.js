@@ -34,7 +34,7 @@ module.exports = {
         }
 
         if (!text || text.trim() === '') {
-            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Yo, ${m.pushName}, give me a song to search! Example: .play Alone ft Ava Max\n◈━━━━━━━━━━━━━━━━◈');
+            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Yo, ${m.pushName}, give me a song to search! Example: .play Alone ft Ava Max\n◈━━━━━━━━━━━━━━━━◈`);
         }
 
         try {
