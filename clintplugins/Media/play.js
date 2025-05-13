@@ -59,7 +59,7 @@ module.exports = {
 
             // Download the audio
             const encodedUrl = encodeURIComponent(normalizedUrl);
-            const downloadUrl = `https://api.shizo.top/download/ytmp3?apikey=shizo&url=${encodedUrl}`;
+            const downloadUrl = `https://api.giftedtech.web.id/api/download/dlmp3?apikey=gifted&url=${encodedUrl}`;
             let downloadData;
             try {
                 console.log(`Calling API: ${downloadUrl}`);
