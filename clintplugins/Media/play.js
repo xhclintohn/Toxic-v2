@@ -23,7 +23,7 @@ module.exports = async (context) => {
 
     const song = videos[0];
     const apiKey = "gifted";
-    const apiUrl = `https://api.giftedtech.web.id/api/download/dlmp3?apikey=${apiKey}&url=${encodeURIComponent(song.url)}`;
+    const apiUrl = `https://api.giftedtech.web.id/api/download/ytmp3?apikey=${apiKey}&url=${encodeURIComponent(song.url)}`;
 
     const response = await fetch(apiUrl, {
       method: 'GET',
