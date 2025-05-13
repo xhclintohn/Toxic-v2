@@ -4,15 +4,6 @@ module.exports = async (context) => {
   const { client, m } = context;
 
   const settings = await getSettings();
-  if (!settings) {
-    return await m.reply(
-      `◈━━━━━━━━━━━━━━━━◈\n` +
-      `│❒ Yo, no settings found in the database! 😈\n` +
-      `│❒ Fix it and try again, champ! 🥶\n` +
-      `┗━━━━━━━━━━━━━━━┛`
-    );
-  }
-
   const prefix = settings.prefix || '.';
   const botName = process.env.BOTNAME || settings.botname || 'Toxic-MD';
   const sudoUsers = await getSudoUsers();
@@ -98,6 +89,5 @@ module.exports = async (context) => {
     `│❒ *Total Groups*: ${groupCount} (ruling them all!)\n` +
     `┗━━━━━━━━━━━━━━━┛`;
 
-  console.log('[SETTINGS] Sending response:', response.slice(0, 100) + '...');
   await m.reply(response);
 };
