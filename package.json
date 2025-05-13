@@ -92,8 +92,8 @@
     "youtubedl-core": "^4.11.7",
     "acrcloud": "^1.4.0",
     "ytdl-core": "npm:@distube/ytdl-core",
-    "yt-search": "^2.10.4",
-    "youtube-yts": "^2.0.0",
+    "yt-search": "latest",
+    "youtube-yts": "latest",
     "node-youtube-music": "^0.8.3",
     "node-id3": "^0.2.6"
   },
