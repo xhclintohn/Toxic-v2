@@ -22,7 +22,7 @@ module.exports = async (context) => {
     }
 
     const song = videos[0];
-    const apiKey = "gifted_api_se5dccy";
+    const apiKey = "gifted";
     const apiUrl = `https://api.giftedtech.web.id/api/download/dlmp3?apikey=${apiKey}&url=${encodeURIComponent(song.url)}`;
 
     const response = await fetch(apiUrl, {
@@ -43,34 +43,12 @@ module.exports = async (context) => {
     }
 
     const songTitle = data.result.title || song.title;
-    const artist = song.author?.name || "Unknown Artist";
-    const views = song.views?.toLocaleString() || "Unknown";
-    const duration = song.duration?.toString() || "Unknown";
-    const uploaded = song.ago || "Unknown";
-    const quality = data.result.quality || "128Kbps";
-    const thumbnail = data.result.thumbnail || song.thumbnail || "";
-    const videoUrl = song.url;
-
     await m.reply(formatStylishReply(`Grabbing *${songTitle}* for you, hold your damn horses! 🎧`));
-
-    // Format song info for caption
-    const caption = `◈━━━━━━━━━━━━━━━━◈\n` +
-                   `│❒ *${songTitle}* for ${m.pushName}! Jam out, you legend! 🎶\n` +
-                   `│🎤 *Artist*: ${artist}\n` +
-                   `│👀 *Views*: ${views}\n` +
-                   `│⏱ *Duration*: ${duration}\n` +
-                   `│📅 *Uploaded*: ${uploaded}\n` +
-                   `│🔊 *Quality*: ${quality}\n` +
-                   (thumbnail ? `│🖼 *Thumbnail*: ${thumbnail}\n` : '') +
-                   `│🔗 *Video*: ${videoUrl}\n` +
-                   `◈━━━━━━━━━━━━━━━━◈\n` +
-                   `Powered by Toxic-MD`;
 
     await client.sendMessage(m.chat, {
       audio: { url: data.result.download_url },
       mimetype: "audio/mpeg",
-      fileName: `${songTitle}.mp3`,
-      caption: caption
+      fileName: `${songTitle}.mp3`
     }, { quoted: m });
 
   } catch (error) {
