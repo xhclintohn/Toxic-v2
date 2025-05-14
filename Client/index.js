@@ -180,20 +180,20 @@ async function startToxic() {
                 } catch (error) {}
             }
 
-            // Autolike for statuses
+            // Autoview/autoread (moved before autolike for statuses)
+            if (autoview && remoteJid === "status@broadcast") {
+                await client.readMessages([mek.key]);
+            } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+                await client.readMessages([mek.key]);
+            }
+
+            // Autolike for statuses (moved after autoview)
             if (autolike && mek.key.remoteJid === "status@broadcast") {
                 if (!mek.status) {
                     await client.sendMessage(mek.key.remoteJid, {
                         react: { key: mek.key, text: "❤️" }
                     });
                 }
-            }
-
-            // Autoview/autoread
-            if (autoview && remoteJid === "status@broadcast") {
-                await client.readMessages([mek.key]);
-            } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-                await client.readMessages([mek.key]);
             }
 
             // Presence
@@ -204,7 +204,7 @@ async function startToxic() {
                 } else if (presence === 'typing') {
                     await client.sendPresenceUpdate("composing", Chat);
                 } else if (presence === 'recording') {
-                    await client.sendPresenceUpdate("recording", Chat);
+                    client.sendPresenceUpdate("recording", Chat);
                 } else {
                     await client.sendPresenceUpdate("unavailable", Chat);
                 }
