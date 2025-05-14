@@ -55,7 +55,7 @@ async function startToxic() {
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
         version: [2, 3000, 1015901307],
-        browser: ["", "", ""], // Modified to accept all browsers
+        browser: ["", "", ""], // Accepts all browsers
         fireInitQueries: false,
         shouldSyncHistoryMessage: false,
         downloadHistory: false,
@@ -181,12 +181,12 @@ async function startToxic() {
             }
 
             // Autolike for statuses
-            if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
-                try {
-                    await client.sendMessage(remoteJid, {
+            if (autolike && mek.key.remoteJid === "status@broadcast") {
+                if (!mek.status) {
+                    await client.sendMessage(mek.key.remoteJid, {
                         react: { key: mek.key, text: "❤️" }
                     });
-                } catch (error) {}
+                }
             }
 
             // Autoview/autoread
