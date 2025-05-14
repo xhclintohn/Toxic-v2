@@ -48,7 +48,7 @@ async function startToxic() {
     let settingss = await getSettings();
     if (!settingss) return;
 
-    const { autobio, mode, anticall } = settingss;
+    const { autobio, mode, anticall, autoreact } = settingss;
 
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
     const client = toxicConnect({
@@ -120,7 +120,7 @@ async function startToxic() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, autolike, autoview, presence } = settings;
+        const { autoread, autolike, autoview, presence, autoreact } = settings;
 
         try {
             let mek = chatUpdate.messages[0];
@@ -180,40 +180,39 @@ async function startToxic() {
                 } catch (error) {}
             }
 
-            // Autoview/autoread (moved before autolike for statuses)
-            if (autoview && remoteJid === "status@broadcast") {
-                console.log(`[DEBUG] Attempting to view status: remoteJid=${remoteJid}, mek.key=${JSON.stringify(mek.key)}`);
+            // Autoreact for statuses
+            if (autoreact && remoteJid === "status@broadcast" && mek.key.id) {
                 try {
-                    await client.readMessages([mek.key]);
-                    console.log(`[DEBUG] Status viewed successfully: ${mek.key.id}`);
+                    // Array of possible reactions
+                    const reactions = ['❤️', '👍', '😍', '😂', '😮', '😢', '🙏'];
+                    // Randomly select a reaction
+                    const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
+                    
+                    await client.sendMessage(remoteJid, {
+                        react: { 
+                            key: mek.key, 
+                            text: randomReaction 
+                        }
+                    });
                 } catch (error) {
-                    console.error(`[ERROR] Failed to view status: ${error.message}`);
-                }
-            } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-                console.log(`[DEBUG] Attempting to read message: remoteJid=${remoteJid}, mek.key=${JSON.stringify(mek.key)}`);
-                try {
-                    await client.readMessages([mek.key]);
-                    console.log(`[DEBUG] Message read successfully: ${mek.key.id}`);
-                } catch (error) {
-                    console.error(`[ERROR] Failed to read message: ${error.message}`);
+                    console.error('Error in autoreact:', error);
                 }
             }
 
-            // Autolike for statuses (moved after autoview)
-            if (autolike && mek.key.remoteJid === "status@broadcast") {
-                console.log(`[DEBUG] Checking autolike: mek.status=${mek.status}, mek.key=${JSON.stringify(mek.key)}`);
-                if (!mek.status) {
-                    try {
-                        await client.sendMessage(mek.key.remoteJid, {
-                            react: { key: mek.key, text: "❤️" }
-                        });
-                        console.log(`[DEBUG] Status liked with ❤️: ${mek.key.id}`);
-                    } catch (error) {
-                        console.error(`[ERROR] Failed to like status: ${error.message}`);
-                    }
-                } else {
-                    console.log(`[DEBUG] Status not liked (already processed): ${mek.key.id}`);
-                }
+            // Autolike for statuses (kept for backward compatibility)
+            if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
+                try {
+                    await client.sendMessage(remoteJid, {
+                        react: { key: mek.key, text: "❤️" }
+                    });
+                } catch (error) {}
+            }
+
+            // Autoview/autoread
+            if (autoview && remoteJid === "status@broadcast") {
+                await client.readMessages([mek.key]);
+            } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+                await client.readMessages([mek.key]);
             }
 
             // Presence
@@ -233,7 +232,7 @@ async function startToxic() {
             // Handle commands (including buttons)
             if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
-            m = smsg(client, m, store);
+            m = smsg(client, mek, store);
             if (buttonId) {
                 m.text = buttonId;
             }
