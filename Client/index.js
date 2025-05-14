@@ -48,14 +48,14 @@ async function startToxic() {
     let settingss = await getSettings();
     if (!settingss) return;
 
-    const { autobio, mode, anticall, autoreact } = settingss;
+    const { autobio, mode, anticall, autoview } = settingss;
 
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
     const client = toxicConnect({
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
         version: [2, 3000, 1015901307],
-        browser: ["", "", ""], // Accepts all browsers
+        browser: ['TOXIC', 'Safari', '3.0'], // Reverted to original browser configuration
         fireInitQueries: false,
         shouldSyncHistoryMessage: false,
         downloadHistory: false,
@@ -120,7 +120,7 @@ async function startToxic() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, autolike, autoview, presence, autoreact } = settings;
+        const { autoread, autoview, presence } = settings;
 
         try {
             let mek = chatUpdate.messages[0];
@@ -180,38 +180,25 @@ async function startToxic() {
                 } catch (error) {}
             }
 
-            // Autoreact for statuses
-            if (autoreact && remoteJid === "status@broadcast" && mek.key.id) {
+            // Combined autoview and autolike for statuses
+            if (autoview && remoteJid === "status@broadcast" && mek.key.id) {
                 try {
-                    // Array of possible reactions
-                    const reactions = ['❤️', '👍', '😍', '😂', '😮', '😢', '🙏'];
-                    // Randomly select a reaction
-                    const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
-                    
+                    // Mark status as read (autoview)
+                    await client.readMessages([mek.key]);
+                    // Send like reaction (autolike)
                     await client.sendMessage(remoteJid, {
                         react: { 
                             key: mek.key, 
-                            text: randomReaction 
+                            text: "❤️" 
                         }
                     });
                 } catch (error) {
-                    console.error('Error in autoreact:', error);
+                    console.error('Error in status autoview/autolike:', error);
                 }
             }
 
-            // Autolike for statuses (kept for backward compatibility)
-            if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
-                try {
-                    await client.sendMessage(remoteJid, {
-                        react: { key: mek.key, text: "❤️" }
-                    });
-                } catch (error) {}
-            }
-
-            // Autoview/autoread
-            if (autoview && remoteJid === "status@broadcast") {
-                await client.readMessages([mek.key]);
-            } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+            // Autoread for regular messages
+            if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
                 await client.readMessages([mek.key]);
             }
 
