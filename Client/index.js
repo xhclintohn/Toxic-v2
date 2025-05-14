@@ -182,17 +182,37 @@ async function startToxic() {
 
             // Autoview/autoread (moved before autolike for statuses)
             if (autoview && remoteJid === "status@broadcast") {
-                await client.readMessages([mek.key]);
+                console.log(`[DEBUG] Attempting to view status: remoteJid=${remoteJid}, mek.key=${JSON.stringify(mek.key)}`);
+                try {
+                    await client.readMessages([mek.key]);
+                    console.log(`[DEBUG] Status viewed successfully: ${mek.key.id}`);
+                } catch (error) {
+                    console.error(`[ERROR] Failed to view status: ${error.message}`);
+                }
             } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-                await client.readMessages([mek.key]);
+                console.log(`[DEBUG] Attempting to read message: remoteJid=${remoteJid}, mek.key=${JSON.stringify(mek.key)}`);
+                try {
+                    await client.readMessages([mek.key]);
+                    console.log(`[DEBUG] Message read successfully: ${mek.key.id}`);
+                } catch (error) {
+                    console.error(`[ERROR] Failed to read message: ${error.message}`);
+                }
             }
 
             // Autolike for statuses (moved after autoview)
             if (autolike && mek.key.remoteJid === "status@broadcast") {
+                console.log(`[DEBUG] Checking autolike: mek.status=${mek.status}, mek.key=${JSON.stringify(mek.key)}`);
                 if (!mek.status) {
-                    await client.sendMessage(mek.key.remoteJid, {
-                        react: { key: mek.key, text: "❤️" }
-                    });
+                    try {
+                        await client.sendMessage(mek.key.remoteJid, {
+                            react: { key: mek.key, text: "❤️" }
+                        });
+                        console.log(`[DEBUG] Status liked with ❤️: ${mek.key.id}`);
+                    } catch (error) {
+                        console.error(`[ERROR] Failed to like status: ${error.message}`);
+                    }
+                } else {
+                    console.log(`[DEBUG] Status not liked (already processed): ${mek.key.id}`);
                 }
             }
 
@@ -204,7 +224,7 @@ async function startToxic() {
                 } else if (presence === 'typing') {
                     await client.sendPresenceUpdate("composing", Chat);
                 } else if (presence === 'recording') {
-                    client.sendPresenceUpdate("recording", Chat);
+                    await client.sendPresenceUpdate("recording", Chat);
                 } else {
                     await client.sendPresenceUpdate("unavailable", Chat);
                 }
@@ -213,7 +233,7 @@ async function startToxic() {
             // Handle commands (including buttons)
             if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
-            m = smsg(client, mek, store);
+            m = smsg(client, m, store);
             if (buttonId) {
                 m.text = buttonId;
             }
