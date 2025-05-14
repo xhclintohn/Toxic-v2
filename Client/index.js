@@ -55,7 +55,7 @@ async function startToxic() {
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
         version: [2, 3000, 1015901307],
-        browser: ["Chrome (Ubuntu)"],
+        browser: ["", "", ""], // Modified to accept all browsers
         fireInitQueries: false,
         shouldSyncHistoryMessage: false,
         downloadHistory: false,
