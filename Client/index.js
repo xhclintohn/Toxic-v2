@@ -166,7 +166,7 @@ async function startToxic() {
         // Autolike for statuses
         if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
             await client.sendMessage(remoteJid, {
-                react: { key: mek.key, text: "❤️" }
+                react: { key: mek.key, text: "😭" }
             });
         }
 
