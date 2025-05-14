@@ -48,14 +48,13 @@ async function startToxic() {
     let settingss = await getSettings();
     if (!settingss) return;
 
-    const { autobio, mode, anticall, autoview } = settingss;
+    const { autobio, mode, anticall } = settingss;
 
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
     const client = toxicConnect({
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
         version: [2, 3000, 1015901307],
-        browser: ['TOXIC', 'Safari', '3.0'], // Reverted to original browser configuration
         fireInitQueries: false,
         shouldSyncHistoryMessage: false,
         downloadHistory: false,
@@ -103,16 +102,12 @@ async function startToxic() {
         }
         processedCalls.add(callId);
 
-        try {
-            await client.rejectCall(callId, callerJid);
-            await client.sendMessage(callerJid, { text: "> You Have been banned for calling without permission ⚠️!" });
+        await client.rejectCall(callId, callerJid);
+        await client.sendMessage(callerJid, { text: "> You Have been banned for calling without permission ⚠️!" });
 
-            const bannedUsers = await getBannedUsers();
-            if (!bannedUsers.includes(callerNumber)) {
-                await banUser(callerNumber);
-            }
-        } catch (error) {
-            console.error('Error handling call:', error);
+        const bannedUsers = await getBannedUsers();
+        if (!bannedUsers.includes(callerNumber)) {
+            await banUser(callerNumber);
         }
     });
 
@@ -120,113 +115,87 @@ async function startToxic() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, autoview, presence } = settings;
+        const { autoread, autolike, autoview, presence } = settings;
 
-        try {
-            let mek = chatUpdate.messages[0];
-            if (!mek || !mek.key || !mek.message) return;
+        let mek = chatUpdate.messages[0];
+        if (!mek || !mek.key || !mek.message) return;
 
-            mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
+        mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
-            const remoteJid = mek.key.remoteJid;
-            const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
-            const Myself = client.decodeJid(client.user.id);
+        const remoteJid = mek.key.remoteJid;
+        const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
+        const Myself = client.decodeJid(client.user.id);
 
-            // Handle button messages
-            let buttonId = null;
-            if (mek.message?.buttonsResponseMessage?.selectedButtonId) {
-                buttonId = mek.message.buttonsResponseMessage.selectedButtonId;
-            } else if (mek.message?.templateButtonReplyMessage?.selectedId) {
-                buttonId = mek.message.templateButtonReplyMessage.selectedId;
-            }
+        // Antilink logic
+        if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
+            const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
+            const messageContent = (
+                mek.message.conversation ||
+                mek.message.extendedTextMessage?.text ||
+                mek.message.imageMessage?.caption ||
+                mek.message.videoMessage?.caption ||
+                mek.message.documentMessage?.caption ||
+                ""
+            ).toLowerCase();
 
-            // Antilink logic
-            if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
-                try {
-                    const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
-                    const messageContent = (
-                        mek.message.conversation ||
-                        mek.message.extendedTextMessage?.text ||
-                        mek.message.imageMessage?.caption ||
-                        mek.message.videoMessage?.caption ||
-                        mek.message.documentMessage?.caption ||
-                        buttonId ||
-                        ""
-                    ).toLowerCase();
+            if (sender === Myself) return;
 
-                    if (sender === Myself) return;
+            if (urlRegex.test(messageContent)) {
+                const groupMetadata = await client.groupMetadata(remoteJid);
+                if (!groupMetadata || !groupMetadata.participants) return;
 
-                    if (urlRegex.test(messageContent)) {
-                        const groupMetadata = await client.groupMetadata(remoteJid);
-                        if (!groupMetadata || !groupMetadata.participants) return;
+                const groupAdmins = groupMetadata.participants
+                    .filter(p => p.admin != null)
+                    .map(p => client.decodeJid(p.id));
+                const isBotAdmin = groupAdmins.includes(Myself);
+                const isSenderAdmin = groupAdmins.includes(sender);
 
-                        const groupAdmins = groupMetadata.participants
-                            .filter(p => p.admin != null)
-                            .map(p => client.decodeJid(p.id));
-                        const isBotAdmin = groupAdmins.includes(Myself);
-                        const isSenderAdmin = groupAdmins.includes(sender);
-
-                        if (isBotAdmin && !isSenderAdmin) {
-                            await client.sendMessage(remoteJid, {
-                                delete: {
-                                    remoteJid: remoteJid,
-                                    fromMe: false,
-                                    id: mek.key.id,
-                                    participant: sender
-                                }
-                            });
-                        }
-                    }
-                } catch (error) {}
-            }
-
-            // Combined autoview and autolike for statuses
-            if (autoview && remoteJid === "status@broadcast" && mek.key.id) {
-                try {
-                    // Mark status as read (autoview)
-                    await client.readMessages([mek.key]);
-                    // Send like reaction (autolike)
+                if (isBotAdmin && !isSenderAdmin) {
                     await client.sendMessage(remoteJid, {
-                        react: { 
-                            key: mek.key, 
-                            text: "❤️" 
+                        delete: {
+                            remoteJid: remoteJid,
+                            fromMe: false,
+                            id: mek.key.id,
+                            participant: sender
                         }
                     });
-                } catch (error) {
-                    console.error('Error in status autoview/autolike:', error);
                 }
             }
-
-            // Autoread for regular messages
-            if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-                await client.readMessages([mek.key]);
-            }
-
-            // Presence
-            if (remoteJid.endsWith('@s.whatsapp.net')) {
-                const Chat = remoteJid;
-                if (presence === 'online') {
-                    await client.sendPresenceUpdate("available", Chat);
-                } else if (presence === 'typing') {
-                    await client.sendPresenceUpdate("composing", Chat);
-                } else if (presence === 'recording') {
-                    await client.sendPresenceUpdate("recording", Chat);
-                } else {
-                    await client.sendPresenceUpdate("unavailable", Chat);
-                }
-            }
-
-            // Handle commands (including buttons)
-            if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
-
-            m = smsg(client, mek, store);
-            if (buttonId) {
-                m.text = buttonId;
-            }
-            require("./toxic")(client, m, chatUpdate, store);
-        } catch (err) {
-            console.error('[MESSAGES.UPSERT] Error:', err);
         }
+
+        // Autolike for statuses
+        if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
+            await client.sendMessage(remoteJid, {
+                react: { key: mek.key, text: "❤️" }
+            });
+        }
+
+        // Autoview/autoread
+        if (autoview && remoteJid === "status@broadcast") {
+            await client.readMessages([mek.key]);
+        } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+            await client.readMessages([mek.key]);
+        }
+
+        // Presence
+        if (remoteJid.endsWith('@s.whatsapp.net')) {
+            const Chat = remoteJid;
+            if (presence === 'online') {
+                await client.sendPresenceUpdate("available", Chat);
+            } else if (presence === 'typing') {
+                await client.sendPresenceUpdate("composing", Chat);
+            } else if (presence === 'recording') {
+                await client.sendPresenceUpdate("recording", Chat);
+            } else {
+                await client.sendPresenceUpdate("unavailable", Chat);
+            }
+        }
+
+        // Handle commands
+        if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
+
+        m = smsg(client, mek, store);
+        require("./toxic")(client, m, chatUpdate, store);
     });
 
     const unhandledRejections = new Map();
