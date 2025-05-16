@@ -21,7 +21,6 @@
   "author": "xhclinton",
   "license": "MIT",
   "dependencies": {
-    "baileys-elite": "latest",
 "@whiskeysockets/baileys":"github:kagenouReal/Baileys",
     "@adiwajshing/keyed-db": "^0.2.4",
     "@distube/ytdl-core": "^4.15.1",
