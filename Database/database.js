@@ -1,6 +1,6 @@
 const { Pool } = require("pg");
 
-console.log("[DB] Initializing database connection...");
+console.log(`🔄 Initializing database connection...`);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -10,19 +10,19 @@ const pool = new Pool({
 (async () => {
   const client = await pool.connect();
   try {
-    console.log("[DB] Setting up database...");
+    console.log(`🔄 Setting up database...`);
     await client.query(`
       CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL
       );
     `);
-    console.log("✅ Database table ready!");
+    console.log(`✅ Database ready!`);
   } catch (err) {
-    console.error("❌ Database setup failed:", err);
+    console.error(`❌ Database setup failed: ${err}`);
   } finally {
     client.release();
   }
 })();
 
-module.exports = pool; 
+module.exports = pool;
