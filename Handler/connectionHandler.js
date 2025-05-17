@@ -124,13 +124,13 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
             `💾 *Database*: Postgres SQL`,
             `📚 *Library*: Baileys`,
             ``,
-            `│❒ *New Connection Alert!* You’re on the sudo list now, don’t screw it up! 😎`,
+            `│❒ *New Connection Alert!* You’re on the sudo list now, don’t freak it up! 😎`,
             ``,
             `│❒ *Credits*: xh_clinton 🗿`,
             `◈━━━━━━━━━━━━━━━━◈`
           ].join("\n")
         : [
- danej `◈━━━━━━━━━━━━━━━━◈`,
+            `◈━━━━━━━━━━━━━━━━◈`,
             `│❒ *${getGreeting()}*`,
             `│❒ Back again, huh? *${botName}*’s still here, sadly. 📡`,
             ``,
