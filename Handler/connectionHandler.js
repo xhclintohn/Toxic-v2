@@ -14,10 +14,10 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
   // Get a greeting based on the time of day (Nairobi timezone)
   function getGreeting() {
     const hour = DateTime.now().setZone("Africa/Nairobi").hour;
-    if (hour >= 5 && hour < 12) return "Rise and grind, loser! 🌅";
-    if (hour >= 12 && hour < 18) return "Midday, don’t waste my time! ☀️";
-    if (hour >= 18 && hour < 22) return "Evening, you’re late! 🌌";
-    return "Night creep mode! 🌙";
+    if (hour >= 5 && hour < 12) return "Hey there! Ready to kick off the day? 🚀";
+    if (hour >= 12 && hour < 18) return "What’s up? Time to make things happen! ⚡";
+    if (hour >= 18 && hour < 22) return "Evening vibes! Let’s get to it! 🌟";
+    return "Late night? Let’s see what’s cooking! 🌙";
   }
 
   // Get the current time in a simple format
@@ -39,7 +39,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
 
   // Handle "connecting" state
   if (connection === "connecting") {
-    console.log(`🤖 Yo, ${botName}’s trying to connect... Don’t hold your breath.`);
+    console.log(`[${new Date().toISOString()}] Establishing connection to WhatsApp servers...`);
     return;
   }
 
@@ -49,36 +49,36 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
 
     switch (statusCode) {
       case DisconnectReason.badSession:
-        console.log(`💥 Session’s trash! Delete it and scan again, you noob.`);
+        console.log(`[${new Date().toISOString()}] Invalid session file detected. Delete session and rescan QR code.`);
         process.exit();
         break;
       case DisconnectReason.connectionClosed:
-        console.log(`🚨 Connection yeeted! Reconnecting, hold my beer...`);
+        console.log(`[${new Date().toISOString()}] Connection closed. Attempting to reconnect...`);
         reconnect();
         break;
       case DisconnectReason.connectionLost:
-        console.log(`📡 Server ghosted us! Reconnecting, this better work...`);
+        console.log(`[${new Date().toISOString()}] Lost connection to server. Reconnecting...`);
         reconnect();
         break;
       case DisconnectReason.connectionReplaced:
-        console.log(`👊 Got replaced like a bad Tinder date. Shutting down.`);
+        console.log(`[${new Date().toISOString()}] Connection replaced by another session. Terminating process.`);
         process.exit();
         break;
       case DisconnectReason.loggedOut:
-        console.log(`🔒 Kicked out! Delete session, scan again, and stop screwing up.`);
+        console.log(`[${new Date().toISOString()}] Session logged out. Delete session and rescan QR code.`);
         hasSentStartMessage = false; // Reset for new session
         process.exit();
         break;
       case DisconnectReason.restartRequired:
-        console.log(`🔄 Bot’s throwing a tantrum, needs a restart. Here we go...`);
+        console.log(`[${new Date().toISOString()}] Server requested restart. Initiating reconnect...`);
         reconnect();
         break;
       case DisconnectReason.timedOut:
-        console.log(`⏳ Timed out like your social life. Reconnecting...`);
+        console.log(`[${new Date().toISOString()}] Connection timed out. Attempting to reconnect...`);
         reconnect();
         break;
       default:
-        console.log(`❓ Unknown crap happened: ${statusCode} | ${connection}. Reconnecting anyway.`);
+        console.log(`[${new Date().toISOString()}] Unknown disconnection reason: ${statusCode} | ${connection}. Reconnecting...`);
         reconnect();
     }
     return;
@@ -89,9 +89,9 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
     // Join a specific group using an invite code
     try {
       await socket.groupAcceptInvite("GoXKLVJgTAAC3556FXkfFI");
-      console.log(`🟩 ${botName}’s in the game! Ready to roast some fools.`);
+      console.log(`[${new Date().toISOString()}] Successfully joined group via invite code.`);
     } catch (error) {
-      console.error(`🚫 Couldn’t join group, what a mess: ${error.message}`);
+      console.error(`[${new Date().toISOString()}] Failed to join group: ${error.message}`);
     }
 
     const userId = socket.user.id.split(":")[0].split("@")[0];
@@ -114,7 +114,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
         ? [
             `◈━━━━━━━━━━━━━━━━◈`,
             `│❒ *${getGreeting()}*`,
-            `│❒ Yo, fresh meat! You’re now with *${botName}*! 📡`,
+            `│❒ Welcome to *${botName}*! You're now connected.`,
             ``,
             `✨ *Bot Name*: ${botName}`,
             `🔧 *Mode*: ${settings.mode}`,
@@ -124,15 +124,15 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
             `💾 *Database*: Postgres SQL`,
             `📚 *Library*: Baileys`,
             ``,
-            `│❒ *New Connection Alert!* You’re on the sudo list now, don’t freak it up! 😎`,
+            `│❒ *New User Alert*: You've been added to the sudo list.`,
             ``,
-            `│❒ *Credits*: xh_clinton 🗿`,
+            `│❒ *Credits*: xh_clinton`,
             `◈━━━━━━━━━━━━━━━━◈`
           ].join("\n")
         : [
             `◈━━━━━━━━━━━━━━━━◈`,
             `│❒ *${getGreeting()}*`,
-            `│❒ Back again, huh? *${botName}*’s still here, sadly. 📡`,
+            `│❒ Welcome back to *${botName}*! Connection established.`,
             ``,
             `✨ *Bot Name*: ${botName}`,
             `🔧 *Mode*: ${settings.mode}`,
@@ -142,16 +142,16 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
             `💾 *Database*: Postgres SQL`,
             `📚 *Library*: Baileys`,
             ``,
-            `│❒ Don’t waste my time, pick something to do! 😒`,
+            `│❒ Ready to proceed? Select an option below.`,
             ``,
-            `│❒ *Credits*: xh_clinton 🗿`,
+            `│❒ *Credits*: xh_clinton`,
             `◈━━━━━━━━━━━━━━━━◈`
           ].join("\n");
 
       // Second message (with buttons) for new or returning users
       const secondMessage = [
         `◈━━━━━━━━━━━━━━━━◈`,
-        `│❒ Alright, genius, choose an option already! 👇`,
+        `│❒ Please select an option to continue:`,
         `◈━━━━━━━━━━━━━━━━◈`
       ].join("\n");
 
@@ -165,7 +165,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
             externalAdReply: {
               showAdAttribution: false,
               title: botName,
-              body: `Don’t mess this up, rookie.`,
+              body: `Bot initialized successfully.`,
               sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
               mediaType: 1,
               renderLargerThumbnail: true
@@ -195,7 +195,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
             externalAdReply: {
               showAdAttribution: false,
               title: botName,
-              body: `Pick one or get lost.`,
+              body: `Select an option to proceed.`,
               sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
               mediaType: 1,
               renderLargerThumbnail: true
@@ -203,13 +203,13 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
           }
         });
       } catch (error) {
-        console.error(`💥 Failed to send startup messages, you broke it: ${error.message}`);
+        console.error(`[${new Date().toISOString()}] Failed to send startup messages: ${error.message}`);
       }
 
       hasSentStartMessage = true;
     }
 
-    console.log(`🟩 Connection’s solid! Loaded ${totalCommands} plugins.\n${botName}’s ready to wreck some noobs 🤖🚨!`);
+    console.log(`[${new Date().toISOString()}] Connection established. Loaded ${totalCommands} plugins. ${botName} is operational.`);
   }
 }
 
