@@ -14,10 +14,10 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
   // Get a greeting based on the time of day (Nairobi timezone)
   function getGreeting() {
     const hour = DateTime.now().setZone("Africa/Nairobi").hour;
-    if (hour >= 5 && hour < 12) return "Rise and shine! 🌅";
-    if (hour >= 12 && hour < 18) return "Midday vibes! ☀️";
-    if (hour >= 18 && hour < 22) return "Evening glow! 🌌";
-    return "Night owl mode! 🌙";
+    if (hour >= 5 && hour < 12) return "Rise and grind, loser! 🌅";
+    if (hour >= 12 && hour < 18) return "Midday, don’t waste my time! ☀️";
+    if (hour >= 18 && hour < 22) return "Evening, you’re late! 🌌";
+    return "Night creep mode! 🌙";
   }
 
   // Get the current time in a simple format
@@ -39,7 +39,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
 
   // Handle "connecting" state
   if (connection === "connecting") {
-    console.log("Establishing connection 🤖...");
+    console.log(`🤖 Yo, ${botName}’s trying to connect... Don’t hold your breath.`);
     return;
   }
 
@@ -49,36 +49,36 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
 
     switch (statusCode) {
       case DisconnectReason.badSession:
-        console.log("Bad Session File. Please delete session and scan again.");
+        console.log(`💥 Session’s trash! Delete it and scan again, you noob.`);
         process.exit();
         break;
       case DisconnectReason.connectionClosed:
-        console.log("Connection closed 🚨, reconnecting...");
+        console.log(`🚨 Connection yeeted! Reconnecting, hold my beer...`);
         reconnect();
         break;
       case DisconnectReason.connectionLost:
-        console.log("Connection lost from server 🚨, reconnecting...");
+        console.log(`📡 Server ghosted us! Reconnecting, this better work...`);
         reconnect();
         break;
       case DisconnectReason.connectionReplaced:
-        console.log("Connection replaced. Shutting down...");
+        console.log(`👊 Got replaced like a bad Tinder date. Shutting down.`);
         process.exit();
         break;
       case DisconnectReason.loggedOut:
-        console.log("Device logged out. Please delete session and scan again.");
+        console.log(`🔒 Kicked out! Delete session, scan again, and stop screwing up.`);
         hasSentStartMessage = false; // Reset for new session
         process.exit();
         break;
       case DisconnectReason.restartRequired:
-        console.log("Restart required. Restarting...");
+        console.log(`🔄 Bot’s throwing a tantrum, needs a restart. Here we go...`);
         reconnect();
         break;
       case DisconnectReason.timedOut:
-        console.log("Connection timed out. Reconnecting...");
+        console.log(`⏳ Timed out like your social life. Reconnecting...`);
         reconnect();
         break;
       default:
-        console.log(`Unknown disconnect reason: ${statusCode} | ${connection}`);
+        console.log(`❓ Unknown crap happened: ${statusCode} | ${connection}. Reconnecting anyway.`);
         reconnect();
     }
     return;
@@ -89,16 +89,16 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
     // Join a specific group using an invite code
     try {
       await socket.groupAcceptInvite("GoXKLVJgTAAC3556FXkfFI");
-      console.log(`${botName} is running 🟩!`);
+      console.log(`🟩 ${botName}’s in the game! Ready to roast some fools.`);
     } catch (error) {
-      console.error(`Failed to join group: ${error.message}`);
+      console.error(`🚫 Couldn’t join group, what a mess: ${error.message}`);
     }
 
     const userId = socket.user.id.split(":")[0].split("@")[0];
     const settings = await getSettings();
     const sudoUsers = await getSudoUsers();
 
-    // Send startup message (only once per session)
+    // Send startup messages (only once per session)
     if (!hasSentStartMessage) {
       const isNewUser = !sudoUsers.includes(userId);
       if (isNewUser) {
@@ -109,12 +109,12 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
         }
       }
 
-      // Prepare welcome message
-      const message = isNewUser
+      // First message (no buttons) for new or returning users
+      const firstMessage = isNewUser
         ? [
             `◈━━━━━━━━━━━━━━━━◈`,
             `│❒ *${getGreeting()}*`,
-            `│❒ Yo, you're plugged into *${botName}*! 📡`,
+            `│❒ Yo, fresh meat! You’re now with *${botName}*! 📡`,
             ``,
             `✨ *Bot Name*: ${botName}`,
             `🔧 *Mode*: ${settings.mode}`,
@@ -124,19 +124,15 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
             `💾 *Database*: Postgres SQL`,
             `📚 *Library*: Baileys`,
             ``,
-            `│❒ *New Connection Alert!* First time here? We've added you to the sudo crew! 😎`,
-            ``,
-            `│❒ 🚀 *Get Started*:`,
-            `│❒ - Customize bot with *${settings.prefix}settings*`,
-            `│❒ - Hit the button below for commands! 👇`,
+            `│❒ *New Connection Alert!* You’re on the sudo list now, don’t screw it up! 😎`,
             ``,
             `│❒ *Credits*: xh_clinton 🗿`,
             `◈━━━━━━━━━━━━━━━━◈`
           ].join("\n")
         : [
-            `◈━━━━━━━━━━━━━━━━◈`,
+ danej `◈━━━━━━━━━━━━━━━━◈`,
             `│❒ *${getGreeting()}*`,
-            `│❒ Welcome back to *${botName}*! 📡`,
+            `│❒ Back again, huh? *${botName}*’s still here, sadly. 📡`,
             ``,
             `✨ *Bot Name*: ${botName}`,
             `🔧 *Mode*: ${settings.mode}`,
@@ -146,18 +142,47 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
             `💾 *Database*: Postgres SQL`,
             `📚 *Library*: Baileys`,
             ``,
-            `│❒ Ready to dive in? Hit the button below for commands! 😎`,
+            `│❒ Don’t waste my time, pick something to do! 😒`,
             ``,
             `│❒ *Credits*: xh_clinton 🗿`,
             `◈━━━━━━━━━━━━━━━━◈`
           ].join("\n");
 
-      // Send the message with a "Menu" button
+      // Second message (with buttons) for new or returning users
+      const secondMessage = [
+        `◈━━━━━━━━━━━━━━━━◈`,
+        `│❒ Alright, genius, choose an option already! 👇`,
+        `◈━━━━━━━━━━━━━━━━◈`
+      ].join("\n");
+
       try {
+        // Send first message without buttons
         await socket.sendMessage(socket.user.id, {
-          text: message,
+          text: firstMessage,
+          footer: `Powered by ${botName}`,
+          viewOnce: true,
+          contextInfo: {
+            externalAdReply: {
+              showAdAttribution: false,
+              title: botName,
+              body: `Don’t mess this up, rookie.`,
+              sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
+              mediaType: 1,
+              renderLargerThumbnail: true
+            }
+          }
+        });
+
+        // Send second message with buttons
+        await socket.sendMessage(socket.user.id, {
+          text: secondMessage,
           footer: `Powered by ${botName}`,
           buttons: [
+            {
+              buttonId: `${settings.prefix || ''}settings`,
+              buttonText: { displayText: `⚙️ ${toFancyFont('SETTINGS')}` },
+              type: 1
+            },
             {
               buttonId: `${settings.prefix || ''}menu`,
               buttonText: { displayText: `📖 ${toFancyFont('MENU')}` },
@@ -170,7 +195,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
             externalAdReply: {
               showAdAttribution: false,
               title: botName,
-              body: `Yo! Don’t mess this up.`,
+              body: `Pick one or get lost.`,
               sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
               mediaType: 1,
               renderLargerThumbnail: true
@@ -178,13 +203,13 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
           }
         });
       } catch (error) {
-        console.error("Failed to send startup message:", error.message);
+        console.error(`💥 Failed to send startup messages, you broke it: ${error.message}`);
       }
 
       hasSentStartMessage = true;
     }
 
-    console.log(`Connection Success 🟩\nLoaded ${totalCommands} plugins.\n${botName} is up 🤖🚨!`);
+    console.log(`🟩 Connection’s solid! Loaded ${totalCommands} plugins.\n${botName}’s ready to wreck some noobs 🤖🚨!`);
   }
 }
 
