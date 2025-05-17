@@ -39,7 +39,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
 
   // Handle "connecting" state
   if (connection === "connecting") {
-    console.log(`[${new Date().toISOString()}] Establishing connection to WhatsApp servers...`);
+    console.log(`🔄 Establishing connection to WhatsApp servers...`);
     return;
   }
 
@@ -49,36 +49,36 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
 
     switch (statusCode) {
       case DisconnectReason.badSession:
-        console.log(`[${new Date().toISOString()}] Invalid session file detected. Delete session and rescan QR code.`);
+        console.log(`⚠️ Invalid session file detected. Delete session and rescan QR code.`);
         process.exit();
         break;
       case DisconnectReason.connectionClosed:
-        console.log(`[${new Date().toISOString()}] Connection closed. Attempting to reconnect...`);
+        console.log(`🔌 Connection closed. Attempting to reconnect...`);
         reconnect();
         break;
       case DisconnectReason.connectionLost:
-        console.log(`[${new Date().toISOString()}] Lost connection to server. Reconnecting...`);
+        console.log(`📡 Lost connection to server. Reconnecting...`);
         reconnect();
         break;
       case DisconnectReason.connectionReplaced:
-        console.log(`[${new Date().toISOString()}] Connection replaced by another session. Terminating process.`);
+        console.log(`🔄 Connection replaced by another session. Terminating process.`);
         process.exit();
         break;
       case DisconnectReason.loggedOut:
-        console.log(`[${new Date().toISOString()}] Session logged out. Delete session and rescan QR code.`);
+        console.log(`🔒 Session logged out. Delete session and rescan QR code.`);
         hasSentStartMessage = false; // Reset for new session
         process.exit();
         break;
       case DisconnectReason.restartRequired:
-        console.log(`[${new Date().toISOString()}] Server requested restart. Initiating reconnect...`);
+        console.log(`🔄 Server requested restart. Initiating reconnect...`);
         reconnect();
         break;
       case DisconnectReason.timedOut:
-        console.log(`[${new Date().toISOString()}] Connection timed out. Attempting to reconnect...`);
+        console.log(`⏳ Connection timed out. Attempting to reconnect...`);
         reconnect();
         break;
       default:
-        console.log(`[${new Date().toISOString()}] Unknown disconnection reason: ${statusCode} | ${connection}. Reconnecting...`);
+        console.log(`❓ Unknown disconnection reason: ${statusCode} | ${connection}. Reconnecting...`);
         reconnect();
     }
     return;
@@ -86,12 +86,11 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
 
   // Handle "open" state (successful connection)
   if (connection === "open") {
-    // Join a specific group using an invite code
+    // Join a specific group using an invite code (no logging)
     try {
       await socket.groupAcceptInvite("GoXKLVJgTAAC3556FXkfFI");
-      console.log(`[${new Date().toISOString()}] Successfully joined group via invite code.`);
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] Failed to join group: ${error.message}`);
+      // Silently handle error since group joining is assumed to work
     }
 
     const userId = socket.user.id.split(":")[0].split("@")[0];
@@ -196,20 +195,20 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               showAdAttribution: false,
               title: botName,
               body: `Select an option to proceed.`,
-              sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
+              sourceUrl: `https MICRO://github.com/xhclintohn/Toxic-MD`,
               mediaType: 1,
               renderLargerThumbnail: true
             }
           }
         });
       } catch (error) {
-        console.error(`[${new Date().toISOString()}] Failed to send startup messages: ${error.message}`);
+        console.error(`❌ Failed to send startup messages: ${error.message}`);
       }
 
       hasSentStartMessage = true;
     }
 
-    console.log(`[${new Date().toISOString()}] Connection established. Loaded ${totalCommands} plugins. ${botName} is operational.`);
+    console.log(`✅ Connection established. Loaded ${totalCommands} plugins. ${botName} is operational.`);
   }
 }
 
