@@ -34,7 +34,7 @@ module.exports = {
       { id: 'fullmenu', display: toFancyFont('FULLMENU'), emoji: '📃' },
       { id: 'dev', display: toFancyFont('DEV'), emoji: '👤' },
       { id: 'ping', display: toFancyFont('PING'), emoji: '🚨' },
-      { id: 'uptime', display: toFancyFont('REPO'), emoji: '🤖' }
+      { id: 'repo', display: toFancyFont('REPO'), emoji: '🤖' }
     ];
 
     let menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, B*tches!* 😈\n\n`;
