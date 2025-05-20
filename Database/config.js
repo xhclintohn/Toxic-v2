@@ -1,7 +1,14 @@
 const { Pool } = require('pg');
 const { database } = require('../Env/settings');
 
-console.log(`🔄 Initializing database connection...`);
+// Centralized logging function
+const DEBUG = process.env.DEBUG === 'true';
+const log = (message, level = 'info') => {
+    if (level === 'info' && !DEBUG) return;
+    console[level](message);
+};
+
+log(`🔄 Initializing database connection...`);
 
 const pool = new Pool({
     connectionString: database,
@@ -10,7 +17,7 @@ const pool = new Pool({
 
 async function initializeDatabase() {
     const client = await pool.connect();
-    console.log(`🔄 Checking and creating settings tables...`);
+    log(`🔄 Checking and creating settings tables...`);
     try {
         await client.query(`
             CREATE TABLE IF NOT EXISTS settings (
@@ -18,40 +25,25 @@ async function initializeDatabase() {
                 key TEXT UNIQUE NOT NULL,
                 value TEXT NOT NULL
             );
-        `);
-
-        await client.query(`
             CREATE TABLE IF NOT EXISTS group_settings (
                 jid TEXT NOT NULL,
                 key TEXT NOT NULL,
                 value TEXT NOT NULL,
                 PRIMARY KEY (jid, key)
             );
-        `);
-
-        await client.query(`
             CREATE TABLE IF NOT EXISTS conversation_history (
                 id SERIAL PRIMARY KEY,
                 num TEXT NOT NULL,
-                role TEXT NOT NULL, -- 'user' or 'bot'
+                role TEXT NOT NULL,
                 message TEXT NOT NULL,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-        `);
-
-        await client.query(`
             CREATE TABLE IF NOT EXISTS sudo_users (
                 num TEXT PRIMARY KEY
             );
-        `);
-
-        await client.query(`
             CREATE TABLE IF NOT EXISTS banned_users (
                 num TEXT PRIMARY KEY
             );
-        `);
-
-        await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 num TEXT PRIMARY KEY
             );
@@ -66,10 +58,11 @@ async function initializeDatabase() {
             autolike: 'true',
             autoread: 'false',
             autobio: 'false',
-            anticall: 'false', 
-            reactEmoji: '❤️'  
+            anticall: 'false',
+            reactEmoji: '❤️'
         };
 
+        const settingsCount = Object.keys(defaultSettings).length;
         for (const [key, value] of Object.entries(defaultSettings)) {
             await client.query(`
                 INSERT INTO settings (key, value) 
@@ -77,21 +70,22 @@ async function initializeDatabase() {
                 ON CONFLICT (key) DO NOTHING;
             `, [key, value]);
         }
+        log(`✅ Initialized ${settingsCount} default settings`);
 
-        console.log(`✅ Database tables initialized successfully.`);
+        log(`✅ Database tables initialized successfully`);
     } catch (error) {
-        console.error(`❌ Database setup failed: ${error}`);
+        log(`❌ Database setup failed: ${error}`, 'error');
     } finally {
         client.release();
     }
 }
 
 const defaultGroupSettings = {
-    antitag: 'false',         
-    antidelete: 'true',               
-    gcpresence: 'false',    
-    antiforeign: 'false',   
-    antidemote: 'false',      
+    antitag: 'false',
+    antidelete: 'true',
+    gcpresence: 'false',
+    antiforeign: 'false',
+    antidemote: 'false',
     antipromote: 'false',
     events: 'false',
     antilink: 'false'
@@ -99,16 +93,17 @@ const defaultGroupSettings = {
 
 async function initializeGroupSettings(jid) {
     try {
+        const settingsCount = Object.keys(defaultGroupSettings).length;
         for (const [key, value] of Object.entries(defaultGroupSettings)) {
-            console.log(`🔧 Setting ${key} -> ${value} for group: ${jid}`);
             await pool.query(`
-                INSERT INTO group_settings (jit, key, value)
+                INSERT INTO group_settings (jid, key, value)
                 VALUES ($1, $2, $3)
                 ON CONFLICT (jid, key) DO NOTHING;
             `, [jid, key, value]);
         }
+        log(`✅ Initialized ${settingsCount} group settings for ${jid}`);
     } catch (error) {
-        console.error(`❌ Error initializing group settings for ${jid}: ${error}`);
+        log(`❌ Error initializing group settings for ${jid}: ${error}`, 'error');
     }
 }
 
@@ -119,24 +114,24 @@ async function getGroupSetting(jid) {
         `, [jid]);
 
         if (res.rows.length === 0) {
+            log(`🔍 No settings found for ${jid}, initializing defaults`);
             await initializeGroupSettings(jid);
-            return defaultGroupSettings;  
+            return defaultGroupSettings;
         }
 
         let settings = {};
         res.rows.forEach(row => {
             settings[row.key] = row.value === 'true' ? true : row.value === 'false' ? false : row.value;
         });
-
+        log(`🔍 Fetched group settings for ${jid}: ${JSON.stringify(settings)}`);
         return settings;
     } catch (error) {
-        console.error(`❌ Error fetching group settings for ${jid}: ${error}`);
+        log(`❌ Error fetching group settings for ${jid}: ${error}`, 'error');
         return {};
     }
 }
 
 async function updateGroupSetting(jid, key, value) {
-    console.log(`🔧 Updating setting for group ${jid}: ${key} -> ${value}`);
     try {
         const valueToStore = typeof value === 'boolean' ? (value ? 'true' : 'false') : value;
         await pool.query(`
@@ -145,9 +140,9 @@ async function updateGroupSetting(jid, key, value) {
             ON CONFLICT (jid, key) DO UPDATE
             SET value = EXCLUDED.value;
         `, [jid, key, valueToStore]);
-        console.log(`✅ Group setting updated: ${jid}, ${key} -> ${value}`);
+        log(`✅ Updated group setting for ${jid}: ${key}=${value}`);
     } catch (error) {
-        console.error(`❌ Error updating setting for group ${jid}: ${key}: ${error}`);
+        log(`❌ Error updating group setting for ${jid}: ${key}: ${error}`, 'error');
     }
 }
 
@@ -156,10 +151,10 @@ async function getAllGroupSettings() {
         const res = await pool.query(`
             SELECT * FROM group_settings;
         `);
-        console.log(`✅ Fetched all group settings successfully.`);
+        log(`✅ Fetched ${res.rows.length} group settings`);
         return res.rows;
     } catch (error) {
-        console.error(`❌ Error fetching all group settings: ${error}`);
+        log(`❌ Error fetching all group settings: ${error}`, 'error');
         return [];
     }
 }
@@ -171,16 +166,15 @@ async function getSettings() {
         res.rows.forEach(row => {
             settings[row.key] = row.value === 'true' ? true : row.value === 'false' ? false : row.value;
         });
-        console.log(`✅ Fetched global settings successfully.`);
+        log(`✅ Fetched global settings: ${JSON.stringify(settings)}`);
         return settings;
     } catch (error) {
-        console.error(`❌ Error fetching global settings: ${error}`);
+        log(`❌ Error fetching global settings: ${error}`, 'error');
         return {};
     }
 }
 
 async function updateSetting(key, value) {
-    console.log(`🔧 Updating global setting: ${key} -> ${value}`);
     try {
         await pool.query(`
             INSERT INTO settings (key, value) 
@@ -188,55 +182,55 @@ async function updateSetting(key, value) {
             ON CONFLICT (key) DO UPDATE 
             SET value = EXCLUDED.value;
         `, [key, value]);
-        console.log(`✅ Global setting updated: ${key} -> ${value}`);
+        log(`✅ Updated global setting: ${key}=${value}`);
     } catch (error) {
-        console.error(`❌ Error updating global setting: ${key}: ${error}`);
+        log(`❌ Error updating global setting: ${key}: ${error}`, 'error');
     }
 }
 
 async function banUser(num) {
     try {
         await pool.query(`INSERT INTO banned_users (num) VALUES ($1) ON CONFLICT (num) DO NOTHING;`, [num]);
-        console.log(`✅ User ${num} banned successfully.`);
+        log(`✅ Banned user ${num}`);
     } catch (error) {
-        console.error(`❌ Error banning user ${num}: ${error}`);
+        log(`❌ Error banning user ${num}: ${error}`, 'error');
     }
 }
 
 async function unbanUser(num) {
     try {
         await pool.query(`DELETE FROM banned_users WHERE num = $1;`, [num]);
-        console.log(`✅ User ${num} unbanned successfully.`);
+        log(`✅ Unbanned user ${num}`);
     } catch (error) {
-        console.error(`❌ Error unbanning user ${num}: ${error}`);
+        log(`❌ Error unbanning user ${num}: ${error}`, 'error');
     }
 }
 
 async function addSudoUser(num) {
     try {
         await pool.query(`INSERT INTO sudo_users (num) VALUES ($1) ON CONFLICT (num) DO NOTHING;`, [num]);
-        console.log(`✅ Sudo user ${num} added successfully.`);
+        log(`✅ Added sudo user ${num}`);
     } catch (error) {
-        console.error(`❌ Error adding sudo user ${num}: ${error}`);
+        log(`❌ Error adding sudo user ${num}: ${error}`, 'error');
     }
 }
 
 async function removeSudoUser(num) {
     try {
         await pool.query(`DELETE FROM sudo_users WHERE num = $1;`, [num]);
-        console.log(`✅ Sudo user ${num} removed successfully.`);
+        log(`✅ Removed sudo user ${num}`);
     } catch (error) {
-        console.error(`❌ Error removing sudo user ${num}: ${error}`);
+        log(`❌ Error removing sudo user ${num}: ${error}`, 'error');
     }
 }
 
 async function getSudoUsers() {
     try {
         const res = await pool.query('SELECT num FROM sudo_users');
-        console.log(`✅ Fetched sudo users successfully.`);
+        log(`✅ Fetched ${res.rows.length} sudo users`);
         return res.rows.map(row => row.num);
     } catch (error) {
-        console.error(`❌ Error fetching sudo users: ${error}`);
+        log(`❌ Error fetching sudo users: ${error}`, 'error');
         return [];
     }
 }
@@ -247,9 +241,9 @@ async function saveConversation(num, role, message) {
             'INSERT INTO conversation_history (num, role, message) VALUES ($1, $2, $3)',
             [num, role, message]
         );
-        console.log(`✅ Conversation saved for ${num}.`);
+        log(`✅ Saved conversation for ${num}`);
     } catch (error) {
-        console.error(`❌ Error saving conversation for ${num}: ${error}`);
+        log(`❌ Error saving conversation for ${num}: ${error}`, 'error');
     }
 }
 
@@ -259,10 +253,10 @@ async function getRecentMessages(num) {
             'SELECT role, message FROM conversation_history WHERE num = $1 ORDER BY timestamp ASC',
             [num]
         );
-        console.log(`✅ Fetched recent messages for ${num}.`);
+        log(`✅ Fetched ${res.rows.length} recent messages for ${num}`);
         return res.rows;
     } catch (error) {
-        console.error(`❌ Error retrieving conversation history for ${num}: ${error}`);
+        log(`❌ Error retrieving conversation history for ${num}: ${error}`, 'error');
         return [];
     }
 }
@@ -270,24 +264,24 @@ async function getRecentMessages(num) {
 async function deleteUserHistory(num) {
     try {
         await pool.query('DELETE FROM conversation_history WHERE num = $1', [num]);
-        console.log(`✅ Deleted conversation history for ${num}.`);
+        log(`✅ Deleted conversation history for ${num}`);
     } catch (error) {
-        console.error(`❌ Error deleting conversation history for ${num}: ${error}`);
+        log(`❌ Error deleting conversation history for ${num}: ${error}`, 'error');
     }
 }
 
 async function getBannedUsers() {
     try {
         const res = await pool.query('SELECT num FROM banned_users');
-        console.log(`✅ Fetched banned users successfully.`);
+        log(`✅ Fetched ${res.rows.length} banned users`);
         return res.rows.map(row => row.num);
     } catch (error) {
-        console.error(`❌ Error fetching banned users: ${error}`);
+        log(`❌ Error fetching banned users: ${error}`, 'error');
         return [];
     }
 }
 
-initializeDatabase().catch(console.error);
+initializeDatabase().catch(err => log(`❌ Database initialization failed: ${err}`, 'error'));
 
 module.exports = {
     addSudoUser,
