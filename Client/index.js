@@ -126,22 +126,6 @@ async function startToxic() {
         const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
         const Myself = client.decodeJid(client.user.id);
 
-        // Autostatus reaction for status updates
-        if (remoteJid === "status@broadcast") {
-            try {
-                let emoji = ["❤️", "😍", "😼"];
-                let sigma = emoji[Math.floor(Math.random() * emoji.length)];
-                await client.readMessages([mek.key]);
-                await client.sendMessage(
-                    'status@broadcast',
-                    { react: { text: sigma, key: mek.key } },
-                    { statusJidList: [mek.key.participant] }
-                );
-            } catch (err) {
-                console.error("Error in autostatus reaction:", err);
-            }
-        }
-
         // Antilink logic
         if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
             const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
