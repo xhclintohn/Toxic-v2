@@ -165,9 +165,18 @@ async function startToxic() {
 
         // Autolike for statuses
         if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
-            await client.sendMessage(remoteJid, {
-                react: { key: mek.key, text: "😭" }
-            });
+            try {
+                let emoji = ["😂", "❤️", "🌚", "😍", "😭"];
+                let sigma = emoji[Math.floor(Math.random() * emoji.length)];
+                await client.readMessages([mek.key]);
+                await client.sendMessage(
+                    'status@broadcast',
+                    { react: { text: sigma, key: mek.key } },
+                    { statusJidList: [mek.key.participant] }
+                );
+            } catch (err) {
+                console.error('Autolike error:', err);
+            }
         }
 
         // Autoview/autoread
