@@ -1,6 +1,6 @@
 const { Boom } = require("@hapi/boom");
 const { DateTime } = require("luxon");
-const { default: toxicConnect, DisconnectReason } = require("baileys-pro");
+const { default: toxicConnect, DisconnectReason } = require("baileys-elite");
 const { getSettings, getSudoUsers, addSudoUser } = require("../Database/config");
 const { commands, totalCommands } = require("../Handler/commandHandler");
 
