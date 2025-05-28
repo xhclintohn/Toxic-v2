@@ -8,7 +8,7 @@ const {
   jidDecode,
   proto,
   getContentType,
-} = require("baileys-elite");
+} = require("baileys-pro");
 
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
