@@ -30,7 +30,7 @@ const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
-const { getSettings, getBannedUsers, banUser } = require("../Database/config%C2%A0");
+const { getSettings, getBannedUsers, banUser } = require("../Database/config");
 const { botname } = require('../Env/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('../Handler/commandHandler');
@@ -76,7 +76,7 @@ async function startToxic() {
     const client = toxicConnect({
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
-        version: [2, 3000, 1015901307], // Match session generator version
+        version: [2, 3000, 1015901307], // Unchanged, as per your request
         fireInitQueries: false,
         shouldSyncHistoryMessage: false,
         downloadHistory: false,
@@ -84,7 +84,7 @@ async function startToxic() {
         generateHighQualityLinkPreview: true,
         markOnlineOnConnect: true,
         keepAliveIntervalMs: 30_000,
-        browser: [2, 3000, 1023223821], // Updated browser version
+        browser: ['Custom', '3000', '1023223821'], // Updated browser version
         auth: state,
         getMessage: async (key) => {
             if (store) {
