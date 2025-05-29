@@ -13,6 +13,7 @@ const {
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
 const fs = require("fs");
+const path = require("path");
 const FileType = require("file-type");
 const { exec, spawn, execSync } = require("child_process");
 const axios = require("axios");
@@ -30,31 +31,52 @@ const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
 const { getSettings, getBannedUsers, banUser } = require("../Database/config");
-
 const { botname } = require('../Env/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('../Handler/commandHandler');
 authenticationn();
 
-const path = require('path');
+const sessionDir = path.join(__dirname, '..', 'Session');
 
-const sessionName = path.join(__dirname, '..', 'Session');
+// Function to initialize or load Base64 session
+async function initializeSession(base64Creds = null) {
+    if (!fs.existsSync(sessionDir)) {
+        fs.mkdirSync(sessionDir, { recursive: true });
+    }
 
-const groupEvents = require("../Handler/eventHandler");
-const groupEvents2 = require("../Handler/eventHandler2");
-const connectionHandler = require('../Handler/connectionHandler');
+    // If Base64 credentials are provided (from session generator), use them
+    if (base64Creds) {
+        try {
+            const credsBuffer = Buffer.from(base64Creds, 'base64');
+            const credsPath = path.join(sessionDir, 'creds.json');
+            fs.writeFileSync(credsPath, credsBuffer);
+            console.log(chalk.green('Base64 session credentials loaded into Session/creds.json'));
+        } catch (err) {
+            console.error(chalk.red('Failed to load Base64 credentials:', err));
+        }
+    }
+}
 
 async function startToxic() {
-    let settingss = await getSettings();
-    if (!settingss) return;
+    let settings = await getSettings();
+    if (!settings) {
+        console.error(chalk.red('Failed to load settings, exiting...'));
+        return;
+    }
 
-    const { autobio, mode, anticall } = settingss;
+    const { autobio, mode, anticall } = settings;
 
-    const { saveCreds, state } = await useMultiFileAuthState(sessionName);
+    // Load session, optionally using Base64 credentials from session generator
+    // Replace 'YOUR_BASE64_CREDS' with the actual Base64 string from the session generator
+    // In practice, this could be passed via environment variable or file
+    const base64Creds = process.env.BASE64_CREDS || null; // Set this via environment or input
+    await initializeSession(base64Creds);
+
+    const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
     const client = toxicConnect({
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
-        version: [2, 3000, 1015901307],
+        version: [2, 3000, 1015901307], // Match session generator version
         fireInitQueries: false,
         shouldSyncHistoryMessage: false,
         downloadHistory: false,
@@ -62,6 +84,7 @@ async function startToxic() {
         generateHighQualityLinkPreview: true,
         markOnlineOnConnect: true,
         keepAliveIntervalMs: 30_000,
+        browser: Browsers.macOS('Chrome'), // Match session generator browser
         auth: state,
         getMessage: async (key) => {
             if (store) {
@@ -97,13 +120,11 @@ async function startToxic() {
         const callerJid = json.content[0].attrs['call-creator'];
         const callerNumber = callerJid.replace(/[@.a-z]/g, "");
 
-        if (processedCalls.has(callId)) {
-            return;
-        }
+        if (processedCalls.has(callId)) return;
         processedCalls.add(callId);
 
         await client.rejectCall(callId, callerJid);
-        await client.sendMessage(callerJid, { text: "> You Have been banned for calling without permission ⚠️!" });
+        await client.sendMessage(callerJid, { text: "> You have been banned for calling without permission ⚠️!" });
 
         const bannedUsers = await getBannedUsers();
         if (!bannedUsers.includes(callerNumber)) {
@@ -198,17 +219,35 @@ async function startToxic() {
         require("./toxic")(client, m, chatUpdate, store);
     });
 
-    const unhandledRejections = new Map();
-    process.on("unhandledRejection", (reason, promise) => {
-        unhandledRejections.set(promise, reason);
-        console.log("Unhandled Rejection at:", promise, "reason:", reason);
+    // Enhanced connection handler
+    client.ev.on("connection.update", async (update) => {
+        const { connection, lastDisconnect } = update;
+        if (connection === 'open') {
+            console.log(chalk.green('Successfully connected to WhatsApp servers'));
+        } else if (connection === 'close') {
+            const statusCode = lastDisconnect?.error?.output?.statusCode;
+            if (statusCode === DisconnectReason.loggedOut) {
+                console.log(chalk.red('Logged out, clearing session...'));
+                fs.rmSync(sessionDir, { recursive: true, force: true });
+                await startToxic();
+            } else if (statusCode === DisconnectReason.connectionLost || statusCode === DisconnectReason.connectionClosed) {
+                console.log(chalk.yellow('Connection lost, retrying in 10s...'));
+                setTimeout(startToxic, 10000);
+            } else if (statusCode === DisconnectReason.rateOverLimit) {
+                console.log(chalk.yellow('Rate limit hit, retrying in 60s...'));
+                setTimeout(startToxic, 60000);
+            } else if (statusCode === DisconnectReason.badSession) {
+                console.log(chalk.red('Bad session, clearing and restarting...'));
+                fs.rmSync(sessionDir, { recursive: true, force: true });
+                await startToxic();
+            } else {
+                console.error(chalk.red('Connection closed with error:', lastDisconnect?.error));
+                setTimeout(startToxic, 10000);
+            }
+        }
     });
-    process.on("rejectionHandled", (promise) => {
-        unhandledRejections.delete(promise);
-    });
-    process.on("Something went wrong", function (err) {
-        console.log("Caught exception: ", err);
-    });
+
+    client.ev.on("creds.update", saveCreds);
 
     client.decodeJid = (jid) => {
         if (!jid) return jid;
@@ -225,7 +264,7 @@ async function startToxic() {
         if (id.endsWith("@g.us"))
             return new Promise(async (resolve) => {
                 v = store.contacts[id] || {};
-                if (!(v.name || v.subject)) v = client.groupMetadata(id) || {};
+                if (!(v.name || v.subject)) v = await client.groupMetadata(id) || {};
                 resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
             });
         else
@@ -242,15 +281,9 @@ async function startToxic() {
     client.serializeM = (m) => smsg(client, m, store);
 
     client.ev.on("group-participants.update", async (m) => {
-        groupEvents(client, m);
-        groupEvents2(client, m);
+        require("../Handler/eventHandler")(client, m);
+        require("../Handler/eventHandler2")(client, m);
     });
-
-    client.ev.on("connection.update", async (update) => {
-        await connectionHandler(client, update, startToxic);
-    });
-
-    client.ev.on("creds.update", saveCreds);
 
     client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text: text, ...options }, { quoted });
 
