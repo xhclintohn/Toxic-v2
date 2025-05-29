@@ -57,6 +57,18 @@ async function initializeSession(base64Creds = null) {
     }
 }
 
+// Function to clear session
+async function clearSession() {
+    try {
+        if (fs.existsSync(sessionDir)) {
+            fs.rmSync(sessionDir, { recursive: true, force: true });
+            console.log(chalk.yellow('Cleared corrupted session. Please provide new Base64 credentials or scan QR code.'));
+        }
+    } catch (err) {
+        console.error(chalk.red('Failed to clear session:', err));
+    }
+}
+
 async function startToxic() {
     let settings = await getSettings();
     if (!settings) {
@@ -74,7 +86,7 @@ async function startToxic() {
     const client = toxicConnect({
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
-        version: [2, 3000, 1023223821], // Updated to match requested version
+        version: [2, 3000, 1023223821], // Matches requested version
         fireInitQueries: false,
         shouldSyncHistoryMessage: false,
         downloadHistory: false,
@@ -82,7 +94,7 @@ async function startToxic() {
         generateHighQualityLinkPreview: true,
         markOnlineOnConnect: true,
         keepAliveIntervalMs: 30_000,
-        browser: ['Chrome', '3000', '1023223821'], // Updated browser version
+        browser: ['DREADED', 'Safari', '3.0'], // Matches working bot
         auth: state,
         getMessage: async (key) => {
             if (store) {
@@ -217,7 +229,7 @@ async function startToxic() {
         require("./toxic")(client, m, chatUpdate, store);
     });
 
-    // Enhanced connection handler with detailed Jimmy
+    // Enhanced connection handler with session error handling
     client.ev.on("connection.update", async (update) => {
         const { connection, lastDisconnect } = update;
         if (connection === 'open') {
@@ -226,9 +238,18 @@ async function startToxic() {
             const statusCode = lastDisconnect?.error?.output?.statusCode;
             const errorMessage = lastDisconnect?.error?.message || 'Unknown error';
             console.error(chalk.red(`Connection closed with error: ${errorMessage}, Status Code: ${statusCode}`));
+
+            // Handle Bad MAC error specifically
+            if (errorMessage.includes('Bad MAC')) {
+                console.log(chalk.red('Bad MAC error detected, clearing session...'));
+                await clearSession();
+                await startToxic();
+                return;
+            }
+
             if (statusCode === DisconnectReason.loggedOut) {
                 console.log(chalk.red('Logged out, clearing session...'));
-                fs.rmSync(sessionDir, { recursive: true, force: true });
+                await clearSession();
                 await startToxic();
             } else if (statusCode === DisconnectReason.connectionLost || statusCode === DisconnectReason.connectionClosed) {
                 console.log(chalk.yellow('Connection lost, retrying in 10s...'));
@@ -238,7 +259,7 @@ async function startToxic() {
                 setTimeout(startToxic, 60000);
             } else if (statusCode === DisconnectReason.badSession) {
                 console.log(chalk.red('Bad session, clearing and restarting...'));
-                fs.rmSync(sessionDir, { recursive: true, force: true });
+                await clearSession();
                 await startToxic();
             } else {
                 console.error(chalk.red(`Unexpected error, retrying in 10s... Error: ${errorMessage}`));
