@@ -74,7 +74,7 @@ async function startToxic() {
     const client = toxicConnect({
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
-        version: [2, 3000, 1015901307], // Unchanged, as per your request
+        version: [2, 3000, 1023223821], // Updated to match requested version
         fireInitQueries: false,
         shouldSyncHistoryMessage: false,
         downloadHistory: false,
@@ -82,7 +82,7 @@ async function startToxic() {
         generateHighQualityLinkPreview: true,
         markOnlineOnConnect: true,
         keepAliveIntervalMs: 30_000,
-        browser: ['Chrome', '3000', 'Custom'], // Updated browser version for compatibility
+        browser: ['Chrome', '3000', '1023223821'], // Updated browser version
         auth: state,
         getMessage: async (key) => {
             if (store) {
@@ -217,7 +217,7 @@ async function startToxic() {
         require("./toxic")(client, m, chatUpdate, store);
     });
 
-    // Enhanced connection handler with detailed error logging
+    // Enhanced connection handler with detailed Jimmy
     client.ev.on("connection.update", async (update) => {
         const { connection, lastDisconnect } = update;
         if (connection === 'open') {
