@@ -67,8 +67,6 @@ async function startToxic() {
     const { autobio, mode, anticall } = settings;
 
     // Load session, optionally using Base64 credentials from session generator
-    // Replace 'YOUR_BASE64_CREDS' with the actual Base64 string from the session generator
-    // In practice, this could be passed via environment variable or file
     const base64Creds = process.env.BASE64_CREDS || null; // Set this via environment or input
     await initializeSession(base64Creds);
 
@@ -84,7 +82,7 @@ async function startToxic() {
         generateHighQualityLinkPreview: true,
         markOnlineOnConnect: true,
         keepAliveIntervalMs: 30_000,
-        browser: ['Custom', '3000', '1023223821'], // Updated browser version
+        browser: ['Chrome', '3000', 'Custom'], // Updated browser version for compatibility
         auth: state,
         getMessage: async (key) => {
             if (store) {
@@ -219,13 +217,15 @@ async function startToxic() {
         require("./toxic")(client, m, chatUpdate, store);
     });
 
-    // Enhanced connection handler
+    // Enhanced connection handler with detailed error logging
     client.ev.on("connection.update", async (update) => {
         const { connection, lastDisconnect } = update;
         if (connection === 'open') {
             console.log(chalk.green('Successfully connected to WhatsApp servers'));
         } else if (connection === 'close') {
             const statusCode = lastDisconnect?.error?.output?.statusCode;
+            const errorMessage = lastDisconnect?.error?.message || 'Unknown error';
+            console.error(chalk.red(`Connection closed with error: ${errorMessage}, Status Code: ${statusCode}`));
             if (statusCode === DisconnectReason.loggedOut) {
                 console.log(chalk.red('Logged out, clearing session...'));
                 fs.rmSync(sessionDir, { recursive: true, force: true });
@@ -241,7 +241,7 @@ async function startToxic() {
                 fs.rmSync(sessionDir, { recursive: true, force: true });
                 await startToxic();
             } else {
-                console.error(chalk.red('Connection closed with error:', lastDisconnect?.error));
+                console.error(chalk.red(`Unexpected error, retrying in 10s... Error: ${errorMessage}`));
                 setTimeout(startToxic, 10000);
             }
         }
