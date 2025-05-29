@@ -30,7 +30,7 @@ const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
-const { getSettings, getBannedUsers, banUser } = require("../Database/config");
+const { getSettings, getBannedUsers, banUser } = require("../Database/config%C2%A0");
 const { botname } = require('../Env/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('../Handler/commandHandler');
@@ -84,7 +84,7 @@ async function startToxic() {
         generateHighQualityLinkPreview: true,
         markOnlineOnConnect: true,
         keepAliveIntervalMs: 30_000,
-        browser: Browsers.macOS('Chrome'), // Match session generator browser
+        browser: [2, 3000, 1023223821], // Updated browser version
         auth: state,
         getMessage: async (key) => {
             if (store) {
