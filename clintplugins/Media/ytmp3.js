@@ -32,26 +32,41 @@ module.exports = async (context) => {
         const { title, download_url: audioUrl } = data.result;
 
         await m.reply(`_Downloading ${title}_`);
-        await client.sendMessage(
-            m.chat,
-            {
-                audio: { url: audioUrl },
-                fileName: `${title}.mp3`
-            },
-            { quoted: m }
-        );
 
-        await client.sendMessage(
-            m.chat,
-            {
-                document: { url: audioUrl },
-                fileName: `${title}.mp3`
-            },
-            { quoted: m }
-        );
+        // Try sending audio message
+        try {
+            await client.sendMessage(
+                m.chat,
+                {
+                    audio: { url: audioUrl },
+                    fileName: `${title}.mp3`
+                },
+                { quoted: m }
+            );
+        } catch (audioError) {
+            console.error(`Failed to send audio: ${audioError.message}`);
+            throw new Error(`Couldn’t send audio, ${audioError.message}`);
+        }
 
+        // Try sending document message
+        try {
+            await client.sendMessage(
+                m.chat,
+                {
+                    document: { url: audioUrl },
+                    fileName: `${title}.mp3`
+                },
+                { quoted: m }
+            );
+        } catch (docError) {
+            console.error(`Failed to send document: ${docError.message}`);
+            throw new Error(`Couldn’t send document, ${docError.message}`);
+        }
+
+        // Send caption
         await client.sendMessage(m.chat, { text: `> ρσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ` }, { quoted: m });
     } catch (error) {
+        console.error(`Error in ytmp3: ${error.message}`);
         await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}! Couldn’t download your stupid audio. Try later, you whiny prick.\n◈━━━━━━━━━━━━━━━━◈`);
     }
 };
