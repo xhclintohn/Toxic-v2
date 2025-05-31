@@ -147,7 +147,7 @@ async function startToxic() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, autoview, presence } = settings; // Removed autolike
+        const { autoread, autolike, autoview, presence } = settings;
 
         try {
             let mek = chatUpdate.messages[0];
@@ -204,6 +204,16 @@ async function startToxic() {
                     }
                 } catch (error) {
                     console.error(chalk.red('Error in antilink logic:', error));
+                }
+            }
+
+            if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
+                try {
+                    await client.sendMessage(remoteJid, {
+                        react: { key: mek.key, text: "😭" }
+                    });
+                } catch (error) {
+                    console.error(chalk.red('Error in autolike:', error));
                 }
             }
 
