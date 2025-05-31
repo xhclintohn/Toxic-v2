@@ -36,7 +36,6 @@ module.exports = async (context) => {
             m.chat,
             {
                 audio: { url: audioUrl },
-                mimetype: "audio/mpeg",
                 fileName: `${title}.mp3`
             },
             { quoted: m }
@@ -46,7 +45,6 @@ module.exports = async (context) => {
             m.chat,
             {
                 document: { url: audioUrl },
-                mimetype: "audio/mpeg",
                 fileName: `${title}.mp3`
             },
             { quoted: m }
@@ -54,6 +52,4 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, { text: `> ρσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ` }, { quoted: m });
     } catch (error) {
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}! Couldn’t download your stupid audio. Try later, you whiny prick.\n◈━━━━━━━━━━━━━━━━◈`);
-    }
-};
+        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}! Could
