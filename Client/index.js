@@ -8,7 +8,7 @@ const {
   jidDecode,
   proto,
   getContentType,
-} = require("baileys-pro"); // Change to baileys-pro if needed
+} = require("baileys-pro");
 
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
@@ -76,7 +76,7 @@ async function startToxic() {
         return;
     }
 
-    const { autobio, mode, anticall, autoread, presence } = settings;
+    const { autobio, mode, anticall } = settings;
 
     const base64Creds = process.env.BASE64_CREDS || null;
     await initializeSession(base64Creds);
@@ -147,112 +147,48 @@ async function startToxic() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, presence } = settings;
+        const { autoread, autolike, autoview, presence } = settings;
 
         try {
             let mek = chatUpdate.messages[0];
             if (!mek || !mek.key || !mek.message) return;
 
+            mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
+
             const remoteJid = mek.key.remoteJid;
-
-            // Skip protocol messages
-            if (mek.message.protocolMessage) {
-                console.log(chalk.yellow(`Skipped protocol message in ${remoteJid}`));
-                return;
-            }
-
-            // Core status handling (autoreact and view)
-            if (remoteJid === "status@broadcast" && mek.key.id) {
-                try {
-                    console.log(chalk.blue(`Processing status ${mek.key.id}, Key:`, JSON.stringify(mek.key, null, 2)));
-                    // Primary reaction method
-                    const reactionResult = await client.sendMessage(remoteJid, {
-                        react: { key: mek.key, text: "❤️" }
-                    });
-                    console.log(chalk.blue(`Reaction sent to status ${mek.key.id}, Result:`, JSON.stringify(reactionResult, null, 2)));
-                    // View status (mark as read)
-                    await client.readMessages([mek.key]);
-                    console.log(chalk.blue(`Viewed status ${mek.key.id}`));
-                } catch (error) {
-                    console.error(chalk.red(`Error reacting/viewing status ${mek.key.id}:`, error));
-                    // Fallback reaction method
-                    try {
-                        await client.sendMessage(remoteJid, {
-                            reactionMessage: {
-                                key: mek.key,
-                                text: "❤️"
-                            }
-                        });
-                        console.log(chalk.blue(`Fallback reaction sent to status ${mek.key.id}`));
-                    } catch (fallbackError) {
-                        console.error(chalk.red(`Fallback reaction failed for status ${mek.key.id}:`, fallbackError));
-                    }
-                }
-                return; // Skip further processing for statuses
-            }
-
-            // Unwrap nested message types
-            let message = mek.message;
-            for (const type of ['ephemeralMessage', 'viewOnceMessage', 'viewOnceMessageV2']) {
-                if (message[type]) {
-                    message = message[type].message;
-                }
-            }
-
             const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
-            const myself = client.decodeJid(client.user.id);
+            const Myself = client.decodeJid(client.user.id);
 
-            // Extract button ID
             let buttonId = null;
-            if (message?.buttonsResponseMessage?.selectedButtonId) {
-                buttonId = message.buttonsResponseMessage.selectedButtonId;
-            } else if (message?.templateButtonReplyMessage?.selectedId) {
-                buttonId = message.templateButtonReplyMessage.selectedId;
+            if (mek.message?.buttonsResponseMessage?.selectedButtonId) {
+                buttonId = mek.message.buttonsResponseMessage.selectedButtonId;
+            } else if (mek.message?.templateButtonReplyMessage?.selectedId) {
+                buttonId = mek.message.templateButtonReplyMessage.selectedId;
             }
 
-            // Extract text content for antilink and commands
-            let messageContent = "";
-            if (buttonId) {
-                messageContent = buttonId;
-            } else if (message.conversation) {
-                messageContent = message.conversation;
-            } else if (message.extendedTextMessage?.text) {
-                messageContent = message.extendedTextMessage.text;
-            } else if (message.imageMessage?.caption) {
-                messageContent = message.imageMessage.caption;
-            } else if (message.videoMessage?.caption) {
-                messageContent = message.videoMessage.caption;
-            } else if (message.documentMessage?.caption) {
-                messageContent = message.documentMessage.caption;
-            } else if (message.listResponseMessage?.singleSelectReply?.selectedRowId) {
-                messageContent = message.listResponseMessage.singleSelectReply.selectedRowId;
-            } else if (message.templateButtonReplyMessage?.selectedId) {
-                messageContent = message.templateButtonReplyMessage.selectedId;
-            } else if (message.extendedTextMessage?.contextInfo?.quotedMessage) {
-                const quoted = message.extendedTextMessage.contextInfo.quotedMessage;
-                messageContent =
-                    quoted.conversation ||
-                    quoted.extendedTextMessage?.text ||
-                    quoted.imageMessage?.caption ||
-                    quoted.videoMessage?.caption ||
-                    quoted.documentMessage?.caption ||
-                    "";
-            }
-
-            // Antilink logic for groups
             if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
                 try {
                     const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
-                    if (messageContent && urlRegex.test(messageContent.toLowerCase())) {
-                        if (sender === myself) return;
+                    const messageContent = (
+                        mek.message.conversation ||
+                        mek.message.extendedTextMessage?.text ||
+                        mek.message.imageMessage?.caption ||
+                        mek.message.videoMessage?.caption ||
+                        mek.message.documentMessage?.caption ||
+                        buttonId ||
+                        ""
+                    ).toLowerCase();
 
+                    if (sender === Myself) return;
+
+                    if (urlRegex.test(messageContent)) {
                         const groupMetadata = await client.groupMetadata(remoteJid);
                         if (!groupMetadata || !groupMetadata.participants) return;
 
                         const groupAdmins = groupMetadata.participants
                             .filter(p => p.admin != null)
                             .map(p => client.decodeJid(p.id));
-                        const isBotAdmin = groupAdmins.includes(myself);
+                        const isBotAdmin = groupAdmins.includes(Myself);
                         const isSenderAdmin = groupAdmins.includes(sender);
 
                         if (isBotAdmin && !isSenderAdmin) {
@@ -271,12 +207,13 @@ async function startToxic() {
                 }
             }
 
-            // Autoread for private chats
-            if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+
+if (autoview && remoteJid === "status@broadcast") {
+                await client.readMessages([mek.key]);
+            } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
                 await client.readMessages([mek.key]);
             }
 
-            // Presence
             if (remoteJid.endsWith('@s.whatsapp.net')) {
                 const Chat = remoteJid;
                 if (presence === 'online') {
@@ -290,21 +227,13 @@ async function startToxic() {
                 }
             }
 
-            // Handle commands
             if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
-            const m = smsg(client, mek, store);
-            if (buttonId && !m.text) {
-                m.text = buttonId; // Ensure button ID is passed as text
+            m = smsg(client, mek, store);
+            if (buttonId) {
+                m.text = buttonId;
             }
-            if (messageContent && !m.text) {
-                m.text = messageContent; // Fallback to messageContent if smsg fails
-            }
-            if (m.text) {
-                require("./toxic")(client, m, chatUpdate, store);
-            } else {
-                console.log(chalk.yellow(`Skipped message in ${remoteJid} due to no text content:`, JSON.stringify(mek.message, null, 2)));
-            }
+            require("./toxic")(client, m, chatUpdate, store);
         } catch (err) {
             console.error(chalk.red('[MESSAGES.UPSERT] Error:', err));
         }
