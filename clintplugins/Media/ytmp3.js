@@ -18,24 +18,26 @@ module.exports = async (context) => {
 
     try {
         const encodedUrl = encodeURIComponent(text);
-        const apiUrl = `https://api.shizo.top/download/ytmp3?apikey=shizo&url=${encodedUrl}`;
+        const apiUrl = `https://api.giftedtech.web.id/api/download/ytaudio?apikey=gifted_api_se5dccy&format=128kbps&url=${encodedUrl}`;
         const response = await fetch(apiUrl, { timeout: 10000 });
         if (!response.ok) {
             throw new Error(`API puked with status ${response.status}`);
         }
 
         const data = await response.json();
-        if (!data.status || !data.msg) {
+        if (!data.success || !data.result || !data.result.download_url) {
             return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ API’s useless, ${m.pushName}! ${data.msg || 'No audio, you loser.'} Try again, dumbass.\n◈━━━━━━━━━━━━━━━━◈`);
         }
 
-        await m.reply(`_Downloading audio..._`);
+        const { title, download_url: audioUrl } = data.result;
+
+        await m.reply(`_Downloading ${title}_`);
         await client.sendMessage(
             m.chat,
             {
-                audio: { url: data.msg },
+                audio: { url: audioUrl },
                 mimetype: "audio/mpeg",
-                fileName: `${m.pushName}_ytmp3.mp3`
+                fileName: `${title}.mp3`
             },
             { quoted: m }
         );
@@ -43,14 +45,14 @@ module.exports = async (context) => {
         await client.sendMessage(
             m.chat,
             {
-                document: { url: data.msg },
+                document: { url: audioUrl },
                 mimetype: "audio/mpeg",
-                fileName: `${m.pushName}_ytmp3.mp3`
+                fileName: `${title}.mp3`
             },
             { quoted: m }
         );
 
- awaitsendMessage(m.chat, { text: `> ρσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ` }, { quoted: m });
+        await client.sendMessage(m.chat, { text: `> ρσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ` }, { quoted: m });
     } catch (error) {
         await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}! Couldn’t download your stupid audio. Try later, you whiny prick.\n◈━━━━━━━━━━━━━━━━◈`);
     }
