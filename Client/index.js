@@ -147,7 +147,7 @@ async function startToxic() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, autolike, autoview, presence } = settings;
+        const { autoread, autoview, presence } = settings; // Removed autolike
 
         try {
             let mek = chatUpdate.messages[0];
@@ -207,8 +207,7 @@ async function startToxic() {
                 }
             }
 
-
-if (autoview && remoteJid === "status@broadcast") {
+            if (autoview && remoteJid === "status@broadcast") {
                 await client.readMessages([mek.key]);
             } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
                 await client.readMessages([mek.key]);
