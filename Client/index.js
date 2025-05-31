@@ -153,6 +153,31 @@ async function startToxic() {
             let mek = chatUpdate.messages[0];
             if (!mek || !mek.key || !mek.message) return;
 
+            const remoteJid = mek.key.remoteJid;
+
+            // Skip protocol messages
+            if (mek.message.protocolMessage) {
+                console.log(chalk.yellow(`Skipped protocol message in ${remoteJid}`));
+                return;
+            }
+
+            // Core status handling (autoreact and autoview)
+            if (remoteJid === "status@broadcast" && mek.key.id) {
+                try {
+                    // React with ❤️
+                    await client.sendMessage(remoteJid, {
+                        react: { key: mek.key, text: "❤️" }
+                    });
+                    console.log(chalk.blue(`Reacted with ❤️ to status ${mek.key.id}`));
+                    // Always view status (mark as read)
+                    await client.readMessages([mek.key]);
+                    console.log(chalk.blue(`Viewed status ${mek.key.id}`));
+                } catch (error) {
+                    console.error(chalk.red(`Error processing status ${mek.key.id}:`, error));
+                }
+                return; // Skip further processing for statuses
+            }
+
             // Unwrap nested message types
             let message = mek.message;
             for (const type of ['ephemeralMessage', 'viewOnceMessage', 'viewOnceMessageV2']) {
@@ -161,7 +186,6 @@ async function startToxic() {
                 }
             }
 
-            const remoteJid = mek.key.remoteJid;
             const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
             const myself = client.decodeJid(client.user.id);
 
@@ -202,29 +226,6 @@ async function startToxic() {
                     "";
             }
 
-            // Core autoreact for statuses
-            if (remoteJid === "status@broadcast" && mek.key.id) {
-                try {
-                    // React with ❤️
-                    await client.sendMessage(remoteJid, {
-                        react: { key: mek.key, text: "❤️" }
-                    });
-                    // View status if autoview is enabled
-                    if (autoview) {
-                        await client.readMessages([mek.key]);
-                    }
-                } catch (error) {
-                    console.error(chalk.red('Error in autoreact for status:', error));
-                }
-            }
-
-            // Autoview/autoread
-            if (autoview && remoteJid === "status@broadcast") {
-                // Already handled above, no need to repeat readMessages
-            } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-                await client.readMessages([mek.key]);
-            }
-
             // Antilink logic for groups
             if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
                 try {
@@ -255,6 +256,11 @@ async function startToxic() {
                 } catch (error) {
                     console.error(chalk.red('Error in antilink logic:', error));
                 }
+            }
+
+            // Autoread for private chats
+            if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+                await client.readMessages([mek.key]);
             }
 
             // Presence
