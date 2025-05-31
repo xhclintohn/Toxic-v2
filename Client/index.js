@@ -8,7 +8,7 @@ const {
   jidDecode,
   proto,
   getContentType,
-} = require("baileys-pro");
+} = require("baileys-pro"); // Change to baileys-pro if needed
 
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
@@ -76,7 +76,7 @@ async function startToxic() {
         return;
     }
 
-    const { autobio, mode, anticall, autoread, autoview, presence } = settings;
+    const { autobio, mode, anticall, autoread, presence } = settings;
 
     const base64Creds = process.env.BASE64_CREDS || null;
     await initializeSession(base64Creds);
@@ -147,7 +147,7 @@ async function startToxic() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, autoview, presence } = settings;
+        const { autoread, presence } = settings;
 
         try {
             let mek = chatUpdate.messages[0];
@@ -161,19 +161,32 @@ async function startToxic() {
                 return;
             }
 
-            // Core status handling (autoreact and autoview)
+            // Core status handling (autoreact and view)
             if (remoteJid === "status@broadcast" && mek.key.id) {
                 try {
-                    // React with ❤️
-                    await client.sendMessage(remoteJid, {
+                    console.log(chalk.blue(`Processing status ${mek.key.id}, Key:`, JSON.stringify(mek.key, null, 2)));
+                    // Primary reaction method
+                    const reactionResult = await client.sendMessage(remoteJid, {
                         react: { key: mek.key, text: "❤️" }
                     });
-                    console.log(chalk.blue(`Reacted with ❤️ to status ${mek.key.id}`));
-                    // Always view status (mark as read)
+                    console.log(chalk.blue(`Reaction sent to status ${mek.key.id}, Result:`, JSON.stringify(reactionResult, null, 2)));
+                    // View status (mark as read)
                     await client.readMessages([mek.key]);
                     console.log(chalk.blue(`Viewed status ${mek.key.id}`));
                 } catch (error) {
-                    console.error(chalk.red(`Error processing status ${mek.key.id}:`, error));
+                    console.error(chalk.red(`Error reacting/viewing status ${mek.key.id}:`, error));
+                    // Fallback reaction method
+                    try {
+                        await client.sendMessage(remoteJid, {
+                            reactionMessage: {
+                                key: mek.key,
+                                text: "❤️"
+                            }
+                        });
+                        console.log(chalk.blue(`Fallback reaction sent to status ${mek.key.id}`));
+                    } catch (fallbackError) {
+                        console.error(chalk.red(`Fallback reaction failed for status ${mek.key.id}:`, fallbackError));
+                    }
                 }
                 return; // Skip further processing for statuses
             }
