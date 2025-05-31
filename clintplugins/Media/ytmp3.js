@@ -8,7 +8,7 @@ module.exports = async (context) => {
     }
 
     if (!text) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Oi, ${m.pushName}, you forgot the damn YouTube link, you moron! Example: .ytmp3 https://youtube.com/watch?v=whatever\n◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Oi, ${m.pushName}, you forgotसल the damn YouTube link, you moron! Example: .ytmp3 https://youtube.com/watch?v=whatever\n◈━━━━━━━━━━━━━━━━◈`);
     }
 
     const urls = text.match(/(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?)([a-zA-Z0-9_-]{11})/gi);
@@ -19,7 +19,10 @@ module.exports = async (context) => {
     try {
         const encodedUrl = encodeURIComponent(text);
         const apiUrl = `https://api.giftedtech.web.id/api/download/ytaudio?apikey=gifted_api_se5dccy&url=${encodedUrl}`;
-        const response = await fetch(apiUrl, { timeout: 10000 });
+        const response = await fetch(apiUrl, {
+            timeout: 10000,
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
+        });
         if (!response.ok) {
             throw new Error(`API puked with status ${response.status}`);
         }
@@ -29,38 +32,91 @@ module.exports = async (context) => {
             return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ API’s useless, ${m.pushName}! ${data.msg || 'No audio, you loser.'} Try again, dumbass.\n◈━━━━━━━━━━━━━━━━◈`);
         }
 
-        const { title, download_url: audioUrl } = data.result;
+        const { title, download_url: audioUrl, type } = data.result;
+        const mimeType = type === 'mp3' ? 'audio/mpeg' : 'audio/mpeg'; // Fallback to audio/mpeg if type is unexpected
 
-        await m.reply(`_Downloading ${title}_`);
+        // Verify download_url accessibility
+        const urlCheck = await fetch(audioUrl, {
+            method: 'HEAD',
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
+        });
+        if (!urlCheck.ok) {
+            // Fetch media as buffer if direct URL is inaccessible
+            const mediaResponse = await fetch(audioUrl, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
+            });
+            if (!mediaResponse.ok) {
+                throw new Error(`Download URL inaccessible, status ${mediaResponse.status}`);
+            }
+            const mediaBuffer = await mediaResponse.buffer();
 
-        // Try sending audio message
-        try {
-            await client.sendMessage(
-                m.chat,
-                {
-                    audio: { url: audioUrl },
-                    fileName: `${title}.mp3`
-                },
-                { quoted: m }
-            );
-        } catch (audioError) {
-            console.error(`Failed to send audio: ${audioError.message}`);
-            throw new Error(`Couldn’t send audio, ${audioError.message}`);
-        }
+            await m.reply(`_Downloading ${title}_`);
 
-        // Try sending document message
-        try {
-            await client.sendMessage(
-                m.chat,
-                {
-                    document: { url: audioUrl },
-                    fileName: `${title}.mp3`
-                },
-                { quoted: m }
-            );
-        } catch (docError) {
-            console.error(`Failed to send document: ${docError.message}`);
-            throw new Error(`Couldn’t send document, ${docError.message}`);
+            // Try sending audio message with buffer
+            try {
+                await client.sendMessage(
+                    m.chat,
+                    {
+                        audio: mediaBuffer,
+                        fileName: `${title}.mp3`,
+                        mimetype: mimeType
+                    },
+                    { quoted: m }
+                );
+            } catch (audioError) {
+                console.error(`Failed to send audio: ${audioError.message}`);
+                throw new Error(`Couldn’t send audio, ${audioError.message}`);
+            }
+
+            // Try sending document message with buffer
+            try {
+                await client.sendMessage(
+                    m.chat,
+                    {
+                        document: mediaBuffer,
+                        fileName: `${title}.mp3`,
+                        mimetype: mimeType
+                    },
+                    { quoted: m }
+                );
+            } catch (docError) {
+                console.error(`Failed to send document: ${docError.message}`);
+                throw new Error(`Couldn’t send document, ${docError.message}`);
+            }
+        } else {
+            await m.reply(`_Downloading ${title}_`);
+
+            // Try sending audio message with URL
+            try {
+                await client.sendMessage(
+                    m.chat,
+                    {
+                        audio: { url: audioUrl },
+                        fileName: `${title}.mp3`,
+                        mimetype: mimeType
+                    },
+                    { quoted: m }
+                );
+            } catch (audioError) {
+                console.error(`Failed to send audio: ${audioError.message}`);
+                throw new Error(`Couldn’t send audio, ${audioError.message}`);
+            }
+
+            // Try sending document message with URL
+            try {
+                await client.sendMessage(
+                    m.chat,
+                    {
+                        document: { url: audioUrl },
+                        fileName: `${title}.mp3`,
+                        mimetype: mimeType
+                    },
+                    { quoted: m }
+                );
+            } catch (docError) {
+                console.error(`Failed to send document: ${docError.message}`);
+                throw new Error(`Couldn’t send document, ${docError.message}`);
+            }
         }
 
         // Send caption
