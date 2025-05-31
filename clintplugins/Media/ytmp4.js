@@ -36,7 +36,6 @@ module.exports = async (context) => {
             m.chat,
             {
                 video: { url: videoUrl },
-                mimetype: "video/mp4",
                 fileName: `${title}.mp4`
             },
             { quoted: m }
@@ -46,7 +45,6 @@ module.exports = async (context) => {
             m.chat,
             {
                 document: { url: videoUrl },
-                mimetype: "video/mp4",
                 fileName: `${title}.mp4`
             },
             { quoted: m }
