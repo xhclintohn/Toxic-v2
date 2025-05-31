@@ -8,7 +8,7 @@ module.exports = async (context) => {
     }
 
     if (!text) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Oi, ${m.pushName}, you forgot the damn YouTube link, you moron! Example: .ytvid https://youtube.com/watch?v=whatever\n◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Oi, ${m.pushName}, you forgot the damn YouTube link, you moron! Example: .ytmp4 https://youtube.com/watch?v=whatever\n◈━━━━━━━━━━━━━━━━◈`);
     }
 
     const urls = text.match(/(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?)([a-zA-Z0-9_-]{11})/gi);
@@ -48,7 +48,7 @@ module.exports = async (context) => {
                 document: { url: videoUrl },
                 mimetype: "video/mp4",
                 fileName: `${title}.mp4`
-            doub},
+            },
             { quoted: m }
         );
 
