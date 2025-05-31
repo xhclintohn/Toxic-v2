@@ -18,7 +18,7 @@ module.exports = async (context) => {
 
     try {
         const encodedUrl = encodeURIComponent(text);
-        const apiUrl = `https://api.giftedtech.web.id/api/download/ytvid?apikey=gifted_api_se5dccy&format=360p&url=${encodedUrl}`;
+        const apiUrl = `https://api.giftedtech.web.id/api/download/ytvid?apikey=gifted_api_se5dccy&url=${encodedUrl}`;
         const response = await fetch(apiUrl, { timeout: 10000 });
         if (!response.ok) {
             throw new Error(`API puked with status ${response.status}`);
