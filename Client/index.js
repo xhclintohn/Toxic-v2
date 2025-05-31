@@ -210,7 +210,7 @@ async function startToxic() {
             if (autolike && remoteJid === "status@broadcast" && mek.key.id) {
                 try {
                     await client.sendMessage(remoteJid, {
-                        react: { key: mek.key, text: "😭" }
+                        react: { key: mek.key, text: "❤️" }
                     });
                 } catch (error) {
                     console.error(chalk.red('Error in autolike:', error));
