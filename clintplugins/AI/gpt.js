@@ -14,7 +14,7 @@ module.exports = async (context) => {
 
   try {
     const encodedText = encodeURIComponent(text);
-    const apiUrl = `https://api.giftedtech.web.id/api/ai/deepseek-v3?apikey=gifted&q=${encodedText}`;
+    const apiUrl = `https://api.shizo.top/ai/gpt?apikey=shizo&query=${encodedText}`;
     console.log(`[GPT-DEBUG] Fetching API: ${apiUrl}`);
 
     const response = await fetch(apiUrl, { timeout: 10000 }); // 10s timeout
