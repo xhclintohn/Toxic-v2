@@ -9,7 +9,7 @@ module.exports = async (context) => {
   }
 
   if (!text) {
-    return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, you forgot the damn prompt, you moron! Try something like: .gpt What's the meaning of life?\n◈━━━━━━━━━━━━━━━━◈`);
+    return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, you forgot the damn prompt, you moron! Try something like: .gpt What's the meaning of love?\n◈━━━━━━━━━━━━━━━━◈`);
   }
 
   try {
