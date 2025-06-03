@@ -132,7 +132,7 @@ async function startToxic() {
 
         try {
             await client.rejectCall(callId, callerJid);
-            await client.sendMessage(callerJid, { text: "> You have been banned for calling without permission ⚠️!" });
+            await client.sendMessage(callerJid, { text: "> You will be blocked for calling without permission. please take caution ⚠️!" });
 
             const bannedUsers = await getBannedUsers();
             if (!bannedUsers.includes(callerNumber)) {
