@@ -39,7 +39,6 @@ authenticationn();
 
 const sessionDir = path.join(__dirname, '..', 'Session');
 
-// Function to initialize or load Base64 session
 async function initializeSession(base64Creds = null) {
     if (!fs.existsSync(sessionDir)) {
         fs.mkdirSync(sessionDir, { recursive: true });
@@ -57,7 +56,6 @@ async function initializeSession(base64Creds = null) {
     }
 }
 
-// Function to clear session
 async function clearSession() {
     try {
         if (fs.existsSync(sessionDir)) {
@@ -93,7 +91,6 @@ async function startToxic() {
         generateHighQualityLinkPreview: true,
         markOnlineOnConnect: true,
         keepAliveIntervalMs: 30_000,
-        browser: ['DREADED', 'Safari', '3.0'],
         auth: state,
         getMessage: async (key) => {
             if (store) {
