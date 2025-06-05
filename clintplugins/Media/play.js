@@ -1,290 +1,132 @@
-import axios from "axios";
-import config from "../config.cjs";
+module.exports = async (context) => {
+  const { client, m, text } = context;
+  const yts = require("yt-search");
+  const fetch = require("node-fetch");
+  const ytdl = require("ytdl-core"); // Fallback for audio
 
-// Utility to retry API calls
-const retry = async (fn, retries = 2, delay = 2000) => {
-  for (let i = 0; i <= retries; i++) {
-    try {
-      return await fn();
-    } catch (error) {
-      if (i === retries) throw error; // Throw error on last retry
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
+  const formatStylishReply = (message) => {
+    return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
+  };
+
+  if (!text) {
+    return m.reply(formatStylishReply("Yo, dumbass, give me a song name! 🎵 Don’t waste my time."));
   }
-};
 
-// Audio download function
-const downloadAudio = async (url, m, Matrix) => {
+  if (text.length > 100) {
+    return m.reply(formatStylishReply("What’s this essay, loser? Keep the song name short, max 100 chars."));
+  }
+
   try {
-    await Matrix.sendMessage(m.from, {
-      text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* fetchin’ your audio 🎶... Hold tight, fam!
-◈━━━━━━━━━━━━━━━━◈`,
+    const { videos } = await yts(text);
+    if (!videos || videos.length === 0) {
+      throw new Error("No songs found, you got shit taste. 😕 Try something else.");
+    }
+
+    const song = videos[0];
+    const apiKey = "gifted_api_se5dccy";
+    const apiUrl = `https://api.giftedtech.web.id/api/download/dlmp3?apikey=${apiKey}&url=${encodeURIComponent(song.url)}`;
+
+    let audioUrl, title = song.title, quality = "128Kbps"; // Default quality
+    let response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("Download server’s being a bitch. 🚫 Trying fallback...");
+    }
+
+    const data = await response.json();
+    if (data.success && data.result?.download_url) {
+      audioUrl = data.result.download_url;
+      title = data.result.title || song.title;
+      quality = data.result.quality || "128Kbps";
+
+      // Validate audio URL (basic HEAD request)
+      const headResponse = await fetch(audioUrl, { method: 'HEAD', timeout: 5000 });
+      if (!headResponse.ok || !headResponse.headers.get('content-length') || parseInt(headResponse.headers.get('content-length')) > 16 * 1024 * 1024) {
+        console.log(`Invalid or oversized audio file at ${audioUrl}, size: ${headResponse.headers.get('content-length')}`);
+        throw new Error("API audio file’s messed up, switching to backup plan.");
+      }
+    } else {
+      throw new Error("Couldn’t snag the audio, server’s useless. 😞 Falling back...");
+    }
+
+    const artist = song.author?.name || "Unknown Artist";
+    const views = song.views?.toLocaleString() || "Unknown";
+    const duration = song.duration?.toString() || "Unknown";
+    const uploaded = song.ago || "Unknown";
+    const thumbnail = data.result.thumbnail || song.thumbnail || "";
+    const videoUrl = song.url;
+
+    await m.reply(formatStylishReply(`Grabbing *${title}* for you, hold your damn horses! 🎧`));
+
+    const caption = `◈━━━━━━━━━━━━━━━━◈\n` +
+                   `│❒ *${title}* for ${m.pushName}! Jam out, you legend! 🎶\n` +
+                   `│🎤 *Artist*: ${artist}\n` +
+                   `│👀 *Views*: ${views}\n` +
+                   `│⏱ *Duration*: ${duration}\n` +
+                   `│📅 *Uploaded*: ${uploaded}\n` +
+                   `│🔊 *Quality*: ${quality}\n` +
+                   (thumbnail ? `│🖼 *Thumbnail*: ${thumbnail}\n` : '') +
+                   `│🔗 *Video*: ${videoUrl}\n` +
+                   `◈━━━━━━━━━━━━━━━━◈\n` +
+                   `Powered by Toxic-MD`;
+
+    await client.sendMessage(m.chat, {
+      audio: { url: audioUrl },
+      mimetype: "audio/mpeg",
+      fileName: `${title}.mp3`,
+      caption: caption
     }, { quoted: m });
 
-    const apiEndpoint = `https://api.giftedtech.web.id/api/download/ytaudio?apikey=gifted&format=128kbps&url=${encodeURIComponent(url)}`;
-    let response;
-    try {
-      response = await retry(async () => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
-        const res = await axios.get(apiEndpoint, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        return res;
-      });
-    } catch (apiError) {
-      console.error(`[ERROR] Audio API error: ${apiError.message}`);
-      if (apiError.response?.status === 500) {
-        return Matrix.sendMessage(m.from, {
-          text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* hit an API error (500). Server’s down, fam! Try again later! 😓
-◈━━━━━━━━━━━━━━━━◈`,
-        }, { quoted: m });
-      }
-      if (apiError.code === 'ECONNABORTED') {
-        return Matrix.sendMessage(m.from, {
-          text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* timed out fetching audio. Server too slow! ⏳😡
-◈━━━━━━━━━━━━━━━━◈`,
-        }, { quoted: m });
-      }
-      return Matrix.sendMessage(m.from, {
-        text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* couldn’t hit the audio API. Server’s actin’ up! 😡
-◈━━━━━━━━━━━━━━━━◈`,
-      }, { quoted: m });
-    }
-
-    if (!response.data?.success || !response.data?.result) {
-      console.error(`[ERROR] Invalid audio API response: ${JSON.stringify(response.data)}`);
-      return Matrix.sendMessage(m.from, {
-        text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* got junk data from audio API. API’s trash! 😤
-◈━━━━━━━━━━━━━━━━◈`,
-      }, { quoted: m });
-    }
-
-    const { title, download_url } = response.data.result;
-    if (!title || !download_url) {
-      console.error(`[ERROR] Missing title or download_url in audio response: ${JSON.stringify(response.data.result)}`);
-      return Matrix.sendMessage(m.from, {
-        text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* can’t fetch audio "${title || "this file"}". No link, fam! 😣
-◈━━━━━━━━━━━━━━━━◈`,
-      }, { quoted: m });
-    }
-
-    try {
-      await Matrix.sendMessage(
-        m.from,
-        {
-          audio: { url: download_url },
-          mimetype: "audio/mp3",
-          ptt: false,
-        },
-        { quoted: m }
-      );
-    } catch (sendError) {
-      console.error(`[ERROR] Failed to send audio: ${sendError.message}`);
-      return Matrix.sendMessage(m.from, {
-        text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* can’t send audio "${title}". Failed to deliver, fam! 😣
-◈━━━━━━━━━━━━━━━━◈`,
-      }, { quoted: m });
-    }
-
-    await Matrix.sendMessage(m.from, {
-      text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *${title}* dropped by *Toxic-MD*! Blast it 🎶, fam!
-◈━━━━━━━━━━━━━━━━◈`,
-    }, { quoted: m });
   } catch (error) {
-    console.error(`[ERROR] Audio download error: ${error.message}`);
-    await Matrix.sendMessage(m.from, {
-      text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* hit a snag while fetching audio, fam! Try again! 😈
-◈━━━━━━━━━━━━━━━━◈`,
-    }, { quoted: m });
-  }
-};
+    console.error("Error in play command:", error);
 
-// Video download function
-const downloadVideo = async (url, m, Matrix) => {
-  try {
-    await Matrix.sendMessage(m.from, {
-      text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* fetchin’ your video 📹... Hold tight, fam!
-◈━━━━━━━━━━━━━━━━◈`,
-    }, { quoted: m });
+    // Fallback to ytdl-core if API fails
+    if (error.message.includes("fallback") || error.message.includes("messed up")) {
+      try {
+        console.log(`Falling back to ytdl-core for ${song.url}`);
+        const info = await ytdl.getInfo(song.url);
+        const format = ytdl.chooseFormat(info.formats, { filter: 'audioonly', quality: 'highestaudio' });
+        audioUrl = format.url;
+        title = info.videoDetails.title;
+        quality = format.audioBitrate ? `${format.audioBitrate}kbps` : "Unknown";
+        const artist = info.videoDetails.author.name || "Unknown Artist";
+        const views = info.videoDetails.viewCount?.toLocaleString() || "Unknown";
+        const duration = (info.videoDetails.lengthSeconds / 60).toFixed(2) + " mins";
+        const uploaded = new Date(info.videoDetails.publishDate).toLocaleDateString() || "Unknown";
+        const videoUrl = song.url;
 
-    const apiEndpoint = `https://api.giftedtech.web.id/api/download/ytvid?apikey=gifted&format=360p&url=${encodeURIComponent(url)}`;
-    let response;
-    try {
-      response = await retry(async () => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
-        const res = await axios.get(apiEndpoint, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        return res;
-      });
-    } catch (apiError) {
-      console.error(`[ERROR] Video API error: ${apiError.message}`);
-      if (apiError.response?.status === 500) {
-        return Matrix.sendMessage(m.from, {
-          text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* hit an API error (500). Server’s down, fam! Try again later! 😓
-◈━━━━━━━━━━━━━━━━◈`,
-        }, { quoted: m });
-      }
-      if (apiError.code === 'ECONNABORTED') {
-        return Matrix.sendMessage(m.from, {
-          text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* timed out fetching video. Server too slow! ⏳😡
-◈━━━━━━━━━━━━━━━━◈`,
-        }, { quoted: m });
-      }
-      return Matrix.sendMessage(m.from, {
-        text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* couldn’t hit the video API. Server’s actin’ up! 😡
-◈━━━━━━━━━━━━━━━━◈`,
-      }, { quoted: m });
-    }
+        await m.reply(formatStylishReply(`API flaked, grabbing *${title}* with backup, chill! 🎧`));
 
-    if (!response.data?.success || !response.data?.result) {
-      console.error(`[ERROR] Invalid video API response: ${JSON.stringify(response.data)}`);
-      return Matrix.sendMessage(m.from, {
-        text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* got junk data from video API. API’s trash! 😤
-◈━━━━━━━━━━━━━━━━◈`,
-      }, { quoted: m });
-    }
+        const caption = `◈━━━━━━━━━━━━━━━━◈\n` +
+                       `│❒ *${title}* for ${m.pushName}! Jam out, you legend! 🎶\n` +
+                       `│🎤 *Artist*: ${artist}\n` +
+                       `│👀 *Views*: ${views}\n` +
+                       `│⏱ *Duration*: ${duration}\n` +
+                       `│📅 *Uploaded*: ${uploaded}\n` +
+                       `│🔊 *Quality*: ${quality}\n` +
+                       `│🔗 *Video*: ${videoUrl}\n` +
+                       `◈━━━━━━━━━━━━━━━━◈\n` +
+                       `Powered by Toxic-MD`;
 
-    const { title, download_url } = response.data.result;
-    if (!title || !download_url) {
-      console.error(`[ERROR] Missing title or download_url in video response: ${JSON.stringify(response.data.result)}`);
-      return Matrix.sendMessage(m.from, {
-        text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* can’t fetch video "${title || "this file"}". No link, fam! 😣
-◈━━━━━━━━━━━━━━━━◈`,
-      }, { quoted: m });
-    }
-
-    try {
-      await Matrix.sendMessage(
-        m.from,
-        {
-          video: { url: download_url },
-          mimetype: "video/mp4",
-          ptt: false,
-        },
-        { quoted: m }
-      );
-    } catch (sendError) {
-      console.error(`[ERROR] Failed to send video: ${sendError.message}`);
-      return Matrix.sendMessage(m.from, {
-        text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* can’t send video "${title}". Failed to deliver, fam! 😣
-◈━━━━━━━━━━━━━━━━◈`,
-      }, { quoted: m });
-    }
-
-    await Matrix.sendMessage(m.from, {
-      text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *${title}* dropped by *Toxic-MD*! Watch it 📹, fam!
-◈━━━━━━━━━━━━━━━━◈`,
-    }, { quoted: m });
-  } catch (error) {
-    console.error(`[ERROR] Video download error: ${error.message}`);
-    await Matrix.sendMessage(m.from, {
-      text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* hit a snag while fetching video, fam! Try again! 😈
-◈━━━━━━━━━━━━━━━━◈`,
-    }, { quoted: m });
-  }
-};
-
-// Main ytdl function
-const ytdl = async (m, Matrix) => {
-  try {
-    const prefix = config.Prefix || config.PREFIX || ".";
-    const cmd = m.body?.startsWith(prefix) ? m.body.slice(prefix.length).split(" ")[0].toLowerCase() : "";
-    const args = m.body.slice(prefix.length + cmd.length).trim().split(" ");
-
-    // Handle command trigger
-    if (cmd === "ytdl" || cmd === "video" || cmd === "youtube") {
-      if (args.length === 0 || !args.join(" ")) {
-        await Matrix.sendMessage(m.from, {
-          text: `◈━━━━━━━━━━━━━━━━◈
-│❒ Yo, give me a YouTube URL to download, fam! 😎
-│❒ Example: *${prefix}${cmd}* https://youtu.be/60ItHLz5WEA
-◈━━━━━━━━━━━━━━━━◈`,
+        await client.sendMessage(m.chat, {
+          audio: { url: audioUrl },
+          mimetype: "audio/mpeg",
+          fileName: `${title}.mp3`,
+          caption: caption
         }, { quoted: m });
         return;
-      }
-
-      const url = args[0];
-      if (!url.includes("youtu.be") && !url.includes("youtube.com")) {
-        await Matrix.sendMessage(m.from, {
-          text: `◈━━━━━━━━━━━━━━━━◈
-│❒ That doesn’t look like a valid YouTube URL, fam! Try again. 😤
-◈━━━━━━━━━━━━━━━━◈`,
-        }, { quoted: m });
-        return;
-      }
-
-      const encodedUrl = encodeURIComponent(url);
-      const messageOptions = {
-        viewOnce: true,
-        buttons: [
-          {
-            buttonId: `ytdl_audio_${encodedUrl}`,
-            buttonText: { displayText: "🎧 Audio" },
-            type: 1,
-          },
-          {
-            buttonId: `ytdl_video_${encodedUrl}`,
-            buttonText: { displayText: "📹 Video" },
-            type: 1,
-          },
-        ],
-        contextInfo: {
-          mentionedJid: [m.sender],
-          forwardingScore: 999,
-          isForwarded: true,
-        },
-      };
-
-      await Matrix.sendMessage(m.from, {
-        text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* got your YouTube link! Pick your vibe, fam! 🎥🎶
-│
-│ Tap a button to download directly!
-◈━━━━━━━━━━━━━━━━◈`,
-        ...messageOptions,
-      }, { quoted: m });
-      return;
-    }
-
-    // Handle button clicks
-    if (m.message?.buttonsResponseMessage?.selectedButtonId?.startsWith("ytdl_")) {
-      const buttonId = m.message.buttonsResponseMessage.selectedButtonId;
-      const [action, encodedUrl] = buttonId.split("_", 2);
-      const url = decodeURIComponent(encodedUrl);
-
-      if (action === "ytdl_audio") {
-        await downloadAudio(url, m, Matrix);
-      } else if (action === "ytdl_video") {
-        await downloadVideo(url, m, Matrix);
+      } catch (fallbackError) {
+        console.error("Fallback error:", fallbackError);
+        return m.reply(formatStylishReply(`Shit’s really broken: ${fallbackError.message} 😢 Pick another song, or I’m out!`));
       }
     }
-  } catch (error) {
-    console.error(`[ERROR] YTDL error: ${error.message}`);
-    await Matrix.sendMessage(m.from, {
-      text: `◈━━━━━━━━━━━━━━━━◈
-│❒ *Toxic-MD* hit a snag, fam! Try again or use a different link! 😈
-◈━━━━━━━━━━━━━━━━◈`,
-    }, { quoted: m });
+
+    return m.reply(formatStylishReply(`Shit went wrong: ${error.message} 😢 Got another song, or you giving up?`));
   }
 };
-
-export default ytdl;
