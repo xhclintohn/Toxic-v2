@@ -23,7 +23,7 @@ module.exports = async (context) => {
 
     try {
         const encodedUrl = encodeURIComponent(text);
-        const apiUrl = `https://api.giftedtech.web.id/api/download/ytvid?apikey=gifted_api_se5dccy&url=${encodedUrl}`;
+        const apiUrl = `https://api.giftedtech.web.id/api/download/ytvid?apikey=gifted&url=${encodedUrl}`;
         const response = await fetch(apiUrl, {
             timeout: 10000,
             headers: {
