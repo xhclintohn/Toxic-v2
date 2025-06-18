@@ -6,7 +6,7 @@ module.exports = async (context) => {
     }
 
     try {
-        const data = await fetchJson(`https://api.dreaded.site/api/gpt?text=${encodeURIComponent(text)}`);
+        const data = await fetchJson(`https://apis.davidcyriltech.my.id/ai/gpt3?text=${encodeURIComponent(text)}`);
 
         if (data.success) {
             const res = data.result;
