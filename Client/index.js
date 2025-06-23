@@ -52,8 +52,17 @@ async function startToxic() {
 
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
     const client = toxicConnect({
-        logger: pino({ level: 'silent' }),
+        logger: pino({ level: "silent" }),
         printQRInTerminal: true,
+        browser: ["Toxic-MD", "Chrome", "1.0.0"],
+        auth: state,
+        getMessage: async (key) => {
+            if (store) {
+                const msg = await store.loadMessage(key.remoteJid, key.id);
+                return msg.message || undefined;
+            }
+            return { conversation: "Toxic-MD whatsapp user bot" };
+        },
         version: [2, 3000, 1015901307],
         fireInitQueries: false,
         shouldSyncHistoryMessage: false,
@@ -62,16 +71,6 @@ async function startToxic() {
         generateHighQualityLinkPreview: true,
         markOnlineOnConnect: true,
         keepAliveIntervalMs: 30_000,
-        auth: state,
-        getMessage: async (key) => {
-            if (store) {
-                const mssg = await store.loadMessage(key.remoteJid, key.id);
-                return mssg.message || undefined;
-            }
-            return {
-                conversation: "HERE"
-            };
-        }
     });
 
     store.bind(client.ev);
@@ -163,16 +162,15 @@ async function startToxic() {
             }
         }
 
-
         // Autolike for statuses
-if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
-        const nickk = await client.decodeJid(client.user.id);
-        const emojis = ['🗿', '⌚️', '💠', '👣', '🍆', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '🐒', '💗', '❤️‍🔥', '👁️', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😒'];
-        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key, } }, { statusJidList: [mek.key.participant, nickk] });
+        if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
+            const nickk = await client.decodeJid(client.user.id);
+            const emojis = ['🗿', '⌚️', '💠', '👣', '🍆', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '🐒', '💗', '❤️‍🔥', '👁️', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😒'];
+            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key, } }, { statusJidList: [mek.key.participant, nickk] });
 
-   console.log('Reaction sent successfully✅️');
-          }
+            console.log('Reaction sent successfully✅️');
+        }
 
         // Autoview/autoread
         if (autoview && remoteJid === "status@broadcast") {
