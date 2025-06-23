@@ -165,11 +165,9 @@ async function startToxic() {
         // Autolike for statuses
         if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
             const nickk = await client.decodeJid(client.user.id);
-            const emojis = ['🗿', '⌚️', '💠', '👣', '🍆', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '🐒', '💗', '❤️‍🔥', '👁️', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😒'];
+            const emojis = ['🗿', '⌚️', '💠', '👣', '🍆', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '👁️', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😒'];
             const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
             await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key, } }, { statusJidList: [mek.key.participant, nickk] });
-
-            console.log('Reaction sent successfully✅️');
         }
 
         // Autoview/autoread
@@ -203,13 +201,11 @@ async function startToxic() {
     const unhandledRejections = new Map();
     process.on("unhandledRejection", (reason, promise) => {
         unhandledRejections.set(promise, reason);
-        console.log("Unhandled Rejection at:", promise, "reason:", reason);
     });
     process.on("rejectionHandled", (promise) => {
         unhandledRejections.delete(promise);
     });
     process.on("Something went wrong", function (err) {
-        console.log("Caught exception: ", err);
     });
 
     client.decodeJid = (jid) => {
