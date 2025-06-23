@@ -63,7 +63,7 @@ async function startToxic() {
             }
             return { conversation: "Toxic-MD whatsapp user bot" };
         },
-        version: [2, 3000, 1015901307],
+        version: [2, 3000, 1023223821],
         fireInitQueries: false,
         shouldSyncHistoryMessage: false,
         downloadHistory: false,
