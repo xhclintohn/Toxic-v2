@@ -2,18 +2,25 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const AdmZip = require("adm-zip");
+const { execSync } = require("child_process");
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
     const { client, m } = context;
     await ownerMiddleware(context, async () => {
-        try {
-            await m.reply("💣 *Toxic-v2 Update Check Launched!* Scanning for new commits... 😈");
+        // Prevent multiple executions
+        if (global.updateInProgress) {
+            return await m.reply("🛑 *Hold up, punk!* Update already in progress. Wait your turn! 😡");
+        }
+        global.updateInProgress = true;
 
-            // Paths for Heroku
+        try {
+            await m.reply("💣 *Toxic-v2 Update Check Unleashed!* Scanning for new commits... 😈");
+
+            // Paths
             const lastCommitPath = path.join(__dirname, "../../last_commit.txt");
             const zipPath = path.join(__dirname, "../../update.zip");
-            const extractPath = path.join(__dirname, "../../update");
+            const botRoot = path.join(__dirname, "../.."); // Toxic-v2 root
 
             // 1. Check latest commit SHA
             const repoUrl = "https://api.github.com/repos/xhclintohn/Toxic-v2/commits/main";
@@ -31,10 +38,12 @@ module.exports = async (context) => {
             }
 
             if (latestSha === lastSha) {
-                return await m.reply("🛡️ *No new commits, loser!* Toxic-v2 is already the king. 🔥");
+                return await m.reply("🛡️ *No new commits, loser!* Toxic-v2 is already at peak chaos. 🔥").finally(() => {
+                    global.updateInProgress = false;
+                });
             }
 
-            await m.reply("⚡ *Fresh commits found!* Downloading the chaos...");
+            await m.reply("⚡ *New commits detected!* Downloading the mayhem...");
 
             // 3. Download ZIP
             const writer = fs.createWriteStream(zipPath);
@@ -55,33 +64,53 @@ module.exports = async (context) => {
                 writer.on("error", reject);
             });
 
-            // 4. Extract ZIP
-            await m.reply("🧨 *Unpacking the madness...*");
-            if (fs.existsSync(extractPath)) fs.rmSync(extractPath, { recursive: true });
-            fs.mkdirSync(extractPath, { recursive: true });
+            // 4. Extract ZIP directly to bot root
+            await m.reply("🧨 *Unzipping the chaos to Toxic-v2 root...*");
             const zip = new AdmZip(zipPath);
-            zip.extractAllTo(extractPath, true);
+            const zipEntries = zip.getEntries();
+            zipEntries.forEach(entry => {
+                // Skip entries in excluded directories or files
+                const entryPath = entry.entryName;
+                if (
+                    entryPath.includes("node_modules/") ||
+                    entryPath.includes("Session/") ||
+                    entryPath === "Toxic-v2-main/.env" ||
+                    entryPath === "Toxic-v2-main/Procfile" ||
+                    entryPath === "Toxic-v2-main/package.json" ||
+                    entryPath === "Toxic-v2-main/package-lock.json" ||
+                    entryPath === "Toxic-v2-main/last_commit.txt"
+                ) {
+                    return;
+                }
 
-            // 5. Copy files
-            await m.reply("💥 *Applying updates like a boss...*");
-            const extractedFolders = fs.readdirSync(extractPath);
-            const sourceFolder = extractedFolders.find(folder => folder.includes("Toxic-v2"));
-            if (!sourceFolder) throw new Error("Update folder not found");
+                // Extract to bot root, removing "Toxic-v2-main/" prefix
+                const relativePath = entryPath.replace("Toxic-v2-main/", "");
+                const destPath = path.join(botRoot, relativePath);
+                if (entry.isDirectory) {
+                    if (!fs.existsSync(destPath)) fs.mkdirSync(destPath, { recursive: true });
+                } else {
+                    if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+                    zip.extractEntryTo(entry, path.dirname(destPath), false, true);
+                }
+            });
 
-            copyFolderRecursiveSync(
-                path.join(extractPath, sourceFolder),
-                path.join(__dirname, "../.."),
-                ["node_modules", "Session", ".env", "Procfile", "package.json", "last_commit.txt"]
-            );
-
-            // 6. Save new SHA
+            // 5. Save new SHA
             fs.writeFileSync(lastCommitPath, latestSha);
 
-            // 7. Cleanup
+            // 6. Cleanup
             fs.unlinkSync(zipPath);
-            fs.rmSync(extractPath, { recursive: true });
 
-            await m.reply("😈 *Toxic-v2 updated! Time to dominate!* Restarting dyno in 2 seconds...");
+            // 7. Commit and push to Heroku
+            await m.reply("📡 *Committing updates to Heroku like a boss...*");
+            try {
+                execSync("git add .", { cwd: botRoot });
+                execSync(`git commit -m "Auto-update Toxic-v2 to commit ${latestSha}"`, { cwd: botRoot });
+                execSync("git push heroku main", { cwd: botRoot });
+            } catch (gitError) {
+                throw new Error(`Git operation failed: ${gitError.message}`);
+            }
+
+            await m.reply("😈 *Toxic-v2 updated! Ready to dominate!* Restarting dyno in 2 seconds...");
 
             // 8. Heroku dyno restart
             setTimeout(() => {
@@ -91,23 +120,9 @@ module.exports = async (context) => {
 
         } catch (error) {
             console.error("Update error:", error.stack);
-            await m.reply(`💀 *Update failed, weakling!* Error: ${error.message}. Fix it or cry! 😡`);
+            await m.reply(`💀 *Update crashed, weakling!* Error: ${error.message}. Fix it or cry! 😡`);
+        } finally {
+            global.updateInProgress = false;
         }
     });
 };
-
-// Recursive copy function
-function copyFolderRecursiveSync(source, target, ignore = []) {
-    if (!fs.existsSync(target)) fs.mkdirSync(target, { recursive: true });
-    fs.readdirSync(source).forEach(item => {
-        if (ignore.includes(item)) return;
-        const srcPath = path.join(source, item);
-        const destPath = path.join(target, item);
-        if (fs.lstatSync(srcPath).isDirectory()) {
-            copyFolderRecursiveSync(srcPath, destPath, ignore);
-        } else {
-            if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
-            fs.copyFileSync(srcPath, destPath);
-        }
-    });
-}
