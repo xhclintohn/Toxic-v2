@@ -2,7 +2,6 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const AdmZip = require("adm-zip");
-const { execSync } = require("child_process");
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
@@ -10,7 +9,7 @@ module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         // Prevent multiple executions
         if (global.updateInProgress) {
-            return await m.reply("🛑 *Hold up, punk!* Update already in progress. Wait your turn! 😡");
+            return await m.reply("🛑 *Chill, punk!* Update already running. Wait your turn! 😡");
         }
         global.updateInProgress = true;
 
@@ -20,7 +19,7 @@ module.exports = async (context) => {
             // Paths
             const lastCommitPath = path.join(__dirname, "../../last_commit.txt");
             const zipPath = path.join(__dirname, "../../update.zip");
-            const botRoot = path.join(__dirname, "../.."); // Toxic-v2 root
+            const botRoot = path.join(__dirname, "../..");
 
             // 1. Check latest commit SHA
             const repoUrl = "https://api.github.com/repos/xhclintohn/Toxic-v2/commits/main";
@@ -64,12 +63,11 @@ module.exports = async (context) => {
                 writer.on("error", reject);
             });
 
-            // 4. Extract ZIP directly to bot root
+            // 4. Extract ZIP to root
             await m.reply("🧨 *Unzipping the chaos to Toxic-v2 root...*");
             const zip = new AdmZip(zipPath);
             const zipEntries = zip.getEntries();
             zipEntries.forEach(entry => {
-                // Skip entries in excluded directories or files
                 const entryPath = entry.entryName;
                 if (
                     entryPath.includes("node_modules/") ||
@@ -82,8 +80,6 @@ module.exports = async (context) => {
                 ) {
                     return;
                 }
-
-                // Extract to bot root, removing "Toxic-v2-main/" prefix
                 const relativePath = entryPath.replace("Toxic-v2-main/", "");
                 const destPath = path.join(botRoot, relativePath);
                 if (entry.isDirectory) {
@@ -100,27 +96,19 @@ module.exports = async (context) => {
             // 6. Cleanup
             fs.unlinkSync(zipPath);
 
-            // 7. Commit and push to Heroku
-            await m.reply("📡 *Committing updates to Heroku like a boss...*");
-            try {
-                execSync("git add .", { cwd: botRoot });
-                execSync(`git commit -m "Auto-update Toxic-v2 to commit ${latestSha}"`, { cwd: botRoot });
-                execSync("git push heroku main", { cwd: botRoot });
-            } catch (gitError) {
-                throw new Error(`Git operation failed: ${gitError.message}`);
-            }
+            await m.reply(
+                "😈 *Toxic-v2 files updated! Dyno restarting in 3 seconds...* ⚠️ *Warning*: Updates are temporary on Heroku unless you push to git manually. Check logs for manual update steps! 🔥"
+            );
 
-            await m.reply("😈 *Toxic-v2 updated! Ready to dominate!* Restarting dyno in 2 seconds...");
-
-            // 8. Heroku dyno restart
+            // 7. Heroku dyno restart
             setTimeout(() => {
                 console.log("Restarting Heroku dyno...");
-                process.exit(0); // Heroku will restart the dyno
-            }, 2000);
+                process.exit(0);
+            }, 3000);
 
         } catch (error) {
             console.error("Update error:", error.stack);
-            await m.reply(`💀 *Update crashed, weakling!* Error: ${error.message}. Fix it or cry! 😡`);
+            await m.reply(`💀 *Update crashed, weakling!* Error: ${error.message}. Check logs and fix it! 😡`);
         } finally {
             global.updateInProgress = false;
         }
