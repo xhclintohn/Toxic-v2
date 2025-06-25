@@ -37,7 +37,7 @@ module.exports = async (context) => {
 
   try {
     const encodedText = encodeURIComponent(text);
-    const apiUrl = `https://api.giftedtech.web.id/api/search/lyrics?apikey=gifted&query=${encodedText}`;
+    const apiUrl = `https://lyricsapi.fly.dev/api/lyrics?q=${encodedText}`;
     const response = await fetch(apiUrl);
     const data = await response.json();
 
