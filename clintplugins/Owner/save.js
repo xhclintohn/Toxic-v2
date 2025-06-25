@@ -1,6 +1,3 @@
-/*   Fortunatus :v
-
-What's The Point Of This Code ? */
 
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware'); 
 
