@@ -3,6 +3,7 @@ const fetch = require('node-fetch');
 module.exports = async (context) => {
   const { client, m, text, pict, botname } = context;
 
+  // Error handling for missing botname/image
   if (!botname) {
     console.error(`Botname not set.`);
     return m.reply(
@@ -41,7 +42,8 @@ module.exports = async (context) => {
     const response = await fetch(apiUrl);
     const data = await response.json();
 
-    if (!data.success || !data.result) {
+    // Check if API returned valid lyrics
+    if (!data.success || !data.result?.lyrics) {
       return m.reply(
         "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
         "│ ❒ ERROR\n" +
@@ -51,32 +53,38 @@ module.exports = async (context) => {
       );
     }
 
-    // Clean up lyrics: remove colons, excessive newlines, and trim
-    const lyrics = data.result
-      .replace(/:\n/g, '') // Remove ":"
-      .replace(/\n\s*\n/g, '\n') // Replace multiple newlines with single
+    // Extract song details
+    const { title, artist, lyrics, image } = data.result;
+
+    // Clean up lyrics (remove colons, excessive newlines)
+    const cleanedLyrics = lyrics
+      .replace(/:\n/g, '') 
+      .replace(/\n\s*\n/g, '\n') 
       .trim();
 
+    // Format caption with song details
     const caption =
       "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
       "│ ❒ LYRICS SEARCH\n" +
       "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
-      "│ 🎵 Title: " + text + "\n" +
-      "│ 🎤 Artist: Unknown (API's too lazy to tell)\n" +
+      `│ 🎵 Title: ${title}\n` +
+      `│ 🎤 Artist: ${artist || "Unknown"}\n` +
       "│ 📜 Lyrics:\n" +
-      lyrics + "\n" +
+      cleanedLyrics + "\n" +
       "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
-      "│ ❒ Powered by " + botname + ", 'cause " + (m.pushName || "User") + "'s too clueless to find lyrics\n" +
+      `│ ❒ Powered by ${botname}\n` +
       "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈";
 
+    // Send lyrics + cover art
     await client.sendMessage(
       m.chat,
       {
-        image: { url: pict },
-        caption: caption
+        image: { url: image || pict }, // Use API image if available
+        caption: caption,
       },
       { quoted: m }
     );
+
   } catch (error) {
     console.error(`Lyrics API error: ${error.stack}`);
     await m.reply(
