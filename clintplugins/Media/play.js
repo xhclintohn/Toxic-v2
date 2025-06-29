@@ -16,7 +16,7 @@ module.exports = async (context) => {
   }
 
   try {
-    const apiUrl = `https://apis.davidcyriltech.my.id/play?query=${encodeURIComponent(text)}`;
+    const apiUrl = `https://api.giftedtech.web.id/api/download/ytaudio?apikey=gifted&format=128kbps&url=${encodeURIComponent(text)}`;
     let response = await fetch(apiUrl, {
       method: "GET",
       headers: {
