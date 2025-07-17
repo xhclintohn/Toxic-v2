@@ -1,152 +1,93 @@
-const fetch = require('node-fetch');
-const ytdl = require('ytdl-core');
+const fs = require("fs");
+const path = require("path");
+const axios = require("axios");
+
+const tempDir = path.join(__dirname, "temp");
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir);
+}
+
+const isValidYouTubeUrl = (url) => {
+  return /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|shorts\/|embed\/)?[A-Za-z0-9_-]{11}(\?.*)?$/.test(url);
+};
 
 module.exports = async (context) => {
-    const { client, m, text, botname } = context;
+  const { client, m, text } = context;
 
-    const formatStylishReply = (message) => {
-        return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
-    };
+  const formatStylishReply = (message) => {
+    return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
+  };
 
-    if (!botname) {
-        return m.reply(formatStylishReply(`Bot’s screwed, no botname set. Yell at your dev, dipshit.`));
+  if (!text || !isValidYouTubeUrl(text)) {
+    return client.sendMessage(
+      m.chat,
+      { text: formatStylishReply("Yo, drop a valid YouTube URL, fam! 📹 Ex: .ytmp4 https://youtu.be/60ItHLz5WEA") },
+      { quoted: m, ad: true }
+    );
+  }
+
+  try {
+    const timestamp = Date.now();
+    const fileName = `video_${timestamp}.mp4`;
+    const filePath = path.join(tempDir, fileName);
+
+    const thumbnailUrl = `https://i.ytimg.com/vi/${text.match(/[?&]v=([^&]+)/)?.[1]}/hqdefault.jpg` || "https://via.placeholder.com/120x90";
+
+    await client.sendMessage(
+      m.chat,
+      { text: formatStylishReply("Snaggin’ the video for ya, fam! Hold tight! 🔥📽️") },
+      { quoted: m, ad: true }
+    );
+
+    const apiUrl = `https://ytdownloader-aie4qa.fly.dev/download/video?song=${encodeURIComponent(text)}&quality=360p&cb=${timestamp}`;
+    const response = await axios({
+      method: "get",
+      url: apiUrl,
+      responseType: "stream",
+      timeout: 600000,
+    });
+
+    const writer = fs.createWriteStream(filePath);
+    response.data.pipe(writer);
+
+    await new Promise((resolve, reject) => {
+      writer.on("finish", resolve);
+      writer.on("error", reject);
+    });
+
+    if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
+      throw new Error("Video download failed or file is empty");
     }
 
-    if (!text) {
-        return m.reply(formatStylishReply(`Oi, ${m.pushName}, you forgot the damn YouTube link, you moron! Example: .ytmp4 https://youtube.com/watch?v=whatever`));
+    await client.sendMessage(
+      m.chat,
+      {
+        video: { url: filePath },
+        mimetype: "video/mp4",
+        fileName: `video.mp4`,
+        caption: formatStylishReply("Video (360p)"),
+        contextInfo: {
+          externalAdReply: {
+            title: "YouTube Video",
+            body: "Quality: 360p | Powered by Toxic-MD",
+            thumbnailUrl,
+            sourceUrl: text,
+            mediaType: 2,
+            renderLargerThumbnail: true,
+          },
+        },
+      },
+      { quoted: m, ad: true }
+    );
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
     }
-
-    const urls = text.match(/(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?)([a-zA-Z0-9_-]{11})/gi);
-    if (!urls) {
-        return m.reply(formatStylishReply(`That’s not a valid YouTube link, ${m.pushName}, you clueless twit!`));
-    }
-
-    try {
-        const encodedUrl = encodeURIComponent(text);
-        const apiUrl = `https://api.giftedtech.web.id/api/download/ytvid?apikey=gifted&url=${encodedUrl}`;
-        const response = await fetch(apiUrl, {
-            timeout: 10000,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Accept': 'application/json'
-            }
-        });
-        if (!response.ok) {
-            throw new Error(`API puked with status ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (!data.success || !data.result || !data.result.download_url) {
-            throw new Error(`API’s useless, ${data.msg || 'No video, you loser.'} Falling back...`);
-        }
-
-        const { title, download_url: videoUrl, type } = data.result;
-        const mimeType = type === 'mp4' ? 'video/mp4' : 'video/mp4';
-        const quality = data.result.format || '360p';
-
-        // Validate video URL
-        const headResponse = await fetch(videoUrl, {
-            method: 'HEAD',
-            timeout: 5000,
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
-        });
-        if (!headResponse.ok || !headResponse.headers.get('content-length') || parseInt(headResponse.headers.get('content-length')) > 50 * 1024 * 1024) {
-            console.error(`Invalid or oversized video file at ${videoUrl}, size: ${headResponse.headers.get('content-length')}`);
-            throw new Error(`API video file’s messed up, switching to backup plan.`);
-        }
-
-        await m.reply(`_Downloading ${title}_`);
-
-        // Send video message
-        try {
-            await client.sendMessage(
-                m.chat,
-                {
-                    video: { url: videoUrl },
-                    fileName: `${title}.mp4`,
-                    mimetype: mimeType
-                },
-                { quoted: m }
-            );
-        } catch (videoError) {
-            console.error(`Failed to send video: ${videoError.message}`);
-            throw new Error(`Couldn’t send video, ${videoError.message}`);
-        }
-
-        // Send document message
-        try {
-            await client.sendMessage(
-                m.chat,
-                {
-                    document: { url: videoUrl },
-                    fileName: `${title}.mp4`,
-                    mimetype: mimeType
-                },
-                { quoted: m }
-            );
-        } catch (docError) {
-            console.error(`Failed to send document: ${docError.message}`);
-            throw new Error(`Couldn’t send document, ${docError.message}`);
-        }
-
-        // Send caption
-        await client.sendMessage(m.chat, { text: `> ρσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ` }, { quoted: m });
-    } catch (error) {
-        console.error(`Error in ytmp4: ${error.message}`);
-
-        // Fallback to ytdl-core
-        if (error.message.includes('fallback') || error.message.includes('messed up') || error.message.includes('Couldn’t send')) {
-            try {
-                console.log(`Falling back to ytdl-core for ${text}`);
-                const info = await ytdl.getInfo(text);
-                const format = ytdl.chooseFormat(info.formats, { filter: 'videoandaudio', quality: 'highestvideo' });
-                const videoUrl = format.url;
-                const title = info.videoDetails.title;
-                const mimeType = 'video/mp4';
-
-                await m.reply(`_API flaked, grabbing ${title} with backup, chill!_`);
-
-                // Send video message
-                try {
-                    await client.sendMessage(
-                        m.chat,
-                        {
-                            video: { url: videoUrl },
-                            fileName: `${title}.mp4`,
-                            mimetype: mimeType
-                        },
-                        { quoted: m }
-                    );
-                } catch (videoError) {
-                    console.error(`Fallback video send failed: ${videoError.message}`);
-                    throw new Error(`Fallback video send failed, ${videoError.message}`);
-                }
-
-                // Send document message
-                try {
-                    await client.sendMessage(
-                        m.chat,
-                        {
-                            document: { url: videoUrl },
-                            fileName: `${title}.mp4`,
-                            mimetype: mimeType
-                        },
-                        { quoted: m }
-                    );
-                } catch (docError) {
-                    console.error(`Fallback document send failed: ${docError.message}`);
-                    throw new Error(`Fallback document send failed, ${docError.message}`);
-                }
-
-                // Send caption
-                await client.sendMessage(m.chat, { text: `> ρσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ` }, { quoted: m });
-                return;
-            } catch (fallbackError) {
-                console.error(`Fallback error: ${fallbackError.message}`);
-                return m.reply(formatStylishReply(`Shit’s really broken: ${fallbackError.message} 😢 Try another link, you whiny prick.`));
-            }
-        }
-
-        return m.reply(formatStylishReply(`Shit broke, ${m.pushName}! ${error.message} Try again, you pathetic loser.`));
-    }
+  } catch (error) {
+    await client.sendMessage(
+      m.chat,
+      { text: formatStylishReply(`Yo, we hit a snag: ${error.message}. Check the URL and try again! 😎`) },
+      { quoted: m, ad: true }
+    );
+  }
 };
