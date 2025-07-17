@@ -117,7 +117,7 @@ async function startToxic() {
         const { autoread, autolike, autoview, presence, chatbotpm, prefix } = settings;
 
         let mek = chatUpdate.messages[0];
-        if (!mek || !mek.key || !mek.message) return;
+        if (!mek || !mek.key || !mek.message || !mek.key.remoteJid) return;
 
         mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
