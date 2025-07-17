@@ -71,6 +71,12 @@ module.exports = async (context) => {
     `┗━━━━━━━━━━━━━━━┛\n` +
 
     `◈━━━━━━━━━━━━━━━━◈\n` +
+    `│❒ *Chatbot PM*: ${settings.chatbotpm ? '✅ ON, AI chatting' : '❌ OFF, no AI replies'}\n` +
+    `│❒ Auto AI replies for non-sudo users!\n` +
+    `│❒ Ex: ${prefix}chatbotpm on\n` +
+    `┗━━━━━━━━━━━━━━━┛\n` +
+
+    `◈━━━━━━━━━━━━━━━━◈\n` +
     `│❒ *Presence*: ${settings.presence || 'Offline by default! 😴'}\n` +
     `│❒ My online vibe!\n` +
     `│❒ Ex: ${prefix}setpresence typing\n` +
@@ -89,5 +95,12 @@ module.exports = async (context) => {
     `│❒ *Total Groups*: ${groupCount} (ruling them all!)\n` +
     `┗━━━━━━━━━━━━━━━┛`;
 
-  await m.reply(response);
+  await m.reply(response, null, {
+    buttons: [
+      { buttonId: `${prefix}anticall on`, buttonText: { displayText: 'Anticall ON' }, type: 1 },
+      { buttonId: `${prefix}chatbotpm on`, buttonText: { displayText: 'Chatbot PM ON' }, type: 1 },
+      { buttonId: `${prefix}mode private`, buttonText: { displayText: 'Set Private Mode' }, type: 1 }
+    ],
+    headerType: 1
+  });
 };
