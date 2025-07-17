@@ -50,7 +50,7 @@ async function initializeDatabase() {
             autobio: 'false',
             anticall: 'false',
             reactEmoji: '❤️',
-            chatbotpm: 'false' 
+            chatbotpm: 'false'
         };
 
         for (const [key, value] of Object.entries(defaultSettings)) {
@@ -60,8 +60,9 @@ async function initializeDatabase() {
                 ON CONFLICT (key) DO NOTHING;
             `, [key, value]);
         }
+        console.log("Database initialized successfully");
     } catch (error) {
-        console.error(`❌ Database setup failed: ${error}`);
+        console.error(`❌ Database setup failed: ${error.stack}`);
     } finally {
         client.release();
     }
@@ -87,8 +88,9 @@ async function initializeGroupSettings(jid) {
                 ON CONFLICT (jid, key) DO NOTHING;
             `, [jid, key, value]);
         }
+        console.log(`Group settings initialized for ${jid}`);
     } catch (error) {
-        console.error(`❌ Error initializing group settings for ${jid}: ${error}`);
+        console.error(`❌ Error initializing group settings for ${jid}: ${error.stack}`);
     }
 }
 
@@ -109,7 +111,7 @@ async function getGroupSetting(jid) {
         });
         return settings;
     } catch (error) {
-        console.error(`❌ Error fetching group settings for ${jid}: ${error}`);
+        console.error(`❌ Error fetching group settings for ${jid}: ${error.stack}`);
         return {};
     }
 }
@@ -123,8 +125,9 @@ async function updateGroupSetting(jid, key, value) {
             ON CONFLICT (jid, key) DO UPDATE
             SET value = EXCLUDED.value;
         `, [jid, key, valueToStore]);
+        console.log(`Updated group setting ${key} for ${jid} to ${value}`);
     } catch (error) {
-        console.error(`❌ Error updating group setting for ${jid}: ${key}: ${error}`);
+        console.error(`❌ Error updating group setting for ${jid}: ${key}: ${error.stack}`);
     }
 }
 
@@ -135,7 +138,7 @@ async function getAllGroupSettings() {
         `);
         return res.rows;
     } catch (error) {
-        console.error(`❌ Error fetching all group settings: ${error}`);
+        console.error(`❌ Error fetching all group settings: ${error.stack}`);
         return [];
     }
 }
@@ -147,9 +150,10 @@ async function getSettings() {
         res.rows.forEach(row => {
             settings[row.key] = row.value === 'true' ? true : row.value === 'false' ? false : row.value;
         });
+        console.log("Fetched settings:", settings);
         return settings;
     } catch (error) {
-        console.error(`❌ Error fetching global settings: ${error}`);
+        console.error(`❌ Error fetching global settings: ${error.stack}`);
         return {};
     }
 }
@@ -162,49 +166,56 @@ async function updateSetting(key, value) {
             ON CONFLICT (key) DO UPDATE 
             SET value = EXCLUDED.value;
         `, [key, value]);
+        console.log(`Updated setting ${key} to ${value}`);
     } catch (error) {
-        console.error(`❌ Error updating global setting: ${key}: ${error}`);
+        console.error(`❌ Error updating global setting: ${key}: ${error.stack}`);
     }
 }
 
 async function banUser(num) {
     try {
         await pool.query(`INSERT INTO banned_users (num) VALUES ($1) ON CONFLICT (num) DO NOTHING;`, [num]);
+        console.log(`Banned user ${num}`);
     } catch (error) {
-        console.error(`❌ Error banning user ${num}: ${error}`);
+        console.error(`❌ Error banning user ${num}: ${error.stack}`);
     }
 }
 
 async function unbanUser(num) {
     try {
         await pool.query(`DELETE FROM banned_users WHERE num = $1;`, [num]);
+        console.log(`Unbanned user ${num}`);
     } catch (error) {
-        console.error(`❌ Error unbanning user ${num}: ${error}`);
+        console.error(`❌ Error unbanning user ${num}: ${error.stack}`);
     }
 }
 
 async function addSudoUser(num) {
     try {
         await pool.query(`INSERT INTO sudo_users (num) VALUES ($1) ON CONFLICT (num) DO NOTHING;`, [num]);
+        console.log(`Added sudo user ${num}`);
     } catch (error) {
-        console.error(`❌ Error adding sudo user ${num}: ${error}`);
+        console.error(`❌ Error adding sudo user ${num}: ${error.stack}`);
     }
 }
 
 async function removeSudoUser(num) {
     try {
         await pool.query(`DELETE FROM sudo_users WHERE num = $1;`, [num]);
+        console.log(`Removed sudo user ${num}`);
     } catch (error) {
-        console.error(`❌ Error removing sudo user ${num}: ${error}`);
+        console.error(`❌ Error removing sudo user ${num}: ${error.stack}`);
     }
 }
 
 async function getSudoUsers() {
     try {
         const res = await pool.query('SELECT num FROM sudo_users');
-        return res.rows.map(row => row.num);
+        const sudoUsers = res.rows.map(row => row.num);
+        console.log("Fetched sudo users:", sudoUsers);
+        return sudoUsers;
     } catch (error) {
-        console.error(`❌ Error fetching sudo users: ${error}`);
+        console.error(`❌ Error fetching sudo users: ${error.stack}`);
         return [];
     }
 }
@@ -215,8 +226,9 @@ async function saveConversation(num, role, message) {
             'INSERT INTO conversation_history (num, role, message) VALUES ($1, $2, $3)',
             [num, role, message]
         );
+        console.log(`Saved conversation for ${num}`);
     } catch (error) {
-        console.error(`❌ Error saving conversation for ${num}: ${error}`);
+        console.error(`❌ Error saving conversation for ${num}: ${error.stack}`);
     }
 }
 
@@ -228,7 +240,7 @@ async function getRecentMessages(num) {
         );
         return res.rows;
     } catch (error) {
-        console.error(`❌ Error retrieving conversation history for ${num}: ${error}`);
+        console.error(`❌ Error retrieving conversation history for ${num}: ${error.stack}`);
         return [];
     }
 }
@@ -236,22 +248,25 @@ async function getRecentMessages(num) {
 async function deleteUserHistory(num) {
     try {
         await pool.query('DELETE FROM conversation_history WHERE num = $1', [num]);
+        console.log(`Deleted conversation history for ${num}`);
     } catch (error) {
-        console.error(`❌ Error deleting conversation history for ${num}: ${error}`);
+        console.error(`❌ Error deleting conversation history for ${num}: ${error.stack}`);
     }
 }
 
 async function getBannedUsers() {
     try {
         const res = await pool.query('SELECT num FROM banned_users');
-        return res.rows.map(row => row.num);
+        const bannedUsers = res.rows.map(row => row.num);
+        console.log("Fetched banned users:", bannedUsers);
+        return bannedUsers;
     } catch (error) {
-        console.error(`❌ Error fetching banned users: ${error}`);
+        console.error(`❌ Error fetching banned users: ${error.stack}`);
         return [];
     }
 }
 
-initializeDatabase().catch(err => console.error(`❌ Database initialization failed: ${err}`));
+initializeDatabase().catch(err => console.error(`❌ Database initialization failed: ${err.stack}`));
 
 module.exports = {
     addSudoUser,
