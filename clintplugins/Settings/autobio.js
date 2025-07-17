@@ -3,51 +3,63 @@ const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
-    const { m, args } = context;
-    const value = args[0]?.toLowerCase();
+    const { client, m, args, prefix } = context;
 
-    const settings = await getSettings();
-    const prefix = settings.prefix;
-    const isEnabled = settings.autobio === true;
+    const formatStylishReply = (message) => {
+      return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
+    };
 
-    if (value === 'on') {
-      if (isEnabled) {
-        return await m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n` +
-          `│❒ Autobio is already ON, you brain-dead fool! 😈\n` +
-          `│❒ My status is already flexing! 🥶\n` +
-          `┗━━━━━━━━━━━━━━━┛`
+    try {
+      const settings = await getSettings();
+      if (!settings || Object.keys(settings).length === 0) {
+        return await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
+          { quoted: m, ad: true }
         );
       }
-      await updateSetting('autobio', 'true');
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Autobio ON! 🔥\n` +
-        `│❒ My status will update every 10 seconds, bow down! 😈\n` +
-        `┗━━━━━━━━━━━━━━━┛`
-      );
-    } else if (value === 'off') {
-      if (!isEnabled) {
-        return await m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n` +
-          `│❒ Autobio is already OFF, moron! 😈\n` +
-          `│❒ Why you wasting my time? 🖕\n` +
-          `┗━━━━━━━━━━━━━━━┛`
+
+      const value = args.join(" ").toLowerCase();
+
+      if (value === 'on' || value === 'off') {
+        const action = value === 'on';
+        if (settings.autobio === action) {
+          return await client.sendMessage(
+            m.chat,
+            { text: formatStylishReply(`Autobio’s already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time. 😈`) },
+            { quoted: m, ad: true }
+          );
+        }
+
+        await updateSetting('autobio', action);
+        return await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply(`Autobio ${value.toUpperCase()} activated! 🔥 ${action ? 'Bot’s flexing status updates every 10 seconds, bow down! 🦁' : 'No more status flexing, you’re not worth it. 😴'}`) },
+          { quoted: m, ad: true }
         );
       }
-      await updateSetting('autobio', 'false');
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Autobio OFF! 💀\n` +
-        `│❒ No more status flexing for now.\n` +
-        `┗━━━━━━━━━━━━━━━┛`
+
+      const buttons = [
+        { buttonId: `${prefix}autobio on`, buttonText: { displayText: "ON 🦁" }, type: 1 },
+        { buttonId: `${prefix}autobio off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
+      ];
+
+      await client.sendMessage(
+        m.chat,
+        {
+          text: formatStylishReply(`Autobio’s ${settings.autobio ? 'ON 🦁' : 'OFF 😴'}, dumbass. Pick a vibe, noob! 😈`),
+          footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+          buttons,
+          headerType: 1,
+          viewOnce: true,
+        },
+        { quoted: m, ad: true }
       );
-    } else {
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Autobio Status: ${isEnabled ? 'ON 🥶' : 'OFF 😴'}\n` +
-        `│❒ Use "${prefix}autobio on" or "${prefix}autobio off", you noob!\n` +
-        `┗━━━━━━━━━━━━━━━┛`
+    } catch (error) {
+      await client.sendMessage(
+        m.chat,
+        { text: formatStylishReply("Shit broke, couldn’t mess with autobio. Database or something’s fucked. Try later.") },
+        { quoted: m, ad: true }
       );
     }
   });
