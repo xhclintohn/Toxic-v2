@@ -3,49 +3,63 @@ const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
-    const { m, args } = context;
-    const value = args[0]?.toLowerCase();
+    const { client, m, args, prefix } = context;
 
-    const settings = await getSettings();
+    const formatStylishReply = (message) => {
+      return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
+    };
 
-    if (value === 'on') {
-      if (settings.autoread) {
-        return await m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n` +
-          `│❒ Autoread is already ON, you clueless twit! 😈\n` +
-          `│❒ I’m already reading everything! 🥶\n` +
-          `┗━━━━━━━━━━━━━━━┛`
+    try {
+      const settings = await getSettings();
+      if (!settings || Object.keys(settings).length === 0) {
+        return await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
+          { quoted: m, ad: true }
         );
       }
-      await updateSetting('autoread', 'true');
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Autoread ON! 🔥\n` +
-        `│❒ I’ll read every message like a boss! 😈\n` +
-        `┗━━━━━━━━━━━━━━━┛`
-      );
-    } else if (value === 'off') {
-      if (!settings.autoread) {
-        return await m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n` +
-          `│❒ Autoread is already OFF, moron! 😈\n` +
-          `│❒ Stop wasting my time! 🖕\n` +
-          `┗━━━━━━━━━━━━━━━┛`
+
+      const value = args.join(" ").toLowerCase();
+
+      if (value === 'on' || value === 'off') {
+        const action = value === 'on';
+        if (settings.autoread === action) {
+          return await client.sendMessage(
+            m.chat,
+            { text: formatStylishReply(`Autoread’s already ${value.toUpperCase()}, genius. Stop wasting my time. 😈`) },
+            { quoted: m, ad: true }
+          );
+        }
+
+        await updateSetting('autoread', action);
+        return await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply(`Autoread ${value.toUpperCase()} activated! 🔥 ${action ? 'Bot’s reading every message like a creep. 🥶' : 'No more spying on your trash messages. 😴'}`) },
+          { quoted: m, ad: true }
         );
       }
-      await updateSetting('autoread', 'false');
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Autoread OFF! 💀\n` +
-        `│❒ I’m done reading your trash.\n` +
-        `┗━━━━━━━━━━━━━━━┛`
+
+      const buttons = [
+        { buttonId: `${prefix}autoread on`, buttonText: { displayText: "ON 🥶" }, type: 1 },
+        { buttonId: `${prefix}autoread off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
+      ];
+
+      await client.sendMessage(
+        m.chat,
+        {
+          text: formatStylishReply(`Autoread’s ${settings.autoread ? 'ON 🥶' : 'OFF 😴'}, dumbass. Pick a vibe, noob! 😈`),
+          footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+          buttons,
+          headerType: 1,
+          viewOnce: true,
+        },
+        { quoted: m, ad: true }
       );
-    } else {
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Autoread Status: ${settings.autoread ? 'ON 🥶' : 'OFF 😴'}\n` +
-        `│❒ Use "${settings.prefix}autoread on" or "${settings.prefix}autoread off", noob!\n` +
-        `┗━━━━━━━━━━━━━━━┛`
+    } catch (error) {
+      await client.sendMessage(
+        m.chat,
+        { text: formatStylishReply("Shit broke, couldn’t mess with autoread. Database or something’s fucked. Try later.") },
+        { quoted: m, ad: true }
       );
     }
   });
