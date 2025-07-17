@@ -1,5 +1,5 @@
 {
-  "name": "Toxic-V3",
+  "name": "Toxic-MD",
   "version": "2.0.0",
   "description": "WhatsApp Multi Device Bot",
   "main": "index.js",
@@ -8,8 +8,6 @@
     "start": "node index.js"
   },
   "keywords": [
-    "termux",
-    "whatsapp-openai",
     "whatsapp-bot",
     "whatsapp-baileys",
     "baileys-md",
@@ -21,7 +19,7 @@
   "author": "xhclinton",
   "license": "MIT",
   "dependencies": {
-"baileys-pro": "latest",
+"baileys-pro": "github:nstar-y/bail",
     "@adiwajshing/keyed-db": "^0.2.4",
     "@distube/ytdl-core": "^4.15.1",
     "@hapi/boom": "^10.0.0",
