@@ -50,7 +50,7 @@ async function initializeDatabase() {
             autobio: 'false',
             anticall: 'false',
             reactEmoji: '❤️',
-            chatbotpm: 'false'
+            chatbotpm: 'true'
         };
 
         for (const [key, value] of Object.entries(defaultSettings)) {
