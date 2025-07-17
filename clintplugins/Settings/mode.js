@@ -1,36 +1,65 @@
-const { updateSetting, getSettings } = require('../../Database/config');
+const { getSettings, updateSetting } = require('../../Database/config');
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
-    const { m, args } = context;
-    const value = args[0]?.toLowerCase();
+    const { client, m, args, prefix } = context;
 
-    const settings = await getSettings();
-    const prefix = settings.prefix;
+    const formatStylishReply = (message) => {
+      return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
+    };
 
-    if (value === 'public' || value === 'private') {
-      if (settings.mode === value) {
-        return await m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n` +
-          `│❒ Yo, moron! 😈 Bot is already in ${value.toUpperCase()} mode!\n` +
-          `│❒ Stop wasting my time, peasant! 🖕\n` +
-          `┗━━━━━━━━━━━━━━━┛`
+    try {
+      const settings = await getSettings();
+      if (!settings || Object.keys(settings).length === 0) {
+        return await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
+          { quoted: m, ad: true }
         );
       }
-      await updateSetting('mode', value);
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Bot mode set to ${value.toUpperCase()}! 🔥\n` +
-        `│❒ Bow to the king, I rule now! 😈\n` +
-        `┗━━━━━━━━━━━━━━━┛`
+
+      const value = args.join(" ").toLowerCase();
+      const validModes = ['public', 'private'];
+
+      if (validModes.includes(value)) {
+        if (settings.mode === value) {
+          return await client.sendMessage(
+            m.chat,
+            { text: formatStylishReply(`Yo, moron! 😈 Bot is already in ${value.toUpperCase()} mode! Stop wasting my time, peasant! 🖕`) },
+            { quoted: m, ad: true }
+          );
+        }
+
+        await updateSetting('mode', value);
+        return await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply(`Bot mode set to ${value.toUpperCase()}! 🔥 Bow to the king, I rule now! 😈`) },
+          { quoted: m, ad: true }
+        );
+      }
+
+      const buttons = [
+        { buttonId: `${prefix}mode public`, buttonText: { displayText: "PUBLIC 🌐" }, type: 1 },
+        { buttonId: `${prefix}mode private`, buttonText: { displayText: "PRIVATE 🔒" }, type: 1 },
+      ];
+
+      await client.sendMessage(
+        m.chat,
+        {
+          text: formatStylishReply(`Current Mode: ${settings.mode ? settings.mode.toUpperCase() : 'Undefined, you noob! 🥶'}. Pick a mode, fool! 😈`),
+          footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+          buttons,
+          headerType: 1,
+          viewOnce: true,
+        },
+        { quoted: m, ad: true }
       );
-    } else {
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Current Mode: ${settings.mode || 'Undefined, you noob! 🥶'}\n` +
-        `│❒ Use "${prefix}mode public" or "${prefix}mode private", fool!\n` +
-        `┗━━━━━━━━━━━━━━━┛`
+    } catch (error) {
+      await client.sendMessage(
+        m.chat,
+        { text: formatStylishReply("Shit broke, couldn’t update mode. Database or something’s fucked. Try later.") },
+        { quoted: m, ad: true }
       );
     }
   });
