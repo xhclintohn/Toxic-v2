@@ -45,8 +45,13 @@ const groupEvents2 = require("../Handler/eventHandler2");
 const connectionHandler = require('../Handler/connectionHandler');
 
 async function startToxic() {
+    console.log("Starting Toxic-MD...");
     let settingss = await getSettings();
-    if (!settingss) return;
+    if (!settingss) {
+        console.error("Failed to fetch settings, exiting startToxic");
+        return;
+    }
+    console.log("Settings loaded:", settingss);
 
     const { autobio, mode, anticall, chatbotpm } = settingss;
 
@@ -111,13 +116,20 @@ async function startToxic() {
     });
 
     client.ev.on("messages.upsert", async (chatUpdate) => {
+        console.log("Received message update:", JSON.stringify(chatUpdate, null, 2));
         let settings = await getSettings();
-        if (!settings) return;
+        if (!settings) {
+            console.error("Failed to fetch settings in messages.upsert");
+            return;
+        }
 
-        const { autoread, autolike, autoview, presence, chatbotpm } = settings;
+        const { autoread, autolike, autoview, presence, chatbotpm, prefix } = settings;
 
         let mek = chatUpdate.messages[0];
-        if (!mek || !mek.key || !mek.message) return;
+        if (!mek || !mek.key || !mek.message) {
+            console.log("Invalid message, skipping:", mek);
+            return;
+        }
 
         mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
@@ -136,8 +148,9 @@ async function startToxic() {
                     ""
                 ).trim();
 
-                if (!messageContent.startsWith(settings.prefix)) {
+                if (!messageContent.startsWith(prefix)) {
                     if (messageContent) {
+                        console.log(`Processing chatbotpm for ${senderNumber}: ${messageContent}`);
                         try {
                             const encodedText = encodeURIComponent(messageContent);
                             const apiUrl = `https://api.shizo.top/ai/gpt?apikey=shizo&query=${encodedText}`;
@@ -155,6 +168,7 @@ async function startToxic() {
                                 { quoted: mek }
                             );
                         } catch (error) {
+                            console.error(`Chatbotpm error: ${error.message}`);
                             await client.sendMessage(
                                 remoteJid,
                                 { text: "Oops, something went wrong with the chatbot. Try again later!" },
@@ -234,20 +248,26 @@ async function startToxic() {
         }
 
         // Handle commands
-        if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
+        if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") {
+            console.log("Skipping command due to private mode and non-self message");
+            return;
+        }
 
         m = smsg(client, mek, store);
+        console.log("Processed message for toxic.js:", m);
         require("./toxic")(client, m, chatUpdate, store);
     });
 
     const unhandledRejections = new Map();
     process.on("unhandledRejection", (reason, promise) => {
         unhandledRejections.set(promise, reason);
+        console.error("Unhandled rejection:", reason);
     });
     process.on("rejectionHandled", (promise) => {
         unhandledRejections.delete(promise);
     });
     process.on("Something went wrong", function (err) {
+        console.error("Process error:", err);
     });
 
     client.decodeJid = (jid) => {
