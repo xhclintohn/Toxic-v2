@@ -45,15 +45,10 @@ const groupEvents2 = require("../Handler/eventHandler2");
 const connectionHandler = require('../Handler/connectionHandler');
 
 async function startToxic() {
-    console.log("Starting Toxic-MD...");
     let settingss = await getSettings();
-    if (!settingss) {
-        console.error("Failed to fetch settings, exiting startToxic");
-        return;
-    }
-    console.log("Settings loaded:", settingss);
+    if (!settingss) return;
 
-    const { autobio, mode, anticall, chatbotpm } = settingss;
+    const { autobio, mode, anticall, chatbotpm, prefix } = settingss;
 
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
     const client = toxicConnect({
@@ -116,20 +111,13 @@ async function startToxic() {
     });
 
     client.ev.on("messages.upsert", async (chatUpdate) => {
-        console.log("Received message update:", JSON.stringify(chatUpdate, null, 2));
         let settings = await getSettings();
-        if (!settings) {
-            console.error("Failed to fetch settings in messages.upsert");
-            return;
-        }
+        if (!settings) return;
 
         const { autoread, autolike, autoview, presence, chatbotpm, prefix } = settings;
 
         let mek = chatUpdate.messages[0];
-        if (!mek || !mek.key || !mek.message) {
-            console.log("Invalid message, skipping:", mek);
-            return;
-        }
+        if (!mek || !mek.key || !mek.message) return;
 
         mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
@@ -137,16 +125,9 @@ async function startToxic() {
         const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
         const Myself = client.decodeJid(client.user.id);
 
-        // Handle Chatbotpm for non-sudo users only
+        // Handle Chatbotpm for non-sudo users
         if (chatbotpm && remoteJid.endsWith('@s.whatsapp.net') && chatUpdate.type === "notify") {
-            let sudoUsers;
-            try {
-                sudoUsers = await getSudoUsers();
-            } catch (error) {
-                console.error(`Error fetching sudo users: ${error.stack}`);
-                await client.sendMessage(remoteJid, { text: "Error fetching sudo users, skipping chatbotpm." }, { quoted: mek });
-                return;
-            }
+            const sudoUsers = await getSudoUsers();
             const senderNumber = sender.split('@')[0];
             if (!sudoUsers.includes(senderNumber) && sender !== Myself) {
                 const messageContent = (
@@ -158,28 +139,22 @@ async function startToxic() {
 
                 if (!messageContent.startsWith(prefix)) {
                     if (messageContent) {
-                        console.log(`Processing chatbotpm for ${senderNumber}: ${messageContent}`);
                         try {
                             const encodedText = encodeURIComponent(messageContent);
                             const apiUrl = `https://api.shizo.top/ai/gpt?apikey=shizo&query=${encodedText}`;
                             const response = await fetch(apiUrl, { timeout: 10000 });
-                            if (!response.ok) {
-                                throw new Error(`API request failed with status ${response.status}`);
-                            }
+                            if (!response.ok) throw new Error(`API request failed: ${response.status}`);
                             const data = await response.json();
-                            if (!data.status || !data.msg) {
-                                throw new Error("Invalid API response: missing status or msg");
-                            }
+                            if (!data.status || !data.msg) throw new Error("Invalid API response");
                             await client.sendMessage(
                                 remoteJid,
                                 { text: data.msg },
                                 { quoted: mek }
                             );
                         } catch (error) {
-                            console.error(`Chatbotpm error: ${error.message}`);
                             await client.sendMessage(
                                 remoteJid,
-                                { text: "Oops, something went wrong with the chatbot. Try again later!" },
+                                { text: "Chatbot error, try again later!" },
                                 { quoted: mek }
                             );
                         }
@@ -256,31 +231,20 @@ async function startToxic() {
         }
 
         // Handle commands
-        if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") {
-            console.log("Skipping command due to private mode and non-self message");
-            return;
-        }
+        if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
         m = smsg(client, mek, store);
-        console.log("Processed message for toxic.js:", m);
-        try {
-            require("./toxic")(client, m, chatUpdate, store);
-        } catch (error) {
-            console.error(`Error in toxic.js handler: ${error.stack}`);
-            await client.sendMessage(remoteJid, { text: "Error processing command. Check logs for details." }, { quoted: mek });
-        }
+        require("./toxic")(client, m, chatUpdate, store);
     });
 
     const unhandledRejections = new Map();
     process.on("unhandledRejection", (reason, promise) => {
         unhandledRejections.set(promise, reason);
-        console.error("Unhandled rejection:", reason);
     });
     process.on("rejectionHandled", (promise) => {
         unhandledRejections.delete(promise);
     });
     process.on("Something went wrong", function (err) {
-        console.error("Process error:", err);
     });
 
     client.decodeJid = (jid) => {
