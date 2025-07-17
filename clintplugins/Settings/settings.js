@@ -3,6 +3,11 @@ const { getSettings, getSudoUsers, getBannedUsers } = require('../../Database/co
 module.exports = async (context) => {
     const { client, m } = context;
 
+    if (!m.chat) {
+        console.log("Invalid chat JID, skipping settings command");
+        return;
+    }
+
     const settings = await getSettings();
     const prefix = settings.prefix || '.';
     const botName = process.env.BOTNAME || settings.botname || 'Toxic-MD';
@@ -83,12 +88,17 @@ module.exports = async (context) => {
         `│❒ *Total Groups*: ${groupCount}\n` +
         `┗━━━━━━━━━━━━━━━┛`;
 
-    await m.reply(response, null, {
-        buttons: [
-            { buttonId: `${prefix}anticall on`, buttonText: { displayText: 'Anticall ON' }, type: 1 },
-            { buttonId: `${prefix}chatbotpm on`, buttonText: { displayText: 'Chatbot PM ON' }, type: 1 },
-            { buttonId: `${prefix}mode private`, buttonText: { displayText: 'Set Private Mode' }, type: 1 }
-        ],
-        headerType: 1
-    });
+    try {
+        await m.reply(response, null, {
+            buttons: [
+                { buttonId: `${prefix}anticall on`, buttonText: { displayText: 'Anticall ON' }, type: 1 },
+                { buttonId: `${prefix}chatbotpm on`, buttonText: { displayText: 'Chatbot PM ON' }, type: 1 },
+                { buttonId: `${prefix}mode private`, buttonText: { displayText: 'Set Private Mode' }, type: 1 }
+            ],
+            headerType: 1
+        });
+    } catch (error) {
+        console.error(`Error sending settings response: ${error}`);
+        await client.sendMessage(m.chat, { text: "Error displaying settings. Please try again." }, { quoted: m });
+    }
 };
