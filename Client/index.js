@@ -48,7 +48,7 @@ async function startToxic() {
     let settingss = await getSettings();
     if (!settingss) return;
 
-    const { autobio, mode, anticall } = settingss;
+    const { autobio, mode, anticall, chatbotpm } = settingss;
 
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
     const client = toxicConnect({
@@ -114,7 +114,7 @@ async function startToxic() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, autolike, autoview, presence } = settings;
+        const { autoread, autolike, autoview, presence, chatbotpm } = settings;
 
         let mek = chatUpdate.messages[0];
         if (!mek || !mek.key || !mek.message) return;
@@ -124,6 +124,48 @@ async function startToxic() {
         const remoteJid = mek.key.remoteJid;
         const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
         const Myself = client.decodeJid(client.user.id);
+
+        // Handle Chatbotpm for non-sudo users only
+        if (chatbotpm && remoteJid.endsWith('@s.whatsapp.net') && chatUpdate.type === "notify") {
+            const sudoUsers = await getSudoUsers();
+            const senderNumber = sender.split('@')[0];
+            if (!sudoUsers.includes(senderNumber) && sender !== Myself) {
+                const messageContent = (
+                    mek.message.conversation ||
+                    mek.message.extendedTextMessage?.text ||
+                    ""
+                ).trim();
+
+                if (!messageContent.startsWith(settings.prefix)) {
+                    if (messageContent) {
+                        try {
+                            const encodedText = encodeURIComponent(messageContent);
+                            const apiUrl = `https://api.shizo.top/ai/gpt?apikey=shizo&query=${encodedText}`;
+                            const response = await fetch(apiUrl, { timeout: 10000 });
+                            if (!response.ok) {
+                                throw new Error(`API request failed with status ${response.status}`);
+                            }
+                            const data = await response.json();
+                            if (!data.status || !data.msg) {
+                                throw new Error("Invalid API response: missing status or msg");
+                            }
+                            await client.sendMessage(
+                                remoteJid,
+                                { text: data.msg },
+                                { quoted: mek }
+                            );
+                        } catch (error) {
+                            await client.sendMessage(
+                                remoteJid,
+                                { text: "Oops, something went wrong with the chatbot. Try again later!" },
+                                { quoted: mek }
+                            );
+                        }
+                        return;
+                    }
+                }
+            }
+        }
 
         // Antilink logic
         if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
