@@ -60,7 +60,7 @@ async function startToxic() {
         getMessage: async (key) => {
             if (store) {
                 const msg = await store.loadMessage(key.remoteJid, key.id);
-                return msg.message || undefined;
+                return msg?.message || undefined;
             }
             return { conversation: "Toxic-MD whatsapp user bot" };
         },
@@ -127,18 +127,71 @@ async function startToxic() {
         const Myself = client.decodeJid(client.user.id);
 
         // Antidelete logic
-        if (antidelete && mek?.message?.protocolMessage?.type === 0 && remoteJid.endsWith("@g.us")) {
+        if (antidelete && mek?.message?.protocolMessage?.type === 0) {
+            console.log("Deleted Message Detected!");
             const deletedP = mek.message.protocolMessage.key;
-            const deletedM = await store.loadMessage(mek.chat, deletedP.id);
+            const deletedM = await store.loadMessage(deletedP.remoteJid, deletedP.id);
             if (deletedM) {
-                deletedM.message = {
-                    [deletedM.mtype || "msg"]: deletedM?.msg
-                };
-                const M = proto?.WebMessageInfo;
-                const msg = M.fromObject(M.toObject(deletedM));
-                await client.relayMessage(mek.chat, msg.message, {
-                    messageId: generateMessageID()
-                });
+                try {
+                    deletedM.message = {
+                        [deletedM.mtype || "conversation"]: deletedM?.msg
+                    };
+                    const M = proto?.WebMessageInfo;
+                    const msg = M.fromObject(M.toObject(deletedM));
+                    const senderName = await client.getName(deletedP.participant || deletedP.remoteJid);
+                    const forwardMessage = {
+                        text: `🗑️ *Deleted Message*\n\nFrom: ${senderName}\nChat: ${remoteJid}\nType: ${deletedM.mtype || 'unknown'}`,
+                        ...msg.message
+                    };
+                    await client.sendMessage(Myself, forwardMessage, { quoted: mek });
+                } catch (error) {
+                    console.error(`Error forwarding deleted message: ${error}`);
+                }
+            } else {
+                console.log(`Deleted message not found in store: ${deletedP.id}`);
+            }
+        }
+
+        // Antilink logic (global)
+        if (antilink && typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
+            const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
+            const messageContent = (
+                mek.message.conversation ||
+                mek.message.extendedTextMessage?.text ||
+                mek.message.imageMessage?.caption ||
+                mek.message.videoMessage?.caption ||
+                mek.message.documentMessage?.caption ||
+                ""
+            ).toLowerCase();
+
+            if (sender === Myself) return;
+
+            if (urlRegex.test(messageContent)) {
+                try {
+                    const groupMetadata = await client.groupMetadata(remoteJid);
+                    if (!groupMetadata || !groupMetadata.participants) return;
+
+                    const groupAdmins = groupMetadata.participants
+                        .filter(p => p.admin != null)
+                        .map(p => client.decodeJid(p.id));
+                    const isBotAdmin = groupAdmins.includes(Myself);
+                    const isSenderAdmin = groupAdmins.includes(sender);
+
+                    if (isBotAdmin && !isSenderAdmin) {
+                        await client.sendMessage(remoteJid, { text: "🚫 Link detected! Message deleted." });
+                        await client.sendMessage(remoteJid, {
+                            delete: {
+                                remoteJid: remoteJid,
+                                fromMe: false,
+                                id: mek.key.id,
+                                participant: sender
+                            }
+                        });
+                        console.log(`Deleted link from ${sender} in ${remoteJid}`);
+                    }
+                } catch (error) {
+                    console.error(`Error in antilink processing: ${error}`);
+                }
             }
         }
 
@@ -177,43 +230,6 @@ async function startToxic() {
                         }
                         return;
                     }
-                }
-            }
-        }
-
-        // Antilink logic (global)
-        if (antilink && typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
-            const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
-            const messageContent = (
-                mek.message.conversation ||
-                mek.message.extendedTextMessage?.text ||
-                mek.message.imageMessage?.caption ||
-                mek.message.videoMessage?.caption ||
-                mek.message.documentMessage?.caption ||
-                ""
-            ).toLowerCase();
-
-            if (sender === Myself) return;
-
-            if (urlRegex.test(messageContent)) {
-                const groupMetadata = await client.groupMetadata(remoteJid);
-                if (!groupMetadata || !groupMetadata.participants) return;
-
-                const groupAdmins = groupMetadata.participants
-                    .filter(p => p.admin != null)
-                    .map(p => client.decodeJid(p.id));
-                const isBotAdmin = groupAdmins.includes(Myself);
-                const isSenderAdmin = groupAdmins.includes(sender);
-
-                if (isBotAdmin && !isSenderAdmin) {
-                    await client.sendMessage(remoteJid, {
-                        delete: {
-                            remoteJid: remoteJid,
-                            fromMe: false,
-                            id: mek.key.id,
-                            participant: sender
-                        }
-                    });
                 }
             }
         }
