@@ -1,104 +1,58 @@
 const { getSettings, getSudoUsers, getBannedUsers } = require('../../Database/config');
+const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
-    const { client, m } = context;
-
-    if (!m.chat) {
-        console.log("Invalid chat JID, skipping settings command");
-        return;
-    }
+  await ownerMiddleware(context, async () => {
+    const { client, m, prefix } = context;
 
     const settings = await getSettings();
-    const prefix = settings.prefix || '.';
     const botName = process.env.BOTNAME || settings.botname || 'Toxic-MD';
     const sudoUsers = await getSudoUsers();
     const bannedUsers = await getBannedUsers();
-    const groups = await client.groupFetchAllParticipating();
-    const groupCount = Object.keys(groups).length;
+    const groupCount = Object.keys(await client.groupFetchAllParticipating()).length;
 
-    const response = 
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *${botName} Settings* 🔥\n` +
-        `┗━━━━━━━━━━━━━━━┛\n\n` +
+    const formatStylishReply = (message) => {
+      return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
+    };
 
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *Botname*: ${botName}\n` +
-        `│❒ Ex: ${prefix}bot\n` +
-        `┗━━━━━━━━━━━━━━━┛\n` +
+    const buttons = [
+      { buttonId: `${prefix}botname`, buttonText: { displayText: 'Botname 🤖' }, type: 1 },
+      { buttonId: `${prefix}prefix`, buttonText: { displayText: 'Prefix ⚙️' }, type: 1 },
+      { buttonId: `${prefix}autoread`, buttonText: { displayText: 'Autoread 👀' }, type: 1 },
+      { buttonId: `${prefix}autoview`, buttonText: { displayText: 'Autoview Status 📸' }, type: 1 },
+      { buttonId: `${prefix}autolike`, buttonText: { displayText: 'Autolike Status ❤️' }, type: 1 },
+      { buttonId: `${prefix}reaction`, buttonText: { displayText: 'React Emoji 😈' }, type: 1 },
+      { buttonId: `${prefix}setpackname`, buttonText: { displayText: 'Sticker Watermark 🖼️' }, type: 1 },
+      { buttonId: `${prefix}autobio`, buttonText: { displayText: 'Autobio 📝' }, type: 1 },
+      { buttonId: `${prefix}anticall`, buttonText: { displayText: 'Anticall 📞' }, type: 1 },
+      { buttonId: `${prefix}antidelete`, buttonText: { displayText: 'Antidelete 🗑️' }, type: 1 },
+      { buttonId: `${prefix}setpresence`, buttonText: { displayText: 'Presence 🌐' }, type: 1 },
+      { buttonId: `${prefix}mode`, buttonText: { displayText: 'Mode 🔒' }, type: 1 },
+      { buttonId: `${prefix}chatbotpm`, buttonText: { displayText: 'Chatbot PM 💬' }, type: 1 },
+    ];
 
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *Prefix*: ${settings.prefix || 'None'}\n` +
-        `│❒ Ex: ${prefix}prefix !\n` +
-        `┗━━━━━━━━━━━━━━━┛\n` +
+    const message = formatStylishReply(
+      `*Toxic-MD Settings* 🔥\n\n` +
+      `Botname: ${botName}\n` +
+      `Prefix: ${settings.prefix || 'None'}\n` +
+      `Antidelete: ${settings.antidelete ? '✅ ON' : '❌ OFF'}\n` +
+      `Chatbot PM: ${settings.chatbotpm ? '✅ ON' : '❌ OFF'}\n` +
+      `Sudo Users: ${sudoUsers.length > 0 ? sudoUsers.join(', ') : 'None'}\n` +
+      `Banned Users: ${bannedUsers.length}\n` +
+      `Total Groups: ${groupCount}\n\n` +
+      `Tap a button to configure a setting! 😈`
+    );
 
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *Autoread*: ${settings.autoread ? 'ON' : 'OFF'}\n` +
-        `│❒ Ex: ${prefix}autoread on\n` +
-        `┗━━━━━━━━━━━━━━━┛\n` +
-
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *Autoview Status*: ${settings.autoview ? 'ON' : 'OFF'}\n` +
-        `│❒ Ex: ${prefix}autoview on\n` +
-        `┗━━━━━━━━━━━━━━━┛\n` +
-
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *Autolike Status*: ${settings.autolike ? 'ON' : 'OFF'}\n` +
-        `│❒ Ex: ${prefix}autolike on\n` +
-        `┗━━━━━━━━━━━━━━━┛\n` +
-
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *React Emoji*: ${settings.reactEmoji || 'None'}\n` +
-        `│❒ Ex: ${prefix}reaction 😈\n` +
-        `┗━━━━━━━━━━━━━━━┛\n` +
-
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *Sticker Watermark*: ${settings.packname || 'None'}\n` +
-        `│❒ Ex: ${prefix}setpackname Toxic-MD\n` +
-        `┗━━━━━━━━━━━━━━━┛\n` +
-
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *Autobio*: ${settings.autobio ? 'ON' : 'OFF'}\n` +
-        `│❒ Ex: ${prefix}autobio on\n` +
-        `┗━━━━━━━━━━━━━━━┛\n` +
-
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *Anticall*: ${settings.anticall ? 'ON' : 'OFF'}\n` +
-        `│❒ Ex: ${prefix}anticall on\n` +
-        `┗━━━━━━━━━━━━━━━┛\n` +
-
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *Chatbot PM*: ${settings.chatbotpm ? 'ON' : 'OFF'}\n` +
-        `│❒ Ex: ${prefix}chatbotpm on\n` +
-        `┗━━━━━━━━━━━━━━━┛\n` +
-
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *Presence*: ${settings.presence || 'Offline'}\n` +
-        `│❒ Ex: ${prefix}setpresence typing\n` +
-        `┗━━━━━━━━━━━━━━━┛\n` +
-
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *Mode*: ${settings.mode || 'Public'}\n` +
-        `│❒ Ex: ${prefix}mode private\n` +
-        `┗━━━━━━━━━━━━━━━┛\n\n` +
-
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ *Stats* 📊\n` +
-        `│❒ *Sudo Users*: ${sudoUsers.length > 0 ? sudoUsers.join(', ') : 'None'}\n` +
-        `│❒ *Banned Users*: ${bannedUsers.length}\n` +
-        `│❒ *Total Groups*: ${groupCount}\n` +
-        `┗━━━━━━━━━━━━━━━┛`;
-
-    try {
-        await m.reply(response, null, {
-            buttons: [
-                { buttonId: `${prefix}anticall on`, buttonText: { displayText: 'Anticall ON' }, type: 1 },
-                { buttonId: `${prefix}chatbotpm on`, buttonText: { displayText: 'Chatbot PM ON' }, type: 1 },
-                { buttonId: `${prefix}mode private`, buttonText: { displayText: 'Set Private Mode' }, type: 1 }
-            ],
-            headerType: 1
-        });
-    } catch (error) {
-        console.error(`Error sending settings response: ${error}`);
-        await client.sendMessage(m.chat, { text: "Error displaying settings. Please try again." }, { quoted: m });
-    }
+    await client.sendMessage(
+      m.chat,
+      {
+        text: message,
+        footer: '> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ',
+        buttons,
+        headerType: 1,
+        viewOnce: true,
+      },
+      { quoted: m, ad: true }
+    );
+  });
 };
