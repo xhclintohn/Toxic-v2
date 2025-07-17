@@ -50,7 +50,9 @@ async function initializeDatabase() {
             autobio: 'false',
             anticall: 'false',
             reactEmoji: '❤️',
-            chatbotpm: 'false'
+            chatbotpm: 'false',
+            antidelete: 'true',
+            antilink: 'false'
         };
 
         for (const [key, value] of Object.entries(defaultSettings)) {
