@@ -29,7 +29,7 @@ const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
-const { getSettings, getBannedUsers, banUser } = require("../Database/config");
+const { getSettings, getBannedUsers, banUser, getSudoUsers } = require("../Database/config");
 
 const { botname } = require('../Env/settings');
 const { DateTime } = require('luxon');
@@ -139,12 +139,20 @@ async function startToxic() {
 
         // Handle Chatbotpm for non-sudo users only
         if (chatbotpm && remoteJid.endsWith('@s.whatsapp.net') && chatUpdate.type === "notify") {
-            const sudoUsers = await getSudoUsers();
+            let sudoUsers;
+            try {
+                sudoUsers = await getSudoUsers();
+            } catch (error) {
+                console.error(`Error fetching sudo users: ${error.stack}`);
+                await client.sendMessage(remoteJid, { text: "Error fetching sudo users, skipping chatbotpm." }, { quoted: mek });
+                return;
+            }
             const senderNumber = sender.split('@')[0];
             if (!sudoUsers.includes(senderNumber) && sender !== Myself) {
                 const messageContent = (
                     mek.message.conversation ||
                     mek.message.extendedTextMessage?.text ||
+                    mek.message.buttonsResponseMessage?.selectedButtonId ||
                     ""
                 ).trim();
 
@@ -255,7 +263,12 @@ async function startToxic() {
 
         m = smsg(client, mek, store);
         console.log("Processed message for toxic.js:", m);
-        require("./toxic")(client, m, chatUpdate, store);
+        try {
+            require("./toxic")(client, m, chatUpdate, store);
+        } catch (error) {
+            console.error(`Error in toxic.js handler: ${error.stack}`);
+            await client.sendMessage(remoteJid, { text: "Error processing command. Check logs for details." }, { quoted: mek });
+        }
     });
 
     const unhandledRejections = new Map();
