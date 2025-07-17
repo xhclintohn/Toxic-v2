@@ -1,93 +1,58 @@
 const { getSettings, getSudoUsers, getBannedUsers } = require('../../Database/config');
+const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
-  const { client, m } = context;
+  await ownerMiddleware(context, async () => {
+    const { client, m, prefix } = context;
 
-  const settings = await getSettings();
-  const prefix = settings.prefix || '.';
-  const botName = process.env.BOTNAME || settings.botname || 'Toxic-MD';
-  const sudoUsers = await getSudoUsers();
-  const bannedUsers = await getBannedUsers();
-  const groups = await client.groupFetchAllParticipating();
-  const groupCount = Object.keys(groups).length;
+    const settings = await getSettings();
+    const botName = process.env.BOTNAME || settings.botname || 'Toxic-MD';
+    const sudoUsers = await getSudoUsers();
+    const bannedUsers = await getBannedUsers();
+    const groupCount = Object.keys(await client.groupFetchAllParticipating()).length;
 
-  const response = 
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Toxic-MD Settings* 🔥\n` +
-    `┗━━━━━━━━━━━━━━━┛\n\n` +
+    const formatStylishReply = (message) => {
+      return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
+    };
 
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Botname*: ${botName}\n` +
-    `│❒ Call me the boss! 😎\n` +
-    `│❒ Ex: ${prefix}bot\n` +
-    `┗━━━━━━━━━━━━━━━┛\n` +
+    const buttons = [
+      { buttonId: `${prefix}botname`, buttonText: { displayText: 'Botname 🤖' }, type: 1 },
+      { buttonId: `${prefix}prefix`, buttonText: { displayText: 'Prefix ⚙️' }, type: 1 },
+      { buttonId: `${prefix}autoread`, buttonText: { displayText: 'Autoread 👀' }, type: 1 },
+      { buttonId: `${prefix}autoview`, buttonText: { displayText: 'Autoview Status 📸' }, type: 1 },
+      { buttonId: `${prefix}autolike`, buttonText: { displayText: 'Autolike Status ❤️' }, type: 1 },
+      { buttonId: `${prefix}reaction`, buttonText: { displayText: 'React Emoji 😈' }, type: 1 },
+      { buttonId: `${prefix}setpackname`, buttonText: { displayText: 'Sticker Watermark 🖼️' }, type: 1 },
+      { buttonId: `${prefix}autobio`, buttonText: { displayText: 'Autobio 📝' }, type: 1 },
+      { buttonId: `${prefix}anticall`, buttonText: { displayText: 'Anticall 📞' }, type: 1 },
+      { buttonId: `${prefix}antidelete`, buttonText: { displayText: 'Antidelete 🗑️' }, type: 1 },
+      { buttonId: `${prefix}setpresence`, buttonText: { displayText: 'Presence 🌐' }, type: 1 },
+      { buttonId: `${prefix}mode`, buttonText: { displayText: 'Mode 🔒' }, type: 1 },
+      { buttonId: `${prefix}chatbotpm`, buttonText: { displayText: 'Chatbot PM 💬' }, type: 1 },
+    ];
 
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Prefix*: ${settings.prefix || 'No prefix set! 🥶'}\n` +
-    `│❒ Set your command trigger!\n` +
-    `│❒ Ex: ${prefix}prefix !\n` +
-    `┗━━━━━━━━━━━━━━━┛\n` +
+    const message = formatStylishReply(
+      `*Toxic-MD Settings* 🔥\n\n` +
+      `Botname: ${botName}\n` +
+      `Prefix: ${settings.prefix || 'None'}\n` +
+      `Antidelete: ${settings.antidelete ? '✅ ON' : '❌ OFF'}\n` +
+      `Chatbot PM: ${settings.chatbotpm ? '✅ ON' : '❌ OFF'}\n` +
+      `Sudo Users: ${sudoUsers.length > 0 ? sudoUsers.join(', ') : 'None'}\n` +
+      `Banned Users: ${bannedUsers.length}\n` +
+      `Total Groups: ${groupCount}\n\n` +
+      `Tap a button to configure a setting! 😈`
+    );
 
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Autoread*: ${settings.autoread ? '✅ ON, I see everything' : '❌ OFF, ignoring DMs'}\n` +
-    `│❒ Auto-read messages or skip ’em!\n` +
-    `│❒ Ex: ${prefix}autoread on\n` +
-    `┗━━━━━━━━━━━━━━━┛\n` +
-
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Autoview Status*: ${settings.autoview ? '✅ ON, checking stories' : '❌ OFF, not watching'}\n` +
-    `│❒ View statuses automatically!\n` +
-    `│❒ Ex: ${prefix}autoview on\n` +
-    `┗━━━━━━━━━━━━━━━┛\n` +
-
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Autolike Status*: ${settings.autolike ? '✅ ON, liking stories ' : '❌ OFF, no likes'}\n` +
-    `│❒ Auto-like statuses or stay cold!\n` +
-    `│❒ Ex: ${prefix}autolike on\n` +
-    `┗━━━━━━━━━━━━━━━┛\n` +
-
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *React Emoji*: ${settings.reactEmoji || 'None set! 😴'}\n` +
-    `│❒ My vibe on statuses!\n` +
-    `│❒ Ex: ${prefix}reaction 😈\n` +
-    `┗━━━━━━━━━━━━━━━┛\n` +
-
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Sticker Watermark*: ${settings.packname || 'None set! 🥶'}\n` +
-    `│❒ Brand your stickers!\n` +
-    `│❒ Ex: ${prefix}setpackname Toxic-MD\n` +
-    `┗━━━━━━━━━━━━━━━┛\n` +
-
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Autobio*: ${settings.autobio ? '✅ ON, flexing 24/7' : '❌ OFF, staying lowkey'}\n` +
-    `│❒ Auto-update my status!\n` +
-    `│❒ Ex: ${prefix}autobio on\n` +
-    `┗━━━━━━━━━━━━━━━┛\n` +
-
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Anticall*: ${settings.anticall ? '✅ ON, blocking calls' : '❌ OFF, calls allowed'}\n` +
-    `│❒ Stop annoying callers!\n` +
-    `│❒ Ex: ${prefix}anticall on\n` +
-    `┗━━━━━━━━━━━━━━━┛\n` +
-
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Presence*: ${settings.presence || 'Offline by default! 😴'}\n` +
-    `│❒ My online vibe!\n` +
-    `│❒ Ex: ${prefix}setpresence typing\n` +
-    `┗━━━━━━━━━━━━━━━┛\n` +
-
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Mode*: ${settings.mode || 'Public by default! 🥶'}\n` +
-    `│❒ Public or private access!\n` +
-    `│❒ Ex: ${prefix}mode private\n` +
-    `┗━━━━━━━━━━━━━━━┛\n\n` +
-
-    `◈━━━━━━━━━━━━━━━━◈\n` +
-    `│❒ *Stats* 📊\n` +
-    `│❒ *Sudo Users*: ${sudoUsers.length > 0 ? sudoUsers.join(', ') : 'Just me, the king! 😈'}\n` +
-    `│❒ *Banned Users*: ${bannedUsers.length} (stay mad!)\n` +
-    `│❒ *Total Groups*: ${groupCount} (ruling them all!)\n` +
-    `┗━━━━━━━━━━━━━━━┛`;
-
-  await m.reply(response);
+    await client.sendMessage(
+      m.chat,
+      {
+        text: message,
+        footer: '> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ',
+        buttons,
+        headerType: 1,
+        viewOnce: true,
+      },
+      { quoted: m, ad: true }
+    );
+  });
 };
