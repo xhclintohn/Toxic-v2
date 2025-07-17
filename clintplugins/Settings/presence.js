@@ -3,30 +3,66 @@ const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
-    const { m, args, prefix } = context;
-    const value = args[0]?.toLowerCase();
+    const { client, m, args, prefix } = context;
+
+    const formatStylishReply = (message) => {
+      return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
+    };
 
     try {
       const settings = await getSettings();
       if (!settings || Object.keys(settings).length === 0) {
-        return await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Database is fucked, no settings found. Fix it, loser.`);
+        return await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
+          { quoted: m, ad: true }
+        );
       }
 
       const validPresenceValues = ['online', 'offline', 'recording', 'typing'];
+      const value = args.join(" ").toLowerCase();
 
       if (validPresenceValues.includes(value)) {
         if (settings.presence === value) {
-          return await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Presence is already ${value.toUpperCase()}, genius. Stop wasting my time.`);
+          return await client.sendMessage(
+            m.chat,
+            { text: formatStylishReply(`Presence is already ${value.toUpperCase()}, genius. Stop wasting my time.`) },
+            { quoted: m, ad: true }
+          );
         }
 
         await updateSetting('presence', value);
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Presence set to ${value.toUpperCase()}. Bot’s flexing that status now!`);
-      } else {
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Presence is ${settings.presence ? settings.presence.toUpperCase() : 'NONE'}, dumbass.\n\nUse ${prefix}presence online, ${prefix}presence offline, ${prefix}presence recording, or ${prefix}presence typing.`);
+        return await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply(`Presence set to ${value.toUpperCase()}. Bot’s flexing that status now!`) },
+          { quoted: m, ad: true }
+        );
       }
+
+      const buttons = [
+        { buttonId: `${prefix}presence online`, buttonText: { displayText: "ONLINE 🟢" }, type: 1 },
+        { buttonId: `${prefix}presence offline`, buttonText: { displayText: "OFFLINE ⚫" }, type: 1 },
+        { buttonId: `${prefix}presence recording`, buttonText: { displayText: "RECORDING 🎙️" }, type: 1 },
+        { buttonId: `${prefix}presence typing`, buttonText: { displayText: "TYPING ⌨️" }, type: 1 },
+      ];
+
+      await client.sendMessage(
+        m.chat,
+        {
+          text: formatStylishReply(`Presence is ${settings.presence ? settings.presence.toUpperCase() : 'NONE'}. Pick a vibe, fam! 🔥`),
+          footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+          buttons,
+          headerType: 1,
+          viewOnce: true,
+        },
+        { quoted: m, ad: true }
+      );
     } catch (error) {
-      console.error('[Presence] Error in command:', error);
-      await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, couldn’t update presence. Database or something’s fucked. Try later.`);
+      await client.sendMessage(
+        m.chat,
+        { text: formatStylishReply("Shit broke, couldn’t update presence. Database or something’s fucked. Try later.") },
+        { quoted: m, ad: true }
+      );
     }
   });
 };
