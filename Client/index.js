@@ -8,6 +8,7 @@ const {
   jidDecode,
   proto,
   getContentType,
+  generateMessageID
 } = require("baileys-pro");
 
 const pino = require("pino");
@@ -48,7 +49,7 @@ async function startToxic() {
     let settingss = await getSettings();
     if (!settingss) return;
 
-    const { autobio, mode, anticall, chatbotpm, prefix } = settingss;
+    const { autobio, mode, anticall, chatbotpm, prefix, antidelete, antilink } = settingss;
 
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
     const client = toxicConnect({
@@ -114,7 +115,7 @@ async function startToxic() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, autolike, autoview, presence, chatbotpm, prefix } = settings;
+        const { autoread, autolike, autoview, presence, chatbotpm, prefix, antidelete, antilink } = settings;
 
         let mek = chatUpdate.messages[0];
         if (!mek || !mek.key || !mek.message || !mek.key.remoteJid) return;
@@ -124,6 +125,22 @@ async function startToxic() {
         const remoteJid = mek.key.remoteJid;
         const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
         const Myself = client.decodeJid(client.user.id);
+
+        // Antidelete logic
+        if (antidelete && mek?.message?.protocolMessage?.type === 0 && remoteJid.endsWith("@g.us")) {
+            const deletedP = mek.message.protocolMessage.key;
+            const deletedM = await store.loadMessage(mek.chat, deletedP.id);
+            if (deletedM) {
+                deletedM.message = {
+                    [deletedM.mtype || "msg"]: deletedM?.msg
+                };
+                const M = proto?.WebMessageInfo;
+                const msg = M.fromObject(M.toObject(deletedM));
+                await client.relayMessage(mek.chat, msg.message, {
+                    messageId: generateMessageID()
+                });
+            }
+        }
 
         // Handle Chatbotpm for non-sudo users
         if (chatbotpm && remoteJid.endsWith('@s.whatsapp.net') && chatUpdate.type === "notify") {
@@ -164,8 +181,8 @@ async function startToxic() {
             }
         }
 
-        // Antilink logic
-        if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
+        // Antilink logic (global)
+        if (antilink && typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
             const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
             const messageContent = (
                 mek.message.conversation ||
