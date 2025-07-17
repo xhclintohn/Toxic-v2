@@ -1,53 +1,60 @@
-const { getSettings, getGroupSetting, updateGroupSetting } = require('../../Database/config');
+const { getSettings, updateSetting } = require('../../Database/config');
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
-  await ownerMiddleware(context, async () => {
-    const { m, args } = context;
-    const value = args[0]?.toLowerCase();
-    const jid = m.chat;
+    await ownerMiddleware(context, async () => {
+        const { client, m, prefix } = context;
+        const value = context.args[0]?.toLowerCase();
 
-    if (!jid.endsWith('@g.us')) {
-      return await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Dumb move, moron! 😈\n` +
-        `│❒ This command is for groups only, you fool!\n` +
-        `┗━━━━━━━━━━━━━━━┛`
-      );
-    }
+        const settings = await getSettings();
+        const botName = process.env.BOTNAME || settings.botname || 'Toxic-MD';
+        const isEnabled = settings.antidelete === true;
 
-    const settings = await getSettings();
-    const prefix = settings.prefix;
+        const formatStylishReply = (message) => {
+            return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
+        };
 
-    let groupSettings = await getGroupSetting(jid);
-    let isEnabled = groupSettings?.antidelete === true;
+        const buttons = [
+            { buttonId: `${prefix}antidelete on`, buttonText: { displayText: 'Turn ON 🗑️' }, type: 1 },
+            { buttonId: `${prefix}antidelete off`, buttonText: { displayText: 'Turn OFF 🚫' }, type: 1 },
+            { buttonId: `${prefix}settings`, buttonText: { displayText: 'Back to Settings ⚙️' }, type: 1 },
+        ];
 
-    if (value === 'on' || value === 'off') {
-      const action = value === 'on';
+        let message;
+        if (value === 'on' || value === 'off') {
+            const action = value === 'on';
+            if (isEnabled === action) {
+                message = formatStylishReply(
+                    `Antidelete is already ${value.toUpperCase()}! 😈\n\n` +
+                    `Status: ${isEnabled ? '✅ ON' : '❌ OFF'}\n` +
+                    `Use "${prefix}antidelete on" or "${prefix}antidelete off" to toggle.`
+                );
+            } else {
+                await updateSetting('antidelete', action ? 'true' : 'false');
+                message = formatStylishReply(
+                    `Antidelete ${value.toUpperCase()} activated! 🔥\n\n` +
+                    `Status: ${action ? '✅ ON' : '❌ OFF'}\n` +
+                    `Use "${prefix}antidelete on" or "${prefix}antidelete off" to toggle.`
+                );
+            }
+        } else {
+            message = formatStylishReply(
+                `Antidelete Status: ${isEnabled ? '✅ ON' : '❌ OFF'}\n\n` +
+                `Use "${prefix}antidelete on" or "${prefix}antidelete off" to toggle.\n` +
+                `Tap a button to configure! 😈`
+            );
+        }
 
-      if (isEnabled === action) {
-        return await m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n` +
-          `│❒ Antidelete is already ${value.toUpperCase()}, you clueless twit! 🥶\n` +
-          `│❒ Stop spamming, peasant! 🖕\n` +
-          `┗━━━━━━━━━━━━━━━┛`
+        await client.sendMessage(
+            m.chat,
+            {
+                text: message,
+                footer: '> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ',
+                buttons,
+                headerType: 1,
+                viewOnce: true,
+            },
+            { quoted: m, ad: true }
         );
-      }
-
-      await updateGroupSetting(jid, 'antidelete', action ? 'true' : 'false');
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Antidelete ${value.toUpperCase()}! 🔥\n` +
-        `│❒ Deleted messages will be sent to your inbox, king! 😈\n` +
-        `┗━━━━━━━━━━━━━━━┛`
-      );
-    } else {
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Antidelete Status: ${isEnabled ? 'ON 🥶' : 'OFF 😴'}\n` +
-        `│❒ Use "${prefix}antidelete on" or "${prefix}antidelete off", noob!\n` +
-        `┗━━━━━━━━━━━━━━━┛`
-      );
-    }
-  });
+    });
 };
