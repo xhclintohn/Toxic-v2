@@ -52,7 +52,7 @@ async function initializeDatabase() {
             reactEmoji: '❤️',
             chatbotpm: 'false',
             antidelete: 'true',
-            antilink: 'false'
+            antilink: 'true'
         };
 
         for (const [key, value] of Object.entries(defaultSettings)) {
