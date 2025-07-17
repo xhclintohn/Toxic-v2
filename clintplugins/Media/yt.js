@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const yts = require("yt-search");
 const axios = require("axios");
 
 const tempDir = path.join(__dirname, "temp");
@@ -19,39 +18,28 @@ module.exports = async (context) => {
     return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
   };
 
-  if (!text) {
+  if (!text || !isValidYouTubeUrl(text)) {
     return client.sendMessage(
       m.chat,
-      { text: formatStylishReply("Yo, drop a song name, fam! 🎵 Ex: .play Not Like Us") },
-      { quoted: m, ad: true }
-    );
-  }
-
-  if (text.length > 100) {
-    return client.sendMessage(
-      m.chat,
-      { text: formatStylishReply("Keep it short, homie! Song name max 100 chars. 📝") },
+      { text: formatStylishReply("Yo, drop a valid YouTube URL, fam! 🎵 Ex: .yt https://youtu.be/60ItHLz5WEA") },
       { quoted: m, ad: true }
     );
   }
 
   try {
-    const searchQuery = `${text} official`;
-    const searchResult = await yts(searchQuery);
-    const video = searchResult.videos[0];
-    if (!video) {
-      return client.sendMessage(
-        m.chat,
-        { text: formatStylishReply("No tunes found, bruh! 😕 Try another search!") },
-        { quoted: m, ad: true }
-      );
-    }
-
     const timestamp = Date.now();
     const fileName = `audio_${timestamp}.mp3`;
     const filePath = path.join(tempDir, fileName);
 
-    const apiUrl = `https://ytdownloader-aie4qa.fly.dev/download/audio?song=${encodeURIComponent(video.url)}&quality=128K&cb=${timestamp}`;
+    const thumbnailUrl = `https://i.ytimg.com/vi/${text.match(/[?&]v=([^&]+)/)?.[1]}/hqdefault.jpg` || "https://via.placeholder.com/120x90";
+
+    await client.sendMessage(
+      m.chat,
+      { text: formatStylishReply("Grabbin’ the audio for ya, fam! Crank it up! 🔥🎶") },
+      { quoted: m, ad: true }
+    );
+
+    const apiUrl = `https://ytdownloader-aie4qa.fly.dev/download/audio?song=${encodeURIComponent(text)}&quality=128K&cb=${timestamp}`;
     const response = await axios({
       method: "get",
       url: apiUrl,
@@ -68,27 +56,21 @@ module.exports = async (context) => {
     });
 
     if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
-      throw new Error("Download failed or file is empty");
+      throw new Error("Audio download failed or file is empty");
     }
-
-    await client.sendMessage(
-      m.chat,
-      { text: formatStylishReply(`Droppin’ *${video.title}* for ya, fam! Crank it up! 🔥🎧`) },
-      { quoted: m, ad: true }
-    );
 
     await client.sendMessage(
       m.chat,
       {
         audio: { url: filePath },
         mimetype: "audio/mpeg",
-        fileName: `${video.title}.mp3`,
+        fileName: `song.mp3`,
         contextInfo: {
           externalAdReply: {
-            title: video.title,
-            body: `${video.author.name || "Unknown Artist"} | Powered by Toxic-MD`,
-            thumbnailUrl: video.thumbnail || "https://via.placeholder.com/120x90",
-            sourceUrl: video.url,
+            title: "YouTube Audio",
+            body: "Quality: 128K | Powered by Toxic-MD",
+            thumbnailUrl,
+            sourceUrl: text,
             mediaType: 1,
             renderLargerThumbnail: true,
           },
@@ -103,7 +85,7 @@ module.exports = async (context) => {
   } catch (error) {
     await client.sendMessage(
       m.chat,
-      { text: formatStylishReply(`Yo, we hit a snag: ${error.message}. Pick another track! 😎`) },
+      { text: formatStylishReply(`Yo, we hit a snag: ${error.message}. Check the URL and try again! 😎`) },
       { quoted: m, ad: true }
     );
   }
