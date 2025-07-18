@@ -5,14 +5,25 @@
   "main": "index.js",
   "type": "commonjs",
   "engines": {
-    "node": "18.x",
-    "npm": "9.x"
+    "node": "20.x",
+    "npm": "10.x"
   },
   "scripts": {
     "start": "node index.js",
     "preinstall": "exit 0",
     "prepare": "exit 0"
   },
+  "keywords": [
+    "whatsapp-bot",
+    "whatsapp-baileys",
+    "baileys-md",
+    "bot-wa",
+    "bot-md",
+    "whatsapp-multi-device"
+  ],
+  "base": "https://github.com/DikaArdnt/Hisoka-Morou",
+  "author": "xhclinton",
+  "license": "MIT",
   "dependencies": {
     "baileys-pro": "github:nstar-y/bail",
     "@adiwajshing/keyed-db": "^0.2.4",
@@ -86,5 +97,17 @@
     "yt-search": "^2.10.4",
     "youtube-yts": "latest",
     "node-youtube-music": "^0.8.3"
-  }
+  },
+  "directories": {
+    "lib": "lib",
+    "src": "src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xhclintohn/Toxic-v2.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xhclintohn/Toxic-v2/issues"
+  },
+  "homepage": "https://github.com/xhclintohn/Toxic-v2#readme"
 }
