@@ -25,6 +25,7 @@ const _ = require("lodash");
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
 const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
+const { generateMessageID } = require('../lib/botFunctions');
 const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
 
 const authenticationn = require('../Auth/auth.js');
@@ -114,7 +115,7 @@ async function startToxic() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, autolike, autoview, presence, antilink } = settings;
+        const { autoread, autolike, autoview, presence, antilink, antidelete } = settings;
 
         let mek = chatUpdate.messages[0];
         if (!mek || !mek.key || !mek.message) return;
@@ -125,7 +126,27 @@ async function startToxic() {
         const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
         const Myself = client.decodeJid(client.user.id);
 
-        // Antilink logic - Fixed to check if antilink is enabled
+        // Antidelete function
+        if (antidelete && mek?.message?.protocolMessage?.type === 0) {
+            try {
+                const deletedP = mek.message.protocolMessage.key;
+                const deletedM = await store.loadMessage(mek.chat || remoteJid, deletedP.id);
+                if (deletedM) {
+                    deletedM.message = {
+                        [deletedM.mtype || "msg"]: deletedM?.msg
+                    };
+                    const M = proto?.WebMessageInfo;
+                    const msg = M.fromObject(M.toObject(deletedM));
+                    await client.relayMessage(mek.chat || remoteJid, msg.message, {
+                        messageId: generateMessageID()
+                    });
+                }
+            } catch (error) {
+                console.log('Antidelete error:', error);
+            }
+        }
+
+        // Antilink logic - Works for all groups when enabled
         if (antilink && typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
             const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
             const messageContent = (
@@ -151,13 +172,12 @@ async function startToxic() {
                     const isSenderAdmin = groupAdmins.includes(sender);
 
                     if (isBotAdmin && !isSenderAdmin) {
-                        // Send warning message first
+                        // Bot is admin - delete the message
                         await client.sendMessage(remoteJid, {
                             text: `◈━━━━━━━━━━━━━━━━◈\n│❒ @${sender.split('@')[0]} Links are not allowed here! 🚫\n│❒ Message deleted by antilink system 🗑️\n┗━━━━━━━━━━━━━━━┛`,
                             mentions: [sender]
                         });
 
-                        // Then delete the message
                         await client.sendMessage(remoteJid, {
                             delete: {
                                 remoteJid: remoteJid,
@@ -165,6 +185,12 @@ async function startToxic() {
                                 id: mek.key.id,
                                 participant: sender
                             }
+                        });
+                    } else if (!isBotAdmin) {
+                        // Bot is not admin - send warning message
+                        await client.sendMessage(remoteJid, {
+                            text: `◈━━━━━━━━━━━━━━━━◈\n│❒ @${sender.split('@')[0]} Links detected! 🚫\n│❒ I can't delete it because I'm not admin\n│❒ Please make me admin to enable link deletion\n┗━━━━━━━━━━━━━━━┛`,
+                            mentions: [sender]
                         });
                     }
                 } catch (error) {
