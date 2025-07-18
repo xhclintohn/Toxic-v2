@@ -8,7 +8,6 @@ const {
   jidDecode,
   proto,
   getContentType,
-  generateMessageID
 } = require("baileys-pro");
 
 const pino = require("pino");
@@ -30,7 +29,7 @@ const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
-const { getSettings, getBannedUsers, banUser, getSudoUsers } = require("../Database/config");
+const { getSettings, getBannedUsers, banUser } = require("../Database/config");
 
 const { botname } = require('../Env/settings');
 const { DateTime } = require('luxon');
@@ -49,7 +48,7 @@ async function startToxic() {
     let settingss = await getSettings();
     if (!settingss) return;
 
-    const { autobio, mode, anticall, chatbotpm, prefix, antidelete, antilink } = settingss;
+    const { autobio, mode, anticall } = settingss;
 
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
     const client = toxicConnect({
@@ -60,7 +59,7 @@ async function startToxic() {
         getMessage: async (key) => {
             if (store) {
                 const msg = await store.loadMessage(key.remoteJid, key.id);
-                return msg?.message || undefined;
+                return msg.message || undefined;
             }
             return { conversation: "Toxic-MD whatsapp user bot" };
         },
@@ -115,10 +114,10 @@ async function startToxic() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, autolike, autoview, presence, chatbotpm, prefix, antidelete, antilink } = settings;
+        const { autoread, autolike, autoview, presence, antilink } = settings;
 
         let mek = chatUpdate.messages[0];
-        if (!mek || !mek.key || !mek.message || !mek.key.remoteJid) return;
+        if (!mek || !mek.key || !mek.message) return;
 
         mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
@@ -126,33 +125,7 @@ async function startToxic() {
         const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
         const Myself = client.decodeJid(client.user.id);
 
-        // Antidelete logic
-        if (antidelete && mek?.message?.protocolMessage?.type === 0) {
-            console.log("Deleted Message Detected!");
-            const deletedP = mek.message.protocolMessage.key;
-            const deletedM = await store.loadMessage(deletedP.remoteJid, deletedP.id);
-            if (deletedM) {
-                try {
-                    deletedM.message = {
-                        [deletedM.mtype || "conversation"]: deletedM?.msg
-                    };
-                    const M = proto?.WebMessageInfo;
-                    const msg = M.fromObject(M.toObject(deletedM));
-                    const senderName = await client.getName(deletedP.participant || deletedP.remoteJid);
-                    const forwardMessage = {
-                        text: `🗑️ *Deleted Message*\n\nFrom: ${senderName}\nChat: ${remoteJid}\nType: ${deletedM.mtype || 'unknown'}`,
-                        ...msg.message
-                    };
-                    await client.sendMessage(Myself, forwardMessage, { quoted: mek });
-                } catch (error) {
-                    console.error(`Error forwarding deleted message: ${error}`);
-                }
-            } else {
-                console.log(`Deleted message not found in store: ${deletedP.id}`);
-            }
-        }
-
-        // Antilink logic (global)
+        // Antilink logic - Fixed to check if antilink is enabled
         if (antilink && typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
             const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
             const messageContent = (
@@ -178,7 +151,13 @@ async function startToxic() {
                     const isSenderAdmin = groupAdmins.includes(sender);
 
                     if (isBotAdmin && !isSenderAdmin) {
-                        await client.sendMessage(remoteJid, { text: "🚫 Link detected! Message deleted." });
+                        // Send warning message first
+                        await client.sendMessage(remoteJid, {
+                            text: `◈━━━━━━━━━━━━━━━━◈\n│❒ @${sender.split('@')[0]} Links are not allowed here! 🚫\n│❒ Message deleted by antilink system 🗑️\n┗━━━━━━━━━━━━━━━┛`,
+                            mentions: [sender]
+                        });
+
+                        // Then delete the message
                         await client.sendMessage(remoteJid, {
                             delete: {
                                 remoteJid: remoteJid,
@@ -187,49 +166,9 @@ async function startToxic() {
                                 participant: sender
                             }
                         });
-                        console.log(`Deleted link from ${sender} in ${remoteJid}`);
                     }
                 } catch (error) {
-                    console.error(`Error in antilink processing: ${error}`);
-                }
-            }
-        }
-
-        // Handle Chatbotpm for non-sudo users
-        if (chatbotpm && remoteJid.endsWith('@s.whatsapp.net') && chatUpdate.type === "notify") {
-            const sudoUsers = await getSudoUsers();
-            const senderNumber = sender.split('@')[0];
-            if (!sudoUsers.includes(senderNumber) && sender !== Myself) {
-                const messageContent = (
-                    mek.message.conversation ||
-                    mek.message.extendedTextMessage?.text ||
-                    mek.message.buttonsResponseMessage?.selectedButtonId ||
-                    ""
-                ).trim();
-
-                if (!messageContent.startsWith(prefix)) {
-                    if (messageContent) {
-                        try {
-                            const encodedText = encodeURIComponent(messageContent);
-                            const apiUrl = `https://api.shizo.top/ai/gpt?apikey=shizo&query=${encodedText}`;
-                            const response = await fetch(apiUrl, { timeout: 10000 });
-                            if (!response.ok) throw new Error(`API request failed: ${response.status}`);
-                            const data = await response.json();
-                            if (!data.status || !data.msg) throw new Error("Invalid API response");
-                            await client.sendMessage(
-                                remoteJid,
-                                { text: data.msg },
-                                { quoted: mek }
-                            );
-                        } catch (error) {
-                            await client.sendMessage(
-                                remoteJid,
-                                { text: "Chatbot error, try again later!" },
-                                { quoted: mek }
-                            );
-                        }
-                        return;
-                    }
+                    console.log('Antilink error:', error);
                 }
             }
         }
