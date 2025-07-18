@@ -129,29 +129,40 @@ async function startToxic() {
         // FIXED: Antidelete function - Forward deleted messages to bot's number
         if (antidelete && mek?.message?.protocolMessage?.type === 0) {
             try {
+                console.log('Deleted Message Detected!');
                 const deletedP = mek.message.protocolMessage.key;
-                const deletedM = await store.loadMessage(mek.chat || remoteJid, deletedP.id);
-                if (deletedM) {
-                    deletedM.message = {
-                        [deletedM.mtype || "msg"]: deletedM?.msg
-                    };
-                    const M = proto?.WebMessageInfo;
-                    const msg = M.fromObject(M.toObject(deletedM));
+                const deletedM = await store.loadMessage(deletedP.remoteJid, deletedP.id);
+                
+                if (deletedM && deletedM.message) {
+                    const botNumber = client.decodeJid(client.user.id);
+                    const deletedFromChat = deletedP.remoteJid;
+                    const deletedBy = deletedP.participant || deletedP.remoteJid;
+                    const deletedByName = deletedBy.split('@')[0];
                     
-                    // Forward to bot's number instead of relaying back to same chat
-                    const botNumber = Myself; // Bot's own number
-                    const chatName = remoteJid.endsWith("@g.us") ? "Group" : "Private Chat";
-                    const deletedBy = sender.split('@')[0];
+                    // Get chat name
+                    let chatName = "Unknown Chat";
+                    if (deletedFromChat.endsWith("@g.us")) {
+                        try {
+                            const groupMeta = await client.groupMetadata(deletedFromChat);
+                            chatName = groupMeta.subject || "Group Chat";
+                        } catch (err) {
+                            chatName = "Group Chat";
+                        }
+                    } else {
+                        chatName = "Private Chat";
+                    }
                     
                     // Send context message first
                     await client.sendMessage(botNumber, {
-                        text: `🗑️ *DELETED MESSAGE ALERT*\n\n📍 From: ${chatName}\n👤 Deleted by: ${deletedBy}\n📅 Time: ${new Date().toLocaleString()}\n\n⬇️ Original message below:`
+                        text: `🗑️ *DELETED MESSAGE ALERT*\n\n📍 From: ${chatName}\n👤 Deleted by: ${deletedByName}\n📅 Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })}\n💬 Chat ID: ${deletedFromChat}\n\n⬇️ Original message below:`
                     });
                     
                     // Forward the actual deleted message
-                    await client.relayMessage(botNumber, msg.message, {
+                    await client.relayMessage(botNumber, deletedM.message, {
                         messageId: generateMessageID()
                     });
+                    
+                    console.log('Deleted message forwarded to bot successfully');
                 }
             } catch (error) {
                 console.log('Antidelete error:', error);
