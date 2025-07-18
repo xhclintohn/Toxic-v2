@@ -11,7 +11,8 @@
   "scripts": {
     "start": "node index.js",
     "preinstall": "exit 0",
-    "prepare": "exit 0"
+    "prepare": "exit 0",
+    "heroku-postbuild": "npm install --no-save --no-package-lock --no-audit --ignore-scripts"
   },
   "keywords": [
     "whatsapp-bot",
@@ -21,7 +22,6 @@
     "bot-md",
     "whatsapp-multi-device"
   ],
-  "base": "https://github.com/DikaArdnt/Hisoka-Morou",
   "author": "xhclinton",
   "license": "MIT",
   "dependencies": {
@@ -97,17 +97,5 @@
     "yt-search": "^2.10.4",
     "youtube-yts": "latest",
     "node-youtube-music": "^0.8.3"
-  },
-  "directories": {
-    "lib": "lib",
-    "src": "src"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/xhclintohn/Toxic-v2.git"
-  },
-  "bugs": {
-    "url": "https://github.com/xhclintohn/Toxic-v2/issues"
-  },
-  "homepage": "https://github.com/xhclintohn/Toxic-v2#readme"
+  }
 }
