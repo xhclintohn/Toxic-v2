@@ -126,7 +126,7 @@ async function startToxic() {
         const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
         const Myself = client.decodeJid(client.user.id);
 
-        // Antidelete function
+        // FIXED: Antidelete function - Forward deleted messages to bot's number
         if (antidelete && mek?.message?.protocolMessage?.type === 0) {
             try {
                 const deletedP = mek.message.protocolMessage.key;
@@ -137,7 +137,19 @@ async function startToxic() {
                     };
                     const M = proto?.WebMessageInfo;
                     const msg = M.fromObject(M.toObject(deletedM));
-                    await client.relayMessage(mek.chat || remoteJid, msg.message, {
+                    
+                    // Forward to bot's number instead of relaying back to same chat
+                    const botNumber = Myself; // Bot's own number
+                    const chatName = remoteJid.endsWith("@g.us") ? "Group" : "Private Chat";
+                    const deletedBy = sender.split('@')[0];
+                    
+                    // Send context message first
+                    await client.sendMessage(botNumber, {
+                        text: `🗑️ *DELETED MESSAGE ALERT*\n\n📍 From: ${chatName}\n👤 Deleted by: ${deletedBy}\n📅 Time: ${new Date().toLocaleString()}\n\n⬇️ Original message below:`
+                    });
+                    
+                    // Forward the actual deleted message
+                    await client.relayMessage(botNumber, msg.message, {
                         messageId: generateMessageID()
                     });
                 }
@@ -146,7 +158,7 @@ async function startToxic() {
             }
         }
 
-        // Antilink logic - Works for all groups when enabled
+        // FIXED: Antilink logic - Proper admin detection
         if (antilink && typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
             const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
             const messageContent = (
@@ -165,11 +177,24 @@ async function startToxic() {
                     const groupMetadata = await client.groupMetadata(remoteJid);
                     if (!groupMetadata || !groupMetadata.participants) return;
 
+                    // FIXED: Proper admin detection
+                    const botJid = client.decodeJid(client.user.id);
+                    const senderJid = client.decodeJid(sender);
+                    
                     const groupAdmins = groupMetadata.participants
-                        .filter(p => p.admin != null)
+                        .filter(p => p.admin === 'admin' || p.admin === 'superadmin')
                         .map(p => client.decodeJid(p.id));
-                    const isBotAdmin = groupAdmins.includes(Myself);
-                    const isSenderAdmin = groupAdmins.includes(sender);
+                    
+                    const isBotAdmin = groupAdmins.includes(botJid);
+                    const isSenderAdmin = groupAdmins.includes(senderJid);
+
+                    console.log('Admin check:', {
+                        botJid,
+                        senderJid,
+                        groupAdmins,
+                        isBotAdmin,
+                        isSenderAdmin
+                    });
 
                     if (isBotAdmin && !isSenderAdmin) {
                         // Bot is admin - delete the message
