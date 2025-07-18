@@ -4,22 +4,17 @@
   "description": "WhatsApp Multi Device Bot",
   "main": "index.js",
   "type": "commonjs",
-  "scripts": {
-    "start": "node index.js"
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
   },
-  "keywords": [
-    "whatsapp-bot",
-    "whatsapp-baileys",
-    "baileys-md",
-    "bot-wa",
-    "bot-md",
-    "whatsapp-multi-device"
-  ],
-  "base": "https://github.com/DikaArdnt/Hisoka-Morou",
-  "author": "xhclinton",
-  "license": "MIT",
+  "scripts": {
+    "start": "node index.js",
+    "preinstall": "exit 0",
+    "prepare": "exit 0"
+  },
   "dependencies": {
-"baileys-pro": "github:nstar-y/bail",
+    "baileys-pro": "github:nstar-y/bail",
     "@adiwajshing/keyed-db": "^0.2.4",
     "@distube/ytdl-core": "^4.15.1",
     "@hapi/boom": "^10.0.0",
@@ -33,7 +28,7 @@
     "random-useragent": "^0.5.0",
     "axios": "^1.3.6",
     "unofficial-carbon-now": "^1.0.6",
-    "express": "latest",
+    "express": "^4.18.2",
     "chalk": "^4.1.2",
     "wikipedia": "^2.1.1",
     "querystring": "^0.2.1",
@@ -48,7 +43,6 @@
     "ip-location": "^1.0.1",
     "calculator-engine": "^0.1.0",
     "link-preview-js": "^3.0.4",
-    "fluent-ffmpeg": "^2.1.2",
     "gemini-ai": "^1.1.0",
     "fs": "^0.0.1-security",
     "discord-mongoose-economy": "^1.2.0",
@@ -79,33 +73,18 @@
     "unlimited-ai": "^2.0.1",
     "qrcode-terminal": "^0.12.0",
     "quickmongo": "^5.2.0",
-    "adm-zip": "latest",
+    "adm-zip": "^0.5.10",
     "stream": "^0.0.2",
     "readline": "^1.3.0",
     "simple-git": "^3.7.1",
     "heroku-client": "^3.1.0",
-    "google-tts-api": "latest",
     "wa-sticker-formatter": "^4.3.2",
     "genius-lyrics": "^4.4.3",
     "util": "^0.12.5",
     "youtubedl-core": "^4.11.7",
     "acrcloud": "^1.4.0",
-    "ytdl-core": "npm:@distube/ytdl-core",
-    "yt-search": "latest",
-    "youtube-yts": "latest",
-    "node-youtube-music": "^0.8.3",
-    "node-id3": "^0.2.6"
-  },
-  "directories": {
-    "lib": "lib",
-    "src": "src"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/xhclintohn/Toxic-v2.git"
-  },
-  "bugs": {
-    "url": "https://github.com/xhclintohn/Toxic-v2/issues"
-  },
-  "homepage": "https://github.com/xhclintohn/Toxic-v2#readme"
+    "yt-search": "^2.10.4",
+    "youtube-yts": "^1.0.2",
+    "node-youtube-music": "^0.8.3"
+  }
 }
