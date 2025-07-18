@@ -21,7 +21,7 @@
   "author": "xhclinton",
   "license": "MIT",
   "dependencies": {
-"baileys-pro": "npm:baileys-mod@latest",
+"baileys-pro": "github:kiuur/bails",
     "@adiwajshing/keyed-db": "^0.2.4",
     "@distube/ytdl-core": "^4.15.1",
     "@hapi/boom": "^10.0.0",
