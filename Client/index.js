@@ -48,7 +48,7 @@ async function startToxic() {
     let settingss = await getSettings();
     if (!settingss) return;
 
-    const { autobio, mode, anticall } = settingss;
+    const { autobio, mode, anticall, autolike, autolikeemoji } = settingss;
 
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
     const client = toxicConnect({
@@ -114,7 +114,7 @@ async function startToxic() {
         let settings = await getSettings();
         if (!settings) return;
 
-        const { autoread, autolike, autoview, presence } = settings;
+        const { autoread, autolike, autoview, presence, autolikeemoji } = settings;
 
         let mek = chatUpdate.messages[0];
         if (!mek || !mek.key || !mek.message) return;
@@ -163,12 +163,12 @@ async function startToxic() {
         }
 
         // Autolike for statuses
-            if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
-                const nickk = client.decodeJid(client.user.id);
-                const weirdEmojis = ['❤️', '🔥', '😜', '🥀', '🥲', '☃️', '🌜', '⚡', '🕳️', '🦠', '👀', '🥷🏻', '🌹', '⛰️', '🌊', '🌀', '🐾'];
-                const emoji = autolikeemoji === 'random' ? weirdEmojis[Math.floor(Math.random() * weirdEmojis.length)] : autolikeemoji;
-                await client.sendMessage(mek.key.remoteJid, { react: { text: emoji, key: mek.key } }, { statusJidList: [mek.key.participant, nickk] });
-            }
+        if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
+            const nickk = client.decodeJid(client.user.id);
+            const weirdEmojis = ['❤️', '🔥', '😜', '🥀', '🥲', '☃️', '🌜', '⚡', '🕳️', '🦠', '👀', '🥷🏻', '🌹', '⛰️', '🌊', '🌀', '🐾'];
+            const emoji = autolikeemoji === 'random' ? weirdEmojis[Math.floor(Math.random() * weirdEmojis.length)] : autolikeemoji;
+            await client.sendMessage(mek.key.remoteJid, { react: { text: emoji, key: mek.key } }, { statusJidList: [mek.key.participant, nickk] });
+        }
 
         // Autoview/autoread
         if (autoview && remoteJid === "status@broadcast") {
