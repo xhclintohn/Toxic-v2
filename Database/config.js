@@ -24,7 +24,7 @@ const port = process.env.PORT || 10000;
 const _ = require("lodash");
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
-const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
+const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, sleep } = require('../lib/botFunctions');
 const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
 
 const authenticationn = require('../Auth/auth.js');
@@ -34,7 +34,6 @@ const { getSettings, getBannedUsers, banUser } = require("../Database/config");
 const { botname } = require('../Env/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('../Handler/commandHandler');
-authenticationn();
 
 const path = require('path');
 
@@ -44,11 +43,17 @@ const groupEvents = require("../Handler/eventHandler");
 const groupEvents2 = require("../Handler/eventHandler2");
 const connectionHandler = require('../Handler/connectionHandler');
 
-async function startToxic() {
-    let settingss = await getSettings();
-    if (!settingss) return;
+// Initialize authentication
+authenticationn();
 
-    const { autobio, mode, anticall, autolike, reactEmoji } = settingss;
+async function startToxic() {
+    let settings = await getSettings();
+    if (!settings) {
+        console.error("Failed to load settings, exiting...");
+        process.exit(1);
+    }
+
+    const { autobio, mode, anticall, autolike, reactEmoji } = settings;
 
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
     const client = toxicConnect({
@@ -89,16 +94,14 @@ async function startToxic() {
     const processedCalls = new Set();
 
     client.ws.on('CB:call', async (json) => {
-        const settingszs = await getSettings();
-        if (!settingszs?.anticall) return;
+        const settings = await getSettings();
+        if (!settings?.anticall) return;
 
         const callId = json.content[0].attrs['call-id'];
         const callerJid = json.content[0].attrs['call-creator'];
         const callerNumber = callerJid.replace(/[@.a-z]/g, "");
 
-        if (processedCalls.has(callId)) {
-            return;
-        }
+        if (processedCalls.has(callId)) return;
         processedCalls.add(callId);
 
         await client.rejectCall(callId, callerJid);
@@ -194,18 +197,17 @@ async function startToxic() {
         // Handle commands
         if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
-        m = smsg(client, mek, store);
+        const m = smsg(client, mek, store);
         require("./toxic")(client, m, chatUpdate, store);
     });
 
     const unhandledRejections = new Map();
     process.on("unhandledRejection", (reason, promise) => {
         unhandledRejections.set(promise, reason);
+        console.error("Unhandled Rejection at:", promise, "reason:", reason);
     });
     process.on("rejectionHandled", (promise) => {
         unhandledRejections.delete(promise);
-    });
-    process.on("Something went wrong", function (err) {
     });
 
     client.decodeJid = (jid) => {
@@ -279,6 +281,7 @@ async function startToxic() {
     };
 }
 
+// Start the server and bot
 app.use(express.static('public'));
 
 app.get("/", (req, res) => {
@@ -287,7 +290,10 @@ app.get("/", (req, res) => {
 
 app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 
-startToxic();
+startToxic().catch((err) => {
+    console.error("Failed to start Toxic:", err);
+    process.exit(1);
+});
 
 module.exports = startToxic;
 
