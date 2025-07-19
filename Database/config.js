@@ -1,270 +1,300 @@
-const { Pool } = require('pg');
-const { database } = require('../Env/settings');
+const {
+  default: toxicConnect,
+  useMultiFileAuthState,
+  DisconnectReason,
+  fetchLatestBaileysVersion,
+  makeInMemoryStore,
+  downloadContentFromMessage,
+  jidDecode,
+  proto,
+  getContentType,
+} = require("baileys-pro");
 
-const pool = new Pool({
-    connectionString: database,
-    ssl: { rejectUnauthorized: false }
+const pino = require("pino");
+const { Boom } = require("@hapi/boom");
+const fs = require("fs");
+const FileType = require("file-type");
+const { exec, spawn, execSync } = require("child_process");
+const axios = require("axios");
+const chalk = require("chalk");
+const figlet = require("figlet");
+const express = require("express");
+const app = express();
+const port = process.env.PORT || 10000;
+const _ = require("lodash");
+const PhoneNumber = require("awesome-phonenumber");
+const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
+const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
+const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
+
+const authenticationn = require('../Auth/auth.js');
+const { smsg } = require('../Handler/smsg');
+const { getSettings, getBannedUsers, banUser } = require("../Database/config");
+
+const { botname } = require('../Env/settings');
+const { DateTime } = require('luxon');
+const { commands, totalCommands } = require('../Handler/commandHandler');
+authenticationn();
+
+const path = require('path');
+
+const sessionName = path.join(__dirname, '..', 'Session');
+
+const groupEvents = require("../Handler/eventHandler");
+const groupEvents2 = require("../Handler/eventHandler2");
+const connectionHandler = require('../Handler/connectionHandler');
+
+async function startToxic() {
+    let settingss = await getSettings();
+    if (!settingss) return;
+
+    const { autobio, mode, anticall, autolike, reactEmoji } = settingss;
+
+    const { saveCreds, state } = await useMultiFileAuthState(sessionName);
+    const client = toxicConnect({
+        logger: pino({ level: "silent" }),
+        printQRInTerminal: true,
+        browser: ["Toxic-MD", "Chrome", "1.0.0"],
+        auth: state,
+        getMessage: async (key) => {
+            if (store) {
+                const msg = await store.loadMessage(key.remoteJid, key.id);
+                return msg.message || undefined;
+            }
+            return { conversation: "Toxic-MD whatsapp user bot" };
+        },
+        version: [2, 3000, 1023223821],
+        fireInitQueries: false,
+        shouldSyncHistoryMessage: false,
+        downloadHistory: false,
+        syncFullHistory: false,
+        generateHighQualityLinkPreview: true,
+        markOnlineOnConnect: true,
+        keepAliveIntervalMs: 30_000,
+    });
+
+    store.bind(client.ev);
+
+    setInterval(() => { store.writeToFile("store.json"); }, 3000);
+
+    if (autobio) {
+        setInterval(() => {
+            const date = new Date();
+            client.updateProfileStatus(
+                `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi'})}.`
+            );
+        }, 10 * 1000);
+    }
+
+    const processedCalls = new Set();
+
+    client.ws.on('CB:call', async (json) => {
+        const settingszs = await getSettings();
+        if (!settingszs?.anticall) return;
+
+        const callId = json.content[0].attrs['call-id'];
+        const callerJid = json.content[0].attrs['call-creator'];
+        const callerNumber = callerJid.replace(/[@.a-z]/g, "");
+
+        if (processedCalls.has(callId)) {
+            return;
+        }
+        processedCalls.add(callId);
+
+        await client.rejectCall(callId, callerJid);
+        await client.sendMessage(callerJid, { text: "> You Have been banned for calling without permission ⚠️!" });
+
+        const bannedUsers = await getBannedUsers();
+        if (!bannedUsers.includes(callerNumber)) {
+            await banUser(callerNumber);
+        }
+    });
+
+    client.ev.on("messages.upsert", async (chatUpdate) => {
+        let settings = await getSettings();
+        if (!settings) return;
+
+        const { autoread, autolike, autoview, presence, reactEmoji } = settings;
+
+        let mek = chatUpdate.messages[0];
+        if (!mek || !mek.key || !mek.message) return;
+
+        mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
+
+        const remoteJid = mek.key.remoteJid;
+        const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
+        const Myself = client.decodeJid(client.user.id);
+
+        // Antilink logic
+        if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
+            const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
+            const messageContent = (
+                mek.message.conversation ||
+                mek.message.extendedTextMessage?.text ||
+                mek.message.imageMessage?.caption ||
+                mek.message.videoMessage?.caption ||
+                mek.message.documentMessage?.caption ||
+                ""
+            ).toLowerCase();
+
+            if (sender === Myself) return;
+
+            if (urlRegex.test(messageContent)) {
+                const groupMetadata = await client.groupMetadata(remoteJid);
+                if (!groupMetadata || !groupMetadata.participants) return;
+
+                const groupAdmins = groupMetadata.participants
+                    .filter(p => p.admin != null)
+                    .map(p => client.decodeJid(p.id));
+                const isBotAdmin = groupAdmins.includes(Myself);
+                const isSenderAdmin = groupAdmins.includes(sender);
+
+                if (isBotAdmin && !isSenderAdmin) {
+                    await client.sendMessage(remoteJid, {
+                        delete: {
+                            remoteJid: remoteJid,
+                            fromMe: false,
+                            id: mek.key.id,
+                            participant: sender
+                        }
+                    });
+                }
+            }
+        }
+
+        // Autolike for statuses
+        if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
+            const nickk = client.decodeJid(client.user.id);
+            const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
+            const emoji = reactEmoji === 'random' ? emojis[Math.floor(Math.random() * emojis.length)] : reactEmoji;
+            await client.sendMessage(mek.key.remoteJid, { react: { text: emoji, key: mek.key } }, { statusJidList: [mek.key.participant, nickk] });
+        }
+
+        // Autoview/autoread
+        if (autoview && remoteJid === "status@broadcast") {
+            await client.readMessages([mek.key]);
+        } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+            await client.readMessages([mek.key]);
+        }
+
+        // Presence
+        if (remoteJid.endsWith('@s.whatsapp.net')) {
+            const Chat = remoteJid;
+            if (presence === 'online') {
+                await client.sendPresenceUpdate("available", Chat);
+            } else if (presence === 'typing') {
+                await client.sendPresenceUpdate("composing", Chat);
+            } else if (presence === 'recording') {
+                await client.sendPresenceUpdate("recording", Chat);
+            } else {
+                await client.sendPresenceUpdate("unavailable", Chat);
+            }
+        }
+
+        // Handle commands
+        if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
+
+        m = smsg(client, mek, store);
+        require("./toxic")(client, m, chatUpdate, store);
+    });
+
+    const unhandledRejections = new Map();
+    process.on("unhandledRejection", (reason, promise) => {
+        unhandledRejections.set(promise, reason);
+    });
+    process.on("rejectionHandled", (promise) => {
+        unhandledRejections.delete(promise);
+    });
+    process.on("Something went wrong", function (err) {
+    });
+
+    client.decodeJid = (jid) => {
+        if (!jid) return jid;
+        if (/:\d+@/gi.test(jid)) {
+            let decode = jidDecode(jid) || {};
+            return (decode.user && decode.server && decode.user + "@" + decode.server) || jid;
+        } else return jid;
+    };
+
+    client.getName = (jid, withoutContact = false) => {
+        id = client.decodeJid(jid);
+        withoutContact = client.withoutContact || withoutContact;
+        let v;
+        if (id.endsWith("@g.us"))
+            return new Promise(async (resolve) => {
+                v = store.contacts[id] || {};
+                if (!(v.name || v.subject)) v = client.groupMetadata(id) || {};
+                resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
+            });
+        else
+            v = id === "0@s.whatsapp.net"
+                ? { id, name: "WhatsApp" }
+                : id === client.decodeJid(client.user.id)
+                ? client.user
+                : store.contacts[id] || {};
+        return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
+    };
+
+    client.public = true;
+
+    client.serializeM = (m) => smsg(client, m, store);
+
+    client.ev.on("group-participants.update", async (m) => {
+        groupEvents(client, m);
+        groupEvents2(client, m);
+    });
+
+    client.ev.on("connection.update", async (update) => {
+        await connectionHandler(client, update, startToxic);
+    });
+
+    client.ev.on("creds.update", saveCreds);
+
+    client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text: text, ...options }, { quoted });
+
+    client.downloadMediaMessage = async (message) => {
+        let mime = (message.msg || message).mimetype || '';
+        let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+        const stream = await downloadContentFromMessage(message, messageType);
+        let buffer = Buffer.from([]);
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+        return buffer;
+    };
+
+    client.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
+        let quoted = message.msg ? message.msg : message;
+        let mime = (message.msg || message).mimetype || '';
+        let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+        const stream = await downloadContentFromMessage(quoted, messageType);
+        let buffer = Buffer.from([]);
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+        let type = await FileType.fromBuffer(buffer);
+        const trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
+        await fs.writeFileSync(trueFileName, buffer);
+        return trueFileName;
+    };
+}
+
+app.use(express.static('public'));
+
+app.get("/", (req, res) => {
+    res.sendFile(__dirname + '/index.html');
 });
 
-async function initializeDatabase() {
-    const client = await pool.connect();
-    try {
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS settings (
-                id SERIAL PRIMARY KEY,
-                key TEXT UNIQUE NOT NULL,
-                value TEXT NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS group_settings (
-                jid TEXT NOT NULL,
-                key TEXT NOT NULL,
-                value TEXT NOT NULL,
-                PRIMARY KEY (jid, key)
-            );
-            CREATE TABLE IF NOT EXISTS conversation_history (
-                id SERIAL PRIMARY KEY,
-                num TEXT NOT NULL,
-                role TEXT NOT NULL,
-                message TEXT NOT NULL,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-            CREATE TABLE IF NOT EXISTS sudo_users (
-                num TEXT PRIMARY KEY
-            );
-            CREATE TABLE IF NOT EXISTS banned_users (
-                num TEXT PRIMARY KEY
-            );
-            CREATE TABLE IF NOT EXISTS users (
-                num TEXT PRIMARY KEY
-            );
-        `);
+app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 
-        const defaultSettings = {
-            prefix: '.',
-            packname: 'Toxic-MD',
-            mode: 'public',
-            presence: 'online',
-            autoview: 'true',
-            autolike: 'true',
-            autoread: 'false',
-            autobio: 'false',
-            anticall: 'false',
-            reactEmoji: '❤️'
-        };
+startToxic();
 
-        for (const [key, value] of Object.entries(defaultSettings)) {
-            await client.query(`
-                INSERT INTO settings (key, value) 
-                VALUES ($1, $2)
-                ON CONFLICT (key) DO NOTHING;
-            `, [key, value]);
-        }
-    } catch (error) {
-        console.error(`❌ Database setup failed: ${error}`);
-    } finally {
-        client.release();
-    }
-}
+module.exports = startToxic;
 
-const defaultGroupSettings = {
-    antitag: 'false',
-    antidelete: 'true',
-    gcpresence: 'false',
-    antiforeign: 'false',
-    antidemote: 'false',
-    antipromote: 'false',
-    events: 'false',
-    antilink: 'false'
-};
-
-async function initializeGroupSettings(jid) {
-    try {
-        for (const [key, value] of Object.entries(defaultGroupSettings)) {
-            await pool.query(`
-                INSERT INTO group_settings (jid, key, value)
-                VALUES ($1, $2, $3)
-                ON CONFLICT (jid, key) DO NOTHING;
-            `, [jid, key, value]);
-        }
-    } catch (error) {
-        console.error(`❌ Error initializing group settings for ${jid}: ${error}`);
-    }
-}
-
-async function getGroupSetting(jid) {
-    try {
-        const res = await pool.query(`
-            SELECT key, value FROM group_settings WHERE jid = $1;
-        `, [jid]);
-
-        if (res.rows.length === 0) {
-            await initializeGroupSettings(jid);
-            return defaultGroupSettings;
-        }
-
-        let settings = {};
-        res.rows.forEach(row => {
-            settings[row.key] = row.value === 'true' ? true : row.value === 'false' ? false : row.value;
-        });
-        return settings;
-    } catch (error) {
-        console.error(`❌ Error fetching group settings for ${jid}: ${error}`);
-        return {};
-    }
-}
-
-async function updateGroupSetting(jid, key, value) {
-    try {
-        const valueToStore = typeof value === 'boolean' ? (value ? 'true' : 'false') : value;
-        await pool.query(`
-            INSERT INTO group_settings (jid, key, value)
-            VALUES ($1, $2, $3)
-            ON CONFLICT (jid, key) DO UPDATE
-            SET value = EXCLUDED.value;
-        `, [jid, key, valueToStore]);
-    } catch (error) {
-        console.error(`❌ Error updating group setting for ${jid}: ${key}: ${error}`);
-    }
-}
-
-async function getAllGroupSettings() {
-    try {
-        const res = await pool.query(`
-            SELECT * FROM group_settings;
-        `);
-        return res.rows;
-    } catch (error) {
-        console.error(`❌ Error fetching all group settings: ${error}`);
-        return [];
-    }
-}
-
-async function getSettings() {
-    try {
-        const res = await pool.query("SELECT key, value FROM settings");
-        const settings = {};
-        res.rows.forEach(row => {
-            settings[row.key] = row.value === 'true' ? true : row.value === 'false' ? false : row.value;
-        });
-        return settings;
-    } catch (error) {
-        console.error(`❌ Error fetching global settings: ${error}`);
-        return {};
-    }
-}
-
-async function updateSetting(key, value) {
-    try {
-        await pool.query(`
-            INSERT INTO settings (key, value) 
-            VALUES ($1, $2)
-            ON CONFLICT (key) DO UPDATE 
-            SET value = EXCLUDED.value;
-        `, [key, value]);
-    } catch (error) {
-        console.error(`❌ Error updating global setting: ${key}: ${error}`);
-    }
-}
-
-async function banUser(num) {
-    try {
-        await pool.query(`INSERT INTO banned_users (num) VALUES ($1) ON CONFLICT (num) DO NOTHING;`, [num]);
-    } catch (error) {
-        console.error(`❌ Error banning user ${num}: ${error}`);
-    }
-}
-
-async function unbanUser(num) {
-    try {
-        await pool.query(`DELETE FROM banned_users WHERE num = $1;`, [num]);
-    } catch (error) {
-        console.error(`❌ Error unbanning user ${num}: ${error}`);
-    }
-}
-
-async function addSudoUser(num) {
-    try {
-        await pool.query(`INSERT INTO sudo_users (num) VALUES ($1) ON CONFLICT (num) DO NOTHING;`, [num]);
-    } catch (error) {
-        console.error(`❌ Error adding sudo user ${num}: ${error}`);
-    }
-}
-
-async function removeSudoUser(num) {
-    try {
-        await pool.query(`DELETE FROM sudo_users WHERE num = $1;`, [num]);
-    } catch (error) {
-        console.error(`❌ Error removing sudo user ${num}: ${error}`);
-    }
-}
-
-async function getSudoUsers() {
-    try {
-        const res = await pool.query('SELECT num FROM sudo_users');
-        return res.rows.map(row => row.num);
-    } catch (error) {
-        console.error(`❌ Error fetching sudo users: ${error}`);
-        return [];
-    }
-}
-
-async function saveConversation(num, role, message) {
-    try {
-        await pool.query(
-            'INSERT INTO conversation_history (num, role, message) VALUES ($1, $2, $3)',
-            [num, role, message]
-        );
-    } catch (error) {
-        console.error(`❌ Error saving conversation for ${num}: ${error}`);
-    }
-}
-
-async function getRecentMessages(num) {
-    try {
-        const res = await pool.query(
-            'SELECT role, message FROM conversation_history WHERE num = $1 ORDER BY timestamp ASC',
-            [num]
-        );
-        return res.rows;
-    } catch (error) {
-        console.error(`❌ Error retrieving conversation history for ${num}: ${error}`);
-        return [];
-    }
-}
-
-async function deleteUserHistory(num) {
-    try {
-        await pool.query('DELETE FROM conversation_history WHERE num = $1', [num]);
-    } catch (error) {
-        console.error(`❌ Error deleting conversation history for ${num}: ${error}`);
-    }
-}
-
-async function getBannedUsers() {
-    try {
-        const res = await pool.query('SELECT num FROM banned_users');
-        return res.rows.map(row => row.num);
-    } catch (error) {
-        console.error(`❌ Error fetching banned users: ${error}`);
-        return [];
-    }
-}
-
-initializeDatabase().catch(err => console.error(`❌ Database initialization failed: ${err}`));
-
-module.exports = {
-    addSudoUser,
-    saveConversation,
-    getRecentMessages,
-    deleteUserHistory,
-    getSudoUsers,
-    removeSudoUser,
-    banUser,
-    unbanUser,
-    getBannedUsers,
-    getSettings,
-    updateSetting,
-    getGroupSetting,
-    updateGroupSetting,
-    initializeGroupSettings
-};
+let file = require.resolve(__filename);
+fs.watchFile(file, () => {
+    fs.unwatchFile(file);
+    console.log(chalk.redBright(`Update ${__filename}`));
+    delete require.cache[file];
+    require(file);
+});
