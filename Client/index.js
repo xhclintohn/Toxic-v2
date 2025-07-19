@@ -163,12 +163,12 @@ async function startToxic() {
         }
 
         // Autolike for statuses
-        if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
-            const nickk = await client.decodeJid(client.user.id);
-            const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
-            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-            await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key, } }, { statusJidList: [mek.key.participant, nickk] });
-        }
+            if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
+                const nickk = client.decodeJid(client.user.id);
+                const weirdEmojis = ['❤️', '🔥', '😜', '🥀', '🥲', '☃️', '🌜', '⚡', '🕳️', '🦠', '👀', '🥷🏻', '🌹', '⛰️', '🌊', '🌀', '🐾'];
+                const emoji = autolikeemoji === 'random' ? weirdEmojis[Math.floor(Math.random() * weirdEmojis.length)] : autolikeemoji;
+                await client.sendMessage(mek.key.remoteJid, { react: { text: emoji, key: mek.key } }, { statusJidList: [mek.key.participant, nickk] });
+            }
 
         // Autoview/autoread
         if (autoview && remoteJid === "status@broadcast") {
