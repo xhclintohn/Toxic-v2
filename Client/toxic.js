@@ -14,7 +14,7 @@ const gcPresence = require('../Functions/gcPresence');
 const antitaggc = require('../Functions/antitag');
 const antidel = require('../Functions/antidelete');
 
-const { getSettings, getSudoUsers, getBannedUsers } = require('../Database/config'); // Removed getGroupSettings as it may not exist
+const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require('../Database/config');
 
 const { botname, mycode } = require('../Env/settings');
 
@@ -113,7 +113,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
       return;
     }
 
-    await antidel(client, m);
+    await antidel(client, m, store);
     await status_saver(client, m, Owner, prefix);
     await gcPresence(client, m);
     await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
