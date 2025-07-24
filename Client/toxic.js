@@ -1,4 +1,4 @@
-const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType } = require("baileys-pro");
+const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType, generateMessageID } = require("baileys-pro");
 const fs = require("fs");
 const util = require("util");
 const chalk = require("chalk");
@@ -14,7 +14,7 @@ const gcPresence = require('../Functions/gcPresence');
 const antitaggc = require('../Functions/antitag');
 const antidel = require('../Functions/antidelete');
 
-const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require('../Database/config'); // Added getGroupSettings
+const { getSettings, getSudoUsers, getBannedUsers } = require('../Database/config'); // Removed getGroupSettings as it may not exist
 
 const { botname, mycode } = require('../Env/settings');
 
