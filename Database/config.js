@@ -27,7 +27,8 @@ async function initializeDatabase() {
                 id SERIAL PRIMARY KEY,
                 num TEXT NOT NULL,
                 role TEXT NOT NULL,
-                message TEXT NOTrese
+                message TEXT NOT NULL,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
             CREATE TABLE IF NOT EXISTS sudo_users (
                 num TEXT PRIMARY KEY
@@ -87,7 +88,7 @@ async function getSettings() {
 async function updateSetting(key, value) {
     try {
         const valueToStore = typeof value === 'boolean' ? (value ? 'true' : 'false') : value;
-        await client.query(`
+        await pool.query(`
             INSERT INTO settings (key, value) 
             VALUES ($1, $2)
             ON CONFLICT (key) DO UPDATE 
@@ -111,7 +112,7 @@ async function getGroupSettings(jid) {
                 antipromote: res.rows[0].antipromote
             };
         }
-        // Fallback to global antidelete setting if no group-specific settings
+        // Fallback to global settings if no group-specific settings
         return {
             antidelete: globalSettings.antidelete || true,
             gcpresence: globalSettings.gcpresence || true,
@@ -242,7 +243,6 @@ module.exports = {
     getBannedUsers,
     getSettings,
     updateSetting,
-    getGroupSetting,
     getGroupSettings,
     updateGroupSetting
 };
