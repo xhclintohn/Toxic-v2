@@ -1,12 +1,12 @@
 const fs = require("fs");
 const path = require("path");
-const { getGroupSetting } = require("../Database/config");
+const { getGroupSettings } = require("../Database/config"); // Fixed function name
 
 module.exports = async (client, m) => {
     if (!m.isGroup) return;
 
     const jid = m.chat;
-    let groupSettings = await getGroupSetting(jid);
+    let groupSettings = await getGroupSettings(jid); // Fixed function name
 
     if (!groupSettings || groupSettings.antidelete !== true) return;
 
