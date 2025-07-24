@@ -1,42 +1,36 @@
-const fs = require("fs");
-const path = require("path");
-const { getGroupSettings } = require("../Database/config"); // Fixed function name
+const { proto, generateMessageID } = require("baileys-pro");
+const { getSettings } = require("../Database/config");
 
-module.exports = async (client, m) => {
-    if (!m.isGroup) return;
+module.exports = async (client, m, store) => {
+    try {
+        const settings = await getSettings();
+        if (!settings || !settings.antidelete) return;
 
-    const jid = m.chat;
-    let groupSettings = await getGroupSettings(jid); // Fixed function name
+        const botNumber = await client.decodeJid(client.user.id);
 
-    if (!groupSettings || groupSettings.antidelete !== true) return;
+        if (m?.message?.protocolMessage?.type === 0) {
+            console.log("Deleted Message Detected!");
+            const deletedP = m.message.protocolMessage.key;
+            const deletedM = await store.loadMessage(deletedP.remoteJid, deletedP.id);
 
-    if (m.message.protocolMessage && m.message.protocolMessage.type === 0) {
-        console.log("Deleted Message Detected!");
-        let key = m.message.protocolMessage.key;
-
-        try {
-            const st = path.join(__dirname, "../Client/store.json");
-            const datac = fs.readFileSync(st, "utf8");
-            const jsonData = JSON.parse(datac);
-
-            let messagez = jsonData.messages[key.remoteJid];
-            let msgb;
-
-            for (let i = 0; i < messagez.length; i++) {
-                if (messagez[i].key.id === key.id) {
-                    msgb = messagez[i];
-                }
+            if (!deletedM) {
+                console.log("Deleted message detected, error retrieving...");
+                return;
             }
 
-            console.log(msgb);
+            deletedM.message = {
+                [deletedM.mtype || "msg"]: deletedM?.msg
+            };
 
-            if (!msgb) {
-                return console.log("Deleted message detected, error retrieving...");
-            }
+            const M = proto?.WebMessageInfo;
+            const msg = M.fromObject(M.toObject(deletedM));
 
-            await client.sendMessage(client.user.id, { forward: msgb }, { quoted: msgb });
-        } catch (e) {
-            console.log(e);
+            // Forward to bot's number (client.user.id) for both groups and PMs
+            await client.relayMessage(botNumber, msg.message, {
+                messageId: generateMessageID()
+            });
         }
+    } catch (e) {
+        console.log("Error in antidelete:", e);
     }
 };
