@@ -242,6 +242,7 @@ module.exports = {
     getBannedUsers,
     getSettings,
     updateSetting,
+    getGroupSetting,
     getGroupSettings,
     updateGroupSetting
 };
