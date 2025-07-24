@@ -14,7 +14,7 @@ const gcPresence = require('../Functions/gcPresence');
 const antitaggc = require('../Functions/antitag');
 const antidel = require('../Functions/antidelete');
 
-const { getSettings, getSudoUsers, getBannedUsers } = require('../Database/config');
+const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require('../Database/config'); // Added getGroupSettings
 
 const { botname, mycode } = require('../Env/settings');
 
