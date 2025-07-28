@@ -91,7 +91,7 @@
     "wikipedia": "^2.1.1",
     "youtubedl-core": "^4.11.7",
     "yt-search": "^2.10.4",
-    "youtube-yts": "^1.0.2"
+    "youtube-yts": "latest"
   },
   "directories": {
     "lib": "lib",
