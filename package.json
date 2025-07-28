@@ -67,7 +67,7 @@
     "mathjs": "^11.3.0",
     "qs": "^6.11.0",
     "javascript-obfuscator": "^4.1.0",
-    "jimp": "^0.16.13",
+    "jimp": "^0.22.12",
     "lodash": "^4.17.21",
     "luxon": "^3.4.4",
     "moment-timezone": "^0.5.34",
