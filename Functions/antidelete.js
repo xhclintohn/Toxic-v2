@@ -1,4 +1,4 @@
-const { proto, generateMessageID } = require("baileys-pro");
+const { proto } = require("baileys-pro");
 const fs = require("fs");
 const path = require("path");
 const { getSettings } = require("../Database/config");
@@ -33,6 +33,7 @@ function saveChatData(remoteJid, messageId, chatData) {
 }
 
 async function handleIncomingMessage(client, m) {
+    if (!m.key || !m.key.remoteJid || !m.key.id) return;
     const remoteJid = m.key.remoteJid;
     const messageId = m.key.id;
     const chatData = loadChatData(remoteJid, messageId);
@@ -63,7 +64,7 @@ async function handleMessageRevocation(client, m, pict) {
 
     let notificationText = `◈━━━━━━━━━━━━━━━━◈\n` +
         `│❒ TOXIC-MD ANTIDELETE 🧨\n` +
-        `│❒ Caught ${deletedByFormatted} tried to erase evidence! 😈\n` +
+        `│❒ Caught ${deletedByFormatted} tryna erase evidence! 😈\n` +
         `│❒ Sent by: ${sentByFormatted}\n` +
         `◈━━━━━━━━━━━━━━━━◈\n`;
 
@@ -183,6 +184,7 @@ async function handleMessageRevocation(client, m, pict) {
 
 module.exports = async (client, m, store, pict) => {
     try {
+        if (!m || !m.key || !m.message) return;
         const settings = await getSettings();
         if (!settings || !settings.antidelete) return;
 
