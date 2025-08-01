@@ -26,7 +26,7 @@ module.exports = async (context) => {
       { buttonId: `${prefix}autobio`, buttonText: { displayText: 'Autobio 📝' }, type: 1 },
       { buttonId: `${prefix}anticall`, buttonText: { displayText: 'Anticall 📞' }, type: 1 },
       { buttonId: `${prefix}antidelete`, buttonText: { displayText: 'Antidelete 🗑️' }, type: 1 },
-      { buttonId: `${prefix}setpresence`, buttonText: { displayText: 'Presence 🌐' }, type: 1 },
+      { buttonId: `${prefix}presence`, buttonText: { displayText: 'Presence 🌐' }, type: 1 },
       { buttonId: `${prefix}mode`, buttonText: { displayText: 'Mode 🔒' }, type: 1 },
       { buttonId: `${prefix}chatbotpm`, buttonText: { displayText: 'Chatbot PM 💬' }, type: 1 },
     ];
