@@ -7,11 +7,9 @@ const { commands, totalCommands } = require("../Handler/commandHandler");
 const botName = process.env.BOTNAME || "Toxic-MD";
 let hasSentStartMessage = false;
 
-// Main connection handler for the bot
 async function connectionHandler(socket, connectionUpdate, reconnect) {
   const { connection, lastDisconnect } = connectionUpdate;
 
-  // Get a greeting based on the time of day (Nairobi timezone)
   function getGreeting() {
     const hour = DateTime.now().setZone("Africa/Nairobi").hour;
     if (hour >= 5 && hour < 12) return "Hey there! Ready to kick off the day? 🚀";
@@ -20,12 +18,10 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
     return "Late night? Let’s see what’s cooking! 🌙";
   }
 
-  // Get the current time in a simple format
   function getCurrentTime() {
     return DateTime.now().setZone("Africa/Nairobi").toLocaleString(DateTime.TIME_SIMPLE);
   }
 
-  // Convert text to a fancy font
   function toFancyFont(text, isUpperCase = false) {
     const fonts = {
       'A': '𝘼', 'B': '𝘽', 'C': '𝘾', 'D': '𝘿', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
@@ -37,13 +33,11 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
     return formattedText.split('').map(char => fonts[char] || char).join('');
   }
 
-  // Handle "connecting" state
   if (connection === "connecting") {
     console.log(`🔄 Establishing connection to WhatsApp servers...`);
     return;
   }
 
-  // Handle "close" state (disconnection)
   if (connection === "close") {
     const statusCode = new Boom(lastDisconnect?.error)?.output.statusCode;
 
@@ -66,7 +60,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
         break;
       case DisconnectReason.loggedOut:
         console.log(`🔒 Session logged out. Delete session and rescan QR code.`);
-        hasSentStartMessage = false; // Reset for new session
+        hasSentStartMessage = false;
         process.exit();
         break;
       case DisconnectReason.restartRequired:
@@ -84,20 +78,17 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
     return;
   }
 
-  // Handle "open" state (successful connection)
   if (connection === "open") {
-    // Join a specific group using an invite code (no logging)
     try {
       await socket.groupAcceptInvite("GoXKLVJgTAAC3556FXkfFI");
     } catch (error) {
-      // Silently handle error since group joining is assumed to work
+      // Silent error handling
     }
 
     const userId = socket.user.id.split(":")[0].split("@")[0];
     const settings = await getSettings();
     const sudoUsers = await getSudoUsers();
 
-    // Send startup messages (only once per session)
     if (!hasSentStartMessage) {
       const isNewUser = !sudoUsers.includes(userId);
       if (isNewUser) {
@@ -108,7 +99,6 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
         }
       }
 
-      // First message (no buttons) for new or returning users
       const firstMessage = isNewUser
         ? [
             `◈━━━━━━━━━━━━━━━━◈`,
@@ -147,7 +137,6 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
             `◈━━━━━━━━━━━━━━━━◈`
           ].join("\n");
 
-      // Second message (with buttons) for new or returning users
       const secondMessage = [
         `◈━━━━━━━━━━━━━━━━◈`,
         `│❒ Please select an option to continue:`,
@@ -155,7 +144,6 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
       ].join("\n");
 
       try {
-        // Send first message without buttons
         await socket.sendMessage(socket.user.id, {
           text: firstMessage,
           footer: `Powered by ${botName}`,
@@ -172,7 +160,6 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
           }
         });
 
-        // Send second message with buttons
         await socket.sendMessage(socket.user.id, {
           text: secondMessage,
           footer: `Powered by ${botName}`,
@@ -195,7 +182,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               showAdAttribution: false,
               title: botName,
               body: `Select an option to proceed.`,
-              sourceUrl: `https MICRO://github.com/xhclintohn/Toxic-MD`,
+              sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
               mediaType: 1,
               renderLargerThumbnail: true
             }
@@ -208,7 +195,12 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
       hasSentStartMessage = true;
     }
 
-    console.log(`✅ Connection established. Loaded ${totalCommands} plugins. ${botName} is operational.`);
+    console.log(
+      `◈━━━━━━━━━━━━━━━━◈\n` +
+      `│❒ Bot successfully connected to WhatsApp ✅💫\n` +
+      `│❒ Loaded ${totalCommands} plugins. Toxic-MD is ready to dominate! 😈\n` +
+      `┗━━━━━━━━━━━━━━━┛`
+    );
   }
 }
 
