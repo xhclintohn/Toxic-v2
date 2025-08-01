@@ -43,6 +43,7 @@ const sessionName = path.join(__dirname, '..', 'Session');
 const groupEvents = require("../Handler/eventHandler");
 const groupEvents2 = require("../Handler/eventHandler2");
 const connectionHandler = require('../Handler/connectionHandler');
+const antilinkAntidelete = require('../Functions/antilink');
 
 async function startToxic() {
     let settingss = await getSettings();
@@ -125,44 +126,8 @@ async function startToxic() {
         const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
         const Myself = client.decodeJid(client.user.id);
 
-        // Antilink logic
-        if (typeof remoteJid === 'string' && remoteJid.endsWith("@g.us")) {
-            const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
-            const messageContent = (
-                mek.message.conversation ||
-                mek.message.extendedTextMessage?.text ||
-                mek.message.imageMessage?.caption ||
-                mek.message.videoMessage?.caption ||
-                mek.message.documentMessage?.caption ||
-                ""
-            ).toLowerCase();
+        await antilinkAntidelete(client, mek, store, fs.readFileSync(path.resolve(__dirname, '../toxic.jpg')));
 
-            if (sender === Myself) return;
-
-            if (urlRegex.test(messageContent)) {
-                const groupMetadata = await client.groupMetadata(remoteJid);
-                if (!groupMetadata || !groupMetadata.participants) return;
-
-                const groupAdmins = groupMetadata.participants
-                    .filter(p => p.admin != null)
-                    .map(p => client.decodeJid(p.id));
-                const isBotAdmin = groupAdmins.includes(Myself);
-                const isSenderAdmin = groupAdmins.includes(sender);
-
-                if (isBotAdmin && !isSenderAdmin) {
-                    await client.sendMessage(remoteJid, {
-                        delete: {
-                            remoteJid: remoteJid,
-                            fromMe: false,
-                            id: mek.key.id,
-                            participant: sender
-                        }
-                    });
-                }
-            }
-        }
-
-        // Autolike for statuses
         if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
             const nickk = await client.decodeJid(client.user.id);
             const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
@@ -170,14 +135,12 @@ async function startToxic() {
             await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key, } }, { statusJidList: [mek.key.participant, nickk] });
         }
 
-        // Autoview/autoread
         if (autoview && remoteJid === "status@broadcast") {
             await client.readMessages([mek.key]);
         } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
             await client.readMessages([mek.key]);
         }
 
-        // Presence
         if (remoteJid.endsWith('@s.whatsapp.net')) {
             const Chat = remoteJid;
             if (presence === 'online') {
@@ -191,7 +154,6 @@ async function startToxic() {
             }
         }
 
-        // Handle commands
         if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
 
         m = smsg(client, mek, store);
