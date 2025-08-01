@@ -48,7 +48,15 @@ const antilink = require('../Functions/antilink');
 
 async function startToxic() {
     let settingss = await getSettings();
-    if (!settingss) return;
+    if (!settingss) {
+        console.log(
+            `◈━━━━━━━━━━━━━━━━◈\n` +
+            `│❒ TOXIC-MD FAILED TO CONNECT 😵\n` +
+            `│❒ Settings not found, check your database! 🖕\n` +
+            `┗━━━━━━━━━━━━━━━┛`
+        );
+        return;
+    }
 
     const { autobio, mode, anticall } = settingss;
 
@@ -76,6 +84,13 @@ async function startToxic() {
     });
 
     store.bind(client.ev);
+
+    console.log(
+        `◈━━━━━━━━━━━━━━━━◈\n` +
+        `│❒ Bot successfully connected to WhatsApp ✅💫\n` +
+        `│❒ Loaded ${totalCommands} plugins. Toxic-MD is ready to dominate! 😈\n` +
+        `┗━━━━━━━━━━━━━━━┛`
+    );
 
     setInterval(() => { store.writeToFile("store.json"); }, 3000);
 
