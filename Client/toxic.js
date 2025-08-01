@@ -27,7 +27,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     let settings = await getSettings();
     if (!settings) return;
 
-    const { prefix, mode, gcpresence, antitag, antidelete, antilink, packname } = settings;
+    const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink, packname } = settings;
 
     var body =
       m.body ||
@@ -97,7 +97,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
       client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
       pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
       packname, generateProfilePicture, groupMetadata, toxicspeed, mycode,
-      fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag, antidelete, fetchBuffer, store, uploadtoimgur, chatUpdate, getGroupAdmins, pict, Tag
+      fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag, antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate, getGroupAdmins, pict, Tag
     };
 
     if (cmd) {
@@ -112,6 +112,12 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
       return;
     }
 
+    // Debug: Confirm antidelete is a function
+    if (typeof antidelete !== 'function') {
+      console.error('Toxic-MD Error: antidelete is not a function, check Functions/antidelete.js');
+      return;
+    }
+
     await antidelete(client, m, store, pict);
     await antilink(client, m, store);
     await status_saver(client, m, Owner, prefix);
@@ -123,7 +129,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     }
 
   } catch (err) {
-    console.log(util.format(err));
+    console.log('Toxic-MD Error:', util.format(err));
   }
 
   process.on('uncaughtException', function (err) {
@@ -135,6 +141,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     if (e.includes("Connection Closed")) return;
     if (e.includes("Timed Out")) return;
     if (e.includes("Value not found")) return;
-    console.log('Caught exception: ', err);
+    console.log('Toxic-MD Caught exception:', err);
   });
 };
