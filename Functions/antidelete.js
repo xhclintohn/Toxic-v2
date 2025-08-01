@@ -14,7 +14,7 @@ function loadChatData(remoteJid, messageId) {
     try {
         const data = fs.readFileSync(chatFilePath, "utf8");
         return JSON.parse(data) || [];
-    } catch (error) {
+    } catch {
         return [];
     }
 }
@@ -51,10 +51,7 @@ async function handleMessageRevocation(client, m, pict) {
     const chatData = loadChatData(remoteJid, messageId);
     const originalMessage = chatData[0];
 
-    if (!originalMessage) {
-        console.log("Toxic-MD: No original message found for ID:", messageId);
-        return;
-    }
+    if (!originalMessage) return;
 
     const deletedBy = m.participant || m.key.participant || m.key.remoteJid;
     const sentBy = originalMessage.key.participant || originalMessage.key.remoteJid;
@@ -66,7 +63,7 @@ async function handleMessageRevocation(client, m, pict) {
 
     let notificationText = `◈━━━━━━━━━━━━━━━━◈\n` +
         `│❒ TOXIC-MD ANTIDELETE 🧨\n` +
-        `│❒ Caught ${deletedByFormatted} tryna erase evidence! 😈\n` +
+        `│❒ Caught ${deletedByFormatted} tried to erase evidence! 😈\n` +
         `│❒ Sent by: ${sentByFormatted}\n` +
         `◈━━━━━━━━━━━━━━━━◈\n`;
 
@@ -81,8 +78,8 @@ async function handleMessageRevocation(client, m, pict) {
             await client.sendMessage(botNumber, { text: notificationText });
         } else if (originalMessage.message?.imageMessage) {
             notificationText += `│❒ Deleted Media: [Image] 📸\n`;
-            try {
-                const buffer = await client.downloadMediaMessage(originalMessage);
+            const buffer = await client.downloadMediaMessage(originalMessage);
+            if (buffer) {
                 await client.sendMessage(botNumber, {
                     image: buffer,
                     caption: `${notificationText}\nImage caption: ${originalMessage.message.imageMessage.caption || "None"}`,
@@ -97,15 +94,11 @@ async function handleMessageRevocation(client, m, pict) {
                         }
                     }
                 });
-            } catch (mediaError) {
-                console.error("Toxic-MD Failed to download image:", mediaError);
-                notificationText += `│❒ ⚠️ Image expired, can't recover! 😤\n`;
-                await client.sendMessage(botNumber, { text: notificationText });
             }
         } else if (originalMessage.message?.videoMessage) {
             notificationText += `│❒ Deleted Media: [Video] 🎥\n`;
-            try {
-                const buffer = await client.downloadMediaMessage(originalMessage);
+            const buffer = await client.downloadMediaMessage(originalMessage);
+            if (buffer) {
                 await client.sendMessage(botNumber, {
                     video: buffer,
                     caption: `${notificationText}\nVideo caption: ${originalMessage.message.videoMessage.caption || "None"}`,
@@ -120,15 +113,11 @@ async function handleMessageRevocation(client, m, pict) {
                         }
                     }
                 });
-            } catch (mediaError) {
-                console.error("Toxic-MD Failed to download video:", mediaError);
-                notificationText += `│❒ ⚠️ Video expired, can't recover! 😤\n`;
-                await client.sendMessage(botNumber, { text: notificationText });
             }
         } else if (originalMessage.message?.stickerMessage) {
             notificationText += `│❒ Deleted Media: [Sticker] 😎\n`;
-            try {
-                const buffer = await client.downloadMediaMessage(originalMessage);
+            const buffer = await client.downloadMediaMessage(originalMessage);
+            if (buffer) {
                 await client.sendMessage(botNumber, {
                     sticker: buffer,
                     contextInfo: {
@@ -142,22 +131,13 @@ async function handleMessageRevocation(client, m, pict) {
                         }
                     }
                 });
-            } catch (mediaError) {
-                console.error("Toxic-MD Failed to download sticker:", mediaError);
-                notificationText += `│❒ ⚠️ Sticker expired, can't recover! 😤\n`;
-                await client.sendMessage(botNumber, { text: notificationText });
             }
         } else if (originalMessage.message?.documentMessage) {
             notificationText += `│❒ Deleted Media: [Document] 📄\n`;
             const docMessage = originalMessage.message.documentMessage;
             const fileName = docMessage.fileName || `document_${Date.now()}.dat`;
-            try {
-                const buffer = await client.downloadMediaMessage(originalMessage);
-                if (!buffer) {
-                    notificationText += `│❒ ⚠️ Document download failed! 😤\n`;
-                    await client.sendMessage(botNumber, { text: notificationText });
-                    return;
-                }
+            const buffer = await client.downloadMediaMessage(originalMessage);
+            if (buffer) {
                 await client.sendMessage(botNumber, {
                     document: buffer,
                     fileName: fileName,
@@ -173,16 +153,12 @@ async function handleMessageRevocation(client, m, pict) {
                         }
                     }
                 });
-            } catch (mediaError) {
-                console.error("Toxic-MD Failed to download document:", mediaError);
-                notificationText += `│❒ ⚠️ Document expired, can't recover! 😤\n`;
-                await client.sendMessage(botNumber, { text: notificationText });
             }
         } else if (originalMessage.message?.audioMessage) {
             notificationText += `│❒ Deleted Media: [Audio] 🎙️\n`;
-            try {
-                const buffer = await client.downloadMediaMessage(originalMessage);
-                const isPTT = originalMessage.message.audioMessage.ptt === true;
+            const buffer = await client.downloadMediaMessage(originalMessage);
+            const isPTT = originalMessage.message.audioMessage.ptt === true;
+            if (buffer) {
                 await client.sendMessage(botNumber, {
                     audio: buffer,
                     ptt: isPTT,
@@ -198,19 +174,10 @@ async function handleMessageRevocation(client, m, pict) {
                         }
                     }
                 });
-            } catch (mediaError) {
-                console.error("Toxic-MD Failed to download audio:", mediaError);
-                notificationText += `│❒ ⚠️ Audio expired, can't recover! 😤\n`;
-                await client.sendMessage(botNumber, { text: notificationText });
             }
-        } else {
-            notificationText += `│❒ Unknown message type, can't recover! 🤷‍♂️\n`;
-            await client.sendMessage(botNumber, { text: notificationText });
         }
     } catch (error) {
-        console.error("Toxic-MD Error handling deleted message:", error);
-        notificationText += `│❒ ⚠️ Something broke, couldn't recover! 😡\n`;
-        await client.sendMessage(botNumber, { text: notificationText });
+        console.error("Toxic-MD Antidelete Error:", error);
     }
 }
 
