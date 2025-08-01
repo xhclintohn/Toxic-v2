@@ -2,7 +2,10 @@ const { getSettings } = require("../Database/config");
 
 module.exports = async (client, m, store) => {
     try {
-        if (!m || !m.key || !m.message) return;
+        if (!m || !m.key || !m.message) {
+            console.log(`Toxic-MD Antilink: Skipped - Invalid message`);
+            return;
+        }
         const settings = await getSettings();
         if (!settings || !settings.antilink || typeof m.key.remoteJid !== "string" || !m.key.remoteJid.endsWith("@g.us")) {
             console.log(`Toxic-MD Antilink: Skipped - antilink=${settings?.antilink}, remoteJid=${m.key.remoteJid}`);
