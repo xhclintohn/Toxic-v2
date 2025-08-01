@@ -12,7 +12,8 @@ const { commands, aliases, totalCommands } = require('../Handler/commandHandler'
 const status_saver = require('../Functions/status_saver');
 const gcPresence = require('../Functions/gcPresence');
 const antitaggc = require('../Functions/antitag');
-const antidel = require('../Functions/antidelete');
+const antidelete = require('../Functions/antidelete');
+const antilink = require('../Functions/antilink');
 
 const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require('../Database/config');
 
@@ -28,7 +29,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
     const { prefix, mode, gcpresence, antitag, antidelete, antilink, packname } = settings;
 
-    // Use m.body for commands, including button clicks
     var body =
       m.body ||
       (m.mtype === "imageMessage" && m.message.imageMessage.caption) ||
@@ -36,7 +36,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
       (m.mtype === "buttonsResponseMessage" && m.message.buttonsResponseMessage?.selectedButtonId) ||
       "";
 
-    // Ensure body is a string
     body = typeof body === 'string' ? body : '';
 
     const Tag =
@@ -113,7 +112,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
       return;
     }
 
-    await antidel(client, m, store);
+    await antidelete(client, m, store, pict);
+    await antilink(client, m, store);
     await status_saver(client, m, Owner, prefix);
     await gcPresence(client, m);
     await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
