@@ -27,7 +27,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     let settings = await getSettings();
     if (!settings) return;
 
-    const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink, packname } = settings;
+    const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, packname } = settings;
 
     var body =
       m.body ||
@@ -112,9 +112,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
       return;
     }
 
-    // Debug: Confirm antidelete is a function
+    // Debug: Confirm antidelete and antilink are functions
     if (typeof antidelete !== 'function') {
       console.error('Toxic-MD Error: antidelete is not a function, check Functions/antidelete.js');
+      return;
+    }
+    if (typeof antilink !== 'function') {
+      console.error('Toxic-MD Error: antilink is not a function, check Functions/antilink.js');
       return;
     }
 
