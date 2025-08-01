@@ -30,21 +30,21 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, packname } = settings;
 
     var body =
-      m.body ||
-      (m.mtype === "imageMessage" && m.message.imageMessage.caption) ||
-      (m.mtype === "extendedTextMessage" && m.message.extendedTextMessage.text) ||
-      (m.mtype === "buttonsResponseMessage" && m.message.buttonsResponseMessage?.selectedButtonId) ||
+      m.message?.conversation ||
+      m.message?.extendedTextMessage?.text ||
+      m.message?.imageMessage?.caption ||
+      m.message?.videoMessage?.caption ||
+      m.message?.documentMessage?.caption ||
+      m.message?.buttonsResponseMessage?.selectedButtonId ||
       "";
 
     body = typeof body === 'string' ? body : '';
 
     const Tag =
-      m.mtype == "extendedTextMessage" &&
-      m.message.extendedTextMessage.contextInfo != null
-        ? m.message.extendedTextMessage.contextInfo.mentionedJid
-        : [];
+      m.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
 
-    var msgToxic = m.message.extendedTextMessage?.contextInfo?.quotedMessage;
+    var msgToxic = m.message?.extendedTextMessage?.contextInfo?.quotedMessage || null;
+
     var budy = typeof m.text == "string" ? m.text : "";
 
     const timestamp = speed();
