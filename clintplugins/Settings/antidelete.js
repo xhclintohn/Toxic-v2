@@ -1,26 +1,22 @@
-const { getSettings, getGroupSetting, updateGroupSetting } = require('../../Database/config');
+const { getSettings, updateSettings } = require('../../Database/config');
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
-    const { m, args } = context;
+    const { m, args, prefix } = context;
     const value = args[0]?.toLowerCase();
-    const jid = m.chat;
 
-    if (!jid.endsWith('@g.us')) {
+    let settings = await getSettings();
+    if (!settings) {
       return await m.reply(
         `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Dumb move, moron! 😈\n` +
-        `│❒ This command is for groups only, you fool!\n` +
+        `│❒ Yo, dumbass! 😈 Settings are screwed up!\n` +
+        `│❒ Fix your database, moron! 🖕\n` +
         `┗━━━━━━━━━━━━━━━┛`
       );
     }
 
-    const settings = await getSettings();
-    const prefix = settings.prefix;
-
-    let groupSettings = await getGroupSetting(jid);
-    let isEnabled = groupSettings?.antidelete === true;
+    let isEnabled = settings.antidelete === true;
 
     if (value === 'on' || value === 'off') {
       const action = value === 'on';
@@ -34,10 +30,10 @@ module.exports = async (context) => {
         );
       }
 
-      await updateGroupSetting(jid, 'antidelete', action ? 'true' : 'false');
+      await updateSettings('antidelete', action);
       await m.reply(
         `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Antidelete ${value.toUpperCase()}! 🔥\n` +
+        `│❒ Antidelete ${value.toUpperCase()} globally! 🔥\n` +
         `│❒ Deleted messages will be sent to your inbox, king! 😈\n` +
         `┗━━━━━━━━━━━━━━━┛`
       );
