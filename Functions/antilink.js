@@ -2,17 +2,22 @@ const { getSettings } = require("../Database/config");
 
 module.exports = async (client, m, store) => {
     try {
-        if (!m || !m.key || !m.message) {
-            console.log(`Toxic-MD Antilink: Skipped - Invalid message`);
+        // Early exit for invalid or non-group messages
+        if (!m || !m.key || !m.message || !m.key.remoteJid.endsWith("@g.us")) {
+            console.log(`Toxic-MD Antilink: Skipped - Invalid message or not a group (remoteJid=${m.key.remoteJid})`);
             return;
         }
+
         const settings = await getSettings();
-        if (!settings || !settings.antilink || typeof m.key.remoteJid !== "string" || !m.key.remoteJid.endsWith("@g.us")) {
+        if (!settings || !settings.antilink) {
             console.log(`Toxic-MD Antilink: Skipped - antilink=${settings?.antilink}, remoteJid=${m.key.remoteJid}`);
             return;
         }
 
         const botNumber = await client.decodeJid(client.user.id);
+        const sender = await client.decodeJid(m.key.participant || m.key.from);
+        const pushName = m.pushName || "loser";
+
         const messageContent = (
             m.message?.conversation ||
             m.message?.extendedTextMessage?.text ||
@@ -28,7 +33,7 @@ module.exports = async (client, m, store) => {
             return;
         }
 
-        console.log(`Toxic-MD Antilink: URL detected in ${m.key.remoteJid} by ${m.sender}: ${messageContent}`);
+        console.log(`Toxic-MD Antilink: URL detected in ${m.key.remoteJid} by ${sender}: ${messageContent}`);
 
         const groupMetadata = await client.groupMetadata(m.key.remoteJid).catch(e => {
             console.error(`Toxic-MD Antilink: Failed to fetch group metadata for ${m.key.remoteJid}:`, e);
@@ -43,24 +48,42 @@ module.exports = async (client, m, store) => {
             .filter(p => p.admin != null)
             .map(p => client.decodeJid(p.id));
         const isBotAdmin = groupAdmins.includes(botNumber);
-        const isSenderAdmin = groupAdmins.includes(m.sender);
+        const isSenderAdmin = groupAdmins.includes(sender);
 
-        console.log(`Toxic-MD Antilink: BotAdmin=${isBotAdmin}, SenderAdmin=${isSenderAdmin}, Sender=${m.sender}`);
+        console.log(`Toxic-MD Antilink: BotAdmin=${isBotAdmin}, SenderAdmin=${isSenderAdmin}, Sender=${sender}`);
 
-        if (isBotAdmin && !isSenderAdmin && m.sender !== botNumber) {
-            try {
-                await client.sendMessage(m.key.remoteJid, {
-                    delete: {
-                        remoteJid: m.key.remoteJid,
-                        fromMe: false,
-                        id: m.key.id,
-                        participant: m.sender
+        if (isBotAdmin && !isSenderAdmin && sender !== botNumber) {
+            // Delete the message instantly
+            await client.sendMessage(m.key.remoteJid, {
+                delete: {
+                    remoteJid: m.key.remoteJid,
+                    fromMe: false,
+                    id: m.key.id,
+                    participant: sender
+                }
+            });
+            console.log(`Toxic-MD Antilink: Deleted message with URL in ${m.key.remoteJid} from ${sender}`);
+
+            // Send warning message immediately, quoting the sender's message
+            await client.sendMessage(
+                m.key.remoteJid,
+                {
+                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${pushName}! Links are banned here, you dumbass! 😈 Keep it up, and you’re toast! 🦁\n┗━━━━━━━━━━━━━━━┛`,
+                    footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+                    contextInfo: {
+                        externalAdReply: {
+                            showAdAttribution: false,
+                            title: "Toxic-MD Antilink",
+                            body: "Link deleted. Don’t test me!",
+                            sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
+                            mediaType: 1,
+                            renderLargerThumbnail: true
+                        }
                     }
-                });
-                console.log(`Toxic-MD Antilink: Deleted message with URL in ${m.key.remoteJid} from ${m.sender}`);
-            } catch (e) {
-                console.error(`Toxic-MD Antilink: Failed to delete message in ${m.key.remoteJid}:`, e);
-            }
+                },
+                { quoted: m }
+            );
+            console.log(`Toxic-MD Antilink: Sent warning to ${sender} in ${m.key.remoteJid}`);
         } else {
             console.log(`Toxic-MD Antilink: Skipped deletion - BotAdmin=${isBotAdmin}, SenderAdmin=${isSenderAdmin}`);
         }
