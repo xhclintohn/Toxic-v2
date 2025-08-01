@@ -85,13 +85,6 @@ async function startToxic() {
 
     store.bind(client.ev);
 
-    console.log(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Bot successfully connected to WhatsApp ✅💫\n` +
-        `│❒ Loaded ${totalCommands} plugins. Toxic-MD is ready to dominate! 😈\n` +
-        `┗━━━━━━━━━━━━━━━┛`
-    );
-
     setInterval(() => { store.writeToFile("store.json"); }, 3000);
 
     if (autobio) {
@@ -141,6 +134,16 @@ async function startToxic() {
         const remoteJid = mek.key.remoteJid;
         const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
         const Myself = client.decodeJid(client.user.id);
+
+        // Debug: Confirm antidelete and antilink are functions
+        if (typeof antidelete !== 'function') {
+            console.error('Toxic-MD Error: antidelete is not a function, check Functions/antidelete.js');
+            return;
+        }
+        if (typeof antilink !== 'function') {
+            console.error('Toxic-MD Error: antilink is not a function, check Functions/antilink.js');
+            return;
+        }
 
         await antidelete(client, mek, store, fs.readFileSync(path.resolve(__dirname, '../toxic.jpg')));
         await antilink(client, mek, store);
