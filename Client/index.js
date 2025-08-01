@@ -43,7 +43,8 @@ const sessionName = path.join(__dirname, '..', 'Session');
 const groupEvents = require("../Handler/eventHandler");
 const groupEvents2 = require("../Handler/eventHandler2");
 const connectionHandler = require('../Handler/connectionHandler');
-const antilinkAntidelete = require('../Functions/antilink');
+const antidelete = require('../Functions/antidelete');
+const antilink = require('../Functions/antilink');
 
 async function startToxic() {
     let settingss = await getSettings();
@@ -126,7 +127,8 @@ async function startToxic() {
         const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
         const Myself = client.decodeJid(client.user.id);
 
-        await antilinkAntidelete(client, mek, store, fs.readFileSync(path.resolve(__dirname, '../toxic.jpg')));
+        await antidelete(client, mek, store, fs.readFileSync(path.resolve(__dirname, '../toxic.jpg')));
+        await antilink(client, mek, store);
 
         if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
             const nickk = await client.decodeJid(client.user.id);
