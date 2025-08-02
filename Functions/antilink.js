@@ -60,7 +60,13 @@ module.exports = async (client, m, store) => {
 
         console.log(`Toxic-MD Antilink: BotAdmin=${isBotAdmin}, SenderAdmin=${isSenderAdmin}, Sender=${sender}`);
 
-        if (isBotAdmin && !isSenderAdmin && sender !== botNumber) {
+        // Skip if sender is an admin or the bot itself
+        if (isSenderAdmin || sender === botNumber) {
+            console.log(`Toxic-MD Antilink: Skipped - Sender is admin or bot (SenderAdmin=${isSenderAdmin}, Sender=${sender})`);
+            return;
+        }
+
+        if (isBotAdmin) {
             // Delete the message using sendMessage
             try {
                 await client.sendMessage(m.key.remoteJid, {
@@ -86,7 +92,7 @@ module.exports = async (client, m, store) => {
             );
             console.log(`Toxic-MD Antilink: Sent warning to ${sender} in ${m.key.remoteJid}`);
         } else {
-            console.log(`Toxic-MD Antilink: Skipped deletion - BotAdmin=${isBotAdmin}, SenderAdmin=${isSenderAdmin}`);
+            console.log(`Toxic-MD Antilink: Skipped deletion - Bot is not admin (BotAdmin=${isBotAdmin})`);
         }
     } catch (e) {
         console.error("Toxic-MD Antilink Error:", e);
