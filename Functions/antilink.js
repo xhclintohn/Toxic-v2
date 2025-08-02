@@ -21,6 +21,12 @@ module.exports = async (client, m, store) => {
 
         if (admins.includes(sender)) return;
 
+        const isBotAdmin = admins.includes(botNumber);
+        if (!isBotAdmin) {
+            console.error("Toxic-MD Antilink Error: Bot is not an admin in group", m.chat);
+            return;
+        }
+
         const messageContent = (
             m.message?.conversation ||
             m.message?.extendedTextMessage?.text ||
@@ -32,11 +38,9 @@ module.exports = async (client, m, store) => {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         if (!urlRegex.test(messageContent)) return;
 
-        const isBotAdmin = admins.includes(botNumber);
-        if (!isBotAdmin) return;
-
         try {
-            await client.sendMessage(m.chat, { delete: m.key });
+            console.log(`Toxic-MD Antilink: Attempting to delete message in ${m.chat} with key:`, m.key);
+            await client.deleteMessage(m.chat, m.key);
             await client.sendMessage(m.chat, {
                 text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Links are banned here, you dumbass! 😈 Delete that or you’re toast! 🦁\n┗━━━━━━━━━━━━━━━┛`
             });
