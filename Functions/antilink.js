@@ -1,87 +1,49 @@
-const { getSettings } = require("../Database/config");
+const { getSettings, getSudoUsers } = require("../Database/config");
 
 module.exports = async (client, m, store) => {
     try {
-        // Early exit for invalid or non-group messages
-        if (!m || !m.key || !m.message || !m.key.remoteJid.endsWith("@g.us")) {
-            return;
-        }
+        if (!m || !m.message || m.key.fromMe) return;
 
         const settings = await getSettings();
-        if (!settings || !settings.antilink) {
-            return;
-        }
+        if (!settings || !settings.antilink) return;
 
         const botNumber = await client.decodeJid(client.user.id);
-        const sender = m.sender ? await client.decodeJid(m.sender) : (m.key.participant ? await client.decodeJid(m.key.participant) : null);
-        const pushName = m.pushName || "loser";
+        const sender = m.sender ? await client.decodeJid(m.sender) : null;
+        const senderNumber = sender ? sender.split('@')[0] : null;
 
-        if (!sender) {
-            console.error(`Toxic-MD Antilink: Skipped - No valid sender for message in ${m.key.remoteJid}`);
-            return;
-        }
+        if (!m.isGroup || !sender || !senderNumber) return;
+
+        const groupMetadata = await client.groupMetadata(m.chat).catch(() => null);
+        if (!groupMetadata) return;
+
+        const participants = groupMetadata.participants || [];
+        const admins = participants.filter(p => p.admin === "admin" || p.admin === "superadmin").map(p => p.id);
+
+        if (admins.includes(sender)) return;
 
         const messageContent = (
             m.message?.conversation ||
             m.message?.extendedTextMessage?.text ||
             m.message?.imageMessage?.caption ||
             m.message?.videoMessage?.caption ||
-            m.message?.documentMessage?.caption ||
             ""
-        ).toLowerCase();
+        ).trim();
 
-        const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
-        if (!urlRegex.test(messageContent)) {
-            return;
-        }
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        if (!urlRegex.test(messageContent)) return;
 
-        console.log(`Toxic-MD Antilink: URL detected in ${m.key.remoteJid} by ${sender}`);
+        const isBotAdmin = admins.includes(botNumber);
+        if (!isBotAdmin) return;
 
-        const groupMetadata = await client.groupMetadata(m.key.remoteJid).catch(e => {
-            console.error(`Toxic-MD Antilink: Failed to fetch group metadata for ${m.key.remoteJid}:`, e);
-            return null;
-        });
-        if (!groupMetadata || !groupMetadata.participants) {
-            console.error(`Toxic-MD Antilink: Invalid group metadata for ${m.key.remoteJid}`);
-            return;
-        }
-
-        const groupAdmins = groupMetadata.participants
-            .filter(p => p.admin != null)
-            .map(p => client.decodeJid(p.id));
-        const isBotAdmin = groupAdmins.includes(botNumber);
-        const isSenderAdmin = groupAdmins.includes(sender);
-
-        // Skip if sender is an admin or the bot itself
-        if (isSenderAdmin || sender === botNumber) {
-            return;
-        }
-
-        if (isBotAdmin) {
-            // Delete the message
-            try {
-                await client.sendMessage(m.key.remoteJid, {
-                    delete: {
-                        remoteJid: m.key.remoteJid,
-                        fromMe: false,
-                        id: m.key.id,
-                        participant: sender
-                    }
-                });
-                console.log(`Toxic-MD Antilink: Deleted message with URL in ${m.key.remoteJid} from ${sender}`);
-            } catch (e) {
-                console.error(`Toxic-MD Antilink: Failed to delete message in ${m.key.remoteJid}:`, e);
-            }
-
-            // Send warning message without link preview
-            await client.sendMessage(
-                m.key.remoteJid,
-                {
-                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${pushName}! Links are banned here, you dumbass! 😈 Keep it up, and you’re toast! 🦁\n┗━━━━━━━━━━━━━━━┛`,
-                    footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ"
-                }
-            );
-            console.log(`Toxic-MD Antilink: Sent warning to ${sender} in ${m.key.remoteJid}`);
+        try {
+            await client.sendMessage(m.chat, {
+                delete: m.key
+            });
+            await client.sendMessage(m.chat, {
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName || "No Name"}! Links are banned here, you dumbass! 😈 Keep it up, and you’re toast! 🦁\n┗━━━━━━━━━━━━━━━┛`
+            }, { quoted: m });
+        } catch (e) {
+            console.error("Toxic-MD Antilink Error:", e);
         }
     } catch (e) {
         console.error("Toxic-MD Antilink Error:", e);
