@@ -116,20 +116,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             return;
         }
 
-        // Debug: Confirm functions
-        if (typeof antidelete !== 'function') {
-            console.error('Toxic-MD Error: antidelete is not a function, check Functions/antidelete.js');
-            return;
-        }
-        if (typeof antilink !== 'function') {
-            console.error('Toxic-MD Error: antilink is not a function, check Functions/antilink.js');
-            return;
-        }
-        if (typeof chatbotpm !== 'function') {
-            console.error('Toxic-MD Error: chatbotpm is not a function, check Functions/chatbotpm.js');
-            return;
-        }
-
         if (antideleteSetting === true) {
             await antidelete(client, m, store, pict);
         }
@@ -142,6 +128,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         if (cmd) {
             await commands[resolvedCommandName](context);
         }
+
+        console.log(`◈━━━━━━━━━━━━━━━━◈\n│❒ Bot successfully connected to WhatsApp ✅💫\n│❒ Loaded ${totalCommands} plugins. Toxic-MD is ready to dominate! 😈\n┗━━━━━━━━━━━━━━━┛`);
 
     } catch (err) {
         console.error('Toxic-MD Error:', util.format(err));
