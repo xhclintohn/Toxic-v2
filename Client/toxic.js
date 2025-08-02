@@ -19,6 +19,9 @@ const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require(
 
 const { botname, mycode } = require('../Env/settings');
 
+// Fix MaxListenersExceededWarning
+process.setMaxListeners(0);
+
 module.exports = toxic = async (client, m, chatUpdate, store) => {
   try {
     const sudoUsers = await getSudoUsers();
