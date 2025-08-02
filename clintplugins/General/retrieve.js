@@ -10,7 +10,7 @@ module.exports = async (context) => {
             const imageUrl = await client.downloadAndSaveMediaMessage(quotedMessage.imageMessage);
             await client.sendMessage(client.user.id, { 
                 image: { url: imageUrl },
-                caption: "Retrieved by Toxic-MD"
+                caption: "Rҽƚɾιҽʋҽԃ  Ⴆყ ƚσxιƈ Mԃȥ"
             });
         } 
         else if (quotedMessage?.videoMessage) {
