@@ -14,6 +14,7 @@ const gcPresence = require('../Functions/gcPresence');
 const antitaggc = require('../Functions/antitag');
 const antidelete = require('../Functions/antidelete');
 const antilink = require('../Functions/antilink');
+const chatbotpm = require('../Functions/chatbotpm');
 
 const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require('../Database/config');
 
@@ -30,7 +31,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     let settings = await getSettings();
     if (!settings) return;
 
-    const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, packname } = settings;
+    const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, chatbotpm: chatbotpmSetting, packname } = settings;
 
     var body =
       m.message?.conversation ||
@@ -106,7 +107,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     if (cmd) {
       const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
       if (bannedUsers.includes(senderNumber)) {
-        await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost!` }, { quoted: m });
+        await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost! 💀` }, { quoted: m });
         return;
       }
     }
@@ -115,7 +116,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
       return;
     }
 
-    // Debug: Confirm antidelete and antilink are functions
+    // Debug: Confirm functions
     if (typeof antidelete !== 'function') {
       console.error('Toxic-MD Error: antidelete is not a function, check Functions/antidelete.js');
       return;
@@ -124,9 +125,14 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
       console.error('Toxic-MD Error: antilink is not a function, check Functions/antilink.js');
       return;
     }
+    if (typeof chatbotpm !== 'function') {
+      console.error('Toxic-MD Error: chatbotpm is not a function, check Functions/chatbotpm.js');
+      return;
+    }
 
     await antidelete(client, m, store, pict);
     await antilink(client, m, store);
+    await chatbotpm(client, m, store, chatbotpmSetting);
     await status_saver(client, m, Owner, prefix);
     await gcPresence(client, m);
     await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
@@ -136,7 +142,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     }
 
   } catch (err) {
-    console.log('Toxic-MD Error:', util.format(err));
+    console.error('Toxic-MD Error:', util.format(err));
   }
 
   process.on('uncaughtException', function (err) {
@@ -148,6 +154,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     if (e.includes("Connection Closed")) return;
     if (e.includes("Timed Out")) return;
     if (e.includes("Value not found")) return;
-    console.log('Toxic-MD Caught exception:', err);
+    console.error('Toxic-MD Caught exception:', err);
   });
 };
