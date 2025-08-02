@@ -33,16 +33,23 @@ module.exports = async (client, m, store) => {
             m.message?.imageMessage?.caption ||
             m.message?.videoMessage?.caption ||
             ""
-        ).trim();
+        ).toLowerCase();
 
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
         if (!urlRegex.test(messageContent)) return;
 
         try {
             console.log(`Toxic-MD Antilink: Attempting to delete message in ${m.chat} with key:`, m.key);
-            await client.deleteMessage(m.chat, m.key);
             await client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Links are banned here, you dumbass! 😈 Delete that or you’re toast! 🦁\n┗━━━━━━━━━━━━━━━┛`
+                delete: {
+                    remoteJid: m.chat,
+                    fromMe: false,
+                    id: m.key.id,
+                    participant: sender
+                }
+            });
+            await client.sendMessage(m.chat, {
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Links are banned here, you dumbass! 😠 Don't send links again or you're toast! 💀\n┗━━━━━━━━━━━━━━━┛`
             });
         } catch (e) {
             console.error("Toxic-MD Antilink Error:", e);
