@@ -4,13 +4,11 @@ module.exports = async (client, m, store) => {
     try {
         // Early exit for invalid or non-group messages
         if (!m || !m.key || !m.message || !m.key.remoteJid.endsWith("@g.us")) {
-            console.log(`Toxic-MD Antilink: Skipped - Invalid message or not a group (remoteJid=${m.key.remoteJid})`);
             return;
         }
 
         const settings = await getSettings();
         if (!settings || !settings.antilink) {
-            console.log(`Toxic-MD Antilink: Skipped - antilink=${settings?.antilink}, remoteJid=${m.key.remoteJid}`);
             return;
         }
 
@@ -18,11 +16,8 @@ module.exports = async (client, m, store) => {
         const sender = m.sender ? await client.decodeJid(m.sender) : (m.key.participant ? await client.decodeJid(m.key.participant) : null);
         const pushName = m.pushName || "loser";
 
-        // Debug: Log raw m.sender and m.key
-        console.log(`Toxic-MD Antilink: Raw m.sender=${m.sender}, m.key=${JSON.stringify(m.key)}`);
-
         if (!sender) {
-            console.log(`Toxic-MD Antilink: Skipped - No valid sender for message in ${m.key.remoteJid}`);
+            console.error(`Toxic-MD Antilink: Skipped - No valid sender for message in ${m.key.remoteJid}`);
             return;
         }
 
@@ -37,18 +32,17 @@ module.exports = async (client, m, store) => {
 
         const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+)/i;
         if (!urlRegex.test(messageContent)) {
-            console.log(`Toxic-MD Antilink: No URL detected in message: ${messageContent}`);
             return;
         }
 
-        console.log(`Toxic-MD Antilink: URL detected in ${m.key.remoteJid} by ${sender}: ${messageContent}`);
+        console.log(`Toxic-MD Antilink: URL detected in ${m.key.remoteJid} by ${sender}`);
 
         const groupMetadata = await client.groupMetadata(m.key.remoteJid).catch(e => {
             console.error(`Toxic-MD Antilink: Failed to fetch group metadata for ${m.key.remoteJid}:`, e);
             return null;
         });
         if (!groupMetadata || !groupMetadata.participants) {
-            console.log(`Toxic-MD Antilink: Invalid group metadata for ${m.key.remoteJid}`);
+            console.error(`Toxic-MD Antilink: Invalid group metadata for ${m.key.remoteJid}`);
             return;
         }
 
@@ -58,16 +52,13 @@ module.exports = async (client, m, store) => {
         const isBotAdmin = groupAdmins.includes(botNumber);
         const isSenderAdmin = groupAdmins.includes(sender);
 
-        console.log(`Toxic-MD Antilink: BotAdmin=${isBotAdmin}, SenderAdmin=${isSenderAdmin}, Sender=${sender}`);
-
         // Skip if sender is an admin or the bot itself
         if (isSenderAdmin || sender === botNumber) {
-            console.log(`Toxic-MD Antilink: Skipped - Sender is admin or bot (SenderAdmin=${isSenderAdmin}, Sender=${sender})`);
             return;
         }
 
         if (isBotAdmin) {
-            // Delete the message using sendMessage
+            // Delete the message
             try {
                 await client.sendMessage(m.key.remoteJid, {
                     delete: {
@@ -91,8 +82,6 @@ module.exports = async (client, m, store) => {
                 }
             );
             console.log(`Toxic-MD Antilink: Sent warning to ${sender} in ${m.key.remoteJid}`);
-        } else {
-            console.log(`Toxic-MD Antilink: Skipped deletion - Bot is not admin (BotAdmin=${isBotAdmin})`);
         }
     } catch (e) {
         console.error("Toxic-MD Antilink Error:", e);
