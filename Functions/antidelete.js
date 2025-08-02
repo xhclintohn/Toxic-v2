@@ -1,17 +1,4 @@
-const fs = require('fs');
-
-// In-memory store for message_data (replace with file-based or DB if needed)
-const message_data = {
-    data: new Map(),
-    check: async ({ from }) => {
-        return message_data.data.has(from) ? message_data.data.get(from) : null;
-    },
-    save: async ({ from }) => {
-        const msg = { id: from, created: Date.now() };
-        message_data.data.set(from, msg);
-        return msg;
-    }
-};
+const { message_data } = require("../lib/Store");
 
 module.exports = async (client, m, store, pict) => {
     try {
