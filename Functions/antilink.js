@@ -15,11 +15,16 @@ module.exports = async (client, m, store) => {
         }
 
         const botNumber = await client.decodeJid(client.user.id);
-        const sender = m.key.participant ? await client.decodeJid(m.key.participant) : await client.decodeJid(m.key.from || m.key.remoteJid);
+        const sender = m.sender ? await client.decodeJid(m.sender) : (m.key.participant ? await client.decodeJid(m.key.participant) : null);
         const pushName = m.pushName || "loser";
 
-        // Debug: Log raw m.key
-        console.log(`Toxic-MD Antilink: Raw m.key=${JSON.stringify(m.key)}`);
+        // Debug: Log raw m.sender and m.key
+        console.log(`Toxic-MD Antilink: Raw m.sender=${m.sender}, m.key=${JSON.stringify(m.key)}`);
+
+        if (!sender) {
+            console.log(`Toxic-MD Antilink: Skipped - No valid sender for message in ${m.key.remoteJid}`);
+            return;
+        }
 
         const messageContent = (
             m.message?.conversation ||
@@ -56,33 +61,27 @@ module.exports = async (client, m, store) => {
         console.log(`Toxic-MD Antilink: BotAdmin=${isBotAdmin}, SenderAdmin=${isSenderAdmin}, Sender=${sender}`);
 
         if (isBotAdmin && !isSenderAdmin && sender !== botNumber) {
-            // Delete the message using chatModify
+            // Delete the message using sendMessage
             try {
-                await client.chatModify(
-                    { delete: true, lastMessages: [{ key: m.key, messageTimestamp: m.messageTimestamp }] },
-                    m.key.remoteJid
-                );
+                await client.sendMessage(m.key.remoteJid, {
+                    delete: {
+                        remoteJid: m.key.remoteJid,
+                        fromMe: false,
+                        id: m.key.id,
+                        participant: sender
+                    }
+                });
                 console.log(`Toxic-MD Antilink: Deleted message with URL in ${m.key.remoteJid} from ${sender}`);
             } catch (e) {
                 console.error(`Toxic-MD Antilink: Failed to delete message in ${m.key.remoteJid}:`, e);
             }
 
-            // Send warning message without quoting
+            // Send warning message without link preview
             await client.sendMessage(
                 m.key.remoteJid,
                 {
                     text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${pushName}! Links are banned here, you dumbass! 😈 Keep it up, and you’re toast! 🦁\n┗━━━━━━━━━━━━━━━┛`,
-                    footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
-                    contextInfo: {
-                        externalAdReply: {
-                            showAdAttribution: false,
-                            title: "Toxic-MD Antilink",
-                            body: "Link deleted. Don’t test me!",
-                            sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
-                            mediaType: 1,
-                            renderLargerThumbnail: true
-                        }
-                    }
+                    footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ"
                 }
             );
             console.log(`Toxic-MD Antilink: Sent warning to ${sender} in ${m.key.remoteJid}`);
