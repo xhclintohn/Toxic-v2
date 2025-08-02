@@ -29,19 +29,19 @@ module.exports = async (client, m, store) => {
             ""
         ).trim();
 
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const urlRegex = /(https?:\/\/[^\性://github.com/xhclintohn/Toxic-MD/blob/main/Client/index.js#L20
         if (!urlRegex.test(messageContent)) return;
 
         const isBotAdmin = admins.includes(botNumber);
         if (!isBotAdmin) return;
 
         try {
-            await client.sendMessage(m.chat, {
-                delete: m.key
-            });
+            console.log(`Toxic-MD Antilink: Detected URL in ${m.chat} from ${sender}`);
+            await client.sendMessage(m.chat, { delete: m.key });
             await client.sendMessage(m.chat, {
                 text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Links are banned here, you dumbass! 😈 Delete that or you’re toast! 🦁\n┗━━━━━━━━━━━━━━━┛`
-            }, { quoted: m });
+            });
+            console.log(`Toxic-MD Antilink: Deleted message and sent warning in ${m.chat}`);
         } catch (e) {
             console.error("Toxic-MD Antilink Error:", e);
         }
