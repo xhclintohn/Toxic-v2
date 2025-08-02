@@ -15,8 +15,11 @@ module.exports = async (client, m, store) => {
         }
 
         const botNumber = await client.decodeJid(client.user.id);
-        const sender = await client.decodeJid(m.key.participant || m.key.from);
+        const sender = m.key.participant ? await client.decodeJid(m.key.participant) : await client.decodeJid(m.key.from || m.key.remoteJid);
         const pushName = m.pushName || "loser";
+
+        // Debug: Log raw m.key
+        console.log(`Toxic-MD Antilink: Raw m.key=${JSON.stringify(m.key)}`);
 
         const messageContent = (
             m.message?.conversation ||
@@ -53,18 +56,18 @@ module.exports = async (client, m, store) => {
         console.log(`Toxic-MD Antilink: BotAdmin=${isBotAdmin}, SenderAdmin=${isSenderAdmin}, Sender=${sender}`);
 
         if (isBotAdmin && !isSenderAdmin && sender !== botNumber) {
-            // Delete the message instantly
-            await client.sendMessage(m.key.remoteJid, {
-                delete: {
-                    remoteJid: m.key.remoteJid,
-                    fromMe: false,
-                    id: m.key.id,
-                    participant: sender
-                }
-            });
-            console.log(`Toxic-MD Antilink: Deleted message with URL in ${m.key.remoteJid} from ${sender}`);
+            // Delete the message using chatModify
+            try {
+                await client.chatModify(
+                    { delete: true, lastMessages: [{ key: m.key, messageTimestamp: m.messageTimestamp }] },
+                    m.key.remoteJid
+                );
+                console.log(`Toxic-MD Antilink: Deleted message with URL in ${m.key.remoteJid} from ${sender}`);
+            } catch (e) {
+                console.error(`Toxic-MD Antilink: Failed to delete message in ${m.key.remoteJid}:`, e);
+            }
 
-            // Send warning message immediately, quoting the sender's message
+            // Send warning message without quoting
             await client.sendMessage(
                 m.key.remoteJid,
                 {
@@ -80,8 +83,7 @@ module.exports = async (client, m, store) => {
                             renderLargerThumbnail: true
                         }
                     }
-                },
-                { quoted: m }
+                }
             );
             console.log(`Toxic-MD Antilink: Sent warning to ${sender} in ${m.key.remoteJid}`);
         } else {
