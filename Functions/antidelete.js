@@ -1,4 +1,17 @@
-const { message_data } = require("../lib/Store");
+const fs = require('fs');
+
+// In-memory store for message_data (replace with file-based or DB if needed)
+const message_data = {
+    data: new Map(),
+    check: async ({ from }) => {
+        return message_data.data.has(from) ? message_data.data.get(from) : null;
+    },
+    save: async ({ from }) => {
+        const msg = { id: from, created: Date.now() };
+        message_data.data.set(from, msg);
+        return msg;
+    }
+};
 
 module.exports = async (client, m, store, pict) => {
     try {
@@ -16,8 +29,6 @@ module.exports = async (client, m, store, pict) => {
         if (!msg) {
             msg = await message_data.save({ from });
         }
-
-        let messageContent = JSON.stringify(m.message);
 
         const botNumber = await client.decodeJid(client.user.id);
         if (remoteJid === botNumber || participant === botNumber) return;
@@ -37,7 +48,7 @@ module.exports = async (client, m, store, pict) => {
         });
 
         if (type === "conversation" || type === "extendedTextMessage") {
-            await client.sendMessage(botNumber, { text: messageContent });
+            await client.sendMessage(botNumber, { text: content });
         } else if (type.includes("Message")) {
             await client.sendMessage(botNumber, m.message);
         }
