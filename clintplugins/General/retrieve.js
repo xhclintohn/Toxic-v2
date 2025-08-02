@@ -17,7 +17,7 @@ module.exports = async (context) => {
             const videoUrl = await client.downloadAndSaveMediaMessage(quotedMessage.videoMessage);
             await client.sendMessage(client.user.id, {
                 video: { url: videoUrl },
-                caption: "Retrieved by Toxic-MD"
+                caption: "Rҽƚɾιҽʋҽԃ  Ⴆყ ƚσxιƈ Mԃȥ"
             });
         }
     } catch (error) {
