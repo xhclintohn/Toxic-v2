@@ -4,7 +4,6 @@ module.exports = async (client, m, store, pict) => {
     try {
         const settings = await require('../Database/config').getSettings();
         if (!settings || !settings.antidelete || !m.message || m.key.fromMe) {
-            console.log(`Toxic-MD Antidelete: Skipped - antidelete=${settings?.antidelete}, fromMe=${m.key?.fromMe}`);
             return;
         }
 
@@ -14,26 +13,22 @@ module.exports = async (client, m, store, pict) => {
         const participant = m.key.participant || remoteJid;
 
         if (participant === botNumber) {
-            console.log(`Toxic-MD Antidelete: Skipped - Message from bot itself`);
             return;
         }
 
         // Handle incoming message (store it)
         if (!m.message.protocolMessage) {
-            console.log(`Toxic-MD Antidelete: Storing message - remoteJid=${remoteJid}, messageId=${messageId}`);
             saveChatData(remoteJid, messageId, [m]);
             return;
         }
 
         // Handle revocation (protocolMessage)
         if (m.message.protocolMessage?.key) {
-            console.log(`Toxic-MD Antidelete: Processing revocation - remoteJid=${remoteJid}, messageId=${m.message.protocolMessage.key.id}`);
             const originalMessageId = m.message.protocolMessage.key.id;
             const chatData = loadChatData(remoteJid, originalMessageId);
             const originalMessage = chatData[0];
 
             if (!originalMessage) {
-                console.log(`Toxic-MD Antidelete: No original message found for messageId=${originalMessageId}`);
                 return;
             }
 
@@ -134,7 +129,7 @@ module.exports = async (client, m, store, pict) => {
                         const fileName = docMessage.fileName || `document_${Date.now()}.dat`;
                         const buffer = await client.downloadMediaMessage(originalMessage);
                         if (!buffer) {
-                            console.log('Toxic-MD Antidelete: Download failed - empty buffer');
+                            console.error('Toxic-MD Antidelete: Download failed - empty buffer');
                             notificationText += `\n│❒ *Error*: Download failed`;
                             await client.sendMessage(botNumber, { text: notificationText });
                             return;
