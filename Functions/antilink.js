@@ -1,4 +1,4 @@
-const { getSettings, getSudoUsers } = require("../Database/config");
+const { getSettings } = require("../Database/config");
 
 module.exports = async (client, m, store) => {
     try {
@@ -7,11 +7,11 @@ module.exports = async (client, m, store) => {
         const settings = await getSettings();
         if (!settings || !settings.antilink) return;
 
+        if (!m.isGroup) return;
+
         const botNumber = await client.decodeJid(client.user.id);
         const sender = m.sender ? await client.decodeJid(m.sender) : null;
-        const senderNumber = sender ? sender.split('@')[0] : null;
-
-        if (!m.isGroup || !sender || !senderNumber) return;
+        if (!sender) return;
 
         const groupMetadata = await client.groupMetadata(m.chat).catch(() => null);
         if (!groupMetadata) return;
@@ -40,7 +40,7 @@ module.exports = async (client, m, store) => {
                 delete: m.key
             });
             await client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName || "No Name"}! Links are banned here, you dumbass! 😈 Keep it up, and you’re toast! 🦁\n┗━━━━━━━━━━━━━━━┛`
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Links are banned here, you dumbass! 😈 Delete that or you’re toast! 🦁\n┗━━━━━━━━━━━━━━━┛`
             }, { quoted: m });
         } catch (e) {
             console.error("Toxic-MD Antilink Error:", e);
