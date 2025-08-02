@@ -20,6 +20,7 @@ module.exports = async (client, m, store, pict) => {
         const botNumber = await client.decodeJid(client.user.id);
         if (remoteJid === botNumber || participant === botNumber) return;
 
+        // Send deletion notification
         await client.sendMessage(botNumber, {
             text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *DELETED MESSAGE DETECTED* 🥀\n│❒ *From*: ${from}\n│❒ *Sender*: ${participant || remoteJid}\n│❒ *Type*: ${type}\n│❒ *Content*: ${content}\n┗━━━━━━━━━━━━━━━┛`,
             contextInfo: {
@@ -34,10 +35,13 @@ module.exports = async (client, m, store, pict) => {
             }
         });
 
+        // Only forward content messages, skip protocolMessage
         if (type === "conversation" || type === "extendedTextMessage") {
             await client.sendMessage(botNumber, { text: content });
-        } else if (type.includes("Message")) {
+        } else if (type.includes("Message") && type !== "protocolMessage") {
             await client.sendMessage(botNumber, m.message);
+        } else {
+            console.log(`Toxic-MD Antidelete: Skipped forwarding ${type} message, no content to send`);
         }
     } catch (e) {
         console.error("Toxic-MD Antidelete Error:", e);
