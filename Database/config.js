@@ -44,17 +44,17 @@ async function initializeDatabase() {
         const defaultSettings = {
             prefix: '.',
             packname: 'Toxic-MD',
-            mode: 'public',
+            mode: 'private',
             presence: 'online',
             autoview: 'true',
-            autolike: 'true',
+            autolike: 'false',
             autoread: 'false',
             autobio: 'false',
             anticall: 'false',
             chatbotpm: 'false',
             autolikeemoji: '❤️',
             antilink: 'false',
-            antidelete: 'true'
+            antidelete: 'false'
         };
 
         for (const [key, value] of Object.entries(defaultSettings)) {
