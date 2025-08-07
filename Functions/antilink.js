@@ -42,7 +42,7 @@ module.exports = async (client, m, store) => {
         });
 
         await client.sendMessage(m.chat, {
-            text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Links are banned here!\n┗━━━━━━━━━━━━━━━┛`
+            text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Links are not allowed here⚠️!\n┗━━━━━━━━━━━━━━━┛`
         });
 
     } catch (e) {
