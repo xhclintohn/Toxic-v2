@@ -5,90 +5,79 @@ const { getSettings } = require('../../Database/config');
 module.exports = {
   name: 'menu',
   aliases: ['help', 'commands', 'list'],
-  description: 'Displays a simplified bot command menu with list buttons and a voice note',
+  description: 'Displays bot command menu with WORKING buttons',
   run: async (context) => {
-    try {
-      const { client, m, mode, pict, botname, text } = context;
+    const { client, m, mode, pict, botname, text, commandHandler } = context;
 
-      if (text) {
-        return client.sendMessage(m.chat, { 
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, what's with the extra bullshit? Just say ${prefix}menu, moron.` 
-        }, { quoted: m });
-      }
-
-      const settings = await getSettings();
-      const effectivePrefix = settings.prefix || '';
-
-      // First send the list message
-      await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, B*tches!* 😈\n\n` +
-              `🤖 *Bσƚ*: ${botname}\n` +
-              `🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'}\n` +
-              `🌐 *Mσԃҽ*: ${mode}\n` +
-              `\n◈━━━━━━━━━━━━━━━━◈\n\n` +
-              `*Select an option Below, Loser.* 😈`,
-        footer: `Pσɯҽɾҽԃ Ⴆყ ${botname}`,
-        title: `${botname} COMMAND MENU`,
-        buttonText: "VIEW OPTIONS",
-        sections: [
-          {
-            title: "MAIN COMMANDS",
-            rows: [
-              {
-                title: "📃 FULL MENU",
-                description: "Show all commands",
-                rowId: `${effectivePrefix}fullmenu`
-              },
-              {
-                title: "👤 DEVELOPER",
-                description: "Contact developer",
-                rowId: `${effectivePrefix}dev`
-              }
-            ]
-          },
-          {
-            title: "BOT INFO",
-            rows: [
-              {
-                title: "🚨 PING",
-                description: "Check bot speed",
-                rowId: `${effectivePrefix}ping`
-              },
-              {
-                title: "🤖 REPOSITORY",
-                description: "Get source code",
-                rowId: `${effectivePrefix}repo`
-              }
-            ]
-          }
-        ]
+    // Toxic response for extra text 😈
+    if (text) {
+      return client.sendMessage(m.chat, { 
+        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo ${m.pushName}, stop typing nonsense! Just *${prefix}menu* dumbass!` 
       }, { quoted: m });
+    }
 
-      // Then send the audio
-      const possibleAudioPaths = [
-        path.join(__dirname, 'xh_clinton', 'menu.mp3'),
-        path.join(process.cwd(), 'xh_clinton', 'menu.mp3'),
-        path.join(__dirname, '..', 'xh_clinton', 'menu.mp3'),
-      ];
+    const settings = await getSettings();
+    const prefix = settings.prefix || '!';
 
-      let audioPath = null;
-      for (const possiblePath of possibleAudioPaths) {
-        if (fs.existsSync(possiblePath)) {
-          audioPath = possiblePath;
-          break;
+    // PROPER LIST MESSAGE STRUCTURE
+    const listMessage = {
+      text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botname} COMMANDS* 😈\n` +
+            `│❒ *Prefix:* ${prefix}\n` +
+            `│❒ *Mode:* ${mode}\n` +
+            `◈━━━━━━━━━━━━━━━━◈\n\n` +
+            `Tap mf options below 👇`,
+      footer: `© ${botname} | Don't fuck it up`,
+      title: "MAIN MENU",
+      buttonText: "SHOW COMMANDS",
+      sections: [
+        {
+          title: "🔥 CORE COMMANDS",
+          rows: [
+            {
+              title: "📜 FULL MENU",
+              description: "All commands available",
+              rowId: `${prefix}fullmenu`
+            },
+            {
+              title: "👑 OWNER",
+              description: "Bot owner commands",
+              rowId: `${prefix}owner`
+            }
+          ]
+        },
+        {
+          title: "ℹ BOT INFO",
+          rows: [
+            {
+              title: "🏓 PING",
+              description: "Check bot speed",
+              rowId: `${prefix}ping`
+            },
+            {
+              title: "💾 SOURCE",
+              description: "Get bot code",
+              rowId: `${prefix}repo`
+            }
+          ]
         }
-      }
+      ]
+    };
 
-      if (audioPath) {
-        await client.sendMessage(m.chat, {
-          audio: { url: audioPath },
-          ptt: true,
-          mimetype: 'audio/mpeg',
-          fileName: 'menu.mp3'
-        }, { quoted: m });
-      }
-    } catch (error) {
-      console.error('Error in menu command:', error);
+    // Send the list message
+    await client.sendMessage(m.chat, listMessage, { quoted: m });
+
+    // AUDIO PART (keep your existing audio code)
+    const audioPath = [
+      path.join(__dirname, 'xh_clinton', 'menu.mp3'),
+      path.join(process.cwd(), 'xh_clinton', 'menu.mp3')
+    ].find(p => fs.existsSync(p));
+
+    if (audioPath) {
+      await client.sendMessage(m.chat, {
+        audio: { url: audioPath },
+        ptt: true,
+        mimetype: 'audio/mpeg'
+      }, { quoted: m });
     }
   }
 };
