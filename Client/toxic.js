@@ -20,7 +20,6 @@ const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require(
 
 const { botname, mycode } = require('../Env/settings');
 
-// Fix MaxListenersExceededWarning
 process.setMaxListeners(0);
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
@@ -40,6 +39,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             m.message?.videoMessage?.caption ||
             m.message?.documentMessage?.caption ||
             m.message?.buttonsResponseMessage?.selectedButtonId ||
+            m.message?.listResponseMessage?.singleSelectReply?.selectedRowId ||
+            m.text ||
             "";
 
         body = typeof body === 'string' ? body : '';
@@ -57,7 +58,9 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const filePath = require('path').resolve(__dirname, '../toxic.jpg');
         const pict = fs.readFileSync(filePath);
 
-        const commandName = body && body.startsWith(prefix) ? body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase() : null;
+        const commandName = body && (body.startsWith(prefix) || body.startsWith('/')) ? 
+            body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase() : 
+            null;
         const resolvedCommandName = aliases[commandName] || commandName;
 
         const cmd = commands[resolvedCommandName];
