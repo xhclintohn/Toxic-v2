@@ -6,6 +6,7 @@ const { commands, totalCommands } = require("../Handler/commandHandler");
 
 const botName = process.env.BOTNAME || "Toxic-MD";
 let hasSentStartMessage = false;
+let isFirstRun = true;
 
 async function connectionHandler(socket, connectionUpdate, reconnect) {
   const { connection, lastDisconnect } = connectionUpdate;
@@ -13,9 +14,9 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
   function getGreeting() {
     const hour = DateTime.now().setZone("Africa/Nairobi").hour;
     if (hour >= 5 && hour < 12) return "Hey there! Ready to kick off the day? 🚀";
-    if (hour >= 12 && hour < 18) return "What’s up? Time to make things happen! ⚡";
-    if (hour >= 18 && hour < 22) return "Evening vibes! Let’s get to it! 🌟";
-    return "Late night? Let’s see what’s cooking! 🌙";
+    if (hour >= 12 && hour < 18) return "What's up? Time to make things happen! ⚡";
+    if (hour >= 18 && hour < 22) return "Evening vibes! Let's get to it! 🌟";
+    return "Late night? Let's see what's cooking! 🌙";
   }
 
   function getCurrentTime() {
@@ -61,6 +62,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
       case DisconnectReason.loggedOut:
         console.log(`🔒 Session logged out. Delete session and rescan QR code.`);
         hasSentStartMessage = false;
+        isFirstRun = true; // Reset first run flag on logout
         process.exit();
         break;
       case DisconnectReason.restartRequired:
@@ -89,7 +91,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
     const settings = await getSettings();
     const sudoUsers = await getSudoUsers();
 
-    if (!hasSentStartMessage) {
+    if (isFirstRun && !hasSentStartMessage) { // Modified this condition
       const isNewUser = !sudoUsers.includes(userId);
       if (isNewUser) {
         await addSudoUser(userId);
@@ -193,6 +195,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
       }
 
       hasSentStartMessage = true;
+      isFirstRun = false;
     }
 
     console.log(
