@@ -5,12 +5,12 @@ const { getSettings } = require('../../Database/config');
 module.exports = {
   name: 'menu',
   aliases: ['help', 'commands', 'list'],
-  description: 'Displays a simplified bot command menu with buttons and a voice note',
+  description: 'Displays a simplified bot command menu with list buttons and a voice note',
   run: async (context) => {
     const { client, m, mode, pict, botname, text } = context;
 
     if (text) {
-      return client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, what’s with the extra bullshit? Just say ${prefix}menu, moron.` }, { quoted: m });
+      return client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, what's with the extra bullshit? Just say ${prefix}menu, moron.` }, { quoted: m });
     }
 
     const settings = await getSettings();
@@ -29,12 +29,38 @@ module.exports = {
         .join('');
     };
 
-    // Define button commands with toxic emojis
-    const buttonCommands = [
-      { id: 'fullmenu', display: toFancyFont('FULLMENU'), emoji: '📃' },
-      { id: 'dev', display: toFancyFont('DEV'), emoji: '👤' },
-      { id: 'ping', display: toFancyFont('PING'), emoji: '🚨' },
-      { id: 'repo', display: toFancyFont('REPO'), emoji: '🤖' }
+    // Define list sections and commands
+    const listSections = [
+      {
+        title: "MAIN COMMANDS",
+        rows: [
+          {
+            title: "📃 FULL MENU",
+            description: "Show all available commands",
+            rowId: `${effectivePrefix}fullmenu`
+          },
+          {
+            title: "👤 DEVELOPER",
+            description: "Contact the bot developer",
+            rowId: `${effectivePrefix}dev`
+          }
+        ]
+      },
+      {
+        title: "BOT INFO",
+        rows: [
+          {
+            title: "🚨 PING",
+            description: "Check bot response time",
+            rowId: `${effectivePrefix}ping`
+          },
+          {
+            title: "🤖 REPOSITORY",
+            description: "Get the bot source code",
+            rowId: `${effectivePrefix}repo`
+          }
+        ]
+      }
     ];
 
     let menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, B*tches!* 😈\n\n`;
@@ -42,17 +68,14 @@ module.exports = {
     menuText += `🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'} (learn it, dumbass)\n`;
     menuText += `🌐 *Mσԃҽ*: ${mode} (deal with it)\n`;
     menuText += `\n◈━━━━━━━━━━━━━━━━◈\n\n`;
-    menuText += `*Tap an option Below, Loser.* 😈\n`;
+    menuText += `*Select an option Below, Loser.* 😈\n`;
 
     await client.sendMessage(m.chat, {
       text: menuText,
       footer: `Pσɯҽɾҽԃ Ⴆყ ${botname}`,
-      buttons: buttonCommands.map(cmd => ({
-        buttonId: `${effectivePrefix}${cmd.id}`,
-        buttonText: { displayText: `${cmd.emoji} ${cmd.display}` },
-        type: 1
-      })),
-      headerType: 1,
+      title: `${botname} COMMAND MENU`,
+      buttonText: "VIEW OPTIONS",
+      sections: listSections,
       viewOnce: true,
       contextInfo: {
         externalAdReply: {
