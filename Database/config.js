@@ -18,7 +18,7 @@ async function initializeDatabase() {
             CREATE TABLE IF NOT EXISTS group_settings (
                 jid TEXT PRIMARY KEY,
                 antidelete BOOLEAN DEFAULT true,
-                gcpresence BOOLEAN DEFAULT true,
+                gcpresence BOOLEAN DEFAULT false,  -- Changed to false by default
                 events BOOLEAN DEFAULT false,
                 antidemote BOOLEAN DEFAULT false,
                 antipromote BOOLEAN DEFAULT false
@@ -115,7 +115,7 @@ async function getGroupSettings(jid) {
         // Fallback to global settings if no group-specific settings
         return {
             antidelete: globalSettings.antidelete || true,
-            gcpresence: globalSettings.gcpresence || true,
+            gcpresence: false,  // Changed to false by default
             events: false,
             antidemote: false,
             antipromote: false
@@ -124,7 +124,7 @@ async function getGroupSettings(jid) {
         console.error(`❌ Error fetching group settings for ${jid}: ${error}`);
         return {
             antidelete: true,
-            gcpresence: true,
+            gcpresence: false,
             events: false,
             antidemote: false,
             antipromote: false
