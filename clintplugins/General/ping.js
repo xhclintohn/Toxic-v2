@@ -41,7 +41,7 @@ module.exports = {
           .join('');
       };
 
-      // Uptime calculation from uptime.js
+      // Uptime
       const formatUptime = (seconds) => {
         const days = Math.floor(seconds / (3600 * 24));
         const hours = Math.floor((seconds % (3600 * 24)) / 3600);
@@ -78,7 +78,7 @@ I'm running like a damn beast! 😈
 ◈━━━━━━━━━━━━━━━━◈
       `;
 
-      // Send the text message first
+    
       await client.sendMessage(m.chat, {
         text: replyText,
         mentions: [m.sender],
@@ -97,7 +97,7 @@ I'm running like a damn beast! 😈
 
       // Send the audio voice note after the text
       await client.sendMessage(m.chat, {
-        audio: { url: 'https://url.bwmxmd.online/Adams.ewg0ellz.m4a' },
+        audio: { url: 'https://url.bwmxmd.online/Adams.93vw1nye.mp3' },
         mimetype: 'audio/mp4',
         ptt: true
       }, { quoted: m });
