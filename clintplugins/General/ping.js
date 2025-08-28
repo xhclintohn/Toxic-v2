@@ -62,30 +62,23 @@ module.exports = {
       const botName = 'Toxic-MD';
       const replyText = `
 ◈━━━━━━━━━━━━━━━━◈
-│❒ *Pong, @${userNumber}!* 🏓
-
+│❒ *Pong, ${m.pushName}!* 🏓
+│
 │ ⏱️ *Response Time*: ${pingTime}ms
-
+│
 │ 🤖 *Bot Name*: ${toFancyFont(botName)}
-
+│
 │ ⏰ *Uptime*: ${uptimeText}
-
+│
 │ 🟢 *Status*: Active
-
+│
 │ Yo, ${m.pushName}, I'm running like a damn beast! 😈
-
+│
 > Pσɯҽɾҽԃ Ⴆყ Toxic-MD
 ◈━━━━━━━━━━━━━━━━◈
       `;
 
-      // Send the audio voice note
-      await client.sendMessage(m.chat, {
-        audio: { url: 'https://url.bwmxmd.online/Adams.ewg0ellz.m4a' },
-        mimetype: 'audio/mp4',
-        ptt: true // Displays as a voice note with waveform
-      }, { quoted: m });
-
-      // Send the text message
+      // Send the text message first
       await client.sendMessage(m.chat, {
         text: replyText,
         mentions: [m.sender],
@@ -100,6 +93,13 @@ module.exports = {
             renderLargerThumbnail: true
           }
         }
+      }, { quoted: m });
+
+      // Send the audio voice note after the text
+      await client.sendMessage(m.chat, {
+        audio: { url: 'https://url.bwmxmd.online/Adams.ewg0ellz.m4a' },
+        mimetype: 'audio/mp4',
+        ptt: true // Displays as a voice note with waveform
       }, { quoted: m });
 
     } catch (error) {
