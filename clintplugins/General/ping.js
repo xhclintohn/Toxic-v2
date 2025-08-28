@@ -62,18 +62,18 @@ module.exports = {
       const botName = 'Toxic-MD';
       const replyText = `
 ◈━━━━━━━━━━━━━━━━◈
-│❒ *Pong, ${m.pushName}!* 🏓
-│
+│❒ *Pong,@${m.pushName}!* 🏓
+
 │ ⏱️ *Response Time*: ${pingTime}ms
-│
+
 │ 🤖 *Bot Name*: ${toFancyFont(botName)}
-│
+
 │ ⏰ *Uptime*: ${uptimeText}
-│
+
 │ 🟢 *Status*: Active
-│
-│ Yo, ${m.pushName}, I'm running like a damn beast! 😈
-│
+
+I'm running like a damn beast! 😈
+
 > Pσɯҽɾҽԃ Ⴆყ Toxic-MD
 ◈━━━━━━━━━━━━━━━━◈
       `;
@@ -99,7 +99,7 @@ module.exports = {
       await client.sendMessage(m.chat, {
         audio: { url: 'https://url.bwmxmd.online/Adams.ewg0ellz.m4a' },
         mimetype: 'audio/mp4',
-        ptt: true // Displays as a voice note with waveform
+        ptt: true
       }, { quoted: m });
 
     } catch (error) {
