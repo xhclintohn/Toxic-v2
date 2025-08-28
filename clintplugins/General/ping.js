@@ -3,7 +3,7 @@ const { getSettings } = require('../../Database/config');
 module.exports = {
   name: 'ping',
   aliases: ['p'],
-  description: 'Checks the bot’s response time with an uptime button',
+  description: 'Checks the bot’s response time, uptime, and status with a sassy vibe',
   run: async (context) => {
     const { client, m, toxicspeed } = context;
 
@@ -30,7 +30,7 @@ module.exports = {
 
       const toFancyFont = (text, isUpperCase = false) => {
         const fonts = {
-          'A': '𝘼', 'B': '𝘽', 'C': '𝘾', 'D': '𝘿', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
+          'A': '𝘼', 'B': '𝘽', 'C': '𝙆', 'D': '𝙉', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
           'N': '𝙉', 'O': '𝙊', 'P': '𝙋', 'Q': '𝙌', 'R': '𝙍', 'S': '𝙎', 'T': '𝙏', 'U': '𝙐', 'V': '𝙑', 'W': '𝙒', 'X': '𝙓', 'Y': '𝙔', 'Z': '𝙕',
           'a': '𝙖', 'b': '𝙗', 'c': '𝙘', 'd': '𝙙', 'e': '𝙚', 'f': '𝙛', 'g': '𝙜', 'h': '𝙝', 'i': '𝙞', 'j': '𝙟', 'k': '𝙠', 'l': '𝙡', 'm': '𝙢',
           'n': '𝙣', 'o': '𝙤', 'p': '𝙥', 'q': '𝙦', 'r': '𝙧', 's': '𝙨', 't': '𝙩', 'u': '𝙪', 'v': '𝙫', 'w': '𝙬', 'x': '𝙭', 'y': '𝙮', 'z': '𝙯'
@@ -41,23 +41,58 @@ module.exports = {
           .join('');
       };
 
+      // Uptime calculation from uptime.js
+      const formatUptime = (seconds) => {
+        const days = Math.floor(seconds / (3600 * 24));
+        const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+
+        const daysDisplay = days > 0 ? `${days} ${days === 1 ? 'day' : 'days'}, ` : '';
+        const hoursDisplay = hours > 0 ? `${hours} ${hours === 1 ? 'hour' : 'hours'}, ` : '';
+        const minutesDisplay = minutes > 0 ? `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}, ` : '';
+        const secsDisplay = secs > 0 ? `${secs} ${secs === 1 ? 'second' : 'seconds'}` : '';
+
+        return (daysDisplay + hoursDisplay + minutesDisplay + secsDisplay).replace(/,\s*$/, '');
+      };
+
       const userNumber = m.sender.split('@')[0];
       const pingTime = toxicspeed.toFixed(4);
-      const replyText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Pong, @${userNumber}!* 🏓\n⏱️ *Response Time*: ${pingTime}ms\n\nCheck how long I’ve been awake, slacker! 😈\n◈━━━━━━━━━━━━━━━━◈`;
+      const uptimeText = formatUptime(process.uptime());
+      const botName = 'Toxic-MD';
+      const replyText = `
+◈━━━━━━━━━━━━━━━━◈
+│❒ *Pong, @${userNumber}!* 🏓
 
+│ ⏱️ *Response Time*: ${pingTime}ms
+
+│ 🤖 *Bot Name*: ${toFancyFont(botName)}
+
+│ ⏰ *Uptime*: ${uptimeText}
+
+│ 🟢 *Status*: Active
+
+│ Yo, ${m.pushName}, I'm running like a damn beast! 😈
+
+> Pσɯҽɾҽԃ Ⴆყ Toxic-MD
+◈━━━━━━━━━━━━━━━━◈
+      `;
+
+      // Send the audio voice note
+      await client.sendMessage(m.chat, {
+        audio: { url: 'https://url.bwmxmd.online/Adams.ewg0ellz.m4a' },
+        mimetype: 'audio/mp4',
+        ptt: true // Displays as a voice note with waveform
+      }, { quoted: m });
+
+      // Send the text message
       await client.sendMessage(m.chat, {
         text: replyText,
-        footer: `Pσɯҽɾҽԃ Ⴆყ Toxic-MD`,
-        buttons: [
-          { buttonId: `${effectivePrefix}uptime`, buttonText: { displayText: `⏰ ${toFancyFont('UPTIME')}` }, type: 1 }
-        ],
-        headerType: 1,
-        viewOnce: true,
         mentions: [m.sender],
         contextInfo: {
           externalAdReply: {
             showAdAttribution: false,
-            title: `Toxic-MD`,
+            title: `${toFancyFont(botName)}`,
             body: `Yo, ${m.pushName}! Don’t waste my time.`,
             thumbnail: context.pict,
             sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
