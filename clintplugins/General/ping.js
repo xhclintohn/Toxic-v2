@@ -62,7 +62,7 @@ module.exports = {
       const botName = 'Toxic-MD';
       const replyText = `
 ◈━━━━━━━━━━━━━━━━◈
-│❒ *Pong,@${m.pushName}!* 🏓
+│❒ *Pong, @${m.pushName}!* 🏓
 
 │ ⏱️ *Response Time*: ${pingTime}ms
 
