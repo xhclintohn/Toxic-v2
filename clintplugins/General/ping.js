@@ -98,7 +98,7 @@ I'm running like a damn beast! 😈
       // Send the audio voice note after the text
       await client.sendMessage(m.chat, {
         audio: { url: 'https://url.bwmxmd.online/Adams.93vw1nye.mp3' },
-        mimetype: 'audio/mp4',
+        mimetype: 'audio/mp3',
         ptt: true
       }, { quoted: m });
 
