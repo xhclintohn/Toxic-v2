@@ -1,4 +1,8 @@
 const { getSettings } = require('../../Database/config');
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
+const axios = require('axios');
 
 module.exports = {
   name: 'ping',
@@ -7,30 +11,71 @@ module.exports = {
   run: async (context) => {
     const { client, m, toxicspeed } = context;
 
+    // FFmpeg function for media conversion
+    const ffmpeg = (buffer, args = [], ext = '', ext2 = '') => {
+      return new Promise(async (resolve, reject) => {
+        try {
+          let tmp = path.join(__dirname, '../tmp/', +new Date() + '.' + ext);
+          let out = tmp + '.' + ext2;
+          await fs.promises.writeFile(tmp, buffer);
+          spawn('ffmpeg', [
+            '-y',
+            '-i', tmp,
+            ...args,
+            out
+          ])
+            .on('error', reject)
+            .on('close', async (code) => {
+              try {
+                await fs.promises.unlink(tmp);
+                if (code !== 0) return reject(code);
+                resolve(await fs.promises.readFile(out));
+                await fs.promises.unlink(out);
+              } catch (e) {
+                reject(e);
+              }
+            });
+        } catch (e) {
+          reject(e);
+        }
+      });
+    };
+
+    // Convert audio to WhatsApp PTT (voice note)
+    const toPTT = (buffer, ext) => {
+      return ffmpeg(buffer, [
+        '-vn',
+        '-c:a', 'libopus',
+        '-b:a', '128k',
+        '-vbr', 'on',
+        '-compression_level', '10'
+      ], ext, 'opus');
+    };
+
     try {
       // Validate m.sender
       if (!m.sender || typeof m.sender !== 'string' || !m.sender.includes('@s.whatsapp.net')) {
         console.error(`Invalid m.sender: ${JSON.stringify(m.sender)}`);
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Can’t read your number, genius! Try again.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`◎━━━━━━━━━━━━━━━━◎\n│❒ Can’t read your number, genius! Try again.\nCheck https://github.com/xhclintohn/Toxic-MD\n◎━━━━━━━━━━━━━━━━◎`);
       }
 
       // Validate toxicspeed
       if (typeof toxicspeed !== 'number' || isNaN(toxicspeed)) {
         console.error(`Invalid toxicspeed: ${toxicspeed}`);
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Ping’s broken, @${m.sender.split('@')[0]}! Speed data’s fucked.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
+        return m.reply(`◎━━━━━━━━━━━━━━━━◎\n│❒ Ping’s broken, @${m.sender.split('@')[0]}! Speed data’s fucked.\nCheck https://github.com/xhclintohn/Toxic-MD\n◎━━━━━━━━━━━━━━━━◎`, { mentions: [m.sender] });
       }
 
       // Retrieve settings to get the current prefix
       const settings = await getSettings();
       if (!settings) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Error: Couldn’t load settings, you dumb fuck.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`◎━━━━━━━━━━━━━━━━◎\n│❒ Error: Couldn’t load settings, you dumb fuck.\nCheck https://github.com/xhclintohn/Toxic-MD\n◎━━━━━━━━━━━━━━━━◎`);
       }
 
       const effectivePrefix = settings.prefix || ''; // Use empty string for prefixless mode
 
       const toFancyFont = (text, isUpperCase = false) => {
         const fonts = {
-          'A': '𝘼', 'B': '𝘽', 'C': '𝙆', 'D': '𝙉', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
+          'A': '𝘼', 'B': '𝘽', 'C': '𝘾', 'D': '𝘿', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
           'N': '𝙉', 'O': '𝙊', 'P': '𝙋', 'Q': '𝙌', 'R': '𝙍', 'S': '𝙎', 'T': '𝙏', 'U': '𝙐', 'V': '𝙑', 'W': '𝙒', 'X': '𝙓', 'Y': '𝙔', 'Z': '𝙕',
           'a': '𝙖', 'b': '𝙗', 'c': '𝙘', 'd': '𝙙', 'e': '𝙚', 'f': '𝙛', 'g': '𝙜', 'h': '𝙝', 'i': '𝙞', 'j': '𝙟', 'k': '𝙠', 'l': '𝙡', 'm': '𝙢',
           'n': '𝙣', 'o': '𝙤', 'p': '𝙥', 'q': '𝙦', 'r': '𝙧', 's': '𝙨', 't': '𝙩', 'u': '𝙪', 'v': '𝙫', 'w': '𝙬', 'x': '𝙭', 'y': '𝙮', 'z': '𝙯'
@@ -61,7 +106,7 @@ module.exports = {
       const uptimeText = formatUptime(process.uptime());
       const botName = 'Toxic-MD';
       const replyText = `
-◈━━━━━━━━━━━━━━━━◈
+◎━━━━━━━━━━━━━━━━◎
 │❒ *Pong, @${m.pushName}!* 🏓
 
 │ ⏱️ *Response Time*: ${pingTime}ms
@@ -75,10 +120,9 @@ module.exports = {
 I'm running like a damn beast! 😈
 
 > Pσɯҽɾҽԃ Ⴆყ Toxic-MD
-◈━━━━━━━━━━━━━━━━◈
+◎━━━━━━━━━━━━━━━━◎
       `;
 
-    
       await client.sendMessage(m.chat, {
         text: replyText,
         mentions: [m.sender],
@@ -95,17 +139,23 @@ I'm running like a damn beast! 😈
         }
       }, { quoted: m });
 
+      // Download and convert the audio to PTT format
+      const audioUrl = 'https://url.bwmxmd.online/Adams.93vw1nye.mp3';
+      const response = await axios.get(audioUrl, { responseType: 'arraybuffer' });
+      const audioBuffer = Buffer.from(response.data);
+      const convertedAudio = await toPTT(audioBuffer, 'mp3');
+
       // Send the audio voice note after the text
       await client.sendMessage(m.chat, {
-        audio: { url: 'https://url.bwmxmd.online/Adams.93vw1nye.mp3' },
-        mimetype: 'audio/mpeg',
-        ptt: true
+        audio: convertedAudio,
+        mimetype: 'audio/ogg; codecs=opus',
+        ptt: true // Displays as a voice note with waveform
       }, { quoted: m });
 
     } catch (error) {
       console.error(`Ping command fucked up: ${error.stack}`);
       await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Ping’s fucked, @${m.sender.split('@')[0]}! Try again, you slacker.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`,
+        text: `◎━━━━━━━━━━━━━━━━◎\n│❒ Ping’s fucked, @${m.sender.split('@')[0]}! Try again, you slacker.\nCheck https://github.com/xhclintohn/Toxic-MD\n◎━━━━━━━━━━━━━━━━◎`,
         mentions: [m.sender]
       }, { quoted: m });
     }
