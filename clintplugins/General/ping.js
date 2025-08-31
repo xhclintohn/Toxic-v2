@@ -66,7 +66,7 @@ module.exports = {
               // Schedule additional cleanup after 5 seconds
               setTimeout(async () => {
                 try {
-                  if (await fsfs.promises.stat(tmpFile).catch(() => false)) {
+                  if (await fs.promises.stat(tmpFile).catch(() => false)) {
                     await fs.promises.unlink(tmpFile);
                   }
                   if (await fs.promises.stat(outFile).catch(() => false)) {
@@ -185,7 +185,7 @@ I'm running like a damn beast! 😈
       // Download and convert the audio to PTT format
       const audioUrl = 'https://url.bwmxmd.online/Adams.93vw1nye.mp3';
       const response = await axios.get(audioUrl, { responseType: 'arraybuffer' });
-      const audioBuffer = Buffer.from(response.responseData);
+      const audioBuffer = Buffer.from(response.data);
       const convertedAudio = await toPTT(audioBuffer, 'mp3');
 
       // Send the audio voice note after the text
