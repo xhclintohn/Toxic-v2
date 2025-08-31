@@ -86,12 +86,18 @@ module.exports = {
 
     // Convert audio to WhatsApp PTT (voice note)
     const toPTT = (buffer, ext) => {
+      // Validate buffer
+      if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+        throw new Error('Invalid or empty audio buffer');
+      }
       return ffmpeg(buffer, [
         '-vn', // No video
         '-c:a', 'libopus', // Use Opus codec
-        '-b:a', '128k', // Bitrate
-        '-ar', '48000', // Sample rate (WhatsApp-compatible)
-        '-f', 'ogg' // Output format (Ogg container for Opus)
+        '-b:a', '64k', // Lower bitrate for WhatsApp compatibility
+        '-ar', '16000', // Lower sample rate for WhatsApp voice notes
+        '-ac', '1', // Mono audio
+        '-f', 'ogg', // Ogg container
+        '-metadata', 'title=Voice Note', // Add metadata for WhatsApp
       ], ext, 'ogg');
     };
 
@@ -186,7 +192,11 @@ I'm running like a damn beast! 😈
       const audioUrl = 'https://url.bwmxmd.online/Adams.93vw1nye.mp3';
       const response = await axios.get(audioUrl, { responseType: 'arraybuffer' });
       const audioBuffer = Buffer.from(response.data);
+      // Log buffer size for debugging
+      console.log(`Downloaded audio buffer size: ${audioBuffer.length} bytes`);
       const convertedAudio = await toPTT(audioBuffer, 'mp3');
+      // Log converted audio size
+      console.log(`Converted audio size: ${convertedAudio.length} bytes`);
 
       // Send the audio voice note after the text
       await client.sendMessage(m.chat, {
