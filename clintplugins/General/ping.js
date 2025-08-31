@@ -14,31 +14,70 @@ module.exports = {
     // FFmpeg function for media conversion
     const ffmpeg = (buffer, args = [], ext = '', ext2 = '') => {
       return new Promise(async (resolve, reject) => {
+        let tmpFile, outFile;
         try {
           const tmpDir = path.join(__dirname, '../tmp/');
           // Create tmp directory if it doesn't exist
           await fs.promises.mkdir(tmpDir, { recursive: true });
-          
-          let tmp = path.join(tmpDir, +new Date() + '.' + ext);
-          let out = tmp + '.' + ext2;
-          await fs.promises.writeFile(tmp, buffer);
-          spawn('ffmpeg', [
+
+          tmpFile = path.join(tmpDir, `${+new Date()}.${ext}`);
+          outFile = `${tmpFile}.${ext2}`;
+          await fs.promises.writeFile(tmpFile, buffer);
+
+          const ffmpegProcess = spawn('ffmpeg', [
             '-y',
-            '-i', tmp,
+            '-i', tmpFile,
             ...args,
-            out
-          ])
-            .on('error', reject)
-            .on('close', async (code) => {
-              try {
-                await fs.promises.unlink(tmp);
-                if (code !== 0) return reject(new Error(`FFmpeg exited with code ${code}`));
-                resolve(await fs.promises.readFile(out));
-                await fs.promises.unlink(out);
-              } catch (e) {
-                reject(e);
+            outFile
+          ]);
+
+          // Capture FFmpeg stderr for detailed error logging
+          let stderr = '';
+          ffmpegProcess.stderr.on('data', (data) => {
+            stderr += data.toString();
+          });
+
+          ffmpegProcess.on('error', (err) => {
+            reject(new Error(`FFmpeg error: ${err.message}\n${stderr}`));
+          });
+
+          ffmpegProcess.on('close', async (code) => {
+            try {
+              if (code !== 0) {
+                reject(new Error(`FFmpeg exited with code ${code}\n${stderr}`));
+                return;
               }
-            });
+              const output = await fs.promises.readFile(outFile);
+              resolve(output);
+            } catch (e) {
+              reject(e);
+            } finally {
+              // Clean up files immediately
+              try {
+                if (await fs.promises.stat(tmpFile).catch(() => false)) {
+                  await fs.promises.unlink(tmpFile);
+                }
+                if (await fs.promises.stat(outFile).catch(() => false)) {
+                  await fs.promises.unlink(outFile);
+                }
+              } catch (cleanupError) {
+                console.error(`Cleanup failed: ${cleanupError.message}`);
+              }
+              // Schedule additional cleanup after 5 seconds
+              setTimeout(async () => {
+                try {
+                  if (await fsfs.promises.stat(tmpFile).catch(() => false)) {
+                    await fs.promises.unlink(tmpFile);
+                  }
+                  if (await fs.promises.stat(outFile).catch(() => false)) {
+                    await fs.promises.unlink(outFile);
+                  }
+                } catch (e) {
+                  console.error(`Delayed cleanup failed: ${e.message}`);
+                }
+              }, 5000);
+            }
+          });
         } catch (e) {
           reject(e);
         }
@@ -48,12 +87,12 @@ module.exports = {
     // Convert audio to WhatsApp PTT (voice note)
     const toPTT = (buffer, ext) => {
       return ffmpeg(buffer, [
-        '-vn',
-        '-c:a', 'libopus',
-        '-b:a', '128k',
-        '-vbr', 'on',
-        '-compression_level', '10'
-      ], ext, 'opus');
+        '-vn', // No video
+        '-c:a', 'libopus', // Use Opus codec
+        '-b:a', '128k', // Bitrate
+        '-ar', '48000', // Sample rate (WhatsApp-compatible)
+        '-f', 'ogg' // Output format (Ogg container for Opus)
+      ], ext, 'ogg');
     };
 
     try {
@@ -146,7 +185,7 @@ I'm running like a damn beast! 😈
       // Download and convert the audio to PTT format
       const audioUrl = 'https://url.bwmxmd.online/Adams.93vw1nye.mp3';
       const response = await axios.get(audioUrl, { responseType: 'arraybuffer' });
-      const audioBuffer = Buffer.from(response.data);
+      const audioBuffer = Buffer.from(response.responseData);
       const convertedAudio = await toPTT(audioBuffer, 'mp3');
 
       // Send the audio voice note after the text
