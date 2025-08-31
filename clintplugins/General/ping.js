@@ -15,7 +15,11 @@ module.exports = {
     const ffmpeg = (buffer, args = [], ext = '', ext2 = '') => {
       return new Promise(async (resolve, reject) => {
         try {
-          let tmp = path.join(__dirname, '../tmp/', +new Date() + '.' + ext);
+          const tmpDir = path.join(__dirname, '../tmp/');
+          // Create tmp directory if it doesn't exist
+          await fs.promises.mkdir(tmpDir, { recursive: true });
+          
+          let tmp = path.join(tmpDir, +new Date() + '.' + ext);
           let out = tmp + '.' + ext2;
           await fs.promises.writeFile(tmp, buffer);
           spawn('ffmpeg', [
@@ -28,7 +32,7 @@ module.exports = {
             .on('close', async (code) => {
               try {
                 await fs.promises.unlink(tmp);
-                if (code !== 0) return reject(code);
+                if (code !== 0) return reject(new Error(`FFmpeg exited with code ${code}`));
                 resolve(await fs.promises.readFile(out));
                 await fs.promises.unlink(out);
               } catch (e) {
