@@ -13,7 +13,7 @@ module.exports = async (context) => {
 
   try {
     const encodedText = encodeURIComponent(text);
-    const apiUrl = `https://api.shizo.top/ai/gpt?apikey=shizo&query=${encodedText}`;
+    const apiUrl = `https://api.giftedtech.co.ke/api/ai/gpt?apikey=gifted&q=${encodedText}`;
     const response = await fetch(apiUrl, { timeout: 10000 });
     if (!response.ok) {
       throw new Error(`API puked with status ${response.status}`);
