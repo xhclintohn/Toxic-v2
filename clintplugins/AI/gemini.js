@@ -26,13 +26,14 @@ module.exports = async (context) => {
 
   try {
     // Hit the Gemini API
-    const { data } = await axios.get("https://api.yogik.id/ai/gemini", {
-      params: { text: text },
+    const { data } = await axios.get("https://api.giftedtech.co.ke/api/ai/geminiai", {
+      params: { apikey: "gifted", q: text },
       headers: { Accept: "application/json" },
+      timeout: 10000,
     });
 
     // Check if response is valid
-    if (!data.status || !data.response) {
+    if (!data.success || !data.result) {
       return client.sendMessage(
         m.chat,
         { text: formatStylishReply("API’s acting shady, no response! 😢 Try again.") },
@@ -40,10 +41,10 @@ module.exports = async (context) => {
       );
     }
 
-    // Send
+    // Send the response
     await client.sendMessage(
       m.chat,
-      { text: formatStylishReply(data.response) },
+      { text: formatStylishReply(data.result) },
       { quoted: m, ad: true }
     );
   } catch (error) {
