@@ -13,18 +13,18 @@ module.exports = async (context) => {
 
   try {
     const encodedText = encodeURIComponent(text);
-    const apiUrl = `https://api.giftedtech.co.ke/api/ai/gpt?apikey=gifted&q=${encodedText}`;
+    const apiUrl = `https://api.giftedtech.co.ke/api/ai/gpt4o?apikey=gifted&q=${encodedText}`;
     const response = await fetch(apiUrl, { timeout: 10000 });
     if (!response.ok) {
       throw new Error(`API puked with status ${response.status}`);
     }
 
     const data = await response.json();
-    if (!data.status || !data.msg) {
+    if (!data.success || !data.result) {
       return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ API’s useless, ${m.pushName}! No answer, try again, loser.\n◈━━━━━━━━━━━━━━━━◈`);
     }
 
-    await m.reply(`${data.msg}\n\n> ρσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`);
+    await m.reply(`${data.result}\n\n> ρσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`);
   } catch (error) {
     await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}! API’s down, try later, you whiny prick.\n◈━━━━━━━━━━━━━━━━◈`);
   }
