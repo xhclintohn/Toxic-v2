@@ -69,7 +69,10 @@ module.exports = async (context) => {
 
     const videoData = response.result;
     const timestamp = Date.now();
-    const fileName = `audio_${timestamp}.mp3`;
+    
+    // Determine file extension based on download_url
+    const fileExt = videoData.download_url.includes(".m4a") ? "m4a" : "mp3";
+    const fileName = `audio_${timestamp}.${fileExt}`;
     const filePath = path.join(tempDir, fileName);
 
     // Download the audio file
@@ -78,13 +81,23 @@ module.exports = async (context) => {
       url: videoData.download_url,
       responseType: "stream",
       timeout: 600000,
+      headers: {
+        "Accept": "audio/*",
+      },
     });
 
     const writer = fs.createWriteStream(filePath);
     downloadResponse.data.pipe(writer);
 
     await new Promise((resolve, reject) => {
-      writer.on("finish", resolve);
+      writer.on("finish", () => {
+        // Verify file size after download
+        if (fs.existsSync(filePath) && fs.statSync(filePath).size > 0) {
+          resolve();
+        } else {
+          reject(new Error("Downloaded file is empty or invalid"));
+        }
+      });
       writer.on("error", reject);
     });
 
@@ -98,12 +111,13 @@ module.exports = async (context) => {
       { quoted: m, ad: true }
     );
 
+    // Send the audio with the correct mimetype
     await client.sendMessage(
       m.chat,
       {
         audio: { url: filePath },
-        mimetype: "audio/mpeg",
-        fileName: `${videoData.title}.mp3`,
+        mimetype: fileExt === "m4a" ? "audio/mp4" : "audio/mpeg",
+        fileName: `${videoData.title}.${fileExt}`,
         contextInfo: {
           externalAdReply: {
             title: videoData.title,
@@ -118,6 +132,7 @@ module.exports = async (context) => {
       { quoted: m, ad: true }
     );
 
+    // Clean up the file
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
