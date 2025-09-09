@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const yts = require("yt-search");
 const axios = require("axios");
 
 const tempDir = path.join(__dirname, "temp");
@@ -8,16 +7,19 @@ if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir);
 }
 
-const isValidYouTubeUrl = (url) => {
-  return /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|shorts\/|embed\/)?[A-Za-z0-9_-]{11}(\?.*)?$/.test(url);
-};
-
 module.exports = async (context) => {
   const { client, m, text } = context;
 
   const formatStylishReply = (message) => {
     return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
   };
+
+  // Check if the message is recent (within 1 second)
+  const currentTime = Math.floor(Date.now() / 1000);
+  const messageTime = m.date || Math.floor(Date.now() / 1000);
+  if (currentTime - messageTime > 1) {
+    return;
+  }
 
   if (!text) {
     return client.sendMessage(
@@ -36,10 +38,17 @@ module.exports = async (context) => {
   }
 
   try {
-    const searchQuery = `${text} official`;
-    const searchResult = await yts(searchQuery);
-    const video = searchResult.videos[0];
-    if (!video) {
+    await client.sendMessage(
+      m.chat,
+      { text: formatStylishReply("🔍 Searchin’ for that track, hold up...") },
+      { quoted: m, ad: true }
+    );
+
+    const apiUrl = `https://api.diioffc.web.id/api/search/ytplay?query=${encodeURIComponent(text)}`;
+    const { data: response } = await axios.get(apiUrl);
+
+    const video = response.result;
+    if (!video || !video.url) {
       return client.sendMessage(
         m.chat,
         { text: formatStylishReply("No tunes found, bruh! 😕 Try another search!") },
@@ -51,16 +60,17 @@ module.exports = async (context) => {
     const fileName = `audio_${timestamp}.mp3`;
     const filePath = path.join(tempDir, fileName);
 
-    const apiUrl = `https://ytdownloader-aie4qa.fly.dev/download/audio?song=${encodeURIComponent(video.url)}&quality=128K&cb=${timestamp}`;
-    const response = await axios({
+    // Assuming the API provides a direct audio download link; adjust if needed
+    const downloadUrl = `https://api.diioffc.web.id/api/download/ytmp3?url=${encodeURIComponent(video.url)}&quality=128K&cb=${timestamp}`;
+    const downloadResponse = await axios({
       method: "get",
-      url: apiUrl,
+      url: downloadUrl,
       responseType: "stream",
       timeout: 600000,
     });
 
     const writer = fs.createWriteStream(filePath);
-    response.data.pipe(writer);
+    downloadResponse.data.pipe(writer);
 
     await new Promise((resolve, reject) => {
       writer.on("finish", resolve);
@@ -86,7 +96,7 @@ module.exports = async (context) => {
         contextInfo: {
           externalAdReply: {
             title: video.title,
-            body: `${video.author.name || "Unknown Artist"} | Powered by Toxic-MD`,
+            body: `${video.author?.name || "Unknown Artist"} | Powered by Toxic-MD`,
             thumbnailUrl: video.thumbnail || "https://via.placeholder.com/120x90",
             sourceUrl: video.url,
             mediaType: 1,
