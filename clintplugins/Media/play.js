@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
+const yts = require("yt-search");
 
 const tempDir = path.join(__dirname, "temp");
 if (!fs.existsSync(tempDir)) {
@@ -24,7 +25,7 @@ module.exports = async (context) => {
   if (!text) {
     return client.sendMessage(
       m.chat,
-      { text: formatStylishReply("Yo, drop a song name or YouTube URL, fam! 🎵 Ex: .play Not Like Us") },
+      { text: formatStylishReply("Yo, drop a song name, fam! 🎵 Ex: .play Not Like Us") },
       { quoted: m, ad: true }
     );
   }
@@ -32,7 +33,7 @@ module.exports = async (context) => {
   if (text.length > 100) {
     return client.sendMessage(
       m.chat,
-      { text: formatStylishReply("Keep it short, homie! Song name or URL max 100 chars. 📝") },
+      { text: formatStylishReply("Keep it short, homie! Song name max 100 chars. 📝") },
       { quoted: m, ad: true }
     );
   }
@@ -44,30 +45,20 @@ module.exports = async (context) => {
       { quoted: m, ad: true }
     );
 
-    let downloadUrl;
-    let video;
-
-    // Check if the input is a YouTube URL
-    const isUrl = text.match(/(https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/[^\s]+)/);
-    if (isUrl) {
-      // If input is a URL, use it directly
-      downloadUrl = `https://api.giftedtech.co.ke/api/download/ytmp3?apikey=gifted&url=${encodeURIComponent(text)}`;
-    } else {
-      // If input is a search query, search for the video first (using YouTube search API or similar)
-      const searchUrl = `https://api.giftedtech.co.ke/api/search/yts?query=${encodeURIComponent(text)}`;
-      const searchResponse = await axios.get(searchUrl);
-      video = searchResponse.data.result?.[0]; // Assuming the search API returns a list of results
-      if (!video || !video.url) {
-        return client.sendMessage(
-          m.chat,
-          { text: formatStylishReply("No tunes found, bruh! 😕 Try another search!") },
-          { quoted: m, ad: true }
-        );
-      }
-      downloadUrl = `https://api.giftedtech.co.ke/api/download/ytmp3?apikey=gifted&url=${encodeURIComponent(video.url)}`;
+    // Search for the video using yt-search
+    const searchResults = await yts(text);
+    const video = searchResults.videos[0];
+    if (!video || !video.url) {
+      return client.sendMessage(
+        m.chat,
+        { text: formatStylishReply("No tunes found, bruh! 😕 Try another search!") },
+        { quoted: m, ad: true }
+      );
     }
 
+    const downloadUrl = `https://api.giftedtech.co.ke/api/download/ytmp3?apikey=gifted&url=${encodeURIComponent(video.url)}`;
     const { data: response } = await axios.get(downloadUrl);
+
     if (!response.success || !response.result.download_url) {
       return client.sendMessage(
         m.chat,
@@ -116,9 +107,9 @@ module.exports = async (context) => {
         contextInfo: {
           externalAdReply: {
             title: videoData.title,
-            body: `${videoData.author?.name || "Unknown Artist"} | Powered by Toxic-MD`,
-            thumbnailUrl: videoData.thumbnail || "https://via.placeholder.com/120x90",
-            sourceUrl: videoData.url || text,
+            body: `${video.author?.name || "Unknown Artist"} | Powered by Toxic-MD`,
+            thumbnailUrl: videoData.thumbnail || video.thumbnail || "https://via.placeholder.com/120x90",
+            sourceUrl: video.url,
             mediaType: 1,
             renderLargerThumbnail: true,
           },
