@@ -24,7 +24,7 @@ module.exports = async (context) => {
   if (!text) {
     return client.sendMessage(
       m.chat,
-      { text: formatStylishReply("Yo, drop a song name, fam! 🎵 Ex: .play Not Like Us") },
+      { text: formatStylishReply("Yo, drop a song name or YouTube URL, fam! 🎵 Ex: .play Not Like Us") },
       { quoted: m, ad: true }
     );
   }
@@ -32,7 +32,7 @@ module.exports = async (context) => {
   if (text.length > 100) {
     return client.sendMessage(
       m.chat,
-      { text: formatStylishReply("Keep it short, homie! Song name max 100 chars. 📝") },
+      { text: formatStylishReply("Keep it short, homie! Song name or URL max 100 chars. 📝") },
       { quoted: m, ad: true }
     );
   }
@@ -44,27 +44,47 @@ module.exports = async (context) => {
       { quoted: m, ad: true }
     );
 
-    const apiUrl = `https://api.diioffc.web.id/api/search/ytplay?query=${encodeURIComponent(text)}`;
-    const { data: response } = await axios.get(apiUrl);
+    let downloadUrl;
+    let video;
 
-    const video = response.result;
-    if (!video || !video.url) {
+    // Check if the input is a YouTube URL
+    const isUrl = text.match(/(https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/[^\s]+)/);
+    if (isUrl) {
+      // If input is a URL, use it directly
+      downloadUrl = `https://api.giftedtech.co.ke/api/download/ytmp3?apikey=gifted&url=${encodeURIComponent(text)}`;
+    } else {
+      // If input is a search query, search for the video first (using YouTube search API or similar)
+      const searchUrl = `https://api.giftedtech.co.ke/api/search/yts?query=${encodeURIComponent(text)}`;
+      const searchResponse = await axios.get(searchUrl);
+      video = searchResponse.data.result?.[0]; // Assuming the search API returns a list of results
+      if (!video || !video.url) {
+        return client.sendMessage(
+          m.chat,
+          { text: formatStylishReply("No tunes found, bruh! 😕 Try another search!") },
+          { quoted: m, ad: true }
+        );
+      }
+      downloadUrl = `https://api.giftedtech.co.ke/api/download/ytmp3?apikey=gifted&url=${encodeURIComponent(video.url)}`;
+    }
+
+    const { data: response } = await axios.get(downloadUrl);
+    if (!response.success || !response.result.download_url) {
       return client.sendMessage(
         m.chat,
-        { text: formatStylishReply("No tunes found, bruh! 😕 Try another search!") },
+        { text: formatStylishReply("Couldn’t grab that track, fam! 😕 Try another one!") },
         { quoted: m, ad: true }
       );
     }
 
+    const videoData = response.result;
     const timestamp = Date.now();
     const fileName = `audio_${timestamp}.mp3`;
     const filePath = path.join(tempDir, fileName);
 
-    // Assuming the API provides a direct audio download link; adjust if needed
-    const downloadUrl = `https://api.diioffc.web.id/api/download/ytmp3?url=${encodeURIComponent(video.url)}&quality=128K&cb=${timestamp}`;
+    // Download the audio file
     const downloadResponse = await axios({
       method: "get",
-      url: downloadUrl,
+      url: videoData.download_url,
       responseType: "stream",
       timeout: 600000,
     });
@@ -83,7 +103,7 @@ module.exports = async (context) => {
 
     await client.sendMessage(
       m.chat,
-      { text: formatStylishReply(`Droppin’ *${video.title}* for ya, fam! Crank it up! 🔥🎧`) },
+      { text: formatStylishReply(`Droppin’ *${videoData.title}* for ya, fam! Crank it up! 🔥🎧`) },
       { quoted: m, ad: true }
     );
 
@@ -92,13 +112,13 @@ module.exports = async (context) => {
       {
         audio: { url: filePath },
         mimetype: "audio/mpeg",
-        fileName: `${video.title}.mp3`,
+        fileName: `${videoData.title}.mp3`,
         contextInfo: {
           externalAdReply: {
-            title: video.title,
-            body: `${video.author?.name || "Unknown Artist"} | Powered by Toxic-MD`,
-            thumbnailUrl: video.thumbnail || "https://via.placeholder.com/120x90",
-            sourceUrl: video.url,
+            title: videoData.title,
+            body: `${videoData.author?.name || "Unknown Artist"} | Powered by Toxic-MD`,
+            thumbnailUrl: videoData.thumbnail || "https://via.placeholder.com/120x90",
+            sourceUrl: videoData.url || text,
             mediaType: 1,
             renderLargerThumbnail: true,
           },
