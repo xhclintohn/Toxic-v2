@@ -93,12 +93,12 @@ I'm running like a damn beast! 😈
         }
       }, { quoted: m });
 
-      // Send the audio after the ping message
+      // Send the audio as a voice note after the ping message
       const audioUrl = 'https://files.catbox.moe/4ufunx.mp3';
       await client.sendMessage(m.chat, {
         audio: { url: audioUrl },
         mimetype: 'audio/mp4',
-        ptt: false
+        ptt: true
       }, { quoted: m });
 
     } catch (error) {
