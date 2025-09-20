@@ -1,12 +1,16 @@
 const fs = require("fs");
 const path = require("path");
-const axios = require("axios");
 const yts = require("yt-search");
+const axios = require("axios");
 
 const tempDir = path.join(__dirname, "temp");
 if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir);
 }
+
+const isValidYouTubeUrl = (url) => {
+  return /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|shorts\/|embed\/)?[A-Za-z0-9_-]{11}(\?.*)?$/.test(url);
+};
 
 module.exports = async (context) => {
   const { client, m, text } = context;
@@ -14,13 +18,6 @@ module.exports = async (context) => {
   const formatStylishReply = (message) => {
     return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
   };
-
-  // Check if the message is recent (within 1 second)
-  const currentTime = Math.floor(Date.now() / 1000);
-  const messageTime = m.date || Math.floor(Date.now() / 1000);
-  if (currentTime - messageTime > 1) {
-    return;
-  }
 
   if (!text) {
     return client.sendMessage(
@@ -39,16 +36,10 @@ module.exports = async (context) => {
   }
 
   try {
-    await client.sendMessage(
-      m.chat,
-      { text: formatStylishReply("🔍 Searchin’ for that track, hold up...") },
-      { quoted: m, ad: true }
-    );
-
-    // Search for the video using yt-search
-    const searchResults = await yts(text);
-    const video = searchResults.videos[0];
-    if (!video || !video.url) {
+    const searchQuery = `${text} official`;
+    const searchResult = await yts(searchQuery);
+    const video = searchResult.videos[0];
+    if (!video) {
       return client.sendMessage(
         m.chat,
         { text: formatStylishReply("No tunes found, bruh! 😕 Try another search!") },
@@ -56,48 +47,35 @@ module.exports = async (context) => {
       );
     }
 
-    const downloadUrl = `https://api.giftedtech.co.ke/api/download/ytmp3?apikey=gifted&url=${encodeURIComponent(video.url)}`;
-    const { data: response } = await axios.get(downloadUrl);
+    // Use the new API endpoint
+    const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytmp3?url=${encodeURIComponent(video.url)}`;
+    
+    // Call the API
+    const response = await axios.get(apiUrl);
+    const apiData = response.data;
 
-    if (!response.success || !response.result.download_url) {
-      return client.sendMessage(
-        m.chat,
-        { text: formatStylishReply("Couldn’t grab that track, fam! 😕 Try another one!") },
-        { quoted: m, ad: true }
-      );
+    // Check if the API call was successful
+    if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) {
+      throw new Error("API failed to process the video");
     }
 
-    const videoData = response.result;
     const timestamp = Date.now();
-    
-    // Determine file extension based on download_url
-    const fileExt = videoData.download_url.includes(".m4a") ? "m4a" : "mp3";
-    const fileName = `audio_${timestamp}.${fileExt}`;
+    const fileName = `audio_${timestamp}.mp3`;
     const filePath = path.join(tempDir, fileName);
 
-    // Download the audio file
-    const downloadResponse = await axios({
+    // Download the audio file from the API's download URL
+    const audioResponse = await axios({
       method: "get",
-      url: videoData.download_url,
+      url: apiData.result.downloadUrl,
       responseType: "stream",
       timeout: 600000,
-      headers: {
-        "Accept": "audio/*",
-      },
     });
 
     const writer = fs.createWriteStream(filePath);
-    downloadResponse.data.pipe(writer);
+    audioResponse.data.pipe(writer);
 
     await new Promise((resolve, reject) => {
-      writer.on("finish", () => {
-        // Verify file size after download
-        if (fs.existsSync(filePath) && fs.statSync(filePath).size > 0) {
-          resolve();
-        } else {
-          reject(new Error("Downloaded file is empty or invalid"));
-        }
-      });
+      writer.on("finish", resolve);
       writer.on("error", reject);
     });
 
@@ -107,22 +85,21 @@ module.exports = async (context) => {
 
     await client.sendMessage(
       m.chat,
-      { text: formatStylishReply(`Droppin’ *${videoData.title}* for ya, fam! Crank it up! 🔥🎧`) },
+      { text: formatStylishReply(`Droppin' *${apiData.result.title || video.title}* for ya, fam! Crank it up! 🔥🎧`) },
       { quoted: m, ad: true }
     );
 
-    // Send the audio with the correct mimetype
     await client.sendMessage(
       m.chat,
       {
         audio: { url: filePath },
-        mimetype: fileExt === "m4a" ? "audio/mp4" : "audio/mpeg",
-        fileName: `${videoData.title}.${fileExt}`,
+        mimetype: "audio/mpeg",
+        fileName: `${(apiData.result.title || video.title).substring(0, 100)}.mp3`,
         contextInfo: {
           externalAdReply: {
-            title: videoData.title,
-            body: `${video.author?.name || "Unknown Artist"} | Powered by Toxic-MD`,
-            thumbnailUrl: videoData.thumbnail || video.thumbnail || "https://via.placeholder.com/120x90",
+            title: apiData.result.title || video.title,
+            body: `${video.author.name || "Unknown Artist"} | Powered by Toxic-MD`,
+            thumbnailUrl: apiData.result.thumbnail || video.thumbnail || "https://via.placeholder.com/120x90",
             sourceUrl: video.url,
             mediaType: 1,
             renderLargerThumbnail: true,
@@ -132,7 +109,6 @@ module.exports = async (context) => {
       { quoted: m, ad: true }
     );
 
-    // Clean up the file
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
