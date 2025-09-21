@@ -48,12 +48,12 @@ module.exports = async (client, m, store, chatbotpmSetting) => {
                 throw new Error(`API request failed with status ${response.status}`);
             }
             const data = await response.json();
-            if (!data.status || !data.msg) {
-                throw new Error("Invalid API response: missing status or msg");
+            if (!data.status || !data.response) { 
+                throw new Error("Invalid API response: missing status or response");
             }
             await client.sendMessage(
                 m.key.remoteJid,
-                { text: data.msg },
+                { text: data.response }, 
                 { quoted: m }
             );
         } catch (e) {
