@@ -13,19 +13,8 @@ const commandQueue = queue(async (task, callback) => {
     callback();
 }, 1); // 1 at a time
 
-// Rate limiting: track last execution time per user
-const userLastUsed = new Map();
-const RATE_LIMIT_MS = 30000; // 30 seconds cooldown per user
-
 module.exports = async (context) => {
     const { client, m, mime, packname, author } = context;
-
-    // Rate limiting check
-    const now = Date.now();
-    const lastUsed = userLastUsed.get(m.sender) || 0;
-    if (now - lastUsed < RATE_LIMIT_MS) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Please wait ${Math.ceil((RATE_LIMIT_MS - (now - lastUsed)) / 1000)} seconds before using this command again.\n◈━━━━━━━━━━━━━━━━◈`);
-    }
 
     commandQueue.push({
         context,
@@ -62,7 +51,6 @@ module.exports = async (context) => {
                 await client.sendMessage(m.chat, { sticker: buffer }, { quoted: m });
 
                 await fs.unlink(tempFile).catch(() => console.warn('Failed to delete temp file'));
-                userLastUsed.set(m.sender, Date.now()); // Update last used time
             } catch (error) {
                 console.error(`Sticker error: ${error.message}`);
                 await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ An error occurred while creating the sticker. Please try again.\n◈━━━━━━━━━━━━━━━━◈');
