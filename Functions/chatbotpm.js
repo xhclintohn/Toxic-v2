@@ -42,7 +42,7 @@ module.exports = async (client, m, store, chatbotpmSetting) => {
 
         try {
             const encodedText = encodeURIComponent(messageContent);
-            const apiUrl = `https://api.shizo.top/ai/gpt?apikey=shizo&query=${encodedText}`;
+            const apiUrl = `https://api.privatezia.biz.id/api/ai/GPT-4?query=${encodedText}`;
             const response = await fetch(apiUrl, { timeout: 10000 });
             if (!response.ok) {
                 throw new Error(`API request failed with status ${response.status}`);
