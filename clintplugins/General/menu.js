@@ -18,13 +18,11 @@ module.exports = {
         },
         { quoted: m, ad: true }
       );
-      console.log(`Toxic-MD: Rejected menu with text: ${text}`);
       return;
     }
 
     const settings = await getSettings();
     const effectivePrefix = settings.prefix || '.'; // Dynamic prefix from database
-    console.log(`Toxic-MD: Generating menu with prefix: ${effectivePrefix}`);
 
     // Fancy font converter
     const toFancyFont = (text, isUpperCase = false) => {
@@ -139,7 +137,6 @@ module.exports = {
     );
 
     await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
-    console.log(`Toxic-MD: Sent interactive menu to ${m.chat} with prefix ${effectivePrefix}`);
 
     // Audio message logic
     const possibleAudioPaths = [
@@ -167,7 +164,6 @@ module.exports = {
         },
         { quoted: m }
       );
-      console.log(`Toxic-MD: Sent menu audio to ${m.chat}`);
     }
   },
 };
