@@ -3,6 +3,24 @@ const fetch = require("node-fetch");
 module.exports = async (context) => {
     const { client, m, text, botname } = context;
 
+    const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`API failed with status ${response.status}`);
+                }
+                return response;
+            } catch (error) {
+                if (attempt === retries || error.type !== "request-timeout") {
+                    throw error;
+                }
+                console.error(`Attempt ${attempt} failed: ${error.message}. Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    };
+
     if (!text) {
         return m.reply("Provide an Instagram link for the video.");
     }
@@ -13,14 +31,13 @@ module.exports = async (context) => {
 
     try {
         const encodedUrl = encodeURIComponent(text);
-        const response = await fetch(`https://api.privatezia.biz.id/api/downloader/igdl?url=${encodedUrl}`, {
-            headers: { Accept: "application/json" },
-            timeout: 10000
-        });
-
-        if (!response.ok) {
-            throw new Error(`API failed with status ${response.status}`);
-        }
+        const response = await fetchWithRetry(
+            `https://api.privatezia.biz.id/api/downloader/igdl?url=${encodedUrl}`,
+            {
+                headers: { Accept: "application/json" },
+                timeout: 15000 // Increased timeout to 15 seconds
+            }
+        );
 
         const data = await response.json();
 
@@ -29,14 +46,13 @@ module.exports = async (context) => {
         }
 
         const igVideoUrl = data.data[0].url;
-        // Extract title from filename if available, or use fallback
         const title = data.data[0].url.match(/filename=([^&]+)/)?.[1]?.replace(/%20/g, " ") || "No title available";
 
         if (!igVideoUrl) {
             return m.reply("Invalid Instagram data. Please ensure the video exists.");
         }
 
-        const videoResponse = await fetch(igVideoUrl);
+        const videoResponse = await fetchWithRetry(igVideoUrl, { timeout: 15000 });
         if (!videoResponse.ok) {
             throw new Error(`Failed to download video: HTTP ${videoResponse.status}`);
         }
@@ -56,6 +72,6 @@ module.exports = async (context) => {
         );
     } catch (e) {
         console.error("Instagram download error:", e);
-        m.reply(`An error occurred. API might be down. Error: ${e.message}`);
+        m.reply(`An error occurred. API might be down or slow. Error: ${e.message}`);
     }
 };
