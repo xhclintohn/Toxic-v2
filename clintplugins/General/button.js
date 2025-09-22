@@ -1,4 +1,4 @@
-const { default: makeWASocket } = require('baileys-pro');
+const { default: makeWASocket } = require('@whiskeysockets/baileys');
 
 module.exports = {
   name: 'buttonz',
