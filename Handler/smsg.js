@@ -16,7 +16,7 @@ const path = require('path');
 const filePath = path.resolve(__dirname, '../toxic.jpg'); 
 const kali = readFileSync(filePath);
 
-function smsg(client, m, store) { // Changed 'conn' to 'client'
+function smsg(client, m, store) { // Changed 'conn' back to 'client' to match index.js
   if (!m) return m;
   let M = proto.WebMessageInfo;
   if (m.key) {
@@ -29,7 +29,7 @@ function smsg(client, m, store) { // Changed 'conn' to 'client'
     if (m.isGroup) m.participant = client.decodeJid(m.key.participant) || "";
   }
 
-  // Updated group metadata and admin detection (fixed to use 'client')
+  // Updated group metadata and admin detection (using 'client')
   try {
     m.isGroup = m.chat.endsWith("g.us");
     m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(_ => {}) : {};
