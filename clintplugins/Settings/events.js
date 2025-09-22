@@ -2,32 +2,91 @@ const { getSettings, getGroupSetting, updateGroupSetting } = require('../../Data
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
-    await ownerMiddleware(context, async () => {
-        const { m, args } = context;
-        const value = args[0]?.toLowerCase();
-        const jid = m.chat;
+  await ownerMiddleware(context, async () => {
+    const { client, m, args, prefix } = context;
+    const jid = m.chat;
 
-        if (!jid.endsWith('@g.us')) {
-            return await m.reply('❌ This command can only be used in groups.');
+    const formatStylishReply = (message) => {
+      return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
+    };
+
+    try {
+      if (!jid.endsWith('@g.us')) {
+        return await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply("Yo, dumbass! 😈 This command only works in groups, not your sad DMs. 🖕") },
+          { quoted: m, ad: true }
+        );
+      }
+
+      const settings = await getSettings();
+      if (!settings || Object.keys(settings).length === 0) {
+        return await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser. 💀") },
+          { quoted: m, ad: true }
+        );
+      }
+
+      const value = args[0]?.toLowerCase();
+      let groupSettings = await getGroupSetting(jid);
+      let isEnabled = groupSettings?.events === true || groupSettings?.events === 'true';
+
+      if (value === 'on' || value === 'off') {
+        const action = value === 'on';
+        if (isEnabled === action) {
+          return await client.sendMessage(
+            m.chat,
+            {
+              text: formatStylishReply(
+                `Yo, genius! 😈 Events are already ${value.toUpperCase()} in this group! Stop wasting my time, moron. 🖕`
+              ),
+            },
+            { quoted: m, ad: true }
+          );
         }
 
-        const settings = await getSettings();
-        const prefix = settings.prefix;
+        await updateGroupSetting(jid, 'events', action);
+        return await client.sendMessage(
+          m.chat,
+          {
+            text: formatStylishReply(
+              `Events ${value.toUpperCase()}! 🔥 ${action ? 'Group events are live, let’s make some chaos! 💥' : 'Events off, you boring loser. 😴'}`
+            ),
+          },
+          { quoted: m, ad: true }
+        );
+      }
 
-        let groupSettings = await getGroupSetting(jid);
-        let isEnabled = groupSettings?.events === true;
+      const buttons = [
+        { buttonId: `${prefix}events on`, buttonText: { displayText: 'ON 🥶' }, type: 1 },
+        { buttonId: `${prefix}events off`, buttonText: { displayText: 'OFF 😴' }, type: 1 },
+      ];
 
-        if (value === 'on' || value === 'off') {
-            const action = value === 'on';
-
-            if (isEnabled === action) {
-                return await m.reply(`✅ Events are already ${value.toUpperCase()} for this group.`);
-            }
-
-            await updateGroupSetting(jid, 'events', action ? 'true' : 'false');
-            await m.reply(`✅ Events have been turned ${value.toUpperCase()} for this group.`);
-        } else {
-            await m.reply(`📄 Current events setting for this group: ${isEnabled ? 'ON' : 'OFF'}\n\n _Use ${prefix}events on or ${prefix}events off to change it._`);
-        }
-    });
+      await client.sendMessage(
+        m.chat,
+        {
+          text: formatStylishReply(
+            `Events Status: ${isEnabled ? 'ON 🥶' : 'OFF 😴'}. Pick a vibe, noob! 😈`
+          ),
+          footer: '> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ',
+          buttons,
+          headerType: 1,
+          viewOnce: true,
+        },
+        { quoted: m, ad: true }
+      );
+    } catch (error) {
+      console.error('Toxic-MD: Error in events.js:', error.message);
+      await client.sendMessage(
+        m.chat,
+        {
+          text: formatStylishReply(
+            "Shit broke, couldn’t update events. Database or something’s fucked. Try later, moron. 💀"
+          ),
+        },
+        { quoted: m, ad: true }
+      );
+    }
+  });
 };
