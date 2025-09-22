@@ -15,6 +15,22 @@ async function startToxicMD() {
   client.public = true; // Allow group commands
   client.ev.on('creds.update', saveCreds);
 
+  // Cache settings to avoid DB calls for every message
+  let settings = await getSettings();
+  let prefix = settings.prefix || '.';
+  console.log(`Toxic-MD: Initial prefix set to: ${prefix}`);
+
+  // Refresh settings periodically or on demand
+  async function refreshSettings() {
+    try {
+      settings = await getSettings();
+      prefix = settings.prefix || '.';
+      console.log(`Toxic-MD: Prefix updated to: ${prefix}`);
+    } catch (err) {
+      console.error('Toxic-MD: Error refreshing settings:', err);
+    }
+  }
+
   client.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
     if (connection === 'close') {
@@ -23,6 +39,8 @@ async function startToxicMD() {
       if (shouldReconnect) startToxicMD();
     } else if (connection === 'open') {
       console.log('Toxic-MD: Connected 😈');
+      // Refresh settings on reconnect
+      await refreshSettings();
     }
   });
 
@@ -34,8 +52,6 @@ async function startToxicMD() {
         return;
       }
 
-      const settings = await getSettings();
-      const prefix = settings.prefix || '.'; // Dynamic prefix from database
       console.log(`Toxic-MD: Processing message from ${m.sender} in ${m.isGroup ? 'group' : 'private'} with prefix: ${prefix}`);
 
       const commands = await getCommands();
@@ -81,8 +97,10 @@ async function startToxicMD() {
       // Handle text commands
       const body = m.message.conversation || m.message.extendedTextMessage?.text || '';
       console.log(`Toxic-MD: Message body: ${body}`);
+      
+      // Check if message starts with the current prefix
       if (!body || !body.startsWith(prefix)) {
-        console.log(`Toxic-MD: Message does not start with prefix ${prefix}, ignoring`);
+        console.log(`Toxic-MD: Message does not start with prefix "${prefix}", ignoring`);
         return;
       }
 
