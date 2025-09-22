@@ -73,13 +73,20 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const arg = budy.trim().substring(budy.indexOf(" ") + 1);
         const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
 
-        const getGroupAdmins = (participants) => {
-            let admins = [];
-            for (let i of participants) {
-                i.admin === "superadmin" ? admins.push(i.id) : i.admin === "admin" ? admins.push(i.id) : "";
-            }
-            return admins || [];
-        };
+        // Updated group metadata handling
+        try {
+            m.isGroup = m.chat.endsWith("g.us");
+            m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(_ => {}) : {};
+            const participants = m.metadata?.participants || [];
+            m.isAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === m.sender));
+            m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === botNumber));
+        } catch (error) {
+            console.error("Error fetching group metadata:", error);
+            m.metadata = {};
+            m.isAdmin = false;
+            m.isBotAdmin = false;
+        }
+
         const clint = (m.quoted || m);
         const quoted = (clint.mtype == 'buttonsMessage') ? clint[Object.keys(clint)[1]] : (clint.mtype == 'templateMessage') ? clint.hydratedTemplate[Object.keys(clint.hydratedTemplate)[1]] : (clint.mtype == 'product') ? clint[Object.keys(clint)[0]] : m.quoted ? m.quoted : m;
 
@@ -92,19 +99,19 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const DevToxic = Array.isArray(sudoUsers) ? sudoUsers : [];
         const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
 
-        const groupMetadata = m.isGroup ? await client.groupMetadata(m.chat).catch((e) => { }) : "";
-        const groupName = m.isGroup && groupMetadata ? await groupMetadata.subject : "";
-        const participants = m.isGroup && groupMetadata ? await groupMetadata.participants : "";
-        const groupAdmin = m.isGroup ? await getGroupAdmins(participants) : "";
-        const isBotAdmin = m.isGroup ? groupAdmin.includes(botNumber) : false;
-        const isAdmin = m.isGroup ? groupAdmin.includes(m.sender) : false;
-        const IsGroup = m.chat?.endsWith("@g.us");
+        const groupMetadata = m.isGroup ? m.metadata : "";
+        const groupName = m.isGroup && groupMetadata ? groupMetadata.subject : "";
+        const participants = m.isGroup && groupMetadata ? groupMetadata.participants : "";
+        const groupAdmin = m.isGroup ? (participants.find(p => p.admin !== null)?.jid || []) : "";
+        const isBotAdmin = m.isBotAdmin;
+        const isAdmin = m.isAdmin;
+        const IsGroup = m.isGroup;
 
         const context = {
             client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
             pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
             packname, generateProfilePicture, groupMetadata, toxicspeed, mycode,
-            fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag, antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate, getGroupAdmins, pict, Tag
+            fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag, antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate, getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.jid), pict, Tag
         };
 
         if (cmd) {
