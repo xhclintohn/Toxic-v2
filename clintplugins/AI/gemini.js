@@ -25,15 +25,15 @@ module.exports = async (context) => {
   }
 
   try {
-    // Hit the Gemini API
-    const { data } = await axios.get("https://api.giftedtech.co.ke/api/ai/geminiai", {
-      params: { apikey: "gifted", q: text },
+    // Hit the new Gemini API
+    const { data } = await axios.get("https://api.privatezia.biz.id/api/ai/gemini", {
+      params: { query: text },
       headers: { Accept: "application/json" },
       timeout: 10000,
     });
 
     // Check if response is valid
-    if (!data.success || !data.result) {
+    if (!data.status || !data.response) {
       return client.sendMessage(
         m.chat,
         { text: formatStylishReply("API’s acting shady, no response! 😢 Try again.") },
@@ -41,10 +41,10 @@ module.exports = async (context) => {
       );
     }
 
-    // Send the response
+    // Send the response with creator attribution
     await client.sendMessage(
       m.chat,
-      { text: formatStylishReply(data.result) },
+      { text: formatStylishReply(`${data.response}\n\n> Powered by ${data.model} | Created by ${data.creator}`) },
       { quoted: m, ad: true }
     );
   } catch (error) {
