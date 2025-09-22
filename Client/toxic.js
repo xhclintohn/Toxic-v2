@@ -28,7 +28,10 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const bannedUsers = await getBannedUsers();
 
         let settings = await getSettings();
-        if (!settings) return;
+        if (!settings) {
+            console.error("Toxic-MD: Settings not found, cannot proceed!");
+            return;
+        }
 
         const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, chatbotpm: chatbotpmSetting, packname } = settings;
 
@@ -73,15 +76,20 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const arg = budy.trim().substring(budy.indexOf(" ") + 1);
         const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
 
-        // Updated group metadata handling
+        // Updated group metadata handling with debug logging
         try {
             m.isGroup = m.chat.endsWith("g.us");
-            m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(_ => {}) : {};
+            console.log(`Toxic-MD: Processing message in ${m.isGroup ? 'group' : 'private'} chat: ${m.chat}`);
+            m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => {
+                console.error("Toxic-MD: Group metadata fetch error:", e);
+                return {};
+            }) : {};
             const participants = m.metadata?.participants || [];
             m.isAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === m.sender));
             m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === botNumber));
+            console.log(`Toxic-MD: isAdmin: ${m.isAdmin}, isBotAdmin: ${m.isBotAdmin} for sender: ${m.sender}`);
         } catch (error) {
-            console.error("Error fetching group metadata:", error);
+            console.error("Toxic-MD: Error fetching group metadata:", error);
             m.metadata = {};
             m.isAdmin = false;
             m.isBotAdmin = false;
@@ -102,7 +110,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const groupMetadata = m.isGroup ? m.metadata : "";
         const groupName = m.isGroup && groupMetadata ? groupMetadata.subject : "";
         const participants = m.isGroup && groupMetadata ? groupMetadata.participants : "";
-        const groupAdmin = m.isGroup ? (participants.find(p => p.admin !== null)?.jid || []) : "";
+        const groupAdmin = m.isGroup ? (participants.filter(p => p.admin !== null).map(p => p.jid) || []) : [];
         const isBotAdmin = m.isBotAdmin;
         const isAdmin = m.isAdmin;
         const IsGroup = m.isGroup;
@@ -111,10 +119,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
             pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
             packname, generateProfilePicture, groupMetadata, toxicspeed, mycode,
-            fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag, antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate, getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.jid), pict, Tag
+            fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag, antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate,
+            getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.jid), pict, Tag
         };
 
+        // Debug command receipt
         if (cmd) {
+            console.log(`Toxic-MD: Command received: ${resolvedCommandName} in ${m.isGroup ? 'group' : 'private'} chat from ${m.sender}`);
             const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
             if (bannedUsers.includes(senderNumber)) {
                 await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost! 💀` }, { quoted: m });
@@ -122,7 +133,9 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             }
         }
 
-        if (cmd && mode === 'private' && !itsMe && !Owner && m.sender !== sudoUsers) {
+        // Relax mode check to allow group messages
+        if (cmd && mode === 'private' && !itsMe && !Owner && !sudoUsers.includes(m.sender)) {
+            console.log(`Toxic-MD: Private mode active, skipping non-owner/non-sudo command from ${m.sender}`);
             return;
         }
 
@@ -137,6 +150,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         if (cmd) {
             await commands[resolvedCommandName](context);
+            console.log(`Toxic-MD: Executed command: ${resolvedCommandName}`);
         }
 
         console.log(`◈━━━━━━━━━━━━━━━━◈\n│❒ Bot successfully connected to WhatsApp ✅💫\n│❒ Loaded ${totalCommands} plugins. Toxic-MD is ready to dominate! 😈\n┗━━━━━━━━━━━━━━━┛`);
