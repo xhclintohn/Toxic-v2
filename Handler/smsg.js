@@ -16,7 +16,7 @@ const path = require('path');
 const filePath = path.resolve(__dirname, '../toxic.jpg'); 
 const kali = readFileSync(filePath);
 
-function smsg(conn, m, store) {
+function smsg(client, m, store) { // Changed 'conn' to 'client'
   if (!m) return m;
   let M = proto.WebMessageInfo;
   if (m.key) {
@@ -25,17 +25,17 @@ function smsg(conn, m, store) {
     m.chat = m.key.remoteJid;
     m.fromMe = m.key.fromMe;
     m.isGroup = m.chat.endsWith("@g.us");
-    m.sender = conn.decodeJid((m.fromMe && conn.user.id) || m.participant || m.key.participant || m.chat || "");
-    if (m.isGroup) m.participant = conn.decodeJid(m.key.participant) || "";
+    m.sender = client.decodeJid((m.fromMe && client.user.id) || m.participant || m.key.participant || m.chat || "");
+    if (m.isGroup) m.participant = client.decodeJid(m.key.participant) || "";
   }
 
-  // Updated group metadata and admin detection (from tutorial)
+  // Updated group metadata and admin detection (fixed to use 'client')
   try {
     m.isGroup = m.chat.endsWith("g.us");
-    m.metadata = m.isGroup ? await conn.groupMetadata(m.chat).catch(_ => {}) : {};
+    m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(_ => {}) : {};
     const participants = m.metadata?.participants || [];
     m.isAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === m.sender));
-    m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === conn.decodeJid(conn.user.id)));
+    m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === client.decodeJid(client.user.id)));
   } catch (error) {
     console.error("Error metadata:", error);
     m.metadata = {};
@@ -86,14 +86,14 @@ function smsg(conn, m, store) {
       m.quoted.id = m.msg.contextInfo.stanzaId;
       m.quoted.chat = m.msg.contextInfo.remoteJid || m.chat;
       m.quoted.isBaileys = m.quoted.id ? m.quoted.id.startsWith("BAE5") && m.quoted.id.length === 16 : false;
-      m.quoted.sender = conn.decodeJid(m.msg.contextInfo.participant);
-      m.quoted.fromMe = m.quoted.sender === conn.decodeJid(conn.user.id);
+      m.quoted.sender = client.decodeJid(m.msg.contextInfo.participant);
+      m.quoted.fromMe = m.quoted.sender === client.decodeJid(client.user.id);
       m.quoted.text = m.quoted.text || m.quoted.caption || m.quoted.conversation || m.quoted.contentText || m.quoted.selectedDisplayText || m.quoted.title || "";
       m.quoted.mentionedJid = m.msg.contextInfo ? m.msg.contextInfo.mentionedJid : [];
       m.getQuotedObj = m.getQuotedMessage = async () => {
         if (!m.quoted.id) return false;
-        let q = await store.loadMessage(m.chat, m.quoted.id, conn);
-        return exports.smsg(conn, q, store);
+        let q = await store.loadMessage(m.chat, m.quoted.id, client);
+        return exports.smsg(client, q, store);
       };
       let vM = (m.quoted.fakeObj = M.fromObject({
         key: {
@@ -105,15 +105,15 @@ function smsg(conn, m, store) {
         ...(m.isGroup ? { participant: m.quoted.sender } : {}),
       }));
 
-      m.quoted.delete = () => conn.sendMessage(m.quoted.chat, { delete: vM.key });
-      m.quoted.copyNForward = (jid, forceForward = false, options = {}) => conn.copyNForward(jid, vM, forceForward, options);
-      m.quoted.download = () => conn.downloadMediaMessage(m.quoted);
+      m.quoted.delete = () => client.sendMessage(m.quoted.chat, { delete: vM.key });
+      m.quoted.copyNForward = (jid, forceForward = false, options = {}) => client.copyNForward(jid, vM, forceForward, options);
+      m.quoted.download = () => client.downloadMediaMessage(m.quoted);
     }
   }
-  if (m.msg.url) m.download = () => conn.downloadMediaMessage(m.msg);
+  if (m.msg.url) m.download = () => client.downloadMediaMessage(m.msg);
   m.text = m.text || m.body || "";
   m.reply = (text, chatId = m.chat, options = {}) => {
-    return conn.sendMessage(chatId, 
+    return client.sendMessage(chatId, 
       {
         text: text,
         contextInfo: {
@@ -130,8 +130,8 @@ function smsg(conn, m, store) {
       { quoted: m, ...options }
     );
   };
-  m.copy = () => exports.smsg(conn, M.fromObject(M.toObject(m)));
-  m.copyNForward = (jid = m.chat, forceForward = false, options = {}) => conn.copyNForward(jid, m, forceForward, options);
+  m.copy = () => exports.smsg(client, M.fromObject(M.toObject(m)));
+  m.copyNForward = (jid = m.chat, forceForward = false, options = {}) => client.copyNForward(jid, m, forceForward, options);
   return m;
 }
 
