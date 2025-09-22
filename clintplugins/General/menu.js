@@ -74,15 +74,7 @@ module.exports = {
               {
                 name: 'cta_url',
                 buttonParamsJson: JSON.stringify({
-                  display_text: '📱 Contact Developer',
-                  url: 'https://wa.me/254735342808',
-                  merchant_url: 'https://wa.me/254735342808',
-                }),
-              },
-              {
-                name: 'cta_url',
-                buttonParamsJson: JSON.stringify({
-                  display_text: '💻 GitHub Repo',
+                  display_text: 'GitHub Repo',
                   url: 'https://github.com/xhclintohn/Toxic-MD',
                   merchant_url: 'https://github.com/xhclintohn/Toxic-MD',
                 }),
@@ -90,7 +82,7 @@ module.exports = {
               {
                 name: 'single_select',
                 buttonParamsJson: JSON.stringify({
-                  title: '📋 VIEW COMMANDS',
+                  title: 'VIEW OPTIONS',
                   sections: [
                     {
                       title: '🔥 CORE COMMANDS',
