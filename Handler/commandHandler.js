@@ -96,13 +96,7 @@ const aliases = {
     req: "requests",
     approve: "approve-all",
     reject: "reject-all",
-    up: "uptime",
-    groupname: "setgroupname",
-    setname: "setgroupname",
-    groupdesc: "setgroupdesc",
-    setdesc: "setgroupdesc",
-    grouprestrict: "setgrouprestrict",
-    restrictgroup: "setgrouprestrict"
+    up: "uptime"
 };
 
 commandFiles.forEach((file) => {
