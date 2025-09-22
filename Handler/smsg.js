@@ -8,7 +8,7 @@ const {
   jidDecode,
   proto,
   getContentType,
-} = require("baileys-pro");
+} = require("@whiskeysockets/baileys");
 const { readFileSync } = require('fs');
 
 const path = require('path');
