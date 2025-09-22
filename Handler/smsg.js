@@ -10,15 +10,13 @@ const {
   getContentType,
 } = require("baileys-pro");
 const { readFileSync } = require('fs');
+
 const path = require('path');
 
 const filePath = path.resolve(__dirname, '../toxic.jpg'); 
 const kali = readFileSync(filePath);
 
-function smsg(client, m, store) {
-  // Debug log to check if client is defined
-  console.log('[DEBUG] smsg called with client:', !!client, 'client.user:', client?.user?.id);
-
+function smsg(conn, m, store) {
   if (!m) return m;
   let M = proto.WebMessageInfo;
   if (m.key) {
@@ -27,34 +25,9 @@ function smsg(client, m, store) {
     m.chat = m.key.remoteJid;
     m.fromMe = m.key.fromMe;
     m.isGroup = m.chat.endsWith("@g.us");
-    m.sender = client && client.decodeJid ? client.decodeJid((m.fromMe && client.user?.id) || m.participant || m.key.participant || m.chat || "") : m.chat;
-    if (m.isGroup) m.participant = client && client.decodeJid ? client.decodeJid(m.key.participant) || "" : "";
+    m.sender = conn.decodeJid((m.fromMe && conn.user.id) || m.participant || m.key.participant || m.chat || "");
+    if (m.isGroup) m.participant = conn.decodeJid(m.key.participant) || "";
   }
-
-  // Group metadata and admin detection with fallback
-  try {
-    m.isGroup = m.chat.endsWith("g.us");
-    if (!client || !client.groupMetadata) {
-      console.error('[ERROR] smsg: client or client.groupMetadata is undefined');
-      m.metadata = {};
-      m.isAdmin = false;
-      m.isBotAdmin = false;
-    } else {
-      m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => {
-        console.error('[ERROR] Failed to fetch group metadata:', e);
-        return {};
-      }) : {};
-      const participants = m.metadata?.participants || [];
-      m.isAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === m.sender));
-      m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === client.decodeJid(client.user.id)));
-    }
-  } catch (error) {
-    console.error("[ERROR] smsg metadata block:", error);
-    m.metadata = {};
-    m.isAdmin = false;
-    m.isBotAdmin = false;
-  }
-
   if (m.message) {
     m.mtype = getContentType(m.message);
     m.msg = m.mtype == "viewOnceMessage" ? 
@@ -98,14 +71,14 @@ function smsg(client, m, store) {
       m.quoted.id = m.msg.contextInfo.stanzaId;
       m.quoted.chat = m.msg.contextInfo.remoteJid || m.chat;
       m.quoted.isBaileys = m.quoted.id ? m.quoted.id.startsWith("BAE5") && m.quoted.id.length === 16 : false;
-      m.quoted.sender = client && client.decodeJid ? client.decodeJid(m.msg.contextInfo.participant) : m.msg.contextInfo?.participant;
-      m.quoted.fromMe = client && client.decodeJid ? m.quoted.sender === client.decodeJid(client.user.id) : false;
+      m.quoted.sender = conn.decodeJid(m.msg.contextInfo.participant);
+      m.quoted.fromMe = m.quoted.sender === conn.decodeJid(conn.user.id);
       m.quoted.text = m.quoted.text || m.quoted.caption || m.quoted.conversation || m.quoted.contentText || m.quoted.selectedDisplayText || m.quoted.title || "";
       m.quoted.mentionedJid = m.msg.contextInfo ? m.msg.contextInfo.mentionedJid : [];
       m.getQuotedObj = m.getQuotedMessage = async () => {
         if (!m.quoted.id) return false;
-        let q = await store.loadMessage(m.chat, m.quoted.id, client);
-        return exports.smsg(client, q, store);
+        let q = await store.loadMessage(m.chat, m.quoted.id, conn);
+        return exports.smsg(conn, q, store);
       };
       let vM = (m.quoted.fakeObj = M.fromObject({
         key: {
@@ -117,19 +90,15 @@ function smsg(client, m, store) {
         ...(m.isGroup ? { participant: m.quoted.sender } : {}),
       }));
 
-      m.quoted.delete = () => client && client.sendMessage ? client.sendMessage(m.quoted.chat, { delete: vM.key }) : null;
-      m.quoted.copyNForward = (jid, forceForward = false, options = {}) => client && client.copyNForward ? client.copyNForward(jid, vM, forceForward, options) : null;
-      m.quoted.download = () => client && client.downloadMediaMessage ? client.downloadMediaMessage(m.quoted) : null;
+      m.quoted.delete = () => conn.sendMessage(m.quoted.chat, { delete: vM.key });
+      m.quoted.copyNForward = (jid, forceForward = false, options = {}) => conn.copyNForward(jid, vM, forceForward, options);
+      m.quoted.download = () => conn.downloadMediaMessage(m.quoted);
     }
   }
-  if (m.msg.url) m.download = () => client && client.downloadMediaMessage ? client.downloadMediaMessage(m.msg) : null;
+  if (m.msg.url) m.download = () => conn.downloadMediaMessage(m.msg);
   m.text = m.text || m.body || "";
   m.reply = (text, chatId = m.chat, options = {}) => {
-    if (!client || !client.sendMessage) {
-      console.error('[ERROR] smsg.reply: client.sendMessage is undefined');
-      return null;
-    }
-    return client.sendMessage(chatId, 
+    return conn.sendMessage(chatId, 
       {
         text: text,
         contextInfo: {
@@ -146,8 +115,8 @@ function smsg(client, m, store) {
       { quoted: m, ...options }
     );
   };
-  m.copy = () => exports.smsg(client, M.fromObject(M.toObject(m)));
-  m.copyNForward = (jid = m.chat, forceForward = false, options = {}) => client && client.copyNForward ? client.copyNForward(jid, m, forceForward, options) : null;
+  m.copy = () => exports.smsg(conn, M.fromObject(M.toObject(m)));
+  m.copyNForward = (jid = m.chat, forceForward = false, options = {}) => conn.copyNForward(jid, m, forceForward, options);
   return m;
 }
 
