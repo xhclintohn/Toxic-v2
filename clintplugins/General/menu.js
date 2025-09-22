@@ -137,14 +137,6 @@ module.exports = {
           })
         },
         contextInfo: {
-          forwardingScore: 999,
-          isForwarded: true,
-          forwardedNewsletterMessageInfo: {
-            newsletterName: "Toxic-MD Updates",
-            newsletterJid: "1230292929201@newsletter",
-            serverMessageId: 999,
-            content: "MENU UPDATE"
-          },
           externalAdReply: {
             title: `${botname}`,
             body: `Yo, ${m.pushName}! Ready to fuck shit up?`,
