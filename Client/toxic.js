@@ -28,7 +28,10 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const bannedUsers = await getBannedUsers();
 
         let settings = await getSettings();
-        if (!settings) return;
+        if (!settings) {
+            console.log('[ERROR] Settings not found, skipping message processing.');
+            return;
+        }
 
         const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, chatbotpm: chatbotpmSetting, packname } = settings;
 
@@ -86,6 +89,11 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const isAdmin = m.isGroup ? groupAdmins.includes(m.sender) : false;
         const IsGroup = m.chat?.endsWith("@g.us");
 
+        // Enhanced debug logging for group issues
+        if (IsGroup) {
+            console.log(`[GROUP DEBUG] Chat: ${m.chat}, IsGroup: ${IsGroup}, isBotAdmin: ${isBotAdmin}, isAdmin: ${isAdmin}, Command: ${commandName || 'none'}, Resolved: ${resolvedCommandName || 'none'}, Cmd exists: ${!!cmd}`);
+        }
+
         const getGroupAdmins = (participants) => {
             return participants.filter(p => p.admin === 'superadmin' || p.admin === 'admin').map(p => p.jid || p.id);
         };
@@ -113,7 +121,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
             if (bannedUsers.includes(senderNumber)) {
                 await client.sendMessage(m.chat, { 
-                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost! 💀`,
+                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost! 💀\n◈━━━━━━━━━━━━━━━━◈`,
                     contextInfo: {
                         externalAdReply: {
                             title: `Toxic-MD`,
@@ -126,91 +134,19 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 }, { quoted: m });
                 return;
             }
-        }
 
-        if (cmd && mode === 'private' && !itsMe && !Owner && m.sender !== sudoUsers) {
-            return;
-        }
-
-        // Group Metadata Commands
-        if (resolvedCommandName === 'setgroupname' && IsGroup) {
-            if (!isAdmin) return m.reply('Only group admins can use this command! 😤');
-            if (!isBotAdmin) return m.reply('I need to be an admin to change the group name, you fool! 😒');
-            const newSubject = args.join(" ").trim();
-            if (!newSubject) return m.reply(`Yo, give me a new group name! Usage: ${prefix}setgroupname <new name>`);
-            if (newSubject.length > 100) return m.reply('Group name can’t be longer than 100 characters, genius! 😑');
-
-            try {
-                await client.groupUpdateSubject(m.chat, newSubject);
-                await m.reply(`Group name slammed to "${newSubject}"! Let’s keep the chaos going! 😈`, {
-                    contextInfo: {
-                        externalAdReply: {
-                            title: `Toxic-MD`,
-                            body: `Group Update`,
-                            previewType: "PHOTO",
-                            thumbnail: pict,
-                            sourceUrl: 'https://github.com/xhclintohn/Toxic-MD'
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error('Error updating group subject:', util.format(error));
-                await m.reply('Failed to update group name. WhatsApp’s acting up, not me! 😬');
+            if (mode === 'private' && !itsMe && !Owner && !sudoUsers.includes(m.sender)) {
+                console.log(`[DEBUG] Command blocked: Private mode, sender ${m.sender} is not owner or sudo`);
+                return;
             }
-            return;
-        }
 
-        if (resolvedCommandName === 'setgroupdesc' && IsGroup) {
-            if (!isAdmin) return m.reply('Only group admins can use this command! 😤');
-            if (!isBotAdmin) return m.reply('I need admin powers to change the description, bro! 😒');
-            const newDesc = args.join(" ").trim();
-            if (!newDesc) return m.reply(`Gimme a new description! Usage: ${prefix}setgroupdesc <new description>`);
-
+            console.log(`[DEBUG] Executing command: ${resolvedCommandName} in ${IsGroup ? 'group' : 'private'} chat`);
             try {
-                await client.groupUpdateDescription(m.chat, newDesc);
-                await m.reply('Group description updated! Time to flex that new vibe! 🔥', {
-                    contextInfo: {
-                        externalAdReply: {
-                            title: `Toxic-MD`,
-                            body: `Group Update`,
-                            previewType: "PHOTO",
-                            thumbnail: pict,
-                            sourceUrl: 'https://github.com/xhclintohn/Toxic-MD'
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error('Error updating group description:', util.format(error));
-                await m.reply('Couldn’t update the description. Blame WhatsApp’s nonsense! 😬');
+                await cmd(context);
+            } catch (err) {
+                console.error(`[ERROR] Command ${resolvedCommandName} failed:`, util.format(err));
+                await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Command ${resolvedCommandName} failed! Something broke, and it’s probably not my fault! 😬\n◈━━━━━━━━━━━━━━━━◈`);
             }
-            return;
-        }
-
-        if (resolvedCommandName === 'setgrouprestrict' && IsGroup) {
-            if (!isAdmin) return m.reply('Only group admins can use this command! 😤');
-            if (!isBotAdmin) return m.reply('I need to be an admin to mess with group settings, duh! 😒');
-            const action = args[0]?.toLowerCase();
-            if (!['on', 'off'].includes(action)) return m.reply(`Usage: ${prefix}setgrouprestrict <on|off>`);
-
-            try {
-                const restrict = action === 'on';
-                await client.groupSettingUpdate(m.chat, restrict ? 'locked' : 'unlocked');
-                await m.reply(`Group editing is now ${restrict ? 'locked to admins only' : 'open to all members'}! Keep it toxic! 😎`, {
-                    contextInfo: {
-                        externalAdReply: {
-                            title: `Toxic-MD`,
-                            body: `Group Update`,
-                            previewType: "PHOTO",
-                            thumbnail: pict,
-                            sourceUrl: 'https://github.com/xhclintohn/Toxic-MD'
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error('Error updating group settings:', util.format(error));
-                await m.reply('Failed to update group settings. WhatsApp’s tripping again! 😬');
-            }
-            return;
         }
 
         if (antideleteSetting === true) {
@@ -222,14 +158,10 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         await gcPresence(client, m);
         await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
 
-        if (cmd) {
-            await commands[resolvedCommandName](context);
-        }
-
         console.log(`◈━━━━━━━━━━━━━━━━◈\n│❒ Bot successfully connected to WhatsApp ✅💫\n│❒ Loaded ${totalCommands} plugins. Toxic-MD is ready to dominate! 😈\n┗━━━━━━━━━━━━━━━┛`);
 
     } catch (err) {
-        console.error('Toxic-MD Error:', util.format(err));
+        console.error('[ERROR] Toxic-MD Error:', util.format(err));
     }
 
     process.on('uncaughtException', function (err) {
@@ -241,6 +173,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         if (e.includes("Connection Closed")) return;
         if (e.includes("Timed Out")) return;
         if (e.includes("Value not found")) return;
-        console.error('Toxic-MD Caught exception:', err);
+        console.error('[ERROR] Toxic-MD Caught exception:', err);
     });
 };
