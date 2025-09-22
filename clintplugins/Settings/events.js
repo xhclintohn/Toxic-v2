@@ -1,4 +1,4 @@
-const { getSettings, getGroupSetting, updateGroupSetting } = require('../../Database/config');
+const { getSettings, getGroupSettings, updateGroupSetting } = require('../../Database/config');
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
@@ -29,7 +29,8 @@ module.exports = async (context) => {
       }
 
       const value = args[0]?.toLowerCase();
-      let groupSettings = await getGroupSetting(jid);
+      let groupSettings = await getGroupSettings(jid);
+      console.log('Toxic-MD: Group settings for', jid, ':', groupSettings);
       let isEnabled = groupSettings?.events === true || groupSettings?.events === 'true';
 
       if (value === 'on' || value === 'off') {
@@ -77,12 +78,12 @@ module.exports = async (context) => {
         { quoted: m, ad: true }
       );
     } catch (error) {
-      console.error('Toxic-MD: Error in events.js:', error.message);
+      console.error('Toxic-MD: Error in events.js:', error.stack);
       await client.sendMessage(
         m.chat,
         {
           text: formatStylishReply(
-            "Shit broke, couldn’t update events. Database or something’s fucked. Try later, moron. 💀"
+            `Shit broke, couldn’t update events. Database error: ${error.message}. Try later, moron. 💀`
           ),
         },
         { quoted: m, ad: true }
