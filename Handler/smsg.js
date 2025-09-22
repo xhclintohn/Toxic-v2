@@ -28,6 +28,21 @@ function smsg(conn, m, store) {
     m.sender = conn.decodeJid((m.fromMe && conn.user.id) || m.participant || m.key.participant || m.chat || "");
     if (m.isGroup) m.participant = conn.decodeJid(m.key.participant) || "";
   }
+
+  // Updated group metadata and admin detection (from tutorial)
+  try {
+    m.isGroup = m.chat.endsWith("g.us");
+    m.metadata = m.isGroup ? await conn.groupMetadata(m.chat).catch(_ => {}) : {};
+    const participants = m.metadata?.participants || [];
+    m.isAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === m.sender));
+    m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === conn.decodeJid(conn.user.id)));
+  } catch (error) {
+    console.error("Error metadata:", error);
+    m.metadata = {};
+    m.isAdmin = false;
+    m.isBotAdmin = false;
+  }
+
   if (m.message) {
     m.mtype = getContentType(m.message);
     m.msg = m.mtype == "viewOnceMessage" ? 
