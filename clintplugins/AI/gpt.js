@@ -13,18 +13,22 @@ module.exports = async (context) => {
 
   try {
     const encodedText = encodeURIComponent(text);
-    const apiUrl = `https://api.giftedtech.co.ke/api/ai/gpt4o?apikey=gifted&q=${encodedText}`;
-    const response = await fetch(apiUrl, { timeout: 10000 });
+    const apiUrl = `https://api.privatezia.biz.id/api/ai/GPT-4?query=${encodedText}`;
+    const response = await fetch(apiUrl, { 
+      timeout: 10000, // 10-second timeout
+      headers: { 'Content-Type': 'application/json' }
+    });
+
     if (!response.ok) {
       throw new Error(`API puked with status ${response.status}`);
     }
 
     const data = await response.json();
-    if (!data.success || !data.result) {
+    if (!data.status || !data.response) {
       return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ API’s useless, ${m.pushName}! No answer, try again, loser.\n◈━━━━━━━━━━━━━━━━◈`);
     }
 
-    await m.reply(`${data.result}\n\n> ρσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`);
+    await m.reply(`${data.response}\n\n> ρσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ | Created by ${data.creator}`);
   } catch (error) {
     await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}! API’s down, try later, you whiny prick.\n◈━━━━━━━━━━━━━━━━◈`);
   }
