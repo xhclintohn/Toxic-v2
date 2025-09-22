@@ -76,22 +76,15 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const arg = budy.trim().substring(budy.indexOf(" ") + 1);
         const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
 
-        const groupMetadata = m.isGroup ? await client.groupMetadata(m.chat).catch(() => ({})) : {};
-        const groupName = m.isGroup && groupMetadata.subject ? groupMetadata.subject : "";
-        const participants = m.isGroup && groupMetadata.participants ? groupMetadata.participants.map(p => ({
-            id: p.id || null,
-            jid: p.jid || null,
-            admin: p.admin === 'superadmin' ? 'superadmin' : p.admin === 'admin' ? 'admin' : null,
-            full: p
-        })) : [];
-        const groupAdmins = participants.filter(p => p.admin === 'admin' || p.admin === 'superadmin').map(p => p.jid || p.id);
-        const isBotAdmin = m.isGroup ? groupAdmins.includes(botNumber) : false;
-        const isAdmin = m.isGroup ? groupAdmins.includes(m.sender) : false;
-        const IsGroup = m.chat?.endsWith("@g.us");
+        // Use group metadata and admin status from smsg.js
+        const IsGroup = m.isGroup || m.chat?.endsWith("@g.us"); // Fallback for safety
+        const groupMetadata = m.metadata || {};
+        const groupName = IsGroup && groupMetadata.subject ? groupMetadata.subject : "";
+        const participants = groupMetadata.participants || [];
 
-        // Enhanced debug logging for group issues
-        if (IsGroup) {
-            console.log(`[GROUP DEBUG] Chat: ${m.chat}, IsGroup: ${IsGroup}, isBotAdmin: ${isBotAdmin}, isAdmin: ${isAdmin}, Command: ${commandName || 'none'}, Resolved: ${resolvedCommandName || 'none'}, Cmd exists: ${!!cmd}`);
+        // Debug logging for group issues
+        if (body) {
+            console.log(`[MESSAGE DEBUG] Chat: ${m.chat}, IsGroup: ${IsGroup}, isBotAdmin: ${m.isBotAdmin}, isAdmin: ${m.isAdmin}, Command: ${commandName || 'none'}, Resolved: ${resolvedCommandName || 'none'}, Cmd exists: ${!!cmd}, Sender: ${m.sender}, Text: ${body}`);
         }
 
         const getGroupAdmins = (participants) => {
@@ -111,8 +104,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
 
         const context = {
-            client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
-            pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
+            client, m, text, Owner, chatUpdate, store, isBotAdmin: m.isBotAdmin, isAdmin: m.isAdmin, IsGroup,
+            participants, pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
             packname, generateProfilePicture, groupMetadata, toxicspeed, mycode,
             fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag, antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate, getGroupAdmins, pict, Tag
         };
@@ -156,7 +149,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         await chatbotpm(client, m, store, chatbotpmSetting);
         await status_saver(client, m, Owner, prefix);
         await gcPresence(client, m);
-        await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
+        await antitaggc(client, m, m.isBotAdmin, itsMe, m.isAdmin, Owner, body);
 
         console.log(`◈━━━━━━━━━━━━━━━━◈\n│❒ Bot successfully connected to WhatsApp ✅💫\n│❒ Loaded ${totalCommands} plugins. Toxic-MD is ready to dominate! 😈\n┗━━━━━━━━━━━━━━━┛`);
 
