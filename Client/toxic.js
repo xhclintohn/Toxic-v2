@@ -28,10 +28,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const bannedUsers = await getBannedUsers();
 
         let settings = await getSettings();
-        if (!settings) {
-            console.log('[ERROR] Settings not found, skipping message processing.');
-            return;
-        }
+        if (!settings) return;
 
         const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, chatbotpm: chatbotpmSetting, packname } = settings;
 
@@ -76,21 +73,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const arg = budy.trim().substring(budy.indexOf(" ") + 1);
         const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
 
-        // Use group metadata and admin status from smsg.js
-        const IsGroup = m.isGroup || m.chat?.endsWith("@g.us"); // Fallback for safety
-        const groupMetadata = m.metadata || {};
-        const groupName = IsGroup && groupMetadata.subject ? groupMetadata.subject : "";
-        const participants = groupMetadata.participants || [];
-
-        // Debug logging for group issues
-        if (body) {
-            console.log(`[MESSAGE DEBUG] Chat: ${m.chat}, IsGroup: ${IsGroup}, isBotAdmin: ${m.isBotAdmin}, isAdmin: ${m.isAdmin}, Command: ${commandName || 'none'}, Resolved: ${resolvedCommandName || 'none'}, Cmd exists: ${!!cmd}, Sender: ${m.sender}, Text: ${body}`);
-        }
-
         const getGroupAdmins = (participants) => {
-            return participants.filter(p => p.admin === 'superadmin' || p.admin === 'admin').map(p => p.jid || p.id);
+            let admins = [];
+            for (let i of participants) {
+                i.admin === "superadmin" ? admins.push(i.id) : i.admin === "admin" ? admins.push(i.id) : "";
+            }
+            return admins || [];
         };
-
         const clint = (m.quoted || m);
         const quoted = (clint.mtype == 'buttonsMessage') ? clint[Object.keys(clint)[1]] : (clint.mtype == 'templateMessage') ? clint.hydratedTemplate[Object.keys(clint.hydratedTemplate)[1]] : (clint.mtype == 'product') ? clint[Object.keys(clint)[0]] : m.quoted ? m.quoted : m;
 
@@ -103,9 +92,17 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const DevToxic = Array.isArray(sudoUsers) ? sudoUsers : [];
         const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
 
+        const groupMetadata = m.isGroup ? await client.groupMetadata(m.chat).catch((e) => { }) : "";
+        const groupName = m.isGroup && groupMetadata ? await groupMetadata.subject : "";
+        const participants = m.isGroup && groupMetadata ? await groupMetadata.participants : "";
+        const groupAdmin = m.isGroup ? await getGroupAdmins(participants) : "";
+        const isBotAdmin = m.isGroup ? groupAdmin.includes(botNumber) : false;
+        const isAdmin = m.isGroup ? groupAdmin.includes(m.sender) : false;
+        const IsGroup = m.chat?.endsWith("@g.us");
+
         const context = {
-            client, m, text, Owner, chatUpdate, store, isBotAdmin: m.isBotAdmin, isAdmin: m.isAdmin, IsGroup,
-            participants, pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
+            client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
+            pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
             packname, generateProfilePicture, groupMetadata, toxicspeed, mycode,
             fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag, antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate, getGroupAdmins, pict, Tag
         };
@@ -113,33 +110,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         if (cmd) {
             const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
             if (bannedUsers.includes(senderNumber)) {
-                await client.sendMessage(m.chat, { 
-                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost! 💀\n◈━━━━━━━━━━━━━━━━◈`,
-                    contextInfo: {
-                        externalAdReply: {
-                            title: `Toxic-MD`,
-                            body: pushname,
-                            previewType: "PHOTO",
-                            thumbnail: pict,
-                            sourceUrl: 'https://github.com/xhclintohn/Toxic-MD'
-                        }
-                    }
-                }, { quoted: m });
+                await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost! 💀` }, { quoted: m });
                 return;
             }
+        }
 
-            if (mode === 'private' && !itsMe && !Owner && !sudoUsers.includes(m.sender)) {
-                console.log(`[DEBUG] Command blocked: Private mode, sender ${m.sender} is not owner or sudo`);
-                return;
-            }
-
-            console.log(`[DEBUG] Executing command: ${resolvedCommandName} in ${IsGroup ? 'group' : 'private'} chat`);
-            try {
-                await cmd(context);
-            } catch (err) {
-                console.error(`[ERROR] Command ${resolvedCommandName} failed:`, util.format(err));
-                await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Command ${resolvedCommandName} failed! Something broke, and it’s probably not my fault! 😬\n◈━━━━━━━━━━━━━━━━◈`);
-            }
+        if (cmd && mode === 'private' && !itsMe && !Owner && m.sender !== sudoUsers) {
+            return;
         }
 
         if (antideleteSetting === true) {
@@ -149,12 +126,16 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         await chatbotpm(client, m, store, chatbotpmSetting);
         await status_saver(client, m, Owner, prefix);
         await gcPresence(client, m);
-        await antitaggc(client, m, m.isBotAdmin, itsMe, m.isAdmin, Owner, body);
+        await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
+
+        if (cmd) {
+            await commands[resolvedCommandName](context);
+        }
 
         console.log(`◈━━━━━━━━━━━━━━━━◈\n│❒ Bot successfully connected to WhatsApp ✅💫\n│❒ Loaded ${totalCommands} plugins. Toxic-MD is ready to dominate! 😈\n┗━━━━━━━━━━━━━━━┛`);
 
     } catch (err) {
-        console.error('[ERROR] Toxic-MD Error:', util.format(err));
+        console.error('Toxic-MD Error:', util.format(err));
     }
 
     process.on('uncaughtException', function (err) {
@@ -166,6 +147,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         if (e.includes("Connection Closed")) return;
         if (e.includes("Timed Out")) return;
         if (e.includes("Value not found")) return;
-        console.error('[ERROR] Toxic-MD Caught exception:', err);
+        console.error('Toxic-MD Caught exception:', err);
     });
 };
