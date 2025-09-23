@@ -3,24 +3,22 @@ const fetch = require("node-fetch");
 module.exports = async (context) => {
     const { client, botname, m, text } = context;
 
-    const fetchTikTokData = async (url, retries = 3) => {
-        for (let attempt = 0; attempt < retries; attempt++) {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`API failed with status ${response.status}`);
-            }
-            const data = await response.json();
-            if (
-                data &&
-                data.status === true &&
-                data.data &&
-                data.data.no_watermark &&
-                data.data.title
-            ) {
-                return data;
+    const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`API failed with status ${response.status}`);
+                }
+                return response;
+            } catch (error) {
+                if (attempt === retries || error.type !== "request-timeout") {
+                    throw error;
+                }
+                console.error(`Attempt ${attempt} failed: ${error.message}. Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
-        throw new Error("Failed to fetch valid TikTok data after multiple attempts.");
     };
 
     try {
@@ -28,27 +26,34 @@ module.exports = async (context) => {
         if (!text.includes("tiktok.com")) return m.reply("That is not a valid TikTok link.");
 
         const encodedUrl = encodeURIComponent(text);
-        const url = `https://api.privatezia.biz.id/api/downloader/tiktok?url=${encodedUrl}`;
-        const data = await fetchTikTokData(url);
+        const response = await fetchWithRetry(
+            `https://api.privatezia.biz.id/api/downloader/alldownload?url=${encodedUrl}`,
+            { headers: { Accept: "application/json" }, timeout: 15000 }
+        );
 
-        const tikVideoUrl = data.data.no_watermark;
-        const tikDescription = data.data.title || "No description available";
+        const data = await response.json();
+
+        if (!data || !data.status || !data.result || !data.result.video || !data.result.video.url) {
+            return m.reply("We are sorry but the API endpoint didn't respond correctly. Try again later.");
+        }
+
+        const tikVideoUrl = data.result.video.url;
+        const tikDescription = data.result.title || "No description available";
         const tikAuthor = data.creator || "Unknown Author";
-        // Since the new API doesn't provide stats, we'll use placeholders or omit them
-        const tikLikes = "N/A";
+        const tikLikes = "N/A"; // API doesn't provide stats
         const tikComments = "N/A";
         const tikShares = "N/A";
 
-        const caption = `🎥 TikTok Video\n\n📌 *Description:* ${tikDescription}\n👤 *Author:* ${tikAuthor}\n❤️ *Likes:* ${tikLikes}\n💬 *Comments:* ${tikComments}\n🔗 *Shares:* ${tikShares}\n\n> Powered by ${botname}`;
+        const caption = `🎥 TikTok Video\n\n📌 *Description:* ${tikDescription}\n👤 *Author:* ${tikAuthor}\n❤️ *Likes:* ${tikLikes}\n💬 *Comments:* ${tikComments}\n🔗 *Shares:* ${tikShares}\n\n> Powered by ${botname} | Created by ${data.creator}`;
 
         m.reply(`TikTok data fetched successfully! Sending...`);
 
-        const response = await fetch(tikVideoUrl);
-        if (!response.ok) {
-            throw new Error(`Failed to download video: HTTP ${response.status}`);
+        const videoResponse = await fetchWithRetry(tikVideoUrl, { timeout: 15000 });
+        if (!videoResponse.ok) {
+            throw new Error(`Failed to download video: HTTP ${videoResponse.status}`);
         }
 
-        const arrayBuffer = await response.arrayBuffer();
+        const arrayBuffer = await videoResponse.arrayBuffer();
         const videoBuffer = Buffer.from(arrayBuffer);
 
         await client.sendMessage(m.chat, {
@@ -56,8 +61,8 @@ module.exports = async (context) => {
             mimetype: "video/mp4",
             caption: caption,
         }, { quoted: m });
-
     } catch (error) {
-        m.reply(`Error: ${error.message}`);
+        console.error("TikTok download error:", error);
+        m.reply(`Error: ${error.message}. API might be down or slow.`);
     }
 };
