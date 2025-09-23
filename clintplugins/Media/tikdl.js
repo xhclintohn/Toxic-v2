@@ -39,12 +39,12 @@ module.exports = async (context) => {
 
         const tikVideoUrl = data.result.video.url;
         const tikDescription = data.result.title || "No description available";
-        const tikAuthor = data.creator || "Unknown Author";
+        const tikAuthor = "Unknown Author"; // No creator field used
         const tikLikes = "N/A"; // API doesn't provide stats
         const tikComments = "N/A";
         const tikShares = "N/A";
 
-        const caption = `🎥 TikTok Video\n\n📌 *Description:* ${tikDescription}\n👤 *Author:* ${tikAuthor}\n❤️ *Likes:* ${tikLikes}\n💬 *Comments:* ${tikComments}\n🔗 *Shares:* ${tikShares}\n\n> Powered by ${botname} | Created by ${data.creator}`;
+        const caption = `🎥 TikTok Video\n\n📌 *Description:* ${tikDescription}\n👤 *Author:* ${tikAuthor}\n❤️ *Likes:* ${tikLikes}\n💬 *Comments:* ${tikComments}\n🔗 *Shares:* ${tikShares}\n\n> Powered by ${botname}`;
 
         m.reply(`TikTok data fetched successfully! Sending...`);
 
