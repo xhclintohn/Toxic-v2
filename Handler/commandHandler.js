@@ -92,6 +92,8 @@ const aliases = {
     youtube: "ytmp4",
     tt: "tikdl",
     tiktok: "tikdl",
+    twitter: "twtdl",
+    x: "twtdl",
     ytv: "ytmp4",
     mf: "mediafire",
     emojimix: "emix",
