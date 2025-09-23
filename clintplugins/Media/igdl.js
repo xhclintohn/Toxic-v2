@@ -32,21 +32,18 @@ module.exports = async (context) => {
     try {
         const encodedUrl = encodeURIComponent(text);
         const response = await fetchWithRetry(
-            `https://api.privatezia.biz.id/api/downloader/igdl?url=${encodedUrl}`,
-            {
-                headers: { Accept: "application/json" },
-                timeout: 15000 // Increased timeout to 15 seconds
-            }
+            `https://api.privatezia.biz.id/api/downloader/alldownload?url=${encodedUrl}`,
+            { headers: { Accept: "application/json" }, timeout: 15000 }
         );
 
         const data = await response.json();
 
-        if (!data || !data.status || !data.data || !data.data[0] || !data.data[0].url) {
+        if (!data || !data.status || !data.result || !data.result.video || !data.result.video.url) {
             return m.reply("We are sorry but the API endpoint didn't respond correctly. Try again later.");
         }
 
-        const igVideoUrl = data.data[0].url;
-        const title = data.data[0].url.match(/filename=([^&]+)/)?.[1]?.replace(/%20/g, " ") || "No title available";
+        const igVideoUrl = data.result.video.url;
+        const title = data.result.title || "No title available";
 
         if (!igVideoUrl) {
             return m.reply("Invalid Instagram data. Please ensure the video exists.");
@@ -65,7 +62,7 @@ module.exports = async (context) => {
             {
                 video: videoBuffer,
                 mimetype: "video/mp4",
-                caption: `🎥 Instagram Video\n\n📌 *Title:* ${title}\n👤 *Creator:* ${data.creator}\n\n> Downloaded by ${botname}`,
+                caption: `🎥 Instagram Video\n\n📌 *Title:* ${title}\n\n> Downloaded by ${botname}`,
                 gifPlayback: false,
             },
             { quoted: m }
