@@ -3,6 +3,10 @@ const fetch = require("node-fetch");
 module.exports = async (context) => {
     const { client, m, text, botname } = context;
 
+    const formatStylishReply = (message) => {
+        return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
+    };
+
     const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
@@ -22,11 +26,11 @@ module.exports = async (context) => {
     };
 
     if (!text) {
-        return m.reply("Provide an Instagram link for the video.");
+        return m.reply(formatStylishReply("Yo, drop an Instagram link, fam! 📹 Ex: .instagramdl https://www.instagram.com/reel/DOlTuNlEsDm/"));
     }
 
     if (!text.includes("instagram.com")) {
-        return m.reply("That is not a valid Instagram link.");
+        return m.reply(formatStylishReply("That’s not a valid Instagram link, you clueless twit! Try again."));
     }
 
     try {
@@ -39,14 +43,14 @@ module.exports = async (context) => {
         const data = await response.json();
 
         if (!data || !data.status || !data.result || !data.result.video || !data.result.video.url) {
-            return m.reply("We are sorry but the API endpoint didn't respond correctly. Try again later.");
+            return m.reply(formatStylishReply("API’s actin’ shady, no video found! 😢 Try again later."));
         }
 
         const igVideoUrl = data.result.video.url;
         const title = data.result.title || "No title available";
 
         if (!igVideoUrl) {
-            return m.reply("Invalid Instagram data. Please ensure the video exists.");
+            return m.reply(formatStylishReply("Invalid Instagram data. Make sure the video exists, fam!"));
         }
 
         const videoResponse = await fetchWithRetry(igVideoUrl, { timeout: 15000 });
@@ -62,13 +66,13 @@ module.exports = async (context) => {
             {
                 video: videoBuffer,
                 mimetype: "video/mp4",
-                caption: `🎥 Instagram Video\n\n📌 *Title:* ${title}\n\n> Downloaded by ${botname}`,
+                caption: formatStylishReply(`🎥 Instagram Video\n\n📌 *Title:* ${title}`),
                 gifPlayback: false,
             },
             { quoted: m }
         );
     } catch (e) {
         console.error("Instagram download error:", e);
-        m.reply(`An error occurred. API might be down or slow. Error: ${e.message}`);
+        m.reply(formatStylishReply(`Yo, we hit a snag: ${e.message}. Check the URL and try again! 😎`));
     }
 };
