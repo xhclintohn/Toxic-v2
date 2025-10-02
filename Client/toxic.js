@@ -17,10 +17,19 @@ const antilink = require('../Functions/antilink');
 const chatbotpm = require('../Functions/chatbotpm');
 
 const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require('../Database/config');
-
 const { botname, mycode } = require('../Env/settings');
 
+// 🆕 Import cleanup function
+const { cleanupOldMessages } = require('../lib/Store');
+
 process.setMaxListeners(0);
+
+// Run cleanup immediately at startup
+cleanupOldMessages();
+// Schedule cleanup every 24 hours
+setInterval(() => {
+    cleanupOldMessages();
+}, 24 * 60 * 60 * 1000);
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
     try {
