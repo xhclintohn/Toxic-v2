@@ -99,6 +99,7 @@ const aliases = {
     mf: "mediafire",
     emojimix: "emix",
     chatbot: "chatbotpm",
+    autoreply: "chatbotpm",
     enc: "encrypt",
     req: "requests",
     approve: "approve-all",
