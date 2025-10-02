@@ -1,128 +1,73 @@
-const { Pool } = require('pg');
-const { database } = require('../Env/settings');
+const fs = require("fs");
+const path = require("path");
 
-const pool = new Pool({
-    connectionString: database,
-    ssl: { rejectUnauthorized: false }
-});
+const dataDir = path.join(__dirname, "data");
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
 
-async function initializeDatabase() {
-    const client = await pool.connect();
+// Helper: read JSON safely
+function readJSON(file, fallback = {}) {
     try {
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS settings (
-                id SERIAL PRIMARY KEY,
-                key TEXT UNIQUE NOT NULL,
-                value TEXT NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS group_settings (
-                jid TEXT PRIMARY KEY,
-                antidelete BOOLEAN DEFAULT true,
-                gcpresence BOOLEAN DEFAULT false,  -- Changed to false by default
-                events BOOLEAN DEFAULT false,
-                antidemote BOOLEAN DEFAULT false,
-                antipromote BOOLEAN DEFAULT false
-            );
-            CREATE TABLE IF NOT EXISTS conversation_history (
-                id SERIAL PRIMARY KEY,
-                num TEXT NOT NULL,
-                role TEXT NOT NULL,
-                message TEXT NOT NULL,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-            CREATE TABLE IF NOT EXISTS sudo_users (
-                num TEXT PRIMARY KEY
-            );
-            CREATE TABLE IF NOT EXISTS banned_users (
-                num TEXT PRIMARY KEY
-            );
-            CREATE TABLE IF NOT EXISTS users (
-                num TEXT PRIMARY KEY
-            );
-        `);
-
-        const defaultSettings = {
-            prefix: '.',
-            packname: 'Toxic-MD',
-            mode: 'private',
-            presence: 'online',
-            autoview: 'true',
-            autolike: 'false',
-            autoread: 'false',
-            autobio: 'false',
-            anticall: 'false',
-            chatbotpm: 'false',
-            autolikeemoji: '❤️',
-            antilink: 'false',
-            antidelete: 'false'
-        };
-
-        for (const [key, value] of Object.entries(defaultSettings)) {
-            await client.query(`
-                INSERT INTO settings (key, value) 
-                VALUES ($1, $2)
-                ON CONFLICT (key) DO NOTHING;
-            `, [key, value]);
-        }
-    } catch (error) {
-        console.error(`❌ Database setup failed: ${error}`);
-    } finally {
-        client.release();
+        const filePath = path.join(dataDir, file);
+        if (!fs.existsSync(filePath)) return fallback;
+        const data = fs.readFileSync(filePath, "utf8");
+        return JSON.parse(data);
+    } catch (e) {
+        console.error(`❌ Error reading ${file}:`, e);
+        return fallback;
     }
 }
 
-async function getSettings() {
+// Helper: write JSON safely
+function writeJSON(file, data) {
     try {
-        const res = await pool.query("SELECT key, value FROM settings");
-        const settings = {};
-        res.rows.forEach(row => {
-            settings[row.key] = row.value === 'true' ? true : row.value === 'false' ? false : row.value;
-        });
-        return settings;
-    } catch (error) {
-        console.error(`❌ Error fetching global settings: ${error}`);
-        return {};
+        const filePath = path.join(dataDir, file);
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    } catch (e) {
+        console.error(`❌ Error writing ${file}:`, e);
     }
+}
+
+// ---------- SETTINGS ----------
+async function getSettings() {
+    return readJSON("settings.json", {
+        prefix: ".",
+        packname: "Toxic-MD",
+        mode: "private",
+        presence: "online",
+        autoview: false,
+        autolike: false,
+        autoread: false,
+        autobio: false,
+        anticall: false,
+        chatbotpm: false,
+        autolikeemoji: "❤️",
+        antilink: false,
+        antidelete: false
+    });
 }
 
 async function updateSetting(key, value) {
-    try {
-        const valueToStore = typeof value === 'boolean' ? (value ? 'true' : 'false') : value;
-        await pool.query(`
-            INSERT INTO settings (key, value) 
-            VALUES ($1, $2)
-            ON CONFLICT (key) DO UPDATE 
-            SET value = EXCLUDED.value;
-        `, [key, valueToStore]);
-    } catch (error) {
-        console.error(`❌ Error updating global setting: ${key}: ${error}`);
-    }
+    const settings = await getSettings();
+    settings[key] = value;
+    writeJSON("settings.json", settings);
 }
 
+// ---------- GROUP SETTINGS ----------
 async function getGroupSettings(jid) {
-    try {
-        const globalSettings = await getSettings();
-        const res = await pool.query('SELECT * FROM group_settings WHERE jid = $1', [jid]);
-        if (res.rows.length > 0) {
-            return {
-                antidelete: res.rows[0].antidelete,
-                gcpresence: res.rows[0].gcpresence,
-                events: res.rows[0].events,
-                antidemote: res.rows[0].antidemote,
-                antipromote: res.rows[0].antipromote
-            };
-        }
-        // Fallback to global settings if no group-specific settings
-        return {
-            antidelete: globalSettings.antidelete || true,
-            gcpresence: false,  // Changed to false by default
-            events: false,
-            antidemote: false,
-            antipromote: false
-        };
-    } catch (error) {
-        console.error(`❌ Error fetching group settings for ${jid}: ${error}`);
-        return {
+    const groups = readJSON("group_settings.json", {});
+    return groups[jid] || {
+        antidelete: true,
+        gcpresence: false,
+        events: false,
+        antidemote: false,
+        antipromote: false
+    };
+}
+
+async function updateGroupSetting(jid, key, value) {
+    const groups = readJSON("group_settings.json", {});
+    if (!groups[jid]) {
+        groups[jid] = {
             antidelete: true,
             gcpresence: false,
             events: false,
@@ -130,119 +75,80 @@ async function getGroupSettings(jid) {
             antipromote: false
         };
     }
+    groups[jid][key] = value;
+    writeJSON("group_settings.json", groups);
 }
 
-async function updateGroupSetting(jid, key, value) {
-    try {
-        await pool.query(`
-            INSERT INTO group_settings (jid, ${key})
-            VALUES ($1, $2)
-            ON CONFLICT (jid) DO UPDATE 
-            SET ${key} = EXCLUDED.${key};
-        `, [jid, value]);
-    } catch (error) {
-        console.error(`❌ Error updating group setting ${key} for ${jid}: ${error}`);
-    }
-}
-
+// ---------- USER MANAGEMENT ----------
 async function banUser(num) {
-    try {
-        await pool.query(`INSERT INTO banned_users (num) VALUES ($1) ON CONFLICT (num) DO NOTHING;`, [num]);
-    } catch (error) {
-        console.error(`❌ Error banning user ${num}: ${error}`);
+    const banned = readJSON("banned_users.json", []);
+    if (!banned.includes(num)) {
+        banned.push(num);
+        writeJSON("banned_users.json", banned);
     }
 }
 
 async function unbanUser(num) {
-    try {
-        await pool.query(`DELETE FROM banned_users WHERE num = $1;`, [num]);
-    } catch (error) {
-        console.error(`❌ Error unbanning user ${num}: ${error}`);
-    }
+    let banned = readJSON("banned_users.json", []);
+    banned = banned.filter(u => u !== num);
+    writeJSON("banned_users.json", banned);
 }
 
+async function getBannedUsers() {
+    return readJSON("banned_users.json", []);
+}
+
+// ---------- SUDO USERS ----------
 async function addSudoUser(num) {
-    try {
-        await pool.query(`INSERT INTO sudo_users (num) VALUES ($1) ON CONFLICT (num) DO NOTHING;`, [num]);
-    } catch (error) {
-        console.error(`❌ Error adding sudo user ${num}: ${error}`);
+    const sudo = readJSON("sudo_users.json", []);
+    if (!sudo.includes(num)) {
+        sudo.push(num);
+        writeJSON("sudo_users.json", sudo);
     }
 }
 
 async function removeSudoUser(num) {
-    try {
-        await pool.query(`DELETE FROM sudo_users WHERE num = $1;`, [num]);
-    } catch (error) {
-        console.error(`❌ Error removing sudo user ${num}: ${error}`);
-    }
+    let sudo = readJSON("sudo_users.json", []);
+    sudo = sudo.filter(u => u !== num);
+    writeJSON("sudo_users.json", sudo);
 }
 
 async function getSudoUsers() {
-    try {
-        const res = await pool.query('SELECT num FROM sudo_users');
-        return res.rows.map(row => row.num);
-    } catch (error) {
-        console.error(`❌ Error fetching sudo users: ${error}`);
-        return [];
-    }
+    return readJSON("sudo_users.json", []);
 }
 
+// ---------- CONVERSATION HISTORY ----------
 async function saveConversation(num, role, message) {
-    try {
-        await pool.query(
-            'INSERT INTO conversation_history (num, role, message) VALUES ($1, $2, $3)',
-            [num, role, message]
-        );
-    } catch (error) {
-        console.error(`❌ Error saving conversation for ${num}: ${error}`);
-    }
+    const history = readJSON("conversation_history.json", {});
+    if (!history[num]) history[num] = [];
+    history[num].push({ role, message, timestamp: new Date().toISOString() });
+    writeJSON("conversation_history.json", history);
 }
 
 async function getRecentMessages(num) {
-    try {
-        const res = await pool.query(
-            'SELECT role, message FROM conversation_history WHERE num = $1 ORDER BY timestamp ASC',
-            [num]
-        );
-        return res.rows;
-    } catch (error) {
-        console.error(`❌ Error retrieving conversation history for ${num}: ${error}`);
-        return [];
-    }
+    const history = readJSON("conversation_history.json", {});
+    return history[num] || [];
 }
 
 async function deleteUserHistory(num) {
-    try {
-        await pool.query('DELETE FROM conversation_history WHERE num = $1', [num]);
-    } catch (error) {
-        console.error(`❌ Error deleting conversation history for ${num}: ${error}`);
-    }
+    const history = readJSON("conversation_history.json", {});
+    delete history[num];
+    writeJSON("conversation_history.json", history);
 }
 
-async function getBannedUsers() {
-    try {
-        const res = await pool.query('SELECT num FROM banned_users');
-        return res.rows.map(row => row.num);
-    } catch (error) {
-        console.error(`❌ Error fetching banned users: ${error}`);
-        return [];
-    }
-}
-
-initializeDatabase().catch(err => console.error(`❌ Database initialization failed: ${err}`));
-
+// Export
 module.exports = {
-    addSudoUser,
-    saveConversation,
-    getRecentMessages,
-    deleteUserHistory,
-    getSudoUsers,
-    removeSudoUser,
-    banUser,
-    unbanUser,
-    getBannedUsers,
     getSettings,
     updateSetting,
     getGroupSettings,
-    updateGroupSetting
+    updateGroupSetting,
+    banUser,
+    unbanUser,
+    getBannedUsers,
+    addSudoUser,
+    removeSudoUser,
+    getSudoUsers,
+    saveConversation,
+    getRecentMessages,
+    deleteUserHistory
 };
