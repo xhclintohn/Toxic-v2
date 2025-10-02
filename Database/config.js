@@ -3,34 +3,69 @@ const path = require("path");
 
 const configFile = path.join(__dirname, "settings.json");
 
-// Load settings from file (or default)
-function getSettings() {
+// Load JSON
+function loadConfig() {
     try {
         if (fs.existsSync(configFile)) {
-            const raw = fs.readFileSync(configFile, "utf8");
-            return JSON.parse(raw);
+            return JSON.parse(fs.readFileSync(configFile, "utf8"));
         }
     } catch (err) {
-        console.error("Failed to load settings.json:", err);
+        console.error("[Database] Failed to load settings:", err);
     }
-    // default config
-    return {
-        antidelete: true,
-        // add other default settings here
-    };
+    return { antidelete: true, sudo: [] }; // defaults
 }
 
-// Save settings to file
-function saveSettings(newSettings) {
+// Save JSON
+function saveConfig(data) {
     try {
-        fs.writeFileSync(configFile, JSON.stringify(newSettings, null, 2));
-        console.log("✅ [Database] Settings saved to JSON.");
+        fs.writeFileSync(configFile, JSON.stringify(data, null, 2));
+        console.log("✅ [Database] Settings saved.");
     } catch (err) {
-        console.error("❌ [Database] Failed to save settings:", err);
+        console.error("❌ [Database] Save failed:", err);
     }
+}
+
+// =====================
+// Settings Functions
+// =====================
+function getSettings() {
+    return loadConfig();
+}
+
+function saveSettings(settings) {
+    saveConfig(settings);
+}
+
+// =====================
+// Sudo User Functions
+// =====================
+function getSudoUsers() {
+    const data = loadConfig();
+    return data.sudo || [];
+}
+
+function addSudoUser(user) {
+    const data = loadConfig();
+    if (!data.sudo.includes(user)) {
+        data.sudo.push(user);
+        saveConfig(data);
+        console.log(`⚙️ Added sudo user: ${user}`);
+    }
+    return data.sudo;
+}
+
+function removeSudoUser(user) {
+    const data = loadConfig();
+    data.sudo = (data.sudo || []).filter(u => u !== user);
+    saveConfig(data);
+    console.log(`⚙️ Removed sudo user: ${user}`);
+    return data.sudo;
 }
 
 module.exports = {
     getSettings,
-    saveSettings
+    saveSettings,
+    getSudoUsers,
+    addSudoUser,
+    removeSudoUser
 };
