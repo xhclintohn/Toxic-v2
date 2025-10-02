@@ -1,129 +1,248 @@
-const fs = require("fs");
-const path = require("path");
+const { Pool } = require('pg');
+const { database } = require('../Env/settings');
 
-const configFile = path.join(__dirname, "settings.json");
+const pool = new Pool({
+    connectionString: database,
+    ssl: { rejectUnauthorized: false }
+});
 
-// =====================
-// Load + Save Helpers
-// =====================
-function loadConfig() {
+async function initializeDatabase() {
+    const client = await pool.connect();
     try {
-        if (fs.existsSync(configFile)) {
-            return JSON.parse(fs.readFileSync(configFile, "utf8"));
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS settings (
+                id SERIAL PRIMARY KEY,
+                key TEXT UNIQUE NOT NULL,
+                value TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS group_settings (
+                jid TEXT PRIMARY KEY,
+                antidelete BOOLEAN DEFAULT true,
+                gcpresence BOOLEAN DEFAULT false,  -- Changed to false by default
+                events BOOLEAN DEFAULT false,
+                antidemote BOOLEAN DEFAULT false,
+                antipromote BOOLEAN DEFAULT false
+            );
+            CREATE TABLE IF NOT EXISTS conversation_history (
+                id SERIAL PRIMARY KEY,
+                num TEXT NOT NULL,
+                role TEXT NOT NULL,
+                message TEXT NOT NULL,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS sudo_users (
+                num TEXT PRIMARY KEY
+            );
+            CREATE TABLE IF NOT EXISTS banned_users (
+                num TEXT PRIMARY KEY
+            );
+            CREATE TABLE IF NOT EXISTS users (
+                num TEXT PRIMARY KEY
+            );
+        `);
+
+        const defaultSettings = {
+            prefix: '.',
+            packname: 'Toxic-MD',
+            mode: 'private',
+            presence: 'online',
+            autoview: 'true',
+            autolike: 'false',
+            autoread: 'false',
+            autobio: 'false',
+            anticall: 'false',
+            chatbotpm: 'false',
+            autolikeemoji: '❤️',
+            antilink: 'false',
+            antidelete: 'false'
+        };
+
+        for (const [key, value] of Object.entries(defaultSettings)) {
+            await client.query(`
+                INSERT INTO settings (key, value) 
+                VALUES ($1, $2)
+                ON CONFLICT (key) DO NOTHING;
+            `, [key, value]);
         }
-    } catch (err) {
-        console.error("[Database] Failed to load settings:", err);
+    } catch (error) {
+        console.error(`❌ Database setup failed: ${error}`);
+    } finally {
+        client.release();
     }
-    // default structure
-    return {
-        antidelete: true,
-        sudo: [],
-        banned: [],
-        groups: {}
-    };
 }
 
-function saveConfig(data) {
+async function getSettings() {
     try {
-        fs.writeFileSync(configFile, JSON.stringify(data, null, 2));
-        console.log("✅ [Database] Saved settings.json");
-    } catch (err) {
-        console.error("❌ [Database] Save failed:", err);
+        const res = await pool.query("SELECT key, value FROM settings");
+        const settings = {};
+        res.rows.forEach(row => {
+            settings[row.key] = row.value === 'true' ? true : row.value === 'false' ? false : row.value;
+        });
+        return settings;
+    } catch (error) {
+        console.error(`❌ Error fetching global settings: ${error}`);
+        return {};
     }
 }
 
-// =====================
-// General Settings
-// =====================
-function getSettings() {
-    const data = loadConfig();
-    console.log("⚙️ [Database] Loaded settings:", data);
-    return data;
-}
-
-function saveSettings(settings) {
-    const data = loadConfig();
-    Object.assign(data, settings);
-    saveConfig(data);
-}
-
-// =====================
-// Sudo User Functions
-// =====================
-function getSudoUsers() {
-    const data = loadConfig();
-    return data.sudo || [];
-}
-
-function addSudoUser(user) {
-    const data = loadConfig();
-    if (!data.sudo.includes(user)) {
-        data.sudo.push(user);
-        saveConfig(data);
-        console.log(`⚙️ Added sudo user: ${user}`);
+async function updateSetting(key, value) {
+    try {
+        const valueToStore = typeof value === 'boolean' ? (value ? 'true' : 'false') : value;
+        await pool.query(`
+            INSERT INTO settings (key, value) 
+            VALUES ($1, $2)
+            ON CONFLICT (key) DO UPDATE 
+            SET value = EXCLUDED.value;
+        `, [key, valueToStore]);
+    } catch (error) {
+        console.error(`❌ Error updating global setting: ${key}: ${error}`);
     }
-    return data.sudo;
 }
 
-function removeSudoUser(user) {
-    const data = loadConfig();
-    data.sudo = (data.sudo || []).filter(u => u !== user);
-    saveConfig(data);
-    console.log(`⚙️ Removed sudo user: ${user}`);
-    return data.sudo;
-}
-
-// =====================
-// Banned User Functions
-// =====================
-function getBannedUsers() {
-    const data = loadConfig();
-    return data.banned || [];
-}
-
-function banUser(user) {
-    const data = loadConfig();
-    if (!data.banned.includes(user)) {
-        data.banned.push(user);
-        saveConfig(data);
-        console.log(`🚫 Banned user: ${user}`);
+async function getGroupSettings(jid) {
+    try {
+        const globalSettings = await getSettings();
+        const res = await pool.query('SELECT * FROM group_settings WHERE jid = $1', [jid]);
+        if (res.rows.length > 0) {
+            return {
+                antidelete: res.rows[0].antidelete,
+                gcpresence: res.rows[0].gcpresence,
+                events: res.rows[0].events,
+                antidemote: res.rows[0].antidemote,
+                antipromote: res.rows[0].antipromote
+            };
+        }
+        // Fallback to global settings if no group-specific settings
+        return {
+            antidelete: globalSettings.antidelete || true,
+            gcpresence: false,  // Changed to false by default
+            events: false,
+            antidemote: false,
+            antipromote: false
+        };
+    } catch (error) {
+        console.error(`❌ Error fetching group settings for ${jid}: ${error}`);
+        return {
+            antidelete: true,
+            gcpresence: false,
+            events: false,
+            antidemote: false,
+            antipromote: false
+        };
     }
-    return data.banned;
 }
 
-function unbanUser(user) {
-    const data = loadConfig();
-    data.banned = (data.banned || []).filter(u => u !== user);
-    saveConfig(data);
-    console.log(`✅ Unbanned user: ${user}`);
-    return data.banned;
+async function updateGroupSetting(jid, key, value) {
+    try {
+        await pool.query(`
+            INSERT INTO group_settings (jid, ${key})
+            VALUES ($1, $2)
+            ON CONFLICT (jid) DO UPDATE 
+            SET ${key} = EXCLUDED.${key};
+        `, [jid, value]);
+    } catch (error) {
+        console.error(`❌ Error updating group setting ${key} for ${jid}: ${error}`);
+    }
 }
 
-// =====================
-// Group Settings
-// =====================
-function getGroupSettings(groupId) {
-    const data = loadConfig();
-    return data.groups[groupId] || {};
+async function banUser(num) {
+    try {
+        await pool.query(`INSERT INTO banned_users (num) VALUES ($1) ON CONFLICT (num) DO NOTHING;`, [num]);
+    } catch (error) {
+        console.error(`❌ Error banning user ${num}: ${error}`);
+    }
 }
 
-function saveGroupSettings(groupId, settings) {
-    const data = loadConfig();
-    data.groups[groupId] = { ...(data.groups[groupId] || {}), ...settings };
-    saveConfig(data);
-    console.log(`📌 Saved settings for group: ${groupId}`);
-    return data.groups[groupId];
+async function unbanUser(num) {
+    try {
+        await pool.query(`DELETE FROM banned_users WHERE num = $1;`, [num]);
+    } catch (error) {
+        console.error(`❌ Error unbanning user ${num}: ${error}`);
+    }
 }
+
+async function addSudoUser(num) {
+    try {
+        await pool.query(`INSERT INTO sudo_users (num) VALUES ($1) ON CONFLICT (num) DO NOTHING;`, [num]);
+    } catch (error) {
+        console.error(`❌ Error adding sudo user ${num}: ${error}`);
+    }
+}
+
+async function removeSudoUser(num) {
+    try {
+        await pool.query(`DELETE FROM sudo_users WHERE num = $1;`, [num]);
+    } catch (error) {
+        console.error(`❌ Error removing sudo user ${num}: ${error}`);
+    }
+}
+
+async function getSudoUsers() {
+    try {
+        const res = await pool.query('SELECT num FROM sudo_users');
+        return res.rows.map(row => row.num);
+    } catch (error) {
+        console.error(`❌ Error fetching sudo users: ${error}`);
+        return [];
+    }
+}
+
+async function saveConversation(num, role, message) {
+    try {
+        await pool.query(
+            'INSERT INTO conversation_history (num, role, message) VALUES ($1, $2, $3)',
+            [num, role, message]
+        );
+    } catch (error) {
+        console.error(`❌ Error saving conversation for ${num}: ${error}`);
+    }
+}
+
+async function getRecentMessages(num) {
+    try {
+        const res = await pool.query(
+            'SELECT role, message FROM conversation_history WHERE num = $1 ORDER BY timestamp ASC',
+            [num]
+        );
+        return res.rows;
+    } catch (error) {
+        console.error(`❌ Error retrieving conversation history for ${num}: ${error}`);
+        return [];
+    }
+}
+
+async function deleteUserHistory(num) {
+    try {
+        await pool.query('DELETE FROM conversation_history WHERE num = $1', [num]);
+    } catch (error) {
+        console.error(`❌ Error deleting conversation history for ${num}: ${error}`);
+    }
+}
+
+async function getBannedUsers() {
+    try {
+        const res = await pool.query('SELECT num FROM banned_users');
+        return res.rows.map(row => row.num);
+    } catch (error) {
+        console.error(`❌ Error fetching banned users: ${error}`);
+        return [];
+    }
+}
+
+initializeDatabase().catch(err => console.error(`❌ Database initialization failed: ${err}`));
 
 module.exports = {
-    getSettings,
-    saveSettings,
-    getSudoUsers,
     addSudoUser,
+    saveConversation,
+    getRecentMessages,
+    deleteUserHistory,
+    getSudoUsers,
     removeSudoUser,
-    getBannedUsers,
     banUser,
     unbanUser,
+    getBannedUsers,
+    getSettings,
+    updateSetting,
     getGroupSettings,
-    saveGroupSettings
+    updateGroupSetting
 };
