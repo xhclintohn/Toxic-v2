@@ -4,6 +4,10 @@ const path = require("path");
 const dataDir = path.join(__dirname, "data");
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
 
+function log(msg) {
+    console.log(`[📂 JSON-DB] ${msg}`);
+}
+
 // Helper: read JSON safely
 function readJSON(file, fallback = {}) {
     try {
@@ -22,6 +26,7 @@ function writeJSON(file, data) {
     try {
         const filePath = path.join(dataDir, file);
         fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+        log(`Updated ${file}`);
     } catch (e) {
         console.error(`❌ Error writing ${file}:`, e);
     }
@@ -50,6 +55,7 @@ async function updateSetting(key, value) {
     const settings = await getSettings();
     settings[key] = value;
     writeJSON("settings.json", settings);
+    log(`Setting "${key}" updated → ${value}`);
 }
 
 // ---------- GROUP SETTINGS ----------
@@ -77,6 +83,7 @@ async function updateGroupSetting(jid, key, value) {
     }
     groups[jid][key] = value;
     writeJSON("group_settings.json", groups);
+    log(`Group ${jid}: "${key}" set to ${value}`);
 }
 
 // ---------- USER MANAGEMENT ----------
@@ -85,6 +92,7 @@ async function banUser(num) {
     if (!banned.includes(num)) {
         banned.push(num);
         writeJSON("banned_users.json", banned);
+        log(`User ${num} banned`);
     }
 }
 
@@ -92,6 +100,7 @@ async function unbanUser(num) {
     let banned = readJSON("banned_users.json", []);
     banned = banned.filter(u => u !== num);
     writeJSON("banned_users.json", banned);
+    log(`User ${num} unbanned`);
 }
 
 async function getBannedUsers() {
@@ -104,6 +113,7 @@ async function addSudoUser(num) {
     if (!sudo.includes(num)) {
         sudo.push(num);
         writeJSON("sudo_users.json", sudo);
+        log(`Added sudo user: ${num}`);
     }
 }
 
@@ -111,6 +121,7 @@ async function removeSudoUser(num) {
     let sudo = readJSON("sudo_users.json", []);
     sudo = sudo.filter(u => u !== num);
     writeJSON("sudo_users.json", sudo);
+    log(`Removed sudo user: ${num}`);
 }
 
 async function getSudoUsers() {
@@ -123,6 +134,7 @@ async function saveConversation(num, role, message) {
     if (!history[num]) history[num] = [];
     history[num].push({ role, message, timestamp: new Date().toISOString() });
     writeJSON("conversation_history.json", history);
+    log(`Saved message for ${num} [${role}]`);
 }
 
 async function getRecentMessages(num) {
@@ -134,6 +146,7 @@ async function deleteUserHistory(num) {
     const history = readJSON("conversation_history.json", {});
     delete history[num];
     writeJSON("conversation_history.json", history);
+    log(`Deleted history for ${num}`);
 }
 
 // Export
