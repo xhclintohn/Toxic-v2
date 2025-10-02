@@ -1,31 +1,32 @@
-const { loadChatData, saveChatData, cleanupChatData } = require("../lib/Store");
+const { loadChatData, saveChatData } = require("../lib/Store");
+const fs = require("fs");
+const path = require("path");
 
 module.exports = async (client, m, store, pict) => {
     try {
         const settings = await require('../Database/config').getSettings();
-        if (!settings || !settings.antidelete || !m.message || m.key.fromMe) {
-            return;
-        }
+        if (!settings || !settings.antidelete || !m.message || m.key.fromMe) return;
 
         const botNumber = await client.decodeJid(client.user.id);
         const remoteJid = m.key.remoteJid;
         const messageId = m.key.id;
         const participant = m.key.participant || remoteJid;
 
-        // Ignore bot’s own messages to prevent duplicates
+        // ignore messages from the bot itself
         if (participant === botNumber) return;
 
-        // Handle incoming message (store it)
+        // store incoming messages (non-protocol)
         if (!m.message.protocolMessage) {
             saveChatData(remoteJid, messageId, [m]);
             return;
         }
 
-        // Handle revocation (protocolMessage)
+        // handle revocation
         if (m.message.protocolMessage?.key) {
             const originalMessageId = m.message.protocolMessage.key.id;
             const chatData = loadChatData(remoteJid, originalMessageId);
-            const originalMessage = chatData[0];
+            // chatData is expected to be an array saved by saveChatData(remoteJid, id, [m])
+            const originalMessage = Array.isArray(chatData) ? chatData[0] : (chatData && chatData.data ? chatData.data[0] : chatData);
 
             if (!originalMessage) return;
 
@@ -34,105 +35,133 @@ module.exports = async (client, m, store, pict) => {
             const deletedByFormatted = `@${deletedBy.split('@')[0]}`;
             const sentByFormatted = `@${sentBy.split('@')[0]}`;
 
-            let notificationText = `◈━━━━━━━━━━━━━━━━◈
+            const header =
+`◈━━━━━━━━━━━━━━━━◈
 │❒ *DELETED MESSAGE DETECTED* 🥀
 │❒ *Deleted by*: ${deletedByFormatted}
 │❒ *Sent by*: ${sentByFormatted}
 ┗━━━━━━━━━━━━━━━┛`;
 
+            // shared context info (preview)
+            const contextInfo = {
+                externalAdReply: {
+                    title: "Toxic-MD Antidelete",
+                    body: `DELETED BY: ${deletedByFormatted}`,
+                    thumbnail: pict,
+                    sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
+            };
+
             try {
+                // TEXT (plain)
                 if (originalMessage.message?.conversation) {
                     const messageText = originalMessage.message.conversation;
-                    notificationText += `\n│❒ *Message*: ${messageText}`;
-                    await client.sendMessage(remoteJid, { text: notificationText, mentions: [deletedBy, sentBy] });
+                    await client.sendMessage(remoteJid, {
+                        text: `${header}\n│❒ *Message*: ${messageText}`,
+                        mentions: [deletedBy, sentBy]
+                    });
 
+                // EXTENDED TEXT (quoted/long text)
                 } else if (originalMessage.message?.extendedTextMessage) {
                     const messageText = originalMessage.message.extendedTextMessage.text;
-                    notificationText += `\n│❒ *Message*: ${messageText}`;
-                    await client.sendMessage(remoteJid, { text: notificationText, mentions: [deletedBy, sentBy] });
+                    await client.sendMessage(remoteJid, {
+                        text: `${header}\n│❒ *Message*: ${messageText}`,
+                        mentions: [deletedBy, sentBy]
+                    });
 
+                // IMAGE
                 } else if (originalMessage.message?.imageMessage) {
                     const buffer = await client.downloadMediaMessage(originalMessage);
-                    notificationText += `\n│❒ *Media*: [Image]`;
+                    if (!buffer || buffer.length === 0) throw new Error('empty buffer');
                     await client.sendMessage(remoteJid, {
                         image: buffer,
-                        caption: `${notificationText}\n│❒ *Caption*: ${originalMessage.message.imageMessage.caption || 'None'}`,
+                        caption: `${header}\n│❒ *Caption*: ${originalMessage.message.imageMessage.caption || 'None'}`,
                         mentions: [deletedBy, sentBy],
-                        contextInfo: {
-                            externalAdReply: {
-                                title: "Toxic-MD Antidelete",
-                                body: `DELETED BY: ${deletedByFormatted}`,
-                                thumbnail: pict,
-                                sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
-                                mediaType: 1,
-                                renderLargerThumbnail: true
-                            }
-                        }
+                        contextInfo
                     });
 
+                // VIDEO
                 } else if (originalMessage.message?.videoMessage) {
                     const buffer = await client.downloadMediaMessage(originalMessage);
-                    notificationText += `\n│❒ *Media*: [Video]`;
+                    if (!buffer || buffer.length === 0) throw new Error('empty buffer');
                     await client.sendMessage(remoteJid, {
                         video: buffer,
-                        caption: `${notificationText}\n│❒ *Caption*: ${originalMessage.message.videoMessage.caption || 'None'}`,
+                        caption: `${header}\n│❒ *Caption*: ${originalMessage.message.videoMessage.caption || 'None'}`,
                         mentions: [deletedBy, sentBy],
-                        contextInfo: {
-                            externalAdReply: {
-                                title: "Toxic-MD Antidelete",
-                                body: `DELETED BY: ${deletedByFormatted}`,
-                                thumbnail: pict,
-                                sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
-                                mediaType: 1,
-                                renderLargerThumbnail: true
-                            }
-                        }
+                        contextInfo
                     });
 
+                // STICKER
                 } else if (originalMessage.message?.stickerMessage) {
                     const buffer = await client.downloadMediaMessage(originalMessage);
-                    notificationText += `\n│❒ *Media*: [Sticker]`;
-                    await client.sendMessage(remoteJid, { sticker: buffer });
+                    if (!buffer || buffer.length === 0) throw new Error('empty buffer');
+                    await client.sendMessage(remoteJid, {
+                        sticker: buffer,
+                        mentions: [deletedBy, sentBy],
+                        contextInfo
+                    });
 
+                // DOCUMENT
                 } else if (originalMessage.message?.documentMessage) {
                     const docMessage = originalMessage.message.documentMessage;
-                    const fileName = docMessage.fileName || `document_${Date.now()}.dat`;
                     const buffer = await client.downloadMediaMessage(originalMessage);
-                    notificationText += `\n│❒ *Media*: [Document]`;
+                    if (!buffer || buffer.length === 0) throw new Error('empty buffer');
                     await client.sendMessage(remoteJid, {
                         document: buffer,
-                        fileName: fileName,
+                        fileName: docMessage.fileName || `document_${Date.now()}.dat`,
                         mimetype: docMessage.mimetype || 'application/octet-stream',
-                        caption: notificationText,
-                        mentions: [deletedBy, sentBy]
+                        caption: header,
+                        mentions: [deletedBy, sentBy],
+                        contextInfo
                     });
 
+                // AUDIO / VOICE
                 } else if (originalMessage.message?.audioMessage) {
                     const buffer = await client.downloadMediaMessage(originalMessage);
-                    const isPTT = originalMessage.message.audioMessage.ptt === true;
-                    notificationText += `\n│❒ *Media*: [Audio]`;
+                    if (!buffer || buffer.length === 0) throw new Error('empty buffer');
+                    const isPTT = originalMessage.message.audioMessage?.ptt === true;
                     await client.sendMessage(remoteJid, {
                         audio: buffer,
-                        ptt: isPTT,
-                        mimetype: 'audio/mpeg',
-                        caption: notificationText,
-                        mentions: [deletedBy, sentBy]
+                        ptt: !!isPTT,
+                        mimetype: originalMessage.message.audioMessage?.mimetype || 'audio/mpeg',
+                        // some clients ignore caption for audio, but send header as a text fallback:
+                        caption: header,
+                        mentions: [deletedBy, sentBy],
+                        contextInfo
                     });
 
+                // Unsupported / fallback
                 } else {
-                    // Unsupported message
-                    notificationText += `\n│❒ *Error*: Unsupported message type`;
-                    await client.sendMessage(remoteJid, { text: notificationText, mentions: [deletedBy, sentBy] });
+                    await client.sendMessage(remoteJid, {
+                        text: `${header}\n│❒ *Error*: Unsupported message type`,
+                        mentions: [deletedBy, sentBy]
+                    });
                 }
-            } catch (error) {
-                console.error('Toxic-MD Antidelete Error:', error);
-                await client.sendMessage(remoteJid, { text: `${notificationText}\n│❒ *Error*: Failed to recover deleted content 😓`, mentions: [deletedBy, sentBy] });
+
+                // remove stored file after successful attempt (keeps storage small)
+                try {
+                    const baseDir = path.resolve(__dirname, '../message_data');
+                    const chatFile = path.join(baseDir, remoteJid, `${originalMessageId}.json`);
+                    if (fs.existsSync(chatFile)) fs.unlinkSync(chatFile);
+                } catch (delErr) {
+                    console.error('Toxic-MD Antidelete: Failed to remove stored message file:', delErr);
+                }
+
+            } catch (mediaError) {
+                console.error('Toxic-MD Antidelete: Failed to recover/send original message:', mediaError);
+                // send a single error notification to the original chat
+                try {
+                    await client.sendMessage(remoteJid, {
+                        text: `${header}\n│❒ *Error*: Could not recover deleted content (maybe media expired)`,
+                        mentions: [deletedBy, sentBy]
+                    });
+                } catch (e) {
+                    console.error('Toxic-MD Antidelete: Failed sending fallback notification:', e);
+                }
             }
         }
-
-        // 🧹 Run cleanup every time
-        cleanupChatData(24 * 60 * 60 * 1000); // delete older than 24h
-
     } catch (e) {
         console.error("Toxic-MD Antidelete Error:", e);
     }
