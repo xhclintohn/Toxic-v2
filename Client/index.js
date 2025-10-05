@@ -185,17 +185,97 @@ async function startToxic() {
         const msg = messages[0];
         if (!msg.message) return;
 
-        if (msg.message.listResponseMessage) {
-            const selectedCmd = msg.message.listResponseMessage.singleSelectReply.selectedRowId;
+        try {
+            // Try to extract selection from the different possible reply shapes that Baileys/WhatsApp can send
+            let selectedCmd = null;
+
+            // 1) classic list response
+            const list = msg.message.listResponseMessage;
+            if (list) {
+                // singleSelectReply is the usual shape, but be defensive
+                selectedCmd = list.singleSelectReply?.selectedRowId
+                    || list.selectedRowId
+                    || list.singleSelectReply?.rowId
+                    || list.id
+                    || list.title
+                    || null;
+            }
+
+            // 2) template / hydrated template replies
+            if (!selectedCmd && msg.message.templateButtonReplyMessage) {
+                selectedCmd = msg.message.templateButtonReplyMessage.selectedId
+                    || msg.message.templateButtonReplyMessage.selectedDisplayText
+                    || null;
+            }
+
+            // 3) buttons / quick replies
+            if (!selectedCmd && msg.message.buttonsResponseMessage) {
+                selectedCmd = msg.message.buttonsResponseMessage.selectedButtonId
+                    || msg.message.buttonsResponseMessage.selectedDisplayText
+                    || null;
+            }
+
+            // 4) older buttons shape or buttonReply inside extended text
+            if (!selectedCmd && msg.message.extendedTextMessage?.contextInfo?.quotedMessage) {
+                // not likely, but keep safe fallback
+                // noop
+            }
+
+            // 5) interactiveResponseMessage (newer clients) - attempt reasonable extractions
+            if (!selectedCmd && msg.message.interactiveResponseMessage) {
+                // try nativeFlowResponseMessage params JSON if present
+                const native = msg.message.interactiveResponseMessage.nativeFlowResponseMessage;
+                if (native) {
+                    // paramsJson may be stringified JSON or string
+                    try {
+                        if (native.paramsJson) {
+                            // if it's a string, try parse
+                            const parsed = (typeof native.paramsJson === 'string') ? JSON.parse(native.paramsJson) : native.paramsJson;
+                            selectedCmd = parsed?.selectedId || parsed?.selectedRowId || parsed?.id || parsed?.value || parsed?.command || parsed?.action || null;
+                        }
+                    } catch (e) {
+                        // ignore parse errors
+                    }
+                    // fallback common native fields
+                    selectedCmd = selectedCmd || native?.selectedId || native?.selectedRowId || native?.id || native?.title || null;
+                }
+
+                // also check the standard interactive reply shapes
+                selectedCmd = selectedCmd || msg.message.interactiveResponseMessage?.buttonReply?.id
+                    || msg.message.interactiveResponseMessage?.listReply?.id
+                    || msg.message.interactiveResponseMessage?.templateReply?.selectedId
+                    || msg.message.interactiveResponseMessage?.listReply?.title
+                    || null;
+            }
+
+            // normalize selectedCmd to string (if it's a buffer/object)
+            if (selectedCmd && typeof selectedCmd !== 'string') {
+                try {
+                    selectedCmd = String(selectedCmd);
+                } catch (e) {
+                    selectedCmd = null;
+                }
+            }
+
+            // If still nothing, bail out quietly
+            if (!selectedCmd) return;
 
             // Fetch live prefix from DB
             const settings = await getSettings();
             const effectivePrefix = settings?.prefix || '.';
 
-            // Strip prefix only if it matches DB prefix
-            let command = selectedCmd.startsWith(effectivePrefix)
-                ? selectedCmd.slice(effectivePrefix.length).toLowerCase()
-                : selectedCmd.toLowerCase();
+            // compute command string based on DB prefix primarily,
+            // but be defensive if the selectedCmd uses a different prefix
+            let command = '';
+            if (selectedCmd.startsWith(effectivePrefix)) {
+                command = selectedCmd.slice(effectivePrefix.length).toLowerCase();
+            } else if (/^[!./#]/.test(selectedCmd)) {
+                // common other prefixes
+                command = selectedCmd.slice(1).toLowerCase();
+            } else {
+                // no prefix: treat the whole selectedCmd as command
+                command = selectedCmd.toLowerCase();
+            }
 
             const m = {
                 ...msg,
@@ -212,6 +292,8 @@ async function startToxic() {
             } catch (error) {
                 console.error('Error processing list selection:', error);
             }
+        } catch (err) {
+            console.error('List handler error:', err);
         }
     });
 
