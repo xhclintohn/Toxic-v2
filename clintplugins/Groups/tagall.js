@@ -13,7 +13,7 @@ module.exports = async (context) => {
         const mentions = participants.map(a => a.id);
         const txt = [
             `◈━━━━━━━━━━━━━━━━◈`,
-            `❒ You have been tagged by ${m.pushName}.`,
+            `❒ Hi You have been tagged here.`,
             `  Message: ${text ? text : 'No Message!'}`,
             '',
             ...mentions.map(id => `📧 @${id.split('@')[0]}`),
