@@ -48,6 +48,7 @@ const aliases = {
     kick: "remove",
     mute: "close",
     unmute: "open",
+    opengroup: "open",
     latency: "ping",
     runtime: "uptime",
     admin: "oadmin",
