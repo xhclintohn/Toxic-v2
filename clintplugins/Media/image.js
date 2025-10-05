@@ -62,7 +62,7 @@ module.exports = async (context) => {
         const { buffer, mime } = await downloadImageBuffer(imgUrl);
 
         // Prepare caption with toxic flavor and minimal metadata
-        const caption = formatStylishReply(`🔎 Search: ${text}\n🌐 Source: GiftedTech\n🖼 Image ${sentCount + 1}/${imagesToSend.length}`);
+        const caption = formatStylishReply(`🔎 Search: ${text}\n🌐 Source: Toxic-MD\n🖼 Image ${sentCount + 1}/${imagesToSend.length}`);
 
         await client.sendMessage(
           m.chat,
@@ -84,7 +84,7 @@ module.exports = async (context) => {
             m.chat,
             {
               image: { url: imgUrl },
-              caption: formatStylishReply(`🔎 Fallback send for: ${text}\n🌐 Source: GiftedTech\n🖼 Image ${sentCount + 1}/${imagesToSend.length}`),
+              caption: formatStylishReply(`🔎 Fallback send for: ${text}\n🌐 Source: Toxic-MD\n🖼 Image ${sentCount + 1}/${imagesToSend.length}`),
             },
             { quoted: m }
           );
