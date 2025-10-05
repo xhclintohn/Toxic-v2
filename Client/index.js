@@ -180,28 +180,34 @@ async function startToxic() {
         require("./toxic")(client, m, chatUpdate, store);
     });
 
-    // NEW LIST MESSAGE HANDLER
+    // === FIXED LIST MESSAGE HANDLER ===
     client.ev.on("messages.upsert", async ({ messages }) => {
         const msg = messages[0];
         if (!msg.message) return;
 
         if (msg.message.listResponseMessage) {
             const selectedCmd = msg.message.listResponseMessage.singleSelectReply.selectedRowId;
-            const prefix = selectedCmd.charAt(0);
-            const command = selectedCmd.substring(1).toLowerCase();
+
+            // Fetch live prefix from DB
+            const settings = await getSettings();
+            const effectivePrefix = settings?.prefix || '.';
+
+            // Strip prefix only if it matches DB prefix
+            let command = selectedCmd.startsWith(effectivePrefix)
+                ? selectedCmd.slice(effectivePrefix.length).toLowerCase()
+                : selectedCmd.toLowerCase();
 
             const m = {
                 ...msg,
                 body: selectedCmd,
                 command: command,
-                prefix: prefix,
+                prefix: effectivePrefix,
                 sender: msg.key.remoteJid,
                 from: msg.key.remoteJid,
                 isGroup: msg.key.remoteJid.endsWith('@g.us')
             };
 
             try {
-                const settings = await getSettings();
                 require("./toxic")(client, m, { type: "notify" }, store);
             } catch (error) {
                 console.error('Error processing list selection:', error);
