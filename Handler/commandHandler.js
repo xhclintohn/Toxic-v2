@@ -78,6 +78,8 @@ const aliases = {
     linkgroup: "link",
     mention: "tagall",
     vv: "retrieve",
+    search: "yts",
+    youtubesearch: "yts",
     xd: "retrieve",
     reset: "revoke",
     mute: "close",
