@@ -88,7 +88,7 @@ module.exports = {
                       title: '🔥 CORE COMMANDS',
                       highlight_label: '© Toxic-MD',
                       rows: [
-                        { title: '📜 FULL MENU', description: 'Show all commands', id: `${effectivePrefix}fullmenu` },
+                        { title: '📜 FULL MENU', description: 'Show all commands', id: `.fullmenu` },
                         { title: '⚠️ DEV', description: "Send developer's contact", id: `${effectivePrefix}dev` },
                       ],
                     },
