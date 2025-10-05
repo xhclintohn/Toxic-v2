@@ -97,6 +97,7 @@ const aliases = {
     tiktok: "tikdl",
     twitter: "twtdl",
     x: "twtdl",
+    mutegroup: "close",
     ai: "gpt",
     ytv: "ytmp4",
     mf: "mediafire",
