@@ -3,15 +3,6 @@ const path = require("path");
 const yts = require("yt-search");
 const axios = require("axios");
 
-const tempDir = path.join(__dirname, "temp");
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir);
-}
-
-const isValidYouTubeUrl = (url) => {
-  return /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|shorts\/|embed\/)?[A-Za-z0-9_-]{11}(\?.*)?$/.test(url);
-};
-
 module.exports = async (context) => {
   const { client, m, text } = context;
 
@@ -36,9 +27,11 @@ module.exports = async (context) => {
   }
 
   try {
+    // 1. Search YouTube
     const searchQuery = `${text} official`;
     const searchResult = await yts(searchQuery);
     const video = searchResult.videos[0];
+
     if (!video) {
       return client.sendMessage(
         m.chat,
@@ -47,48 +40,36 @@ module.exports = async (context) => {
       );
     }
 
-    const timestamp = Date.now();
-    const fileName = `video_${timestamp}.mp4`;
-    const filePath = path.join(tempDir, fileName);
+    // 2. Call the API
+    const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytmp4?url=${encodeURIComponent(video.url)}`;
+    const { data } = await axios.get(apiUrl);
 
-    const apiUrl = `https://ytdownloader-aie4qa.fly.dev/download/video?song=${encodeURIComponent(video.url)}&quality=360p&cb=${timestamp}`;
-    const response = await axios({
-      method: "get",
-      url: apiUrl,
-      responseType: "stream",
-      timeout: 600000,
-    });
-
-    const writer = fs.createWriteStream(filePath);
-    response.data.pipe(writer);
-
-    await new Promise((resolve, reject) => {
-      writer.on("finish", resolve);
-      writer.on("error", reject);
-    });
-
-    if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
-      throw new Error("Download failed or file is empty");
+    if (!data || !data.status || !data.result || !data.result.downloadUrl) {
+      throw new Error("API returned invalid response.");
     }
 
+    const result = data.result;
+
+    // 3. Notify user
     await client.sendMessage(
       m.chat,
-      { text: formatStylishReply(`Droppin’ *${video.title}* video for ya, fam! Hold tight! 🔥📽️`) },
+      { text: formatStylishReply(`Droppin’ *${result.title}* video for ya, fam! Hold tight! 🔥📽️`) },
       { quoted: m, ad: true }
     );
 
+    // 4. Send video
     await client.sendMessage(
       m.chat,
       {
-        video: { url: filePath },
+        video: { url: result.downloadUrl },
         mimetype: "video/mp4",
-        fileName: `${video.title}.mp4`,
-        caption: formatStylishReply("Video (360p)"),
+        fileName: `${result.title}.mp4`,
+        caption: formatStylishReply(`🎬 ${result.title}\n📊 Quality: ${result.quality}\n⏳ Duration: ${result.duration}s`),
         contextInfo: {
           externalAdReply: {
-            title: video.title,
-            body: `${video.author.name || "Unknown Artist"} | Powered by Toxic-MD`,
-            thumbnailUrl: video.thumbnail || "https://via.placeholder.com/120x90",
+            title: result.title,
+            body: `Powered by Toxic-MD`,
+            thumbnailUrl: result.thumbnail,
             sourceUrl: video.url,
             mediaType: 2,
             renderLargerThumbnail: true,
@@ -97,10 +78,6 @@ module.exports = async (context) => {
       },
       { quoted: m, ad: true }
     );
-
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
   } catch (error) {
     await client.sendMessage(
       m.chat,
