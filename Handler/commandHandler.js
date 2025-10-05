@@ -88,6 +88,7 @@ const aliases = {
     facebook: "fbdl",
     instagram: "igdl",
     ig: "igdl",
+    img: "image",
     url: "upload",
     tourl: "upload",
     yta: "ytmp3",
