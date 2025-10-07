@@ -6,22 +6,19 @@ module.exports = {
     const { client, m } = context;
 
     try {
-      // Determine who to check - mentioned user or command sender
-      let targetUser;
-      let targetNumber;
-      
+      // Determine who to check - mentioned user, quoted user, or command sender
+      let targetUser = null;
+      let targetNumber = null;
+
       if (m.mentionedJid && m.mentionedJid.length > 0) {
         // Use the first mentioned user
         targetUser = m.mentionedJid[0];
-        targetNumber = targetUser.split('@')[0];
-      } else if (m.quoted) {
+      } else if (m.quoted && m.quoted.sender) {
         // Use the quoted user
         targetUser = m.quoted.sender;
-        targetNumber = targetUser.split('@')[0];
       } else {
         // Use the command sender
         targetUser = m.sender;
-        targetNumber = targetUser.split('@')[0];
       }
 
       // Validate target user
@@ -30,11 +27,25 @@ module.exports = {
         return m.reply(`◈━━━━━━━━━━━━━━━━◈\nWho the fuck am I checking? Tag someone or I'll check your dumb ass!\n◈━━━━━━━━━━━━━━━━◈`);
       }
 
+      // Extract target number
+      targetNumber = targetUser.split('@')[0];
+      if (!targetNumber) {
+        console.error(`Failed to extract target number from JID: ${targetUser}`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nSomething's fucked up with that user. Try again, idiot!\n◈━━━━━━━━━━━━━━━━◈`);
+      }
+
       // Send checking message with dramatic delay
-      const checkingMsg = await m.reply(`◈━━━━━━━━━━━━━━━━◈\nScanning @${targetNumber}'s soul for gay vibes... 🔍\nThis might hurt, bitch!\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [targetUser] });
-      
+      const checkingMsg = await client.sendMessage(
+        m.chat,
+        {
+          text: `◈━━━━━━━━━━━━━━━━◈\nScanning @${targetNumber}'s soul for gay vibes... 🔍\nThis might hurt, bitch!\n◈━━━━━━━━━━━━━━━━◈`,
+          mentions: [targetUser],
+        },
+        { quoted: m }
+      );
+
       // Random dramatic delays between 1-3 seconds
-      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+      await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000));
 
       // Generate completely random percentage (0-100%)
       const percentage = Math.floor(Math.random() * 101);
@@ -42,7 +53,7 @@ module.exports = {
       // Toxic, violent, and realistic roasts based on percentage
       let roast;
       let emoji;
-      
+
       if (percentage === 0) {
         roast = "STRAIGHT AS A FUCKING ARROW! You're so straight you make rulers look curved, you basic bitch!";
         emoji = "🚫🏳️‍🌈";
@@ -86,7 +97,7 @@ module.exports = {
           " Even your mom is disappointed!",
           " What a fucking mess!",
           " You make babies cry!",
-          " Your existence is a mistake!"
+          " Your existence is a mistake!",
         ];
         insult = insults[Math.floor(Math.random() * insults.length)];
       }
@@ -104,21 +115,28 @@ module.exports = {
 ◈━━━━━━━━━━━━━━━━◈`;
 
       // Send the final result
-      await client.sendMessage(m.chat, {
-        text: resultMsg,
-        mentions: [targetUser]
-      }, { quoted: m });
+      await client.sendMessage(
+        m.chat,
+        {
+          text: resultMsg,
+          mentions: [targetUser],
+        },
+        { quoted: m }
+      );
 
       // Delete the checking message for cleaner look
-      if (checkingMsg) {
-        await client.sendMessage(m.chat, {
-          delete: checkingMsg.key
-        });
+      if (checkingMsg && checkingMsg.key) {
+        try {
+          await client.sendMessage(m.chat, {
+            delete: checkingMsg.key,
+          });
+        } catch (deleteError) {
+          console.error(`Failed to delete checking message: ${deleteError.stack}`);
+        }
       }
-
     } catch (error) {
       console.error(`Gaycheck command exploded: ${error.stack}`);
       await m.reply(`◈━━━━━━━━━━━━━━━━◈\nShit broke harder than your will to live! Can't check gay levels right now, you unlucky fuck.\n◈━━━━━━━━━━━━━━━━◈`);
     }
-  }
+  },
 };
