@@ -1,105 +1,124 @@
 module.exports = {
   name: 'gaycheck',
-  aliases: ['gaymeter', 'gcheck'],
-  description: 'Checks gay percentage with toxic randomness, you curious fuck',
+  aliases: ['gaymeter', 'gcheck', 'howgay'],
+  description: 'Checks gay percentage with toxic, violent, and realistic roasts',
   run: async (context) => {
-    const { client, m, botname } = context;
-
-    if (!botname) {
-      console.error(`Botname not set, you useless fuck.`);
-      return m.reply(`◈━━━━━━━━━━━━━━━━◈\nBot's fucked. No botname in context. Yell at the dev, dipshit.\n◈━━━━━━━━━━━━━━━━◈`);
-    }
+    const { client, m } = context;
 
     try {
-      // Check if someone was mentioned
-      let targetUser = m.sender;
-      let targetName = 'You';
+      // Determine who to check - mentioned user or command sender
+      let targetUser;
+      let targetNumber;
       
-      if (m.mentions && m.mentions.length > 0) {
-        targetUser = m.mentions[0];
-        targetName = 'This poor soul';
+      if (m.mentionedJid && m.mentionedJid.length > 0) {
+        // Use the first mentioned user
+        targetUser = m.mentionedJid[0];
+        targetNumber = targetUser.split('@')[0];
+      } else if (m.quoted) {
+        // Use the quoted user
+        targetUser = m.quoted.sender;
+        targetNumber = targetUser.split('@')[0];
+      } else {
+        // Use the command sender
+        targetUser = m.sender;
+        targetNumber = targetUser.split('@')[0];
       }
 
       // Validate target user
       if (!targetUser || typeof targetUser !== 'string' || !targetUser.includes('@s.whatsapp.net')) {
         console.error(`Invalid target user: ${JSON.stringify(targetUser)}`);
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nShit's broken, can't read that number! Try tagging someone properly, dumbass.\n◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nWho the fuck am I checking? Tag someone or I'll check your dumb ass!\n◈━━━━━━━━━━━━━━━━◈`);
       }
 
-      const userNumber = targetUser.split('@')[0];
-
       // Send checking message with dramatic delay
-      await m.reply(`◈━━━━━━━━━━━━━━━━◈\nScanning ${targetName}'s gaydar... 🏳️‍🌈\nPreparing results... 💀\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [targetUser] });
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      const checkingMsg = await m.reply(`◈━━━━━━━━━━━━━━━━◈\nScanning @${targetNumber}'s soul for gay vibes... 🔍\nThis might hurt, bitch!\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [targetUser] });
+      
+      // Random dramatic delays between 1-3 seconds
+      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
 
       // Generate completely random percentage (0-100%)
       const percentage = Math.floor(Math.random() * 101);
 
-      // Toxic messages based on percentage ranges
-      let toxicMessage;
-      let emoji = '🏳️‍🌈';
+      // Toxic, violent, and realistic roasts based on percentage
+      let roast;
+      let emoji;
       
       if (percentage === 0) {
-        toxicMessage = 'LMAO! 0%?! Either you\'re lying to yourself or you\'re so straight you make rulers look curved! 📏';
-        emoji = '📏';
+        roast = "STRAIGHT AS A FUCKING ARROW! You're so straight you make rulers look curved, you basic bitch!";
+        emoji = "🚫🏳️‍🌈";
       } else if (percentage <= 10) {
-        toxicMessage = 'Barely a flicker! You probably think rainbow is just a weather phenomenon, you basic bitch! 🌈➡️🌧️';
-        emoji = '🌧️';
-      } else if (percentage <= 25) {
-        toxicMessage = 'A little curious, huh? Don\'t worry, we won\'t tell your homophobic friends... or will we? 😈';
-        emoji = '🤔';
-      } else if (percentage <= 40) {
-        toxicMessage = 'Okay, definitely some vibes here! You stare at rainbows a little too long, don\'t you? 🌈👀';
-        emoji = '👀';
-      } else if (percentage <= 60) {
-        toxicMessage = 'HALF WAY THERE! Living that bi-curious lifestyle, I see! The closet door is creaking open! 🚪✨';
-        emoji = '✨';
-      } else if (percentage <= 75) {
-        toxicMessage = 'Damn! The meter is BLASTING! You probably organize pride parades in your sleep! 🎉🏳️‍🌈';
-        emoji = '🎉';
-      } else if (percentage <= 90) {
-        toxicMessage = 'HOLY SHIT! The rainbow is STRONG with this one! Even your socks are probably pride-themed! 🌈🧦';
-        emoji = '🧦';
-      } else if (percentage <= 99) {
-        toxicMessage = 'FUCKING FABULOUS! You make unicorns look straight! The entire LGBTQ+ community salutes you! 🦄🎊';
-        emoji = '🦄';
+        roast = "Barely a flicker! You probably just appreciate good fashion, you confused little shit.";
+        emoji = "😴";
+      } else if (percentage <= 20) {
+        roast = "Slight rainbow dust! You've definitely checked out someone of the same gender, you curious fuck.";
+        emoji = "🤔";
+      } else if (percentage <= 35) {
+        roast = "Getting warmer! You've had at least one 'what if' thought, you closet case!";
+        emoji = "🌡️";
+      } else if (percentage <= 50) {
+        roast = "50/50! You're as confused as a chameleon in a bag of skittles, you indecisive bastard!";
+        emoji = "⚖️";
+      } else if (percentage <= 65) {
+        roast = "Definitely some vibes! You've probably experimented and liked it, you sneaky slut!";
+        emoji = "🌈";
+      } else if (percentage <= 80) {
+        roast = "RAINBOW ALERT! You're gayer than a pride parade on steroids, you fabulous disaster!";
+        emoji = "🏳️‍🌈";
+      } else if (percentage <= 95) {
+        roast = "EXTREMELY GAY! You make Elton John look straight, you rainbow-colored menace!";
+        emoji = "🌈🔥";
       } else {
-        toxicMessage = '100% PURE RAINBOW! You invented gay! Even the concept of straight fears you! ABSOLUTE LEGEND! 🌈👑';
-        emoji = '👑';
+        roast = "MAXIMUM GAY OVERLOAD! You invented homosexuality, you glorious rainbow explosion!";
+        emoji = "🌈💥🏳️‍🌈";
       }
 
-      // Additional random toxic roast
-      const extraRoasts = [
-        '\n\nYour ancestors are questioning their life choices right now!',
-        '\n\nEven I\'m blushing, and I\'m just code!',
-        '\n\nThe straights are shaking in their basic boots!',
-        '\n\nYour heterosexuality is filing for divorce!',
-        '\n\nJesus is either proud or horrified - no in between!',
-        '\n\nYour future grandkids will study this in history class!'
-      ];
-      
-      const randomRoast = extraRoasts[Math.floor(Math.random() * extraRoasts.length)];
+      // Add some violent/insulting flavor based on percentage
+      let insult = "";
+      if (percentage < 20) {
+        insult = " Go touch some grass, you boring fuck!";
+      } else if (percentage > 80) {
+        insult = " The whole community thanks you for your service, you magnificent queer!";
+      } else {
+        const insults = [
+          " You basic bitch!",
+          " You confused little shit!",
+          " Get your life together!",
+          " Even your mom is disappointed!",
+          " What a fucking mess!",
+          " You make babies cry!",
+          " Your existence is a mistake!"
+        ];
+        insult = insults[Math.floor(Math.random() * insults.length)];
+      }
 
-      // Build result message
+      // Build the final toxic result message
       const resultMsg = `◈━━━━━━━━━━━━━━━━◈
-*GAY CHECK RESULTS* ${emoji}
+*GAY METER RESULTS* ${emoji}
 
-*TARGET:* @${userNumber}
+*TARGET:* @${targetNumber}
 *GAY PERCENTAGE:* ${percentage}% 
 
-*VERDICT:*
-${toxicMessage}${randomRoast}
+*VERDICT:* ${roast}${insult}
 
+*DISCLAIMER:* This is 100% accurate and scientific, you sensitive snowflake! Cry about it! 😈
 ◈━━━━━━━━━━━━━━━━◈`;
 
+      // Send the final result
       await client.sendMessage(m.chat, {
         text: resultMsg,
         mentions: [targetUser]
       }, { quoted: m });
 
+      // Delete the checking message for cleaner look
+      if (checkingMsg) {
+        await client.sendMessage(m.chat, {
+          delete: checkingMsg.key
+        });
+      }
+
     } catch (error) {
       console.error(`Gaycheck command exploded: ${error.stack}`);
-      await m.reply(`◈━━━━━━━━━━━━━━━━◈\nShit broke harder than your heterosexuality! Try again, dumbass.\nCheck https://github.com/xhclintohn/Toxic-MD for help.\n◈━━━━━━━━━━━━━━━━◈`);
+      await m.reply(`◈━━━━━━━━━━━━━━━━◈\nShit broke harder than your will to live! Can't check gay levels right now, you unlucky fuck.\n◈━━━━━━━━━━━━━━━━◈`);
     }
   }
 };
