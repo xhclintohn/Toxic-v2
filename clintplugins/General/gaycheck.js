@@ -10,6 +10,9 @@ module.exports = {
       let targetUser = null;
       let targetNumber = null;
 
+      // Log message context for debugging
+      console.log(`Message context: isGroup=${m.isGroup}, mentionedJid=${JSON.stringify(m.mentionedJid)}, quotedSender=${m.quoted?.sender || 'none'}`);
+
       // Check if the command is run in a group and if a user is tagged
       if (m.isGroup && m.mentionedJid && m.mentionedJid.length > 0) {
         console.log(`Tagged JIDs: ${JSON.stringify(m.mentionedJid)}`);
@@ -25,7 +28,11 @@ module.exports = {
       }
 
       // Validate target user
-      if (!targetUser || typeof targetUser !== 'string' || !targetUser.includes('@s.whatsapp.net')) {
+      if (
+        !targetUser ||
+        typeof targetUser !== 'string' ||
+        (!targetUser.includes('@s.whatsapp.net') && !targetUser.includes('@lid'))
+      ) {
         console.error(`Invalid target user: ${JSON.stringify(targetUser)}`);
         return m.reply(`◈━━━━━━━━━━━━━━━━◈\nWho the fuck am I checking? Tag someone or I'll check your dumb ass!\n◈━━━━━━━━━━━━━━━━◈`);
       }
