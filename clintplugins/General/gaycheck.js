@@ -10,14 +10,17 @@ module.exports = {
       let targetUser = null;
       let targetNumber = null;
 
-      if (m.mentionedJid && m.mentionedJid.length > 0) {
-        // Use the first mentioned user
-        targetUser = m.mentionedJid[0];
+      // Check if the command is run in a group and if a user is tagged
+      if (m.isGroup && m.mentionedJid && m.mentionedJid.length > 0) {
+        console.log(`Tagged JIDs: ${JSON.stringify(m.mentionedJid)}`);
+        targetUser = m.mentionedJid[0]; // Use the first tagged user
       } else if (m.quoted && m.quoted.sender) {
         // Use the quoted user
+        console.log(`Quoted sender: ${m.quoted.sender}`);
         targetUser = m.quoted.sender;
       } else {
-        // Use the command sender
+        // Default to the command sender
+        console.log(`No tags or quoted message, using sender: ${m.sender}`);
         targetUser = m.sender;
       }
 
@@ -44,7 +47,7 @@ module.exports = {
         { quoted: m }
       );
 
-      // Random dramatic delays between 1-3 seconds
+      // Random dramatic delay between 1-3 seconds
       await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000));
 
       // Generate completely random percentage (0-100%)
