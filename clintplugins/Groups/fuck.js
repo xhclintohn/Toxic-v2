@@ -1,20 +1,22 @@
 module.exports = {
   name: 'fuck',
   aliases: ['screw', 'bang'],
-  description: 'Sends a toxic, realistic "fuck" reaction to a tagged user',
+  description: 'Sends a toxic, realistic "fuck" reaction to a tagged or quoted user',
   run: async (context) => {
     const { client, m } = context;
 
     try {
-      console.log(`Fuck command context: isGroup=${m.isGroup}, mentionedJid=${JSON.stringify(m.mentionedJid)}, sender=${m.sender}`);
+      console.log(`Fuck command context: isGroup=${m.isGroup}, mentionedJid=${JSON.stringify(m.mentionedJid)}, quotedSender=${m.quoted?.sender || 'none'}, sender=${m.sender}`);
 
       if (!m.mentionedJid || m.mentionedJid.length === 0) {
-        console.error('No tagged user provided');
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, perv, tag someone to fuck! I ain’t doing this without a target!`);
+        if (!m.quoted || !m.quoted.sender) {
+          console.error('No tagged or quoted user provided');
+          return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, perv, tag someone or quote a message to fuck! I ain’t doing this without a target!`);
+        }
       }
 
-      const targetUser = m.mentionedJid[0];
-      console.log(`Tagged JID: ${targetUser}`);
+      const targetUser = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null);
+      console.log(`Target JID: ${targetUser}`);
 
       if (
         !targetUser ||
@@ -22,7 +24,7 @@ module.exports = {
         (!targetUser.includes('@s.whatsapp.net') && !targetUser.includes('@lid'))
       ) {
         console.error(`Invalid target user: ${JSON.stringify(targetUser)}`);
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Invalid user, dumbass! Tag a real person to fuck!`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Invalid user, dumbass! Tag or quote a real person to fuck!`);
       }
 
       const targetNumber = targetUser.split('@')[0];
@@ -44,9 +46,21 @@ module.exports = {
       await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000));
 
       const intensities = [
-        { level: 'Awkward', description: 'a clumsy, embarrassing attempt that made @${targetNumber} laugh their ass off! @${senderNumber}, you’re a fucking disaster!', emoji: '😂' },
-        { level: 'Steamy', description: 'a hot and heavy session that got @${targetNumber} all flustered! @${senderNumber}, you’re not half bad!', emoji: '🔥' },
-        { level: 'Legendary', description: 'an earth-shattering fuck that left @${targetNumber} in awe! @${senderNumber}, you’re a goddamn sex god!', emoji: '💦🔥' },
+        {
+          level: 'Awkward',
+          description: 'a clumsy, embarrassing attempt that made @TARGET laugh their ass off! @SENDER, you’re a fucking disaster!',
+          emoji: '😂',
+        },
+        {
+          level: 'Steamy',
+          description: 'a hot and heavy session that got @TARGET all flustered! @SENDER, you’re not half bad!',
+          emoji: '🔥',
+        },
+        {
+          level: 'Legendary',
+          description: 'an earth-shattering fuck that left @TARGET in awe! @SENDER, you’re a goddamn sex god!',
+          emoji: '💦🔥',
+        },
       ];
       const intensity = intensities[Math.floor(Math.random() * intensities.length)];
 
@@ -57,7 +71,7 @@ module.exports = {
 *VICTIM:* @${targetNumber}
 *INTENSITY:* ${intensity.level}
 
-*VERDICT:* ${intensity.description}
+*VERDICT:* ${intensity.description.replace('@TARGET', `@${targetNumber}`).replace('@SENDER', `@${senderNumber}`)}
 
 *DISCLAIMER:* This was 100% consensual in this fictional world, you filthy animal! Cry about it! 😈
 ◈━━━━━━━━━━━━━━━━◈`;
