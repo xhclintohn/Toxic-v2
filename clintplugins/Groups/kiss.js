@@ -1,20 +1,22 @@
 module.exports = {
   name: 'kiss',
   aliases: ['smooch', 'peck'],
-  description: 'Kisses a tagged user with a toxic, realistic reaction',
+  description: 'Kisses a tagged or quoted user with a toxic, realistic reaction',
   run: async (context) => {
     const { client, m } = context;
 
     try {
-      console.log(`Kiss command context: isGroup=${m.isGroup}, mentionedJid=${JSON.stringify(m.mentionedJid)}, sender=${m.sender}`);
+      console.log(`Kiss command context: isGroup=${m.isGroup}, mentionedJid=${JSON.stringify(m.mentionedJid)}, quotedSender=${m.quoted?.sender || 'none'}, sender=${m.sender}`);
 
       if (!m.mentionedJid || m.mentionedJid.length === 0) {
-        console.error('No tagged user provided');
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, moron, tag someone to kiss! I ain’t kissing nobody without a target!`);
+        if (!m.quoted || !m.quoted.sender) {
+          console.error('No tagged or quoted user provided');
+          return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, moron, tag someone or quote a message to kiss! I ain’t kissing nobody without a target!`);
+        }
       }
 
-      const targetUser = m.mentionedJid[0];
-      console.log(`Tagged JID: ${targetUser}`);
+      const targetUser = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null);
+      console.log(`Target JID: ${targetUser}`);
 
       if (
         !targetUser ||
@@ -22,7 +24,7 @@ module.exports = {
         (!targetUser.includes('@s.whatsapp.net') && !targetUser.includes('@lid'))
       ) {
         console.error(`Invalid target user: ${JSON.stringify(targetUser)}`);
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Invalid user, dumbass! Tag a real person to kiss!`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Invalid user, dumbass! Tag or quote a real person to kiss!`);
       }
 
       const targetNumber = targetUser.split('@')[0];
@@ -44,9 +46,21 @@ module.exports = {
       await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000));
 
       const intensities = [
-        { level: 'Awkward', description: 'a cringey, sloppy peck that made @${targetNumber} gag! @${senderNumber}, you kiss like a dead fish!', emoji: '😖' },
-        { level: 'Sweet', description: 'a decent smooch that got @${targetNumber} blushing! @${senderNumber}, not bad, but don’t get cocky!', emoji: '😘' },
-        { level: 'Passionate', description: 'a steamy kiss that left @${targetNumber} speechless! @${senderNumber}, you’re a fucking Casanova!', emoji: '🔥💋' },
+        {
+          level: 'Awkward',
+          description: 'a cringey, sloppy peck that made @TARGET gag! @SENDER, you kiss like a dead fish!',
+          emoji: '😖',
+        },
+        {
+          level: 'Sweet',
+          description: 'a decent smooch that got @TARGET blushing! @SENDER, not bad, but don’t get cocky!',
+          emoji: '😘',
+        },
+        {
+          level: 'Passionate',
+          description: 'a steamy kiss that left @TARGET speechless! @SENDER, you’re a fucking Casanova!',
+          emoji: '🔥💋',
+        },
       ];
       const intensity = intensities[Math.floor(Math.random() * intensities.length)];
 
@@ -57,7 +71,7 @@ module.exports = {
 *VICTIM:* @${targetNumber}
 *INTENSITY:* ${intensity.level}
 
-*VERDICT:* ${intensity.description}
+*VERDICT:* ${intensity.description.replace('@TARGET', `@${targetNumber}`).replace('@SENDER', `@${senderNumber}`)}
 
 *DISCLAIMER:* This kiss was 100% legit, you hopeless romantic! Deal with it! 😈
 ◈━━━━━━━━━━━━━━━━◈`;
