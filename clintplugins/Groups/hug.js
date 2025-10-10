@@ -1,20 +1,22 @@
 module.exports = {
   name: 'hug',
   aliases: ['cuddle', 'embrace'],
-  description: 'Hugs a tagged user with a toxic, realistic reaction',
+  description: 'Hugs a tagged or quoted user with a toxic, realistic reaction',
   run: async (context) => {
     const { client, m } = context;
 
     try {
-      console.log(`Hug command context: isGroup=${m.isGroup}, mentionedJid=${JSON.stringify(m.mentionedJid)}, sender=${m.sender}`);
+      console.log(`Hug command context: isGroup=${m.isGroup}, mentionedJid=${JSON.stringify(m.mentionedJid)}, quotedSender=${m.quoted?.sender || 'none'}, sender=${m.sender}`);
 
       if (!m.mentionedJid || m.mentionedJid.length === 0) {
-        console.error('No tagged user provided');
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, softie, tag someone to hug! I ain’t hugging nobody without a target!`);
+        if (!m.quoted || !m.quoted.sender) {
+          console.error('No tagged or quoted user provided');
+          return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, softie, tag someone or quote a message to hug! I ain’t hugging nobody without a target!`);
+        }
       }
 
-      const targetUser = m.mentionedJid[0];
-      console.log(`Tagged JID: ${targetUser}`);
+      const targetUser = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null);
+      console.log(`Target JID: ${targetUser}`);
 
       if (
         !targetUser ||
@@ -22,7 +24,7 @@ module.exports = {
         (!targetUser.includes('@s.whatsapp.net') && !targetUser.includes('@lid'))
       ) {
         console.error(`Invalid target user: ${JSON.stringify(targetUser)}`);
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Invalid user, dumbass! Tag a real person to hug!`);
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Invalid user, dumbass! Tag or quote a real person to hug!`);
       }
 
       const targetNumber = targetUser.split('@')[0];
@@ -44,9 +46,21 @@ module.exports = {
       await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000));
 
       const intensities = [
-        { level: 'Awkward', description: 'a weird, clingy hug that made @${targetNumber} squirm! @${senderNumber}, you’re creeping everyone out!', emoji: '😅' },
-        { level: 'Warm', description: 'a cozy hug that actually felt nice for @${targetNumber}! @${senderNumber}, you’re not totally useless!', emoji: '🤗' },
-        { level: 'Bone-Crushing', description: 'a massive bear hug that nearly broke @${targetNumber}’s ribs! @${senderNumber}, you’re a fucking beast!', emoji: '💪' },
+        {
+          level: 'Awkward',
+          description: 'a weird, clingy hug that made @TARGET squirm! @SENDER, you’re creeping everyone out!',
+          emoji: '😅',
+        },
+        {
+          level: 'Warm',
+          description: 'a cozy hug that actually felt nice for @TARGET! @SENDER, you’re not totally useless!',
+          emoji: '🤗',
+        },
+        {
+          level: 'Bone-Crushing',
+          description: 'a massive bear hug that nearly broke @TARGET’s ribs! @SENDER, you’re a fucking beast!',
+          emoji: '💪',
+        },
       ];
       const intensity = intensities[Math.floor(Math.random() * intensities.length)];
 
@@ -57,7 +71,7 @@ module.exports = {
 *VICTIM:* @${targetNumber}
 *INTENSITY:* ${intensity.level}
 
-*VERDICT:* ${intensity.description}
+*VERDICT:* ${intensity.description.replace('@TARGET', `@${targetNumber}`).replace('@SENDER', `@${senderNumber}`)}
 
 *DISCLAIMER:* This hug was 100% real, you emotional wreck! Deal with it! 😈
 ◈━━━━━━━━━━━━━━━━◈`;
