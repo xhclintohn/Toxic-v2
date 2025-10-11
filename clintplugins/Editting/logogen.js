@@ -4,7 +4,7 @@ module.exports = async (context) => {
   const { client, m, text } = context;
 
   if (!text) {
-    return m.reply("Enter title, idea, and slogan.\nFormat: _logogen Title|Idea|Slogan_\n\n*Example:* _logogen DreadedTech|AI-Powered Services|Innovation Meets Simplicity_");
+    return m.reply("Enter title, idea, and slogan.\nFormat: _logogen Title|Idea|Slogan_\n\n*Example:* _logogen ToxicTech|AI-Powered Services|Innovation Meets Simplicity_");
   }
 
   const [title, idea, slogan] = text.split("|");
