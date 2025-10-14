@@ -8,6 +8,7 @@ const {
   jidDecode,
   proto,
   getContentType,
+  default: fetchLatestWaWebVersion // Added new import
 } = require("@whiskeysockets/baileys");
 
 const pino = require("pino");
@@ -61,11 +62,17 @@ async function startToxic() {
     const { autobio, mode, anticall } = settingss;
 
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
+    
+    // Fetch the latest WhatsApp Web version
+    const { version, isLatest } = await fetchLatestWaWebVersion();
+    console.log(`Using WhatsApp Web version: ${version.join('.')}, isLatest: ${isLatest}`);
+
     const client = toxicConnect({
         logger: pino({ level: "silent" }),
         printQRInTerminal: true,
-        browser: ["Toxic-MD", "Chrome", "1.0.0"],
+        browser: ["Ubuntu", "Chrome", "20.0.00"], // Updated browser as suggested
         auth: state,
+        version: version, // Use dynamically fetched version
         getMessage: async (key) => {
             if (store) {
                 const msg = await store.loadMessage(key.remoteJid, key.id);
@@ -73,7 +80,6 @@ async function startToxic() {
             }
             return { conversation: "Toxic-MD whatsapp user bot" };
         },
-        version: [2, 3000, 1023223821],
         fireInitQueries: false,
         shouldSyncHistoryMessage: false,
         downloadHistory: false,
