@@ -11,7 +11,7 @@ const {
   getContentType,
   makeCacheableSignalKeyStore,
   Browsers
-} = require("@whiskeysockets/baileys"); // Update to @adiwajshing/baileys if needed
+} = require("@whiskeysockets/baileys"); 
 
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
@@ -62,28 +62,47 @@ async function startToxic() {
   }
 
   const { autobio, mode, anticall } = settingss;
-  const { version } = await fetchLatestWaWebVersion();
+  const { version } = await fetchLatestWaWebVersion(); // Changed to fetchLatestWaWebVersion
 
   const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
   // Initialize the client
   const client = toxicConnect({
-    logger: pino({ level: "silent" }),
-    printQRInTerminal: false,
-    syncFullHistory: false,
-    markOnlineOnConnect: false,
-    keepAliveIntervalMs: 30000,
-    generateHighQualityLinkPreview: false,
-    browser: ['Ubuntu', 'Chrome', '20.0.04'],
-    auth: {
-      creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: "silent", stream: "store" })),
+    printQRInTerminal: false, 
+    syncFullHistory: true, 
+    markOnlineOnConnect: true,
+    connectTimeoutMs: 60000,
+    defaultQueryTimeoutMs: 0,
+    keepAliveIntervalMs: 10000,
+    generateHighQualityLinkPreview: true,
+    patchMessageBeforeSending: (message) => { 
+      const requiresPatch = !!(
+        message.buttonsMessage ||
+        message.templateMessage ||
+        message.listMessage
+      );
+      if (requiresPatch) {
+        message = {
+          viewOnceMessage: {
+            message: {
+              messageContextInfo: {
+                deviceListMetadataVersion: 2,
+                deviceListMetadata: {},
+              },
+              ...message,
+            },
+          },
+        };
+      }
+      return message;
     },
     version: version,
-    fireInitQueries: false,
-    shouldSyncHistoryMessage: true,
-    downloadHistory: false,
-    defaultQueryTimeoutMs: undefined, 
+    browser: ['Ubuntu', 'Chrome', '20.0.04'], 
+    logger: pino({ level: 'silent' }),
+    auth: {
+      creds: state.creds,
+      keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: 'silent', stream: 'store' })),
+    }
   });
 
   store.bind(client.ev);
