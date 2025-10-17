@@ -5,12 +5,12 @@ const {
   DisconnectReason,
   fetchLatestBaileysVersion,
   makeInMemoryStore,
-  fetchLatestWaWebVersion,
   downloadContentFromMessage,
   jidDecode,
   proto,
   getContentType,
   makeCacheableSignalKeyStore,
+  Browsers
 } = require("@whiskeysockets/baileys");
 
 const pino = require("pino");
@@ -62,41 +62,21 @@ async function startToxic() {
   }
 
   const { autobio, mode, anticall } = settingss;
-  const { version, isLatest } = await fetchLatestBaileysVersion();
+  const { version } = await fetchLatestBaileysVersion();
+
   const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
   // Initialize the client
   const client = toxicConnect({
     logger: pino({ level: "debug" }),
     printQRInTerminal: true,
-    syncFullHistory: true,
+    syncFullHistory: false,
     markOnlineOnConnect: true,
-    connectTimeoutMs: 60000, // 60 seconds to establish connection
-    defaultQueryTimeoutMs: 0, // No timeout for queries
-    keepAliveIntervalMs: 10000, // Ping every 10 seconds
+    connectTimeoutMs: 60000,
+    defaultQueryTimeoutMs: 0,
+    keepAliveIntervalMs: 30000,
     generateHighQualityLinkPreview: true,
-    patchMessageBeforeSending: (message) => {
-      const requiresPatch = !!(
-        message.buttonsMessage ||
-        message.templateMessage ||
-        message.listMessage
-      );
-      if (requiresPatch) {
-        message = {
-          viewOnceMessage: {
-            message: {
-              messageContextInfo: {
-                deviceListMetadataVersion: 2,
-                deviceListMetadata: {},
-              },
-              ...message,
-            },
-          },
-        };
-      }
-      return message;
-    },
-    browser: ["Ubuntu", "Chrome", "20.0.04"],
+    browser: Browsers.macOS('Safari'),
     auth: {
       creds: state.creds,
       keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: "silent", stream: "store" })),
