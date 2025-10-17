@@ -30,7 +30,7 @@ module.exports = {
         A: '𝘼', B: '𝘽', C: '𝘾', D: '𝘿', E: '𝙀', F: '𝙁', G: '𝙂', H: '𝙃', I: '𝙄', J: '𝙅', K: '𝙆', L: '𝙇', M: '𝙈',
         N: '𝙉', O: '𝙊', P: '𝙋', Q: '𝙌', R: '𝙍', S: '𝙎', T: '𝙏', U: '𝙐', V: '𝙑', W: '𝙒', X: '𝙓', Y: '𝙔', Z: '𝙕',
         a: '𝙖', b: '𝙗', c: '𝙘', d: '𝙙', e: '𝙚', f: '𝙛', g: '𝙜', h: '𝙝', i: '𝙞', j: '𝙟', k: '𝙠', l: '𝙡', m: '𝙢',
-        n: '𝙣', o: '𝙤', p: '𝙥', q: '𝙦', r: '𝙧', s: '𝙨', t: '𝙩', u: '𝙪', v: '𝙫', w: '𝙬', x: '𝙭', y: '𝙮', z: '𝙯',
+        n: '𝙣', o: '𝙤', p: '𝙥', q: '𝙦', r: '𝙧', s: '𝙨', t: '𝙩', u: '𝙪', v: '𝙫', w: '𝙬', x: '𝙭', y: '𝙯', z: '𝙯',
       };
       return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
         .split('')
@@ -80,9 +80,16 @@ module.exports = {
                 }),
               },
               {
+                name: 'call_permission_request',
+                buttonParamsJson: JSON.stringify({
+                  has_multiple_buttons: true,
+                }),
+              },
+              {
                 name: 'single_select',
                 buttonParamsJson: JSON.stringify({
                   title: 'VIEW OPTIONS',
+                  has_multiple_buttons: true,
                   sections: [
                     {
                       title: '🔥 CORE COMMANDS',
@@ -103,23 +110,41 @@ module.exports = {
                   ],
                 }),
               },
+              {
+                name: 'cta_copy',
+                buttonParamsJson: JSON.stringify({
+                  display_text: 'Copy Toxic Code',
+                  id: 'TOXIC123',
+                  copy_code: 'https://github.com/xhclintohn/Toxic-MD',
+                }),
+              },
             ],
             messageParamsJson: JSON.stringify({
               limited_time_offer: {
                 text: 'Toxic-MD',
                 url: 'https://github.com/xhclintohn/Toxic-MD',
                 copy_code: 'TOXIC',
-                expiration_time: Date.now() * 1000,
+                expiration_time: 1754613436864329, // Updated to match friend's format
               },
               bottom_sheet: {
                 in_thread_buttons_limit: 2,
-                divider_indices: [1, 2],
+                divider_indices: [1, 2, 3, 4, 5, 999], // Expanded to match friend's
                 list_title: 'Select Command',
                 button_title: 'Toxic-MD',
+              },
+              tap_target_configuration: {
+                title: '▸ Toxic-MD ◂',
+                description: 'Unleash the chaos with Toxic-MD!',
+                canonical_url: 'https://github.com/xhclintohn/Toxic-MD',
+                domain: 'github.com',
+                button_index: 0,
               },
             }),
           },
           contextInfo: {
+            mentionedJid: [m.sender],
+            forwardingScore: 777,
+            isForwarded: true,
             externalAdReply: {
               title: `${botname}`,
               body: `Yo, ${m.pushName}! Ready to fuck shit up?`,
@@ -127,13 +152,13 @@ module.exports = {
               thumbnail: pict,
               mediaUrl: '',
               sourceUrl: 'https://github.com/xhclintohn/Toxic-MD',
-              showAdAttribution: false,
-              renderLargerThumbnail: true,
+              showAdAttribution: true, // Updated to match friend's
+              renderLargerThumbnail: false, // Updated to match friend's
             },
           },
         },
       },
-      { quoted: m }
+      { userJid: m.sender, quoted: m } // Added userJid to match friend's
     );
 
     await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
