@@ -1,5 +1,5 @@
 const {
-  default: toxicConnect,
+  default: toxicConnect, // Changed to keep your bot's naming
   makeWASocket,
   useMultiFileAuthState,
   DisconnectReason,
@@ -28,7 +28,7 @@ const _ = require("lodash");
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
 const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
-const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
+const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) }); // Changed to 'silent'
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
@@ -68,22 +68,20 @@ async function startToxic() {
 
   // Initialize the client
   const client = toxicConnect({
-    logger: pino({ level: "debug" }),
+    logger: pino({ level: "silent" }), // Changed to 'silent'
     printQRInTerminal: true,
     syncFullHistory: false,
     markOnlineOnConnect: true,
-    connectTimeoutMs: 60000,
-    defaultQueryTimeoutMs: 0,
-    keepAliveIntervalMs: 30000,
-    generateHighQualityLinkPreview: true,
-    browser: Browsers.macOS('Safari'),
+    keepAliveIntervalMs: 30000, // Kept as is, matches friend's
+    generateHighQualityLinkPreview: false, // Changed to false
+    browser: ['TOXIC-MD', 'Safari', '3.0'], // Changed to custom browser ID
     auth: {
       creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: "silent", stream: "store" })),
+      keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: "silent", stream: "store" })), // Changed to 'silent'
     },
     version: version,
     fireInitQueries: false,
-    shouldSyncHistoryMessage: false,
+    shouldSyncHistoryMessage: true, // Changed to true
     downloadHistory: false,
   });
 
