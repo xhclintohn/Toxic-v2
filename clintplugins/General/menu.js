@@ -46,119 +46,53 @@ module.exports = {
       `\n◈━━━━━━━━━━━━━━━━◈\n\n` +
       `*Select an option Below, Loser.* 😈`;
 
-    // Interactive message with buttons using dynamic prefix
+    // Simple list message with buttons
     const msg = generateWAMessageFromContent(
       m.chat,
       {
-        interactiveMessage: {
-          header: {
-            documentMessage: {
-              url: 'https://mmg.whatsapp.net/v/t62.7119-24/539012045_745537058346694_1512031191239726227_n.enc?ccb=11-4&oh=01_Q5Aa2QGGiJj--6eHxoTTTTzuWtBgCrkcXBz9hN_y2s_Z1lrABA&oe=68D7901C&_nc_sid=5e03e0&mms3=true',
-              mimetype: 'image/png',
-              fileSha256: '+gmvvCB6ckJSuuG3ZOzHsTBgRAukejv1nnfwGSSSS/4=',
-              fileLength: '1435',
-              pageCount: 0,
-              mediaKey: 'MWO6fI223TY8T0i9onNcwNBBPldWfwp1j1FPKCiJFzw=',
-              fileName: 'Toxic-MD',
-              fileEncSha256: 'ZS8v9tio2un1yWVOOG3lwBxiP+mNgaKPY9+wl5pEoi8=',
-              directPath: '/v/t62.7119-24/539012045_745537058346694_1512031191239726227_n.enc?ccb=11-4&oh=01_Q5Aa2QGGiJj--6eHxoTTTTzuWtBgCrkcXBz9hN_y2s_Z1lrABA&oe=68D7901C&_nc_sid=5e03e0',
-              mediaKeyTimestamp: '1756370084',
-              jpegThumbnail: pict,
+        listMessage: {
+          title: `${botname} Menu`,
+          description: menuText,
+          buttonText: 'VIEW OPTIONS',
+          footerText: `Pσɯҽɾҽԃ Ⴆყ ${botname}`,
+          listType: 1, // Single select list
+          sections: [
+            {
+              title: '🔥 CORE COMMANDS',
+              rows: [
+                { title: '📜 FULL MENU', description: 'Show all commands', rowId: `.fullmenu` },
+                { title: '⚠️ DEV', description: "Send developer's contact", rowId: `${effectivePrefix}dev` },
+              ],
             },
-            hasMediaAttachment: true,
-          },
-          body: { text: menuText },
-          footer: { text: `Pσɯҽɾҽԃ Ⴆყ ${botname}` },
-          nativeFlowMessage: {
-            buttons: [
-              {
-                name: 'cta_url',
-                buttonParamsJson: JSON.stringify({
-                  display_text: 'GitHub Repo',
-                  url: 'https://github.com/xhclintohn/Toxic-MD',
-                  merchant_url: 'https://github.com/xhclintohn/Toxic-MD',
-                }),
-              },
-              {
-                name: 'call_permission_request',
-                buttonParamsJson: JSON.stringify({
-                  has_multiple_buttons: true,
-                }),
-              },
-              {
-                name: 'single_select',
-                buttonParamsJson: JSON.stringify({
-                  title: 'VIEW OPTIONS',
-                  has_multiple_buttons: true,
-                  sections: [
-                    {
-                      title: '🔥 CORE COMMANDS',
-                      highlight_label: '© Toxic-MD',
-                      rows: [
-                        { title: '📜 FULL MENU', description: 'Show all commands', id: `.fullmenu` },
-                        { title: '⚠️ DEV', description: "Send developer's contact", id: `${effectivePrefix}dev` },
-                      ],
-                    },
-                    {
-                      title: 'ℹ BOT INFO',
-                      highlight_label: '© Toxic-MD',
-                      rows: [
-                        { title: '🔥 PING', description: 'Check bot speed', id: `${effectivePrefix}ping` },
-                        { title: '💯 REPO', description: 'Get bot repository', id: `${effectivePrefix}repo` },
-                      ],
-                    },
-                  ],
-                }),
-              },
-              {
-                name: 'cta_copy',
-                buttonParamsJson: JSON.stringify({
-                  display_text: 'Copy Toxic Code',
-                  id: 'TOXIC123',
-                  copy_code: 'https://github.com/xhclintohn/Toxic-MD',
-                }),
-              },
-            ],
-            messageParamsJson: JSON.stringify({
-              limited_time_offer: {
-                text: 'Toxic-MD',
-                url: 'https://github.com/xhclintohn/Toxic-MD',
-                copy_code: 'TOXIC',
-                expiration_time: 1754613436864329, // Updated to match friend's format
-              },
-              bottom_sheet: {
-                in_thread_buttons_limit: 2,
-                divider_indices: [1, 2, 3, 4, 5, 999], // Expanded to match friend's
-                list_title: 'Select Command',
-                button_title: 'Toxic-MD',
-              },
-              tap_target_configuration: {
-                title: '▸ Toxic-MD ◂',
-                description: 'Unleash the chaos with Toxic-MD!',
-                canonical_url: 'https://github.com/xhclintohn/Toxic-MD',
-                domain: 'github.com',
-                button_index: 0,
-              },
-            }),
-          },
-          contextInfo: {
-            mentionedJid: [m.sender],
-            forwardingScore: 777,
-            isForwarded: true,
-            externalAdReply: {
-              title: `${botname}`,
-              body: `Yo, ${m.pushName}! Ready to fuck shit up?`,
-              mediaType: 1,
-              thumbnail: pict,
-              mediaUrl: '',
-              sourceUrl: 'https://github.com/xhclintohn/Toxic-MD',
-              showAdAttribution: true, // Updated to match friend's
-              renderLargerThumbnail: false, // Updated to match friend's
+            {
+              title: 'ℹ BOT INFO',
+              rows: [
+                { title: '🔥 PING', description: 'Check bot speed', rowId: `${effectivePrefix}ping` },
+                { title: '💯 REPO', description: 'Get bot repository', rowId: `${effectivePrefix}repo` },
+              ],
             },
+            {
+              title: '🔗 EXTERNAL LINK',
+              rows: [
+                { title: 'GitHub Repo', description: 'Visit Toxic-MD GitHub', rowId: 'cta_url:https://github.com/xhclintohn/Toxic-MD' },
+              ],
+            },
+          ],
+        },
+        contextInfo: {
+          externalAdReply: {
+            title: `${botname}`,
+            body: `Yo, ${m.pushName}! Ready to fuck shit up?`,
+            mediaType: 1,
+            thumbnail: pict,
+            mediaUrl: '',
+            sourceUrl: 'https://github.com/xhclintohn/Toxic-MD',
+            showAdAttribution: false,
+            renderLargerThumbnail: true,
           },
         },
       },
-      { userJid: m.sender, quoted: m } // Added userJid to match friend's
+      { quoted: m }
     );
 
     await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
