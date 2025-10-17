@@ -1,9 +1,9 @@
 const {
-  default: toxicConnect, // Changed to keep your bot's naming
+  default: toxicConnect,
   makeWASocket,
   useMultiFileAuthState,
   DisconnectReason,
-  fetchLatestBaileysVersion,
+  fetchLatestWaWebVersion,
   makeInMemoryStore,
   downloadContentFromMessage,
   jidDecode,
@@ -11,7 +11,7 @@ const {
   getContentType,
   makeCacheableSignalKeyStore,
   Browsers
-} = require("@whiskeysockets/baileys");
+} = require("@whiskeysockets/baileys"); // Update to @adiwajshing/baileys if needed
 
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
@@ -28,7 +28,7 @@ const _ = require("lodash");
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
 const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
-const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) }); // Changed to 'silent'
+const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
@@ -62,27 +62,28 @@ async function startToxic() {
   }
 
   const { autobio, mode, anticall } = settingss;
-  const { version } = await fetchLatestBaileysVersion();
+  const { version } = await fetchLatestWaWebVersion();
 
   const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
   // Initialize the client
   const client = toxicConnect({
-    logger: pino({ level: "silent" }), // Changed to 'silent'
-    printQRInTerminal: true,
+    logger: pino({ level: "silent" }),
+    printQRInTerminal: false,
     syncFullHistory: false,
-    markOnlineOnConnect: true,
-    keepAliveIntervalMs: 30000, // Kept as is, matches friend's
-    generateHighQualityLinkPreview: false, // Changed to false
-    browser: ['TOXIC-MD', 'Safari', '3.0'], // Changed to custom browser ID
+    markOnlineOnConnect: false,
+    keepAliveIntervalMs: 30000,
+    generateHighQualityLinkPreview: false,
+    browser: ['Ubuntu', 'Chrome', '20.0.04'],
     auth: {
       creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: "silent", stream: "store" })), // Changed to 'silent'
+      keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: "silent", stream: "store" })),
     },
     version: version,
     fireInitQueries: false,
-    shouldSyncHistoryMessage: true, // Changed to true
+    shouldSyncHistoryMessage: true,
     downloadHistory: false,
+    defaultQueryTimeoutMs: undefined, 
   });
 
   store.bind(client.ev);
@@ -301,7 +302,15 @@ async function startToxic() {
     }
 
     if (qr) {
-      console.log("📱 New QR code generated. Scan it to authenticate.");
+      console.log("📱 New QR code generated. Please access it via the web interface to authenticate.");
+      // Send QR code to the Express server route
+      app.get('/qr', (req, res) => {
+        if (qr) {
+          res.send(`<h1>Scan this QR code to authenticate Toxic-MD:</h1><pre>${qr}</pre>`);
+        } else {
+          res.send('No QR code available. Bot may already be connected.');
+        }
+      });
     }
 
     await connectionHandler(client, update, startToxic);
