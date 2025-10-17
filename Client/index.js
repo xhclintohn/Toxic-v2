@@ -62,7 +62,7 @@ async function startToxic() {
   }
 
   const { autobio, mode, anticall } = settingss;
-  const { version } = await fetchLatestWaWebVersion(); // Changed to fetchLatestWaWebVersion
+  const { version } = await fetchLatestWaWebVersion();
 
   const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
