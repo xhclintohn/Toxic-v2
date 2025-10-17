@@ -11,7 +11,7 @@ const {
   getContentType,
   makeCacheableSignalKeyStore,
   Browsers
-} = require("@whisketsockets/baileys"); // Changed to @adiwajshing/baileys
+} = require("@whiskeysockets/baileys");
 
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
