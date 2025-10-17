@@ -3,7 +3,7 @@ const {
   makeWASocket,
   useMultiFileAuthState,
   DisconnectReason,
-  fetchLatestWaWebVersion, // Changed to fetchLatestWaWebVersion
+  fetchLatestWaWebVersion,
   makeInMemoryStore,
   downloadContentFromMessage,
   jidDecode,
@@ -11,7 +11,7 @@ const {
   getContentType,
   makeCacheableSignalKeyStore,
   Browsers
-} = require("@adiwajshing/baileys"); // Changed to @adiwajshing/baileys
+} = require("@whisketsockets/baileys"); // Changed to @adiwajshing/baileys
 
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
