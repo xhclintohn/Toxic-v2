@@ -41,7 +41,7 @@ authenticationn();
 
 const path = require('path');
 
-const sessionName = path.join(__dirname, '..', 'Session'); // Kept your session path
+const sessionName = path.join(__dirname, '..', 'Session');
 
 const groupEvents = require("../Handler/eventHandler");
 const groupEvents2 = require("../Handler/eventHandler2");
@@ -68,14 +68,14 @@ async function startToxic() {
 
   // Initialize the client
   const client = toxicConnect({
-    printQRInTerminal: false, // From friend's config
-    syncFullHistory: true, // From friend's config
-    markOnlineOnConnect: true, // From friend's config
-    connectTimeoutMs: 60000, // From friend's config
-    defaultQueryTimeoutMs: 0, // From friend's config
-    keepAliveIntervalMs: 10000, // From friend's config
-    generateHighQualityLinkPreview: true, // From friend's config
-    patchMessageBeforeSending: (message) => { // From friend's config
+    printQRInTerminal: false, 
+    syncFullHistory: true,
+    markOnlineOnConnect: true,
+    connectTimeoutMs: 60000,
+    defaultQueryTimeoutMs: 0,
+    keepAliveIntervalMs: 10000, 
+    generateHighQualityLinkPreview: true, 
+    patchMessageBeforeSending: (message) => { 
       const requiresPatch = !!(
         message.buttonsMessage ||
         message.templateMessage ||
@@ -97,8 +97,8 @@ async function startToxic() {
       return message;
     },
     version: version,
-    browser: ['Ubuntu', 'Chrome', '20.0.04'], // From friend's config
-    logger: pino({ level: 'silent' }), // From friend's config
+    browser: ['Ubuntu', 'Chrome', '20.0.04'],
+    logger: pino({ level: 'silent' }),
     auth: {
       creds: state.creds,
       keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: 'silent', stream: 'store' })),
