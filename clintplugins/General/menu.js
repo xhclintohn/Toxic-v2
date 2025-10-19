@@ -56,7 +56,7 @@ module.exports = {
     menuText += `\n◈━━━━━━━━━━━━━━━━◈\n\n`;
     menuText += `*Select an option Below, Loser.* 😈`;
 
-    // Interactive buttons
+    // Interactive buttons based on friend's documentation
     const interactiveButtons = [
       {
         name: "cta_url",
@@ -89,65 +89,61 @@ module.exports = {
       }
     ];
 
-    // Interactive message with sections
-    const interactiveMessage = {
-      text: menuText,
-      footer: `Pσɯҽɾҽԃ Ⴆყ ${botname}`,
-      title: `${botname} COMMAND MENU`,
-      interactiveButtons,
-      nativeFlowMessage: {
+    // Interactive message with simplified structure
+    await client.sendMessage(m.chat, {
+      interactiveMessage: {
+        title: `${botname} COMMAND MENU`,
+        body: { text: menuText },
+        footer: { text: `Pσɯҽɾҽԃ Ⴆყ ${botname}` },
         buttons: interactiveButtons,
-        messageParamsJson: ''
-      },
-      contextInfo: {
-        externalAdReply: {
-          showAdAttribution: false,
-          title: `${botname}`,
-          body: `Yo, ${m.pushName}! Ready to fuck shit up?`,
-          thumbnail: pict,
-          sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
-          mediaType: 1,
-          renderLargerThumbnail: true
-        }
-      },
-      // Adding sections for list buttons
-      sections: [
-        {
-          title: "🔥 CORE COMMANDS",
-          rows: [
+        listMessage: {
+          title: "🔥 COMMAND CATEGORIES",
+          sections: [
             {
-              title: "📜 𝐅𝐔𝐋𝐋 𝐌𝐄𝐍𝐔",
-              description: "Show all commands",
-              id: `${effectivePrefix}fullmenu`
+              title: "🔥 CORE COMMANDS",
+              rows: [
+                {
+                  title: "📜 𝐅𝐔𝐋𝐋 𝐌𝐄𝐍𝐔",
+                  description: "Show all commands",
+                  id: `${effectivePrefix}fullmenu`
+                },
+                {
+                  title: "⚠️ 𝐃𝐄𝐕",
+                  description: "Send developer's contact",
+                  id: `${effectivePrefix}dev`
+                }
+              ]
             },
             {
-              title: "⚠️ 𝐃𝐄𝐕",
-              description: "Send developer's contact",
-              id: `${effectivePrefix}dev`
+              title: "ℹ BOT INFO",
+              rows: [
+                {
+                  title: "🔥 𝐏𝐈𝐍𝐆",
+                  description: "Check bot speed",
+                  id: `${effectivePrefix}ping`
+                },
+                {
+                  title: "💯 𝐑𝐄𝐏𝐎",
+                  description: "Get bot repository",
+                  id: `${effectivePrefix}repo`
+                }
+              ]
             }
           ]
         },
-        {
-          title: "ℹ BOT INFO",
-          rows: [
-            {
-              title: "🔥 𝐏𝐈𝐍𝐆",
-              description: "Check bot speed",
-              id: `${effectivePrefix}ping`
-            },
-            {
-              title: "💯 𝐑𝐄𝐏𝐎",
-              description: "Get bot repository",
-              id: `${effectivePrefix}repo`
-            }
-          ]
+        contextInfo: {
+          externalAdReply: {
+            showAdAttribution: false,
+            title: `${botname}`,
+            body: `Yo, ${m.pushName}! Ready to fuck shit up?`,
+            thumbnail: pict,
+            sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
+            mediaType: 1,
+            renderLargerThumbnail: true
+          }
         }
-      ]
-    };
-
-    await client.sendMessage(m.chat, interactiveMessage, { 
-      quoted: fakeQuoted 
-    });
+      }
+    }, { quoted: fakeQuoted });
 
     // Audio handling
     const possibleAudioPaths = [
