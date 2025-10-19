@@ -19,20 +19,29 @@ module.exports = async (context) => {
     return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
   };
 
+  // Define fakeQuoted for non-text messages
+  const fakeQuoted = {
+    key: {
+      participant: '0@s.whatsapp.net',
+      remoteJid: '0@s.whatsapp.net',
+      id: m.id
+    },
+    message: {
+      conversation: "Toxic Verified By WhatsApp"
+    },
+    contextInfo: {
+      mentionedJid: [m.sender],
+      forwardingScore: 999,
+      isForwarded: true
+    }
+  };
+
   if (!text) {
-    return client.sendMessage(
-      m.chat,
-      { text: formatStylishReply("Yo, drop a song name, fam! 🎵 Ex: .play Not Like Us") },
-      { quoted: m, ad: true }
-    );
+    return m.reply(formatStylishReply("Yo, drop a song name, fam! 🎵 Ex: .play Not Like Us"));
   }
 
   if (text.length > 100) {
-    return client.sendMessage(
-      m.chat,
-      { text: formatStylishReply("Keep it short, homie! Song name max 100 chars. 📝") },
-      { quoted: m, ad: true }
-    );
+    return m.reply(formatStylishReply("Keep it short, homie! Song name max 100 chars. 📝"));
   }
 
   try {
@@ -40,16 +49,12 @@ module.exports = async (context) => {
     const searchResult = await yts(searchQuery);
     const video = searchResult.videos[0];
     if (!video) {
-      return client.sendMessage(
-        m.chat,
-        { text: formatStylishReply("No tunes found, bruh! 😕 Try another search!") },
-        { quoted: m, ad: true }
-      );
+      return m.reply(formatStylishReply("No tunes found, bruh! 😕 Try another search!"));
     }
 
     // Use the new API endpoint
     const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytmp3?url=${encodeURIComponent(video.url)}`;
-    
+
     // Call the API
     const response = await axios.get(apiUrl);
     const apiData = response.data;
@@ -83,11 +88,7 @@ module.exports = async (context) => {
       throw new Error("Download failed or file is empty");
     }
 
-    await client.sendMessage(
-      m.chat,
-      { text: formatStylishReply(`Droppin' *${apiData.result.title || video.title}* for ya, fam! Crank it up! 🔥🎧`) },
-      { quoted: m, ad: true }
-    );
+    await m.reply(formatStylishReply(`Droppin' *${apiData.result.title || video.title}* for ya, fam! Crank it up! 🔥🎧`));
 
     await client.sendMessage(
       m.chat,
@@ -106,17 +107,13 @@ module.exports = async (context) => {
           },
         },
       },
-      { quoted: m, ad: true }
+      { quoted: fakeQuoted }
     );
 
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
   } catch (error) {
-    await client.sendMessage(
-      m.chat,
-      { text: formatStylishReply(`Yo, we hit a snag: ${error.message}. Pick another track! 😎`) },
-      { quoted: m, ad: true }
-    );
+    await m.reply(formatStylishReply(`Yo, we hit a snag: ${error.message}. Pick another track! 😎`));
   }
 };
