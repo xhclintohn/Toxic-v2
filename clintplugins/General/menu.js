@@ -56,23 +56,8 @@ module.exports = {
     menuText += `\n◈━━━━━━━━━━━━━━━━◈\n\n`;
     menuText += `*Select an option Below, Loser.* 😈`;
 
-    // Interactive buttons based on friend's documentation
+    // Interactive buttons (only Full Menu and Ping)
     const interactiveButtons = [
-      {
-        name: "cta_url",
-        buttonParamsJson: JSON.stringify({
-          display_text: "Open GitHub",
-          url: "https://github.com/xhclintohn/Toxic-MD"
-        })
-      },
-      {
-        name: "cta_copy",
-        buttonParamsJson: JSON.stringify({
-          display_text: "Copy GitHub Link",
-          id: "12345",
-          copy_code: "https://github.com/xhclintohn/Toxic-MD"
-        })
-      },
       {
         name: "quick_reply",
         buttonParamsJson: JSON.stringify({
@@ -89,48 +74,13 @@ module.exports = {
       }
     ];
 
-    // Interactive message with simplified structure
+    // Simplified interactive message
     await client.sendMessage(m.chat, {
       interactiveMessage: {
         title: `${botname} COMMAND MENU`,
         body: { text: menuText },
         footer: { text: `Pσɯҽɾҽԃ Ⴆყ ${botname}` },
         buttons: interactiveButtons,
-        listMessage: {
-          title: "🔥 COMMAND CATEGORIES",
-          sections: [
-            {
-              title: "🔥 CORE COMMANDS",
-              rows: [
-                {
-                  title: "📜 𝐅𝐔𝐋𝐋 𝐌𝐄𝐍𝐔",
-                  description: "Show all commands",
-                  id: `${effectivePrefix}fullmenu`
-                },
-                {
-                  title: "⚠️ 𝐃𝐄𝐕",
-                  description: "Send developer's contact",
-                  id: `${effectivePrefix}dev`
-                }
-              ]
-            },
-            {
-              title: "ℹ BOT INFO",
-              rows: [
-                {
-                  title: "🔥 𝐏𝐈𝐍𝐆",
-                  description: "Check bot speed",
-                  id: `${effectivePrefix}ping`
-                },
-                {
-                  title: "💯 𝐑𝐄𝐏𝐎",
-                  description: "Get bot repository",
-                  id: `${effectivePrefix}repo`
-                }
-              ]
-            }
-          ]
-        },
         contextInfo: {
           externalAdReply: {
             showAdAttribution: false,
