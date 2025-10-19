@@ -18,7 +18,24 @@ module.exports = {
     const settings = await getSettings();
     const effectivePrefix = settings.prefix || '!';
 
-    // ===== YOUR ORIGINAL TOXIC MENU TEXT ===== //
+    // Fake quoted blue tick
+    const fakeQuoted = {
+      key: {
+        participant: '0@s.whatsapp.net',
+        remoteJid: '0@s.whatsapp.net',
+        id: m.id
+      },
+      message: {
+        conversation: "Toxic Verified By WhatsApp"
+      },
+      contextInfo: {
+        mentionedJid: [m.sender],
+        forwardingScore: 999,
+        isForwarded: true
+      }
+    };
+
+    // Fancy font function
     const toFancyFont = (text, isUpperCase = false) => {
       const fonts = {
         'A': '𝘼', 'B': '𝘽', 'C': '𝘾', 'D': '𝘿', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
@@ -39,44 +56,49 @@ module.exports = {
     menuText += `\n◈━━━━━━━━━━━━━━━━◈\n\n`;
     menuText += `*Select an option Below, Loser.* 😈`;
 
+    // Interactive buttons
+    const interactiveButtons = [
+      {
+        name: "cta_url",
+        buttonParamsJson: JSON.stringify({
+          display_text: "Open GitHub",
+          url: "https://github.com/xhclintohn/Toxic-MD"
+        })
+      },
+      {
+        name: "cta_copy",
+        buttonParamsJson: JSON.stringify({
+          display_text: "Copy GitHub Link",
+          id: "12345",
+          copy_code: "https://github.com/xhclintohn/Toxic-MD"
+        })
+      },
+      {
+        name: "quick_reply",
+        buttonParamsJson: JSON.stringify({
+          display_text: "Full Menu",
+          id: `${effectivePrefix}fullmenu`
+        })
+      },
+      {
+        name: "quick_reply",
+        buttonParamsJson: JSON.stringify({
+          display_text: "Ping",
+          id: `${effectivePrefix}ping`
+        })
+      }
+    ];
 
-    await client.sendMessage(m.chat, {
+    // Interactive message with sections
+    const interactiveMessage = {
       text: menuText,
       footer: `Pσɯҽɾҽԃ Ⴆყ ${botname}`,
       title: `${botname} COMMAND MENU`,
-      buttonText: "VIEW OPTIONS",
-      sections: [
-        {
-          title: "🔥 CORE COMMANDS",
-          rows: [
-            {
-              title: "📜 𝐅𝐔𝐋𝐋 𝐌𝐄𝐍𝐔",
-              description: "Show all commands",
-              rowId: `${effectivePrefix}fullmenu`
-            },
-            {
-              title: "⚠️ 𝐃𝐄𝐕",
-              description: "Send developer's contact",
-              rowId: `${effectivePrefix}dev`
-            }
-          ]
-        },
-        {
-          title: "ℹ BOT INFO",
-          rows: [
-            {
-              title: "🔥 𝐏𝐈𝐍𝐆",
-              description: "Check bot speed",
-              rowId: `${effectivePrefix}ping`
-            },
-            {
-              title: "💯 𝐑𝐄𝐏𝐎",
-              description: "Get bot repository",
-              rowId: `${effectivePrefix}repo`
-            }
-          ]
-        }
-      ],
+      interactiveButtons,
+      nativeFlowMessage: {
+        buttons: interactiveButtons,
+        messageParamsJson: ''
+      },
       contextInfo: {
         externalAdReply: {
           showAdAttribution: false,
@@ -87,10 +109,47 @@ module.exports = {
           mediaType: 1,
           renderLargerThumbnail: true
         }
-      }
-    }, { quoted: m });
+      },
+      // Adding sections for list buttons
+      sections: [
+        {
+          title: "🔥 CORE COMMANDS",
+          rows: [
+            {
+              title: "📜 𝐅𝐔𝐋𝐋 𝐌𝐄𝐍𝐔",
+              description: "Show all commands",
+              id: `${effectivePrefix}fullmenu`
+            },
+            {
+              title: "⚠️ 𝐃𝐄𝐕",
+              description: "Send developer's contact",
+              id: `${effectivePrefix}dev`
+            }
+          ]
+        },
+        {
+          title: "ℹ BOT INFO",
+          rows: [
+            {
+              title: "🔥 𝐏𝐈𝐍𝐆",
+              description: "Check bot speed",
+              id: `${effectivePrefix}ping`
+            },
+            {
+              title: "💯 𝐑𝐄𝐏𝐎",
+              description: "Get bot repository",
+              id: `${effectivePrefix}repo`
+            }
+          ]
+        }
+      ]
+    };
 
+    await client.sendMessage(m.chat, interactiveMessage, { 
+      quoted: fakeQuoted 
+    });
 
+    // Audio handling
     const possibleAudioPaths = [
       path.join(__dirname, 'xh_clinton', 'menu.mp3'),
       path.join(process.cwd(), 'xh_clinton', 'menu.mp3'),
@@ -111,7 +170,7 @@ module.exports = {
         ptt: true,
         mimetype: 'audio/mpeg',
         fileName: 'menu.mp3'
-      }, { quoted: m });
+      }, { quoted: fakeQuoted });
     }
   }
 };
