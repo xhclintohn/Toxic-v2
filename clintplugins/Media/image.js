@@ -51,62 +51,93 @@ module.exports = async (context) => {
     // Notify how many we'll send
     await client.sendMessage(
       m.chat,
-      { text: formatStylishReply(`Found ${allImages.length} images — sending ${imagesToSend.length}. Don't beg for more.`) },
+      { text: formatStylishReply(`Found ${allImages.length} images — sending ${imagesToSend.length} in an album. Don't beg for more.`) },
       { quoted: m, ad: true }
     );
 
+    // Prepare album message
+    const albumImages = [];
     let sentCount = 0;
-    for (const imgUrl of imagesToSend) {
+
+    for (const [index, imgUrl] of imagesToSend.entries()) {
       try {
-        // Download image into buffer so WhatsApp receives actual image data (not a link)
+        // Download image into buffer
         const { buffer, mime } = await downloadImageBuffer(imgUrl);
 
-        // Prepare caption with toxic flavor and minimal metadata
-        const caption = formatStylishReply(`🔎 Search: ${text}\n🌐 Source: Toxic-MD\n🖼 Image ${sentCount + 1}/${imagesToSend.length}`);
+        // Prepare caption for each image
+        const caption = formatStylishReply(`🔎 Search: ${text}\n🌐 Source: Toxic-MD\n🖼 Image ${index + 1}/${imagesToSend.length}`);
 
-        await client.sendMessage(
-          m.chat,
-          {
-            image: buffer,
-            mimetype: mime,
-            caption,
-          },
-          { quoted: m }
-        );
+        // Add to album
+        albumImages.push({
+          image: buffer,
+          mimetype: mime,
+          caption
+        });
 
         sentCount++;
       } catch (e) {
-        
-        console.warn(`image.js: failed to download/send image "${imgUrl}" —`, e.message || e);
-        // Try fallback: send as URL (if buffer sending fails for this URL)
-        try {
-          await client.sendMessage(
-            m.chat,
-            {
-              image: { url: imgUrl },
-              caption: formatStylishReply(`🔎 Fallback send for: ${text}\n🌐 Source: Toxic-MD\n🖼 Image ${sentCount + 1}/${imagesToSend.length}`),
-            },
-            { quoted: m }
-          );
-          sentCount++;
-        } catch (e2) {
-          console.warn("image.js: fallback send also failed:", e2.message || e2);
-        }
+        console.warn(`image.js: failed to download image "${imgUrl}" —`, e.message || e);
+        // Skip failed images but continue with others
       }
     }
 
-    if (sentCount === 0) {
-      await client.sendMessage(
+    if (albumImages.length === 0) {
+      return client.sendMessage(
         m.chat,
         { text: formatStylishReply("Alright, everything failed. The web is cursed today. Try another query later.") },
         { quoted: m, ad: true }
       );
-    } else {
+    }
+
+    // Send album message
+    try {
       await client.sendMessage(
         m.chat,
-        { text: formatStylishReply(`All done. Sent ${sentCount} image(s). Don't waste them.`) },
+        {
+          albumMessage: albumImages
+        },
+        { quoted: m }
+      );
+
+      await client.sendMessage(
+        m.chat,
+        { text: formatStylishReply(`All done. Sent ${sentCount} image(s) in an album. Don't waste them.`) },
         { quoted: m, ad: true }
       );
+    } catch (e) {
+      console.error("image.js: failed to send album message:", e.message || e);
+      // Fallback: send images one by one
+      let fallbackSentCount = 0;
+      for (const img of albumImages) {
+        try {
+          await client.sendMessage(
+            m.chat,
+            {
+              image: img.image,
+              mimetype: img.mimetype,
+              caption: img.caption
+            },
+            { quoted: m }
+          );
+          fallbackSentCount++;
+        } catch (e2) {
+          console.warn("image.js: fallback send failed for an image:", e2.message || e2);
+        }
+      }
+
+      if (fallbackSentCount > 0) {
+        await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply(`Album failed, sent ${fallbackSentCount} image(s) individually. Blame the internet.`) },
+          { quoted: m, ad: true }
+        );
+      } else {
+        await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply("Album and individual sends failed. Try again later, loser.") },
+          { quoted: m, ad: true }
+        );
+      }
     }
   } catch (error) {
     console.error("image.js error:", error);
