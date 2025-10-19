@@ -122,6 +122,23 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const isAdmin = m.isAdmin;
         const IsGroup = m.isGroup;
 
+        // Fake quoted blue tick
+        const fakeQuoted = {
+            key: {
+                participant: '0@s.whatsapp.net',
+                remoteJid: '0@s.whatsapp.net',
+                id: m.id
+            },
+            message: {
+                conversation: "Toxic Verified By WhatsApp"
+            },
+            contextInfo: {
+                mentionedJid: [m.sender],
+                forwardingScore: 999,
+                isForwarded: true
+            }
+        };
+
         const context = {
             client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
             pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
@@ -134,7 +151,9 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         if (cmd) {
             const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
             if (bannedUsers.includes(senderNumber)) {
-                await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost! 💀` }, { quoted: m });
+                await client.sendMessage(m.chat, { 
+                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost! 💀` 
+                }, { quoted: fakeQuoted });
                 return;
             }
         }
