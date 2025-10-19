@@ -10,7 +10,6 @@ const {
   getContentType,
 } = require("@whiskeysockets/baileys");
 const { readFileSync } = require('fs');
-
 const path = require('path');
 
 const filePath = path.resolve(__dirname, '../toxic.jpg'); 
@@ -98,6 +97,23 @@ function smsg(conn, m, store) {
   if (m.msg.url) m.download = () => conn.downloadMediaMessage(m.msg);
   m.text = m.text || m.body || "";
   m.reply = (text, chatId = m.chat, options = {}) => {
+    // Fake quoted blue tick
+    const fakeQuoted = {
+      key: {
+        participant: '0@s.whatsapp.net',
+        remoteJid: '0@s.whatsapp.net',
+        id: m.id
+      },
+      message: {
+        conversation: "Toxic Verified By WhatsApp"
+      },
+      contextInfo: {
+        mentionedJid: [m.sender],
+        forwardingScore: 999,
+        isForwarded: true
+      }
+    };
+
     return conn.sendMessage(chatId, 
       {
         text: text,
@@ -112,7 +128,7 @@ function smsg(conn, m, store) {
           }
         }
       }, 
-      { quoted: m, ...options }
+      { quoted: fakeQuoted, ...options }
     );
   };
   m.copy = () => exports.smsg(conn, M.fromObject(M.toObject(m)));
