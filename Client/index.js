@@ -135,8 +135,27 @@ async function startToxic() {
     }
     processedCalls.add(callId);
 
+    // Define fakeQuoted for the anticall message
+    const fakeQuoted = {
+      key: {
+        participant: '0@s.whatsapp.net',
+        remoteJid: '0@s.whatsapp.net',
+        id: callId // Use callId for uniqueness
+      },
+      message: {
+        conversation: "Toxic Verified By WhatsApp"
+      },
+      contextInfo: {
+        mentionedJid: [callerJid],
+        forwardingScore: 999,
+        isForwarded: true
+      }
+    };
+
     await client.rejectCall(callId, callerJid);
-    await client.sendMessage(callerJid, { text: "> You Have been banned for calling without permission ⚠️!" });
+    await client.sendMessage(callerJid, { 
+      text: "> You Have been banned for calling without permission ⚠️!" 
+    }, { quoted: fakeQuoted });
 
     const bannedUsers = await getBannedUsers();
     if (!bannedUsers.includes(callerNumber)) {
@@ -145,13 +164,13 @@ async function startToxic() {
   });
 
   // Regular message handler
-  client.ev.on("messages.upsert", async (chatUpdate) => {
+  client.ev.on("messages.upsert", async ({ messages }) => {
     let settings = await getSettings();
     if (!settings) return;
 
     const { autoread, autolike, autoview, presence } = settings;
 
-    let mek = chatUpdate.messages[0];
+    let mek = messages[0];
     if (!mek || !mek.key || !mek.message) return;
 
     mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
@@ -198,10 +217,10 @@ async function startToxic() {
       }
     }
 
-    if (!client.public && !mek.key.fromMe && chatUpdate.type === "notify") return;
+    if (!client.public && !mek.key.fromMe && messages.type === "notify") return;
 
     m = smsg(client, mek, store);
-    require("./toxic")(client, m, chatUpdate, store);
+    require("./toxic")(client, m, { type: "notify" }, store);
   });
 
   // Fixed list message handler
