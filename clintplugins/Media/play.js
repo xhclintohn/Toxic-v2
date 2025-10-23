@@ -19,7 +19,6 @@ module.exports = async (context) => {
     return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
   };
 
-  // Define fakeQuoted for non-text messages
   const fakeQuoted = {
     key: {
       participant: '0@s.whatsapp.net',
@@ -52,15 +51,14 @@ module.exports = async (context) => {
       return m.reply(formatStylishReply("No tunes found, bruh! 😕 Try another search!"));
     }
 
-    // Use the new API endpoint
-    const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytmp3?url=${encodeURIComponent(video.url)}`;
+    const apiUrl = `https://api.fikmydomainsz.xyz/download/ytmp3?url=${encodeURIComponent(video.url)}`;
 
     // Call the API
     const response = await axios.get(apiUrl);
     const apiData = response.data;
 
     // Check if the API call was successful
-    if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) {
+    if (!apiData.status || !apiData.result) {
       throw new Error("API failed to process the video");
     }
 
@@ -71,7 +69,7 @@ module.exports = async (context) => {
     // Download the audio file from the API's download URL
     const audioResponse = await axios({
       method: "get",
-      url: apiData.result.downloadUrl,
+      url: apiData.result,
       responseType: "stream",
       timeout: 600000,
     });
