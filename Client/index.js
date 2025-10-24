@@ -62,7 +62,7 @@ async function startToxic() {
   }
 
   const { autobio, mode, anticall } = settingss;
-  const { version } = await fetchLatestWaWebVersion(); // Changed to fetchLatestWaWebVersion
+  const { version } = await fetchLatestWaWebVersion();
 
   const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
@@ -97,7 +97,7 @@ async function startToxic() {
       return message;
     },
     version: version,
-    browser: ['Ubuntu', 'Chrome', '20.0.04'],
+    browser: Browsers.macOS('Safari', '20.0.04'), // Updated to match Pair.js with version preserved
     logger: pino({ level: 'silent' }),
     auth: {
       creds: state.creds,
