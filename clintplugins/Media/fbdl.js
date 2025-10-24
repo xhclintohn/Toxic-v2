@@ -26,7 +26,7 @@ module.exports = async (context) => {
     };
 
     if (!text) {
-        return m.reply(formatStylishReply("Yo, drop a Facebook link, fam! 📹 Ex: .facebookdl https://www.facebook.com/share/r/17HKv3oLoc/"));
+        return m.reply(formatStylishReply("Yo, drop a Facebook link, fam! 📹 Ex: .facebookdl https://www.facebook.com/reel/2892722884261200"));
     }
 
     if (!text.includes("facebook.com")) {
@@ -36,28 +36,32 @@ module.exports = async (context) => {
     try {
         const encodedUrl = encodeURIComponent(text);
         const response = await fetchWithRetry(
-            `https://api.privatezia.biz.id/api/downloader/alldownload?url=${encodedUrl}`,
+            `https://api.privatezia.biz.id/api/downloader/fbdownload?url=${encodedUrl}`,
             { headers: { Accept: "application/json" }, timeout: 15000 }
         );
 
         const data = await response.json();
 
-        if (!data || !data.status || !data.result || !data.result.video || !data.result.video.url) {
+        // Check if the API response is valid and contains the expected data
+        if (!data || !data.status || !data.data || !data.data.downloads || data.data.downloads.length === 0) {
             return m.reply(formatStylishReply("API’s actin’ shady, no video found! 😢 Try again later."));
         }
 
-        const fbvid = data.result.video.url;
-        const title = data.result.title || "No title available";
+        // Extract the best quality video URL
+        const fbvid = data.data.best_quality || data.data.downloads.find(d => d.quality === "720p (HD)")?.url;
+        const title = data.data.title || "No title available";
+        const thumbnail = data.data.thumbnail || null;
 
         if (!fbvid) {
-            return m.reply(formatStylishReply("Invalid Facebook data. Make sure the video exists, fam!"));
+            return m.reply(formatStylishReply("Invalid Facebook video data. Make sure the video exists, fam!"));
         }
 
+        // Send the video with a caption
         await client.sendMessage(
             m.chat,
             {
                 video: { url: fbvid },
-                caption: formatStylishReply(`🎥 Facebook Video\n\n📌 *Title:* ${title}`),
+                caption: formatStylishReply(`🎥 Facebook Video\n\n📌 *Title:* ${title}\n📸 *Thumbnail:* ${thumbnail || "Not available"}`),
                 gifPlayback: false,
             },
             { quoted: m }
