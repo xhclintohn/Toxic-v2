@@ -28,7 +28,7 @@ module.exports = async (context) => {
       return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ API’s useless, ${m.pushName}! No answer, try again, loser.\n◈━━━━━━━━━━━━━━━━◈`);
     }
 
-    await m.reply(`${data.response}\n\n> ρσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ | Created by ${data.creator}`);
+    await m.reply(`${data.response}\n\n> ρσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`);
   } catch (error) {
     await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, ${m.pushName}! API’s down, try later, you whiny prick.\n◈━━━━━━━━━━━━━━━━◈`);
   }
