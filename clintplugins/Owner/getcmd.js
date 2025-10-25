@@ -8,13 +8,13 @@ module.exports = async (context) => {
         const allowedNumber = '254735342808@s.whatsapp.net';
         if (m.sender !== allowedNumber) {
             return await client.sendMessage(m.chat, {
-                text: `❌ *Access denied!* This command is restricted to the bot owner.\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3*`
+                text: `❌ *Access denied!* This command is restricted to the bot owner.\n\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
         }
 
         if (!text) {
             return await client.sendMessage(m.chat, {
-                text: `📜 *Please provide a command name!* Example: *${prefix}getcmd ping*\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐖𝐈𝐂-𝐌𝐃 𝐕3*`
+                text: `📜 *Please provide a command name!* Example: *${prefix}getcmd or ${prefix}cmd ping*\n\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
         }
 
@@ -26,6 +26,10 @@ module.exports = async (context) => {
             { name: 'Wa-Privacy' },
             { name: 'Groups' },
             { name: 'AI' },
+            { name: '+18' },
+            { name: 'Logo' },
+            { name: 'Search' },
+            { name: 'Coding' },
             { name: 'Media' },
             { name: 'Editing' },
             { name: 'Utils' }
@@ -39,14 +43,14 @@ module.exports = async (context) => {
 
             try {
                 const data = await fs.readFile(filePath, 'utf8');
-                const replyText = `✅ *Command Source: ${commandName}.js*\n\n\`\`\`javascript\n${data}\n\`\`\`\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3*`;
+                const replyText = `✅ *Command file: ${commandName}.js*\n\n\`\`\`javascript\n${data}\n\`\`\`\n\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
                 await client.sendMessage(m.chat, { text: replyText }, { quoted: m });
                 fileFound = true;
                 break;
             } catch (err) {
                 if (err.code !== 'ENOENT') {
                     await client.sendMessage(m.chat, {
-                        text: `⚠️ *Error reading command file:* ${err.message}\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3*`
+                        text: `⚠️ *Error reading command file:* ${err.message}\n\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`
                     }, { quoted: m });
                     return;
                 }
@@ -55,7 +59,7 @@ module.exports = async (context) => {
 
         if (!fileFound) {
             await client.sendMessage(m.chat, {
-                text: `❌ *Command not found:* ${commandName}\n\nTry a valid command name!\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3*`
+                text: `❌ *Command not found:* ${commandName}\n\nTry a valid command name!\n\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
         }
     } catch (error) {
