@@ -12,7 +12,7 @@ module.exports = async (context) => {
     }
 
     const encodedText = encodeURIComponent(cleanedText);
-    const data = await fetchJson(`https://api.giftedtech.web.id/api/ephoto360/advancedglow?apikey=gifted&text=${encodedText}`);
+    const data = await fetchJson(`https://api.giftedtech.co.ke/api/ephoto360/advancedglow?apikey=gifted&text=${encodedText}`);
 
     if (data && data.success && data.result && data.result.image_url) {
       const caption = `◈━━━━━━━━━━━━━━━━◈\n│❒ Here’s your damn *Advanced Glow* logo, ${m.pushName}! Don’t waste my time again, you prick! 😤\n` +
