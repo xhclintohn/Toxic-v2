@@ -1,6 +1,5 @@
 const {
   default: toxicConnect,
-  makeWASocket,
   useMultiFileAuthState,
   DisconnectReason,
   fetchLatestWaWebVersion,
@@ -66,7 +65,6 @@ async function startToxic() {
 
   const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
-  // Initialize the client
   const client = toxicConnect({
     printQRInTerminal: false, 
     syncFullHistory: true,
@@ -97,7 +95,7 @@ async function startToxic() {
       return message;
     },
     version: version,
-    browser: Browsers.macOS('Safari', '20.0.04'), // Updated to match Pair.js with version preserved
+    browser: ['Ubuntu', 'Chrome', '20.0.04'],
     logger: pino({ level: 'silent' }),
     auth: {
       creds: state.creds,
@@ -135,12 +133,11 @@ async function startToxic() {
     }
     processedCalls.add(callId);
 
-    // Define fakeQuoted for the anticall message
     const fakeQuoted = {
       key: {
         participant: '0@s.whatsapp.net',
         remoteJid: '0@s.whatsapp.net',
-        id: callId // Use callId for uniqueness
+        id: callId
       },
       message: {
         conversation: "Toxic Verified By WhatsApp"
@@ -163,7 +160,6 @@ async function startToxic() {
     }
   });
 
-  // Regular message handler
   client.ev.on("messages.upsert", async ({ messages }) => {
     let settings = await getSettings();
     if (!settings) return;
@@ -223,7 +219,6 @@ async function startToxic() {
     require("./toxic")(client, m, { type: "notify" }, store);
   });
 
-  // Fixed list message handler
   client.ev.on("messages.upsert", async ({ messages }) => {
     const msg = messages[0];
     if (!msg.message) return;
@@ -304,51 +299,29 @@ async function startToxic() {
     groupEvents2(client, m);
   });
 
-  // Enhanced connection handler with reconnection logic
   let reconnectAttempts = 0;
   const maxReconnectAttempts = 5;
-  const baseReconnectDelay = 5000; // 5 seconds
+  const baseReconnectDelay = 5000;
 
   client.ev.on("connection.update", async (update) => {
-    const { connection, lastDisconnect, qr } = update;
+    const { connection, lastDisconnect } = update;
     const reason = lastDisconnect?.error ? new Boom(lastDisconnect.error).output.statusCode : null;
 
-    console.log(`🔄 Connection update: ${connection}${reason ? `, Reason: ${reason}` : ''}`);
-
     if (connection === "open") {
-      console.log("✅ Connected to WhatsApp successfully!");
-      reconnectAttempts = 0; // Reset attempts on successful connection
+      reconnectAttempts = 0;
     }
 
     if (connection === "close") {
-      console.log(`❌ Disconnected: ${reason || "Unknown reason"}`);
-
       if (reason === DisconnectReason.loggedOut || reason === 401) {
-        console.error("🚨 Session logged out or invalid. Deleting session and restarting...");
-        await fs.rmSync(sessionName, { recursive: true, force: true }); // Clear session
-        return startToxic(); // Restart to re-authenticate
+        await fs.rmSync(sessionName, { recursive: true, force: true });
+        return startToxic();
       }
 
       if (reconnectAttempts < maxReconnectAttempts) {
-        const delay = baseReconnectDelay * Math.pow(2, reconnectAttempts); // Exponential backoff
-        console.log(`🔄 Attempting to reconnect (${reconnectAttempts + 1}/${maxReconnectAttempts}) in ${delay / 1000} seconds...`);
+        const delay = baseReconnectDelay * Math.pow(2, reconnectAttempts);
         reconnectAttempts++;
         setTimeout(() => startToxic(), delay);
-      } else {
-        console.error("❌ Max reconnection attempts reached. Please check your network or session.");
       }
-    }
-
-    if (qr) {
-      console.log("📱 New QR code generated. Please access it via the web interface to authenticate.");
-      // Send QR code to the Express server route
-      app.get('/qr', (req, res) => {
-        if (qr) {
-          res.send(`<h1>Scan this QR code to authenticate Toxic-MD:</h1><pre>${qr}</pre>`);
-        } else {
-          res.send('No QR code available. Bot may already be connected.');
-        }
-      });
     }
 
     await connectionHandler(client, update, startToxic);
