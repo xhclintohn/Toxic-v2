@@ -22,9 +22,13 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, {
             interactiveMessage: {
-                header: "Media Uploaded",
-                title: `Media Link: ${link}`,
-                footer: "Powered by Toxic-MD",
+                header: "Media Uploaded Successfully ✅",
+                title: `Media Link: 
+
+${link}
+
+`,
+                footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
                 buttons: [
                     {
                         name: "cta_copy",
