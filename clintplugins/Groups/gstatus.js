@@ -3,7 +3,7 @@ const { getSettings } = require('../../Database/config');
 module.exports = {
   name: 'gstatus',
   aliases: ['groupstatus', 'gs'],
-  description: 'Posts a status message with text, image, video, or audio like a boss 😎',
+  description: 'Posts an image status for the group like a boss 😎',
   run: async (context) => {
     const { client, m, prefix, isBotAdmin, IsGroup, botname } = context;
 
@@ -77,61 +77,37 @@ module.exports = {
       const mime = (quoted.msg || quoted).mimetype || '';
       const caption = m.body.replace(new RegExp(`^${prefix}(gstatus|groupstatus|gs)\\s*`, 'i'), '').trim();
 
-      // Validate input
-      if (!mime && !caption) {
-        console.log(`Toxic-MD: No media or text provided for gstatus by ${m.sender}`);
+      // Validate input (image only)
+      if (!/image/.test(mime)) {
+        console.log(`Toxic-MD: No image provided for gstatus by ${m.sender}`);
         return client.sendText(m.chat, 
-          `◈━━━━━━━━━━━━━━━━◈\n│❒ Brain-dead moron, @${m.sender.split('@')[0]}! 😡 Reply to an image, video, or audio, or add some text! Try ${prefix}gstatus Yo, check this out!, idiot! 🖕\n┗━━━━━━━━━━━━━━━┛`,
+          `◈━━━━━━━━━━━━━━━━◈\n│❒ Brain-dead moron, @${m.sender.split('@')[0]}! 😡 Reply to an image! Try ${prefix}gstatus (reply to image) Yo, check this out!, idiot! 🖕\n┗━━━━━━━━━━━━━━━┛`,
           m,
           { mentions: [m.sender] }
         );
       }
 
-      // Handle different media types or text
-      if (/image/.test(mime)) {
-        const buffer = await client.downloadMediaMessage(quoted);
+      // Download the image and post as group story
+      const buffer = await client.downloadMediaMessage(quoted);
+      try {
+        await client.sendGroupStory(m.chat, {
+          image: buffer,
+          caption: caption || `Posted by *${toFancyFont(botname)}*`
+        });
+      } catch (storyError) {
+        console.error(`Toxic-MD: sendGroupStory failed: ${storyError.stack}`);
+        // Fallback to status@broadcast if sendGroupStory is unavailable
         await client.sendMessage('status@broadcast', {
           image: buffer,
           caption: caption || `Posted by *${toFancyFont(botname)}*`
         });
-        await client.sendText(m.chat, 
-          `◈━━━━━━━━━━━━━━━━◈\n│❒ Image status posted, @${m.sender.split('@')[0]}! 😈 *${toFancyFont(botname)}* just owned the story! 🎗️\n┗━━━━━━━━━━━━━━━┛`,
-          m,
-          { mentions: [m.sender] }
-        );
-      } else if (/video/.test(mime)) {
-        const buffer = await client.downloadMediaMessage(quoted);
-        await client.sendMessage('status@broadcast', {
-          video: buffer,
-          caption: caption || `Posted by *${toFancyFont(botname)}*`
-        });
-        await client.sendText(m.chat, 
-          `◈━━━━━━━━━━━━━━━━◈\n│❒ Video status posted, @${m.sender.split('@')[0]}! 😈 *${toFancyFont(botname)}* just dropped some heat! 🎗️\n┗━━━━━━━━━━━━━━━┛`,
-          m,
-          { mentions: [m.sender] }
-        );
-      } else if (/audio/.test(mime)) {
-        const buffer = await client.downloadMediaMessage(quoted);
-        await client.sendMessage('status@broadcast', {
-          audio: buffer,
-          mimetype: 'audio/mp4',
-          ptt: false
-        });
-        await client.sendText(m.chat, 
-          `◈━━━━━━━━━━━━━━━━◈\n│❒ Audio status posted, @${m.sender.split('@')[0]}! 😈 *${toFancyFont(botname)}* just blasted the group! 🎗️\n┗━━━━━━━━━━━━━━━┛`,
-          m,
-          { mentions: [m.sender] }
-        );
-      } else if (caption) {
-        await client.sendMessage('status@broadcast', {
-          text: caption
-        });
-        await client.sendText(m.chat, 
-          `◈━━━━━━━━━━━━━━━━◈\n│❒ Text status posted, @${m.sender.split('@')[0]}! 😈 *${toFancyFont(botname)}* just told everyone what’s up! 🎗️\n┗━━━━━━━━━━━━━━━┛`,
-          m,
-          { mentions: [m.sender] }
-        );
       }
+
+      await client.sendText(m.chat, 
+        `◈━━━━━━━━━━━━━━━━◈\n│❒ Image status posted, @${m.sender.split('@')[0]}! 😈 *${toFancyFont(botname)}* just owned the group story! 🎗️\n┗━━━━━━━━━━━━━━━┛`,
+        m,
+        { mentions: [m.sender] }
+      );
 
     } catch (error) {
       console.error(`Toxic-MD: Gstatus command error: ${error.stack}`);
