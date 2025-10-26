@@ -17,6 +17,14 @@ module.exports = {
         );
       }
 
+      // Validate sender JID
+      if (!m.sender || typeof m.sender !== 'string' || !m.sender.includes('@s.whatsapp.net')) {
+        console.error(`Toxic-MD: Invalid sender JID: ${JSON.stringify(m.sender)}`);
+        return m.reply(
+          `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, @${m.sender ? m.sender.split('@')[0] : 'unknown'}, your ID’s fucked! 😤 Can’t process this crap. Fix it! 💀\n┗━━━━━━━━━━━━━━━┛`
+        );
+      }
+
       // Validate if the command is used in a group
       if (!IsGroup) {
         console.log(`Toxic-MD: Gstatus command attempted in non-group chat by ${m.sender}`);
@@ -85,7 +93,18 @@ module.exports = {
         );
       }
 
-      const statusJidList = groupMetadata.participants.map(p => p.id);
+      // Ensure statusJidList contains valid string JIDs
+      const statusJidList = groupMetadata.participants
+        .map(p => client.decodeJid(p.id))
+        .filter(jid => typeof jid === 'string' && jid.includes('@s.whatsapp.net'));
+
+      if (!statusJidList.length) {
+        console.error(`Toxic-MD: No valid JIDs found in group ${m.chat}`);
+        return m.reply(
+          `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, @${m.sender.split('@')[0]}! 😤 No valid group members found. This group’s fucked! 💀\n┗━━━━━━━━━━━━━━━┛`,
+          { mentions: [m.sender] }
+        );
+      }
 
       // Handle different media types or text
       if (/image/.test(mime)) {
