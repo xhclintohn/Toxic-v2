@@ -1,121 +1,86 @@
-const fs = require("fs");
-const path = require("path");
+const { getSettings } = require('../../Database/config');
 
-module.exports = async (context) => {
-    const { client, m, text, isBotAdmin } = context;
-
-    const formatStylishReply = (message) => {
-        return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
-    };
-
-    // Check if chat is a group
-    if (!m.isGroup) {
-        return client.sendMessage(
-            m.chat,
-            { text: formatStylishReply("Solo chat? Get lost, moron! This is for GROUPS only! 😡") },
-            { quoted: m }
-        );
-    }
-
-    // Check if bot is group admin
-    if (!isBotAdmin) {
-        return client.sendMessage(
-            m.chat,
-            { text: formatStylishReply("I’m not your lackey! Make me a GROUP ADMIN to post stories, you pathetic fool! 😈") },
-            { quoted: m }
-        );
-    }
-
-    // Optional caption or text status
-    const caption = text ? text.trim() : null;
+module.exports = {
+  name: 'gstatus',
+  aliases: ['groupstatus', 'gs'],
+  description: 'Posts a group status message with text, image, video, or audio like a boss 😎',
+  run: async (context) => {
+    const { client, m, prefix, isBotAdmin, IsGroup } = context;
 
     try {
-        let mediaBuffer;
-        let contentType = null;
-        let mimeType = null;
+      // Validate if the command is used in a group
+      if (!IsGroup) {
+        return m.reply(`◎━━━━━━━━━━━━━━━━◎\n│❒ Yo, @${m.sender.split('@')[0]}! This command only works in groups, dumbass.\nCheck https://github.com/xhclintohn/Toxic-MD\n◎━━━━━━━━━━━━━━━━◎`, { mentions: [m.sender] });
+      }
 
-        // Check for quoted message
-        const quoted = m.quoted || m;
-        const mime = (quoted.msg || quoted).mimetype || "";
+      // Validate if the bot is an admin
+      if (!isBotAdmin) {
+        return m.reply(`◎━━━━━━━━━━━━━━━━◎\n│❒ I'm not an admin, @${m.sender.split('@')[0]}! Tell the group to promote me, you slacker.\nCheck https://github.com/xhclintohn/Toxic-MD\n◎━━━━━━━━━━━━━━━━◎`, { mentions: [m.sender] });
+      }
 
-        // Handle nested messages (ephemeral, view-once)
-        let quotedMessage = quoted;
-        if (quoted.mtype === "ephemeralMessage" || quoted.mtype === "viewOnceMessage") {
-            quotedMessage = quoted.message[Object.keys(quoted.message)[0]];
-        }
+      // Retrieve settings to get the current prefix
+      const settings = await getSettings();
+      if (!settings) {
+        return m.reply(`◎━━━━━━━━━━━━━━━━◎\n│❒ Error: Couldn't load settings, you dumb fuck.\nCheck https://github.com/xhclintohn/Toxic-MD\n◎━━━━━━━━━━━━━━━━◎`);
+      }
 
-        // Check media type or text
-        if (/image/.test(mime) || quotedMessage.mtype === "imageMessage") {
-            mediaBuffer = await client.downloadMediaMessage(quoted);
-            contentType = "image";
-            mimeType = "image/jpeg";
-        } else if (/video/.test(mime) || quotedMessage.mtype === "videoMessage") {
-            mediaBuffer = await client.downloadMediaMessage(quoted);
-            contentType = "video";
-            mimeType = "video/mp4";
-        } else if (/audio/.test(mime) || quotedMessage.mtype === "audioMessage") {
-            mediaBuffer = await client.downloadMediaMessage(quoted);
-            contentType = "audio";
-            mimeType = "audio/mpeg";
-        } else if (caption && !m.quoted) {
-            // Text-only status
-            await client.sendGroupStory(m.chat, { text: caption });
-            return client.sendMessage(
-                m.chat,
-                { text: formatStylishReply(`Smashed that text status into the group! It’s live for 24h, don’t cry when it’s gone! 🔥📱\nText: ${caption}`) },
-                { quoted: m }
-            );
-        } else {
-            return client.sendMessage(
-                m.chat,
-                { text: formatStylishReply("No media? You brain-dead twit! REPLY to an image, video, or audio, or send text, you useless dimwit! 😤 Ex: .gstatus [text] or reply + .gstatus") },
-                { quoted: m }
-            );
-        }
-
-        if (mediaBuffer && mediaBuffer.length === 0) {
-            return client.sendMessage(
-                m.chat,
-                { text: formatStylishReply("Media’s busted, you idiot! Send something that actually works! 😩") },
-                { quoted: m }
-            );
-        }
-
-        // Validate media size
-        const maxSize = contentType === "video" ? 16 * 1024 * 1024 : contentType === "image" ? 5 * 1024 * 1024 : 10 * 1024 * 1024; // Audio ~10MB
-        if (mediaBuffer && mediaBuffer.length > maxSize) {
-            return client.sendMessage(
-                m.chat,
-                { text: formatStylishReply(`You tryna crash me with this massive junk? Max size: ${contentType === "video" ? "16MB" : contentType === "image" ? "5MB" : "10MB"}, you clueless moron! 📉`) },
-                { quoted: m }
-            );
-        }
-
-        // Send as Group Story
-        const storyOptions = {
-            [contentType]: mediaBuffer,
-            caption: caption,
-            mimetype: mimeType
+      // Fancy font function
+      const toFancyFont = (text, isUpperCase = false) => {
+        const fonts = {
+          'A': '𝘼', 'B': '𝘽', 'C': '𝘾', 'D': '𝘿', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
+          'N': '𝙉', 'O': '𝙊', 'P': '𝙋', 'Q': '𝙌', 'R': '𝙍', 'S': '𝙎', 'T': '𝙏', 'U': '𝙐', 'V': '𝙑', 'W': '𝙒', 'X': '𝙓', 'Y': '𝙔', 'Z': '𝙕',
+          'a': '𝙖', 'b': '𝙗', 'c': '𝙘', 'd': '𝙙', 'e': '𝙚', 'f': '𝙛', 'g': '𝙜', 'h': '𝙝', 'i': '𝙞', 'j': '𝙟', 'k': '𝙠', 'l': '𝙡', 'm': '𝙢',
+          'n': '𝙣', 'o': '𝙤', 'p': '𝙥', 'q': '𝙦', 'r': '𝙧', 's': '𝙨', 't': '𝙩', 'u': '𝙪', 'v': '𝙫', 'w': '𝙬', 'x': '𝙭', 'y': '𝙮', 'z': '𝙯'
         };
+        return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
+          .split('')
+          .map(char => fonts[char] || char)
+          .join('');
+      };
 
-        await client.sendGroupStory(m.chat, storyOptions);
+      // Get the quoted message or the current message
+      const quoted = m.quoted ? m.quoted : m;
+      const mime = (quoted.msg || quoted).mimetype || '';
+      const caption = m.body.replace(new RegExp(`^${prefix}(gstatus|groupstatus|gs)\\s*`, 'i'), '').trim();
 
-        // Success
-        const mediaType = contentType.charAt(0).toUpperCase() + contentType.slice(1);
-        await client.sendMessage(
-            m.chat,
-            { text: formatStylishReply(`Crushed it! That ${mediaType} is now group status! Gone in 24h, so don’t whine, weakling! 🔥📱\nCaption: ${caption || "None"}`) },
-            { quoted: m }
-        );
-
-        // React with ✅
-        await m.react("✅");
+      // Handle different media types or text
+      if (/image/.test(mime)) {
+        const buffer = await client.downloadMediaMessage(quoted);
+        await client.sendMessage('status@broadcast', {
+          image: buffer,
+          caption: caption || ''
+        }, { statusJidList: [m.chat] });
+        await m.react('✅');
+      } else if (/video/.test(mime)) {
+        const buffer = await client.downloadMediaMessage(quoted);
+        await client.sendMessage('status@broadcast', {
+          video: buffer,
+          caption: caption || ''
+        }, { statusJidList: [m.chat] });
+        await m.react('✅');
+      } else if (/audio/.test(mime)) {
+        const buffer = await client.downloadMediaMessage(quoted);
+        await client.sendMessage('status@broadcast', {
+          audio: buffer,
+          mimetype: 'audio/mp4',
+          ptt: false
+        }, { statusJidList: [m.chat] });
+        await m.react('✅');
+      } else if (caption) {
+        await client.sendMessage('status@broadcast', {
+          text: caption
+        }, { statusJidList: [m.chat] });
+        await m.react('✅');
+      } else {
+        await m.reply(`◎━━━━━━━━━━━━━━━━◎\n│❒ Yo, @${m.sender.split('@')[0]}! Reply to an image, video, or audio, or add some text, you lazy fuck.\n│❒ Example: ${prefix}gstatus (reply to media) Yo, check this out!\nCheck https://github.com/xhclintohn/Toxic-MD\n◎━━━━━━━━━━━━━━━━◎`, { mentions: [m.sender] });
+      }
 
     } catch (error) {
-        await client.sendMessage(
-            m.chat,
-            { text: formatStylishReply(`You broke it, you absolute dunce! Error: ${error.message}. Fix your media or make me admin! 😎`) },
-            { quoted: m }
-        );
+      console.error(`Gstatus command fucked up: ${error.stack}`);
+      await client.sendMessage(m.chat, {
+        text: `◎━━━━━━━━━━━━━━━━◎\n│❒ Gstatus is fucked, @${m.sender.split('@')[0]}! Try again, you slacker.\nCheck https://github.com/xhclintohn/Toxic-MD\n◎━━━━━━━━━━━━━━━━◎`,
+        mentions: [m.sender]
+      }, { quoted: m });
     }
+  }
 };
