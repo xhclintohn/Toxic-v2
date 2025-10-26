@@ -50,6 +50,7 @@ const aliases = {
     unmute: "open",
     opengroup: "open",
     latency: "ping",
+    groupstatus: "gstatus",
     runtime: "uptime",
     admin: "oadmin",
     groups: "botgc",
