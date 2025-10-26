@@ -1,11 +1,16 @@
 const fs = require("fs");
 const path = require("path");
+const yts = require("yt-search");
 const axios = require("axios");
 
 const tempDir = path.join(__dirname, "temp");
 if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir);
 }
+
+const isValidYouTubeUrl = (url) => {
+  return /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|shorts\/|embed\/)?[A-Za-z0-9_-]{11}(\?.*)?$/.test(url);
+};
 
 module.exports = async (context) => {
   const { client, m, text } = context;
@@ -14,51 +19,54 @@ module.exports = async (context) => {
     return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
   };
 
-  const fakeQuoted = {
-    key: {
-      participant: '0@s.whatsapp.net',
-      remoteJid: '0@s.whatsapp.net',
-      id: m.id
-    },
-    message: {
-      conversation: "Toxic Verified By WhatsApp"
-    },
-    contextInfo: {
-      mentionedJid: [m.sender],
-      forwardingScore: 999,
-      isForwarded: true
-    }
-  };
-
   if (!text) {
-    return m.reply(formatStylishReply("Yo, drop a song name, fam! 🎵 Ex: .play Alone"));
+    return client.sendMessage(
+      m.chat,
+      { text: formatStylishReply("Yo, drop a song name, fam! 🎵 Ex: .play Not Like Us") },
+      { quoted: m, ad: true }
+    );
   }
 
   if (text.length > 100) {
-    return m.reply(formatStylishReply("Keep it short, homie! Song name max 100 chars. 📝"));
+    return client.sendMessage(
+      m.chat,
+      { text: formatStylishReply("Keep it short, homie! Song name max 100 chars. 📝") },
+      { quoted: m, ad: true }
+    );
   }
 
   try {
-    const apiUrl = `https://www.joocode.zone.id/api/music?query=${encodeURIComponent(text)}`;
+    const searchQuery = `${text} official`;
+    const searchResult = await yts(searchQuery);
+    const video = searchResult.videos[0];
+    if (!video) {
+      return client.sendMessage(
+        m.chat,
+        { text: formatStylishReply("No tunes found, bruh! 😕 Try another search!") },
+        { quoted: m, ad: true }
+      );
+    }
 
-    // Call the Joocode API
+   
+    const apiUrl = `https://api.fikmydomainsz.xyz/download/ytmp3?url=${encodeURIComponent(video.url)}`;
+    
+    // Call the API
     const response = await axios.get(apiUrl);
     const apiData = response.data;
 
     // Check if the API call was successful
-    if (apiData.error || !apiData.raw || !apiData.raw.status || !apiData.raw.download) {
-      throw new Error(apiData.error || "API failed to fetch song data");
+    if (!apiData.status || !apiData.result) {
+      throw new Error("API failed to process the video");
     }
 
-    const songData = apiData.raw;
     const timestamp = Date.now();
     const fileName = `audio_${timestamp}.mp3`;
     const filePath = path.join(tempDir, fileName);
 
-    // Download the audio file from the API's download URL
+    // Download the audio file from the API's result URL
     const audioResponse = await axios({
       method: "get",
-      url: songData.download,
+      url: apiData.result,
       responseType: "stream",
       timeout: 600000,
     });
@@ -75,32 +83,40 @@ module.exports = async (context) => {
       throw new Error("Download failed or file is empty");
     }
 
-    await m.reply(formatStylishReply(`Droppin' *${songData.title}* by ${songData.artist} for ya, fam! Crank it up! 🔥🎧`));
+    await client.sendMessage(
+      m.chat,
+      { text: formatStylishReply(`Droppin' *${video.title}* for ya, fam! Crank it up! 🔥🎧`) },
+      { quoted: m, ad: true }
+    );
 
     await client.sendMessage(
       m.chat,
       {
         audio: { url: filePath },
         mimetype: "audio/mpeg",
-        fileName: `${songData.title.substring(0, 100)}.mp3`,
+        fileName: `${video.title.substring(0, 100)}.mp3`,
         contextInfo: {
           externalAdReply: {
-            title: songData.title,
-            body: `${songData.artist} | Powered by Toxic-MD`,
-            thumbnailUrl: songData.thumbnail || "https://via.placeholder.com/120x90",
-            sourceUrl: songData.spotify_url,
+            title: video.title,
+            body: `${video.author.name || "Unknown Artist"} | Powered by Toxic-MD`,
+            thumbnailUrl: video.thumbnail || "https://via.placeholder.com/120x90",
+            sourceUrl: video.url,
             mediaType: 1,
             renderLargerThumbnail: true,
           },
         },
       },
-      { quoted: fakeQuoted }
+      { quoted: m, ad: true }
     );
 
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
   } catch (error) {
-    await m.reply(formatStylishReply(`Yo, we hit a snag: ${error.message}. Pick another track! 😎`));
+    await client.sendMessage(
+      m.chat,
+      { text: formatStylishReply(`Yo, we hit a snag: ${error.message}. Pick another track! 😎`) },
+      { quoted: m, ad: true }
+    );
   }
 };
