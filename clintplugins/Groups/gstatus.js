@@ -87,21 +87,14 @@ module.exports = {
         );
       }
 
-      // Download the image and post as group story
+      // Download the image and post as group status
       const buffer = await client.downloadMediaMessage(quoted);
-      try {
-        await client.sendGroupStory(m.chat, {
+      await client.sendMessage(m.chat, {
+        groupStatusMessage: {
           image: buffer,
           caption: caption || `Posted by *${toFancyFont(botname)}*`
-        });
-      } catch (storyError) {
-        console.error(`Toxic-MD: sendGroupStory failed: ${storyError.stack}`);
-        // Fallback to status@broadcast if sendGroupStory is unavailable
-        await client.sendMessage('status@broadcast', {
-          image: buffer,
-          caption: caption || `Posted by *${toFancyFont(botname)}*`
-        });
-      }
+        }
+      });
 
       await client.sendText(m.chat, 
         `◈━━━━━━━━━━━━━━━━◈\n│❒ Image status posted, @${m.sender.split('@')[0]}! 😈 *${toFancyFont(botname)}* just owned the group story! 🎗️\n┗━━━━━━━━━━━━━━━┛`,
