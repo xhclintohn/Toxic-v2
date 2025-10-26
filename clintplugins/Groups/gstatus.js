@@ -12,7 +12,7 @@ module.exports = async (context) => {
     if (!m.isGroup) {
         return client.sendMessage(
             m.chat,
-            { text: formatStylishReply("This only works in groups, fam! Join one and try again. 📢") },
+            { text: formatStylishReply("What’s this solo crap? This command’s for GROUPS only, moron! Join one and stop wasting my time! 😡") },
             { quoted: m }
         );
     }
@@ -21,7 +21,7 @@ module.exports = async (context) => {
     if (!isBotAdmin) {
         return client.sendMessage(
             m.chat,
-            { text: formatStylishReply("Yo, I need to be a group admin to post stories! Promote me, fam. 😎") },
+            { text: formatStylishReply("Yo, you think I’m some peasant? I need ADMIN rights to post group stories, dumbass! Promote me NOW! 😈") },
             { quoted: m }
         );
     }
@@ -34,17 +34,34 @@ module.exports = async (context) => {
         let isVideo = false;
         let mimeType = "image/jpeg"; // Default
 
-        // If quoted message exists and has media (image/video)
-        if (m.quoted && (m.quoted.imageMessage || m.quoted.videoMessage)) {
-            // Download the quoted media using client.downloadMediaMessage
-            mediaBuffer = await client.downloadMediaMessage(m.quoted);
-            isVideo = !!m.quoted.videoMessage;
-            mimeType = isVideo ? "video/mp4" : "image/jpeg";
-        } else {
-            // Prompt for quoted media
+        // Debug: Log quoted message structure
+        console.log("gstatus.js: Quoted message structure:", JSON.stringify(m.quoted || {}, null, 2));
+
+        // Check for quoted message and media
+        if (!m.quoted) {
             return client.sendMessage(
                 m.chat,
-                { text: formatStylishReply("Reply to an image or video to set as group status, bruh! 📸 Ex: Reply to img + .gstatus [optional caption]") },
+                { text: formatStylishReply("No quoted message? Are you brain-dead? REPLY to an image or video, idiot! Ex: Reply + .gstatus [caption] 🖕") },
+                { quoted: m }
+            );
+        }
+
+        // Handle quoted media (image, video, or nested messages)
+        let quotedMessage = m.quoted;
+        // Check for nested messages (ephemeral, viewOnce, etc.)
+        if (quotedMessage.mtype === "ephemeralMessage" || quotedMessage.mtype === "viewOnceMessage") {
+            quotedMessage = quotedMessage.message[Object.keys(quotedMessage.message)[0]];
+        }
+
+        // Check media type
+        if (quotedMessage.mtype === "imageMessage" || quotedMessage.mtype === "videoMessage") {
+            mediaBuffer = await client.downloadMediaMessage(m.quoted);
+            isVideo = quotedMessage.mtype === "videoMessage";
+            mimeType = isVideo ? "video/mp4" : "image/jpeg";
+        } else {
+            return client.sendMessage(
+                m.chat,
+                { text: formatStylishReply(`What’s this garbage? You call THAT media? Reply to an actual IMAGE or VIDEO, you clueless twit! 😤 Ex: .gstatus [caption]`) },
                 { quoted: m }
             );
         }
@@ -52,7 +69,7 @@ module.exports = async (context) => {
         if (!mediaBuffer || mediaBuffer.length === 0) {
             return client.sendMessage(
                 m.chat,
-                { text: formatStylishReply("Couldn't grab that media, fam. Make sure it's an image/video. 😩") },
+                { text: formatStylishReply("Media’s borked or empty, you fool! Send a proper image or video that actually works! 😣") },
                 { quoted: m }
             );
         }
@@ -62,7 +79,7 @@ module.exports = async (context) => {
         if (mediaBuffer.length > maxSize) {
             return client.sendMessage(
                 m.chat,
-                { text: formatStylishReply(`Media too big, fam! Max size: ${isVideo ? "16MB" : "5MB"}. Try a smaller file. 📉`) },
+                { text: formatStylishReply(`You trying to crash me with this massive file? Max size: ${isVideo ? "16MB" : "5MB"}, you numbskull! Shrink it! 📉`) },
                 { quoted: m }
             );
         }
@@ -80,7 +97,7 @@ module.exports = async (context) => {
         const mediaType = isVideo ? "Video" : "Image";
         await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`Boom! Sent ${mediaType} as group status. It'll vanish in 24h. 🔥📱\nCaption: ${caption || "None"}`) },
+            { text: formatStylishReply(`Hell yeah! Slammed that ${mediaType} into the group status! It’s live for 24h, so don’t cry when it vanishes! 🔥📱\nCaption: ${caption || "None"}`) },
             { quoted: m }
         );
 
@@ -88,7 +105,7 @@ module.exports = async (context) => {
         console.error("Group Story send error:", error);
         await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`Hit a snag: ${error.message}. Check perms (bot needs admin) or update Baileys. 😎`) },
+            { text: formatStylishReply(`You broke something, genius! Error: ${error.message}. Check admin perms or update Baileys, you slacker! 😎`) },
             { quoted: m }
         );
     }
