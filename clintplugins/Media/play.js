@@ -1,16 +1,11 @@
 const fs = require("fs");
 const path = require("path");
-const yts = require("yt-search");
 const axios = require("axios");
 
 const tempDir = path.join(__dirname, "temp");
 if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir);
 }
-
-const isValidYouTubeUrl = (url) => {
-  return /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|shorts\/|embed\/)?[A-Za-z0-9_-]{11}(\?.*)?$/.test(url);
-};
 
 module.exports = async (context) => {
   const { client, m, text } = context;
@@ -36,7 +31,7 @@ module.exports = async (context) => {
   };
 
   if (!text) {
-    return m.reply(formatStylishReply("Yo, drop a song name, fam! 🎵 Ex: .play Not Like Us"));
+    return m.reply(formatStylishReply("Yo, drop a song name, fam! 🎵 Ex: .play Alone"));
   }
 
   if (text.length > 100) {
@@ -44,24 +39,18 @@ module.exports = async (context) => {
   }
 
   try {
-    const searchQuery = `${text} official`;
-    const searchResult = await yts(searchQuery);
-    const video = searchResult.videos[0];
-    if (!video) {
-      return m.reply(formatStylishReply("No tunes found, bruh! 😕 Try another search!"));
-    }
+    const apiUrl = `https://www.joocode.zone.id/api/music?query=${encodeURIComponent(text)}`;
 
-    const apiUrl = `https://savant-api.vercel.app/download/play?query=${encodeURIComponent(text)}`;
-
-    // Call the API
+    // Call the Joocode API
     const response = await axios.get(apiUrl);
     const apiData = response.data;
 
     // Check if the API call was successful
-    if (!apiData.status || !apiData.result || !apiData.result.download) {
-      throw new Error("API failed to process the video");
+    if (apiData.error || !apiData.raw || !apiData.raw.status || !apiData.raw.download) {
+      throw new Error(apiData.error || "API failed to fetch song data");
     }
 
+    const songData = apiData.raw;
     const timestamp = Date.now();
     const fileName = `audio_${timestamp}.mp3`;
     const filePath = path.join(tempDir, fileName);
@@ -69,7 +58,7 @@ module.exports = async (context) => {
     // Download the audio file from the API's download URL
     const audioResponse = await axios({
       method: "get",
-      url: apiData.result.download,
+      url: songData.download,
       responseType: "stream",
       timeout: 600000,
     });
@@ -86,20 +75,20 @@ module.exports = async (context) => {
       throw new Error("Download failed or file is empty");
     }
 
-    await m.reply(formatStylishReply(`Droppin' *${apiData.result.title || video.title}* for ya, fam! Crank it up! 🔥🎧`));
+    await m.reply(formatStylishReply(`Droppin' *${songData.title}* by ${songData.artist} for ya, fam! Crank it up! 🔥🎧`));
 
     await client.sendMessage(
       m.chat,
       {
         audio: { url: filePath },
         mimetype: "audio/mpeg",
-        fileName: `${(apiData.result.title || video.title).substring(0, 100)}.mp3`,
+        fileName: `${songData.title.substring(0, 100)}.mp3`,
         contextInfo: {
           externalAdReply: {
-            title: apiData.result.title || video.title,
-            body: `${apiData.result.author || video.author.name || "Unknown Artist"} | Powered by Toxic-MD`,
-            thumbnailUrl: apiData.result.thumbnail || video.thumbnail || "https://via.placeholder.com/120x90",
-            sourceUrl: apiData.result.url || video.url,
+            title: songData.title,
+            body: `${songData.artist} | Powered by Toxic-MD`,
+            thumbnailUrl: songData.thumbnail || "https://via.placeholder.com/120x90",
+            sourceUrl: songData.spotify_url,
             mediaType: 1,
             renderLargerThumbnail: true,
           },
