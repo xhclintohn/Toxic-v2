@@ -3,7 +3,7 @@ const { getSettings } = require('../../Database/config');
 module.exports = {
   name: 'gstatus',
   aliases: ['groupstatus', 'gs'],
-  description: 'Posts a group status message with text, image, video, or audio like a boss 😎',
+  description: 'Posts a status message with text, image, video, or audio like a boss 😎',
   run: async (context) => {
     const { client, m, prefix, isBotAdmin, IsGroup, botname } = context;
 
@@ -11,8 +11,9 @@ module.exports = {
       // Validate botname
       if (!botname) {
         console.error('Toxic-MD: Botname not set in context');
-        return m.reply(
+        return client.sendText(m.chat, 
           `◈━━━━━━━━━━━━━━━━◈\n│❒ Bot’s fucked, @${m.sender.split('@')[0]}! 😤 No botname set. Yell at the dev, dipshit! 💀\n┗━━━━━━━━━━━━━━━┛`,
+          m,
           { mentions: [m.sender] }
         );
       }
@@ -20,16 +21,18 @@ module.exports = {
       // Validate sender JID
       if (!m.sender || typeof m.sender !== 'string' || !m.sender.includes('@s.whatsapp.net')) {
         console.error(`Toxic-MD: Invalid sender JID: ${JSON.stringify(m.sender)}`);
-        return m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, @${m.sender ? m.sender.split('@')[0] : 'unknown'}, your ID’s fucked! 😤 Can’t process this crap. Fix it! 💀\n┗━━━━━━━━━━━━━━━┛`
+        return client.sendText(m.chat, 
+          `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName || 'unknown'}, your ID’s fucked! 😤 Can’t process this crap. Fix it! 💀\n┗━━━━━━━━━━━━━━━┛`,
+          m
         );
       }
 
       // Validate if the command is used in a group
       if (!IsGroup) {
         console.log(`Toxic-MD: Gstatus command attempted in non-group chat by ${m.sender}`);
-        return m.reply(
+        return client.sendText(m.chat, 
           `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, @${m.sender.split('@')[0]}, you dumb fuck! 😈 This ain’t a group! Use ${prefix}gstatus in a group, moron! 🖕\n┗━━━━━━━━━━━━━━━┛`,
+          m,
           { mentions: [m.sender] }
         );
       }
@@ -37,8 +40,9 @@ module.exports = {
       // Validate if the bot is an admin
       if (!isBotAdmin) {
         console.log(`Toxic-MD: Bot is not admin in ${m.chat}`);
-        return m.reply(
+        return client.sendText(m.chat, 
           `◈━━━━━━━━━━━━━━━━◈\n│❒ OI, @${m.sender.split('@')[0]}! 😤 I ain’t admin, so I can’t post status! Make me admin or fuck off! 🚫\n┗━━━━━━━━━━━━━━━┛`,
+          m,
           { mentions: [m.sender] }
         );
       }
@@ -47,8 +51,9 @@ module.exports = {
       const settings = await getSettings();
       if (!settings) {
         console.error('Toxic-MD: Settings not found');
-        return m.reply(
+        return client.sendText(m.chat, 
           `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, @${m.sender.split('@')[0]}! 😤 Couldn’t load settings, you dumb fuck. Fix this crap! 💀\n┗━━━━━━━━━━━━━━━┛`,
+          m,
           { mentions: [m.sender] }
         );
       }
@@ -75,33 +80,9 @@ module.exports = {
       // Validate input
       if (!mime && !caption) {
         console.log(`Toxic-MD: No media or text provided for gstatus by ${m.sender}`);
-        return m.reply(
+        return client.sendText(m.chat, 
           `◈━━━━━━━━━━━━━━━━◈\n│❒ Brain-dead moron, @${m.sender.split('@')[0]}! 😡 Reply to an image, video, or audio, or add some text! Try ${prefix}gstatus Yo, check this out!, idiot! 🖕\n┗━━━━━━━━━━━━━━━┛`,
-          { mentions: [m.sender] }
-        );
-      }
-
-      // Get group participants for statusJidList
-      let groupMetadata;
-      try {
-        groupMetadata = await client.groupMetadata(m.chat);
-      } catch (e) {
-        console.error(`Toxic-MD: Error fetching group metadata: ${e.stack}`);
-        return m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, @${m.sender.split('@')[0]}! 😤 Couldn’t get group data: ${e.message}. Fix this crap! 💀\n┗━━━━━━━━━━━━━━━┛`,
-          { mentions: [m.sender] }
-        );
-      }
-
-      // Ensure statusJidList contains valid string JIDs
-      const statusJidList = groupMetadata.participants
-        .map(p => client.decodeJid(p.id))
-        .filter(jid => typeof jid === 'string' && jid.includes('@s.whatsapp.net'));
-
-      if (!statusJidList.length) {
-        console.error(`Toxic-MD: No valid JIDs found in group ${m.chat}`);
-        return m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, @${m.sender.split('@')[0]}! 😤 No valid group members found. This group’s fucked! 💀\n┗━━━━━━━━━━━━━━━┛`,
+          m,
           { mentions: [m.sender] }
         );
       }
@@ -112,9 +93,10 @@ module.exports = {
         await client.sendMessage('status@broadcast', {
           image: buffer,
           caption: caption || `Posted by *${toFancyFont(botname)}*`
-        }, { statusJidList });
-        await m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n│❒ Image status posted, @${m.sender.split('@')[0]}! 😈 *${toFancyFont(botname)}* just owned the group story! 🎗️\n┗━━━━━━━━━━━━━━━┛`,
+        });
+        await client.sendText(m.chat, 
+          `◈━━━━━━━━━━━━━━━━◈\n│❒ Image status posted, @${m.sender.split('@')[0]}! 😈 *${toFancyFont(botname)}* just owned the story! 🎗️\n┗━━━━━━━━━━━━━━━┛`,
+          m,
           { mentions: [m.sender] }
         );
       } else if (/video/.test(mime)) {
@@ -122,9 +104,10 @@ module.exports = {
         await client.sendMessage('status@broadcast', {
           video: buffer,
           caption: caption || `Posted by *${toFancyFont(botname)}*`
-        }, { statusJidList });
-        await m.reply(
+        });
+        await client.sendText(m.chat, 
           `◈━━━━━━━━━━━━━━━━◈\n│❒ Video status posted, @${m.sender.split('@')[0]}! 😈 *${toFancyFont(botname)}* just dropped some heat! 🎗️\n┗━━━━━━━━━━━━━━━┛`,
+          m,
           { mentions: [m.sender] }
         );
       } else if (/audio/.test(mime)) {
@@ -133,25 +116,28 @@ module.exports = {
           audio: buffer,
           mimetype: 'audio/mp4',
           ptt: false
-        }, { statusJidList });
-        await m.reply(
+        });
+        await client.sendText(m.chat, 
           `◈━━━━━━━━━━━━━━━━◈\n│❒ Audio status posted, @${m.sender.split('@')[0]}! 😈 *${toFancyFont(botname)}* just blasted the group! 🎗️\n┗━━━━━━━━━━━━━━━┛`,
+          m,
           { mentions: [m.sender] }
         );
       } else if (caption) {
         await client.sendMessage('status@broadcast', {
           text: caption
-        }, { statusJidList });
-        await m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n│❒ Text status posted, @${m.sender.split('@')[0]}! 😈 *${toFancyFont(botname)}* just told the group what’s up! 🎗️\n┗━━━━━━━━━━━━━━━┛`,
+        });
+        await client.sendText(m.chat, 
+          `◈━━━━━━━━━━━━━━━━◈\n│❒ Text status posted, @${m.sender.split('@')[0]}! 😈 *${toFancyFont(botname)}* just told everyone what’s up! 🎗️\n┗━━━━━━━━━━━━━━━┛`,
+          m,
           { mentions: [m.sender] }
         );
       }
 
     } catch (error) {
       console.error(`Toxic-MD: Gstatus command error: ${error.stack}`);
-      await m.reply(
+      await client.sendText(m.chat, 
         `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, @${m.sender.split('@')[0]}! 😤 Couldn’t post status: ${error.message}. Try later, incompetent fuck! 💀\n┗━━━━━━━━━━━━━━━┛`,
+        m,
         { mentions: [m.sender] }
       );
     }
