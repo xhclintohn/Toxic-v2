@@ -1,5 +1,3 @@
-const { getSettings } = require('./Database/config');
-
 /**
  * Fetches and displays Toxic-MD repository information from GitHub.
  * @module repo
