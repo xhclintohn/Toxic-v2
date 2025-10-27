@@ -37,9 +37,13 @@ async function uploadImage(buffer) {
 module.exports = async (context) => {
     const { client, mime, m } = context;
 
+    // Check if the input is an image
     if (!/image/.test(mime)) {
-        return m.reply("Please send or reply to an image.");
+        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Please send or reply to an image.\n◈━━━━━━━━━━━━━━━━◈`);
     }
+
+    // Send processing message
+    await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Enhancing your image. Wait! 🗿\n◈━━━━━━━━━━━━━━━━◈`);
 
     try {
         // Step 1: Download the image buffer
@@ -47,7 +51,7 @@ module.exports = async (context) => {
 
         // Step 2: Check file size (limit to 10MB)
         if (media.length > 10 * 1024 * 1024) {
-            return m.reply('Media is too large. Maximum size is 10MB.');
+            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Media is too large. Maximum size is 10MB.\n◈━━━━━━━━━━━━━━━━◈`);
         }
 
         // Step 3: Upload image to get a public URL
@@ -72,11 +76,11 @@ module.exports = async (context) => {
         // Step 6: Send the enhanced image to the user
         await client.sendMessage(m.chat, {
             image: enhancedImage,
-            caption: 'Image has been enhanced to HD.',
+            caption: `◈━━━━━━━━━━━━━━━━◈\n❒ Image has been enhanced to HD.\n◈━━━━━━━━━━━━━━━━◈`,
         }, { quoted: m });
 
     } catch (err) {
-        console.error("Error:", err.response?.data || err.message);
-        m.reply(`An error occurred while processing the image: ${err.message}`);
+        // Send error message with styling
+        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ An error occurred while processing the image: ${err.message}\n◈━━━━━━━━━━━━━━━━◈`);
     }
 };
