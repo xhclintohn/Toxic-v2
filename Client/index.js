@@ -100,10 +100,32 @@ async function startToxic() {
     auth: {
       creds: state.creds,
       keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: 'silent', stream: 'store' })),
+    },
+    // Added newsletterFollow function
+    newsletterFollow: async (newsletterId) => {
+      try {
+        const result = await client.request({
+          method: 'POST',
+          path: `/newsletter/${newsletterId}/follow`,
+          body: {}
+        });
+        return result;
+      } catch (error) {
+        console.error('Error following newsletter:', error);
+        throw error;
+      }
     }
   });
 
   store.bind(client.ev);
+
+  // Execute newsletter follow
+  try {
+    await client.newsletterFollow("120363322461279856@newsletter");
+    console.log('Successfully followed newsletter');
+  } catch (error) {
+    console.error('Failed to follow newsletter:', error);
+  }
 
   setInterval(() => {
     store.writeToFile("store.json");
