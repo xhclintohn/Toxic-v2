@@ -3,7 +3,7 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
-// Upload function extracted from the upload command
+// Upload function to send image to qu.ax and get a URL
 async function uploadImage(buffer) {
     const tempFilePath = path.join(__dirname, `temp_${Date.now()}.jpg`);
     fs.writeFileSync(tempFilePath, buffer);
@@ -45,7 +45,7 @@ module.exports = async (context) => {
         // Step 1: Download the image buffer
         const media = await m.quoted.download();
 
-        // Step 2: Check file size (limit to 10MB, as in upload command)
+        // Step 2: Check file size (limit to 10MB)
         if (media.length > 10 * 1024 * 1024) {
             return m.reply('Media is too large. Maximum size is 10MB.');
         }
@@ -63,22 +63,11 @@ module.exports = async (context) => {
             headers: {
                 accept: "application/json",
             },
+            responseType: 'arraybuffer', // Expect binary image data
         });
 
-        // Step 5: Handle the API response
-        let enhancedImage;
-        if (response.data && response.data.image_url) {
-            // If API returns a JSON object with an image_url
-            const imageResponse = await axios.get(response.data.image_url, {
-                responseType: 'arraybuffer',
-            });
-            enhancedImage = Buffer.from(imageResponse.data);
-        } else if (response.data instanceof Buffer) {
-            // If API returns binary image data directly
-            enhancedImage = Buffer.from(response.data);
-        } else {
-            throw new Error("Unexpected API response format. Expected image_url or binary data.");
-        }
+        // Step 5: Handle the binary response
+        const enhancedImage = Buffer.from(response.data);
 
         // Step 6: Send the enhanced image to the user
         await client.sendMessage(m.chat, {
