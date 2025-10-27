@@ -1,57 +1,37 @@
-const FormData = require("form-data");
-const Jimp = require("jimp");
+const axios = require('axios');
+const FormData = require('form-data');
+const fs = require('fs');
+const path = require('path');
 
-function getObfuscatedKeys() {
-    return [
-        "inferenceengine", "push", "21AoSGqU", "225006xOkcNu", "concat", "472390FPofBK",
-        "4809828vvqtte", "data", "model_version", "3NUOcvQ", "14047187eKUyBb", "error",
-        "3013792ZhnCJd", "okhttp/4.9.3", ".ai/", "enhance_image_body.jpg", "from",
-        "10610670esKiBu", "append", "18nRsxLl", "submit", "https", "image", ".vyro",
-        "image/jpeg", "enhance", "jimp", "24448HhNNWt", "1230ttmiGH", "Keep-Alive"
-    ];
-}
+// Upload function extracted from the upload command
+async function uploadImage(buffer) {
+    const tempFilePath = path.join(__dirname, `temp_${Date.now()}.jpg`);
+    fs.writeFileSync(tempFilePath, buffer);
 
-function getKey(index) {
-    const keys = getObfuscatedKeys();
-    return keys[index - 127];
-}
+    const form = new FormData();
+    form.append('files[]', fs.createReadStream(tempFilePath));
 
-async function enhanceWithVyro(imageBuffer, effect) {
-    return new Promise((resolve, reject) => {
-        const supported = ["enhance", "recolor", "dehaze"];
-        if (!supported.includes(effect)) effect = supported[0];
-
-        const form = new FormData();
-        const url = `https://${getKey(128)}${getKey(151)}${getKey(142)}${effect}`;
-
-        form.append(getKey(136), 1, {
-            "Content-Transfer-Encoding": "binary",
-            contentType: "multipart/form-data; charset=utf-8"
-        });
-
-        form.append(getKey(150), Buffer.from(imageBuffer), {
-            filename: getKey(143),
-            contentType: getKey(152)
-        });
-
-        form.submit({
-            url,
-            host: `${getKey(128)}${getKey(151)}.ai`,
-            path: `/${effect}`,
-            protocol: "https:",
+    try {
+        const response = await axios.post('https://qu.ax/upload.php', form, {
             headers: {
-                "User-Agent": getKey(141),
-                Connection: getKey(127),
-                "Accept-Encoding": "gzip"
-            }
-        }, (err, res) => {
-            if (err) return reject(err);
-            let chunks = [];
-            res.on("data", chunk => chunks.push(chunk));
-            res.on("end", () => resolve(Buffer.concat(chunks)));
-            res.on("error", reject);
+                ...form.getHeaders(),
+            },
         });
-    });
+
+        const link = response.data.files[0].url;
+        if (!link) throw new Error('No URL returned in response');
+
+        if (fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+        }
+
+        return { url: link };
+    } catch (error) {
+        if (fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+        }
+        throw new Error(`Upload error: ${error.message}`);
+    }
 }
 
 module.exports = async (context) => {
@@ -62,16 +42,52 @@ module.exports = async (context) => {
     }
 
     try {
+        // Step 1: Download the image buffer
         const media = await m.quoted.download();
-        const enhancedImage = await enhanceWithVyro(media, "enhance");
 
+        // Step 2: Check file size (limit to 10MB, as in upload command)
+        if (media.length > 10 * 1024 * 1024) {
+            return m.reply('Media is too large. Maximum size is 10MB.');
+        }
+
+        // Step 3: Upload image to get a public URL
+        const uploadResult = await uploadImage(media);
+        const imageUrl = uploadResult.url;
+
+        // Step 4: Call the upscale API with the image URL
+        const response = await axios.get("https://fgsi.koyeb.app/api/tools/upscale", {
+            params: {
+                apikey: "fgsiapi-2dcdfa06-6d",
+                url: imageUrl,
+            },
+            headers: {
+                accept: "application/json",
+            },
+        });
+
+        // Step 5: Handle the API response
+        let enhancedImage;
+        if (response.data && response.data.image_url) {
+            // If API returns a JSON object with an image_url
+            const imageResponse = await axios.get(response.data.image_url, {
+                responseType: 'arraybuffer',
+            });
+            enhancedImage = Buffer.from(imageResponse.data);
+        } else if (response.data instanceof Buffer) {
+            // If API returns binary image data directly
+            enhancedImage = Buffer.from(response.data);
+        } else {
+            throw new Error("Unexpected API response format. Expected image_url or binary data.");
+        }
+
+        // Step 6: Send the enhanced image to the user
         await client.sendMessage(m.chat, {
             image: enhancedImage,
-            caption: 'Image has been enhanced to HD.'
+            caption: 'Image has been enhanced to HD.',
         }, { quoted: m });
 
     } catch (err) {
-        console.error("Error:", err);
-        m.reply("An error occurred while processing the image.");
+        console.error("Error:", err.response?.data || err.message);
+        m.reply(`An error occurred while processing the image: ${err.message}`);
     }
 };
