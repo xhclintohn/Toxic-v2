@@ -1,22 +1,22 @@
 const { Boom } = require("@hapi/boom");
 const { DateTime } = require("luxon");
-const { default: toxicConnect, DisconnectReason } = require("@whiskeysockets/baileys");
+const { DisconnectReason } = require("@whiskeysockets/baileys");
 const { getSettings, getSudoUsers, addSudoUser } = require("../Database/config");
 const { commands, totalCommands } = require("../Handler/commandHandler");
 
 const botName = process.env.BOTNAME || "Toxic-MD";
 let hasSentStartMessage = false;
-let hasFollowedNewsletter = false; // Add flag to prevent duplicate follows
+let hasFollowedNewsletter = false;
 
 async function connectionHandler(socket, connectionUpdate, reconnect) {
   const { connection, lastDisconnect } = connectionUpdate;
 
   function getGreeting() {
     const hour = DateTime.now().setZone("Africa/Nairobi").hour;
-    if (hour >= 5 && hour < 12) return "Hey there! Ready to kick off the day? 🚀";
-    if (hour >= 12 && hour < 18) return "What’s up? Time to make things happen! ⚡";
-    if (hour >= 18 && hour < 22) return "Evening vibes! Let’s get to it! 🌟";
-    return "Late night? Let’s see what’s cooking! 🌙";
+    if (hour >= 5 && hour < 12) return "Good morning!";
+    if (hour >= 12 && hour < 18) return "Good afternoon!";
+    if (hour >= 18 && hour < 22) return "Good evening!";
+    return "Hello!";
   }
 
   function getCurrentTime() {
@@ -34,47 +34,28 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
     return formattedText.split('').map(char => fonts[char] || char).join('');
   }
 
-  if (connection === "connecting") {
-    console.log(`🔄 Establishing connection to WhatsApp servers...`);
-    return;
-  }
-
   if (connection === "close") {
     const statusCode = new Boom(lastDisconnect?.error)?.output.statusCode;
 
     switch (statusCode) {
       case DisconnectReason.badSession:
-        console.log(`⚠️ Invalid session file detected. Delete session and rescan QR code.`);
+        hasSentStartMessage = false;
+        hasFollowedNewsletter = false;
         process.exit();
         break;
       case DisconnectReason.connectionClosed:
-        console.log(`🔌 Connection closed. Attempting to reconnect...`);
-        reconnect();
-        break;
       case DisconnectReason.connectionLost:
-        console.log(`📡 Lost connection to server. Reconnecting...`);
+      case DisconnectReason.timedOut:
+      case DisconnectReason.restartRequired:
         reconnect();
         break;
       case DisconnectReason.connectionReplaced:
-        console.log(`🔄 Connection replaced by another session. Terminating process.`);
-        process.exit();
-        break;
       case DisconnectReason.loggedOut:
-        console.log(`🔒 Session logged out. Delete session and rescan QR code.`);
         hasSentStartMessage = false;
-        hasFollowedNewsletter = false; // Reset flag on logout
+        hasFollowedNewsletter = false;
         process.exit();
-        break;
-      case DisconnectReason.restartRequired:
-        console.log(`🔄 Server requested restart. Initiating reconnect...`);
-        reconnect();
-        break;
-      case DisconnectReason.timedOut:
-        console.log(`⏳ Connection timed out. Attempting to reconnect...`);
-        reconnect();
         break;
       default:
-        console.log(`❓ Unknown disconnection reason: ${statusCode} | ${connection}. Reconnecting...`);
         reconnect();
     }
     return;
@@ -87,12 +68,10 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
       // Silent error handling
     }
 
-    // Execute newsletter follow only if not already followed
     if (!hasFollowedNewsletter) {
       try {
         await socket.newsletterFollow("120363322461279856@newsletter");
-        console.log('Successfully followed newsletter');
-        hasFollowedNewsletter = true; // Set flag to prevent duplicate attempts
+        hasFollowedNewsletter = true;
       } catch (error) {
         console.error('Failed to follow newsletter:', error);
       }
@@ -114,47 +93,33 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
 
       const firstMessage = isNewUser
         ? [
-            `◈━━━━━━━━━━━━━━━━◈`,
-            `│❒ *${getGreeting()}*`,
-            `│❒ Welcome to *${botName}*! You're now connected.`,
-            ``,
-            `✨ *Bot Name*: ${botName}`,
-            `🔧 *Mode*: ${settings.mode}`,
-            `➡️ *Prefix*: ${settings.prefix}`,
-            `📋 *Commands*: ${totalCommands}`,
-            `🕒 *Time*: ${getCurrentTime()}`,
-            `💾 *Database*: Postgres SQL`,
-            `📚 *Library*: Baileys`,
-            ``,
-            `│❒ *New User Alert*: You've been added to the sudo list.`,
-            ``,
-            `│❒ *Credits*: xh_clinton`,
-            `◈━━━━━━━━━━━━━━━━◈`
+            `${getGreeting()}`,
+            `Welcome to ${botName}! You're now connected.`,
+            `Bot Name: ${botName}`,
+            `Mode: ${settings.mode}`,
+            `Prefix: ${settings.prefix}`,
+            `Commands: ${totalCommands}`,
+            `Time: ${getCurrentTime()}`,
+            `Database: Postgres SQL`,
+            `Library: Baileys`,
+            `New User Alert: You've been added to the sudo list.`,
+            `Credits: xh_clinton`
           ].join("\n")
         : [
-            `◈━━━━━━━━━━━━━━━━◈`,
-            `│❒ *${getGreeting()}*`,
-            `│❒ Welcome back to *${botName}*! Connection established.`,
-            ``,
-            `✨ *Bot Name*: ${botName}`,
-            `🔧 *Mode*: ${settings.mode}`,
-            `➡️ *Prefix*: ${settings.prefix}`,
-            `📋 *Commands*: ${totalCommands}`,
-            `🕒 *Time*: ${getCurrentTime()}`,
-            `💾 *Database*: Postgres SQL`,
-            `📚 *Library*: Baileys`,
-            ``,
-            `│❒ Ready to proceed? Select an option below.`,
-            ``,
-            `│❒ *Credits*: xh_clinton`,
-            `◈━━━━━━━━━━━━━━━━◈`
+            `${getGreeting()}`,
+            `Welcome back to ${botName}! Connection established.`,
+            `Bot Name: ${botName}`,
+            `Mode: ${settings.mode}`,
+            `Prefix: ${settings.prefix}`,
+            `Commands: ${totalCommands}`,
+            `Time: ${getCurrentTime()}`,
+            `Database: Postgres SQL`,
+            `Library: Baileys`,
+            `Ready to proceed? Select an option below.`,
+            `Credits: xh_clinton`
           ].join("\n");
 
-      const secondMessage = [
-        `◈━━━━━━━━━━━━━━━━◈`,
-        `│❒ Please select an option to continue:`,
-        `◈━━━━━━━━━━━━━━━━◈`
-      ].join("\n");
+      const secondMessage = `Please select an option to continue:`;
 
       try {
         await socket.sendMessage(socket.user.id, {
@@ -179,12 +144,12 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
           buttons: [
             {
               buttonId: `${settings.prefix || ''}settings`,
-              buttonText: { displayText: `⚙️ ${toFancyFont('SETTINGS')}` },
+              buttonText: { displayText: `SETTINGS` },
               type: 1
             },
             {
               buttonId: `${settings.prefix || ''}menu`,
-              buttonText: { displayText: `📖 ${toFancyFont('MENU')}` },
+              buttonText: { displayText: `MENU` },
               type: 1
             }
           ],
@@ -202,18 +167,11 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
           }
         });
       } catch (error) {
-        console.error(`❌ Failed to send startup messages: ${error.message}`);
+        console.error(`Failed to send startup messages: ${error.message}`);
       }
 
       hasSentStartMessage = true;
     }
-
-    console.log(
-      `◈━━━━━━━━━━━━━━━━◈\n` +
-      `│❒ Bot successfully connected to WhatsApp ✅💫\n` +
-      `│❒ Loaded ${totalCommands} plugins. Toxic-MD is ready to dominate! 😈\n` +
-      `┗━━━━━━━━━━━━━━━┛`
-    );
   }
 }
 
