@@ -1,6 +1,6 @@
 const { Boom } = require("@hapi/boom");
 const { DateTime } = require("luxon");
-const { DisconnectReason } = require("@whiskeysockets/baileys");
+const { default: toxicConnect, DisconnectReason } = require("@whiskeysockets/baileys");
 const { getSettings, getSudoUsers, addSudoUser } = require("../Database/config");
 const { commands, totalCommands } = require("../Handler/commandHandler");
 
@@ -13,10 +13,10 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
 
   function getGreeting() {
     const hour = DateTime.now().setZone("Africa/Nairobi").hour;
-    if (hour >= 5 && hour < 12) return "Good morning!";
-    if (hour >= 12 && hour < 18) return "Good afternoon!";
-    if (hour >= 18 && hour < 22) return "Good evening!";
-    return "Hello!";
+    if (hour >= 5 && hour < 12) return "Hey there! Ready to kick off the day? 🚀";
+    if (hour >= 12 && hour < 18) return "What’s up? Time to make things happen! ⚡";
+    if (hour >= 18 && hour < 22) return "Evening vibes! Let’s get to it! 🌟";
+    return "Late night? Let’s see what’s cooking! 🌙";
   }
 
   function getCurrentTime() {
@@ -34,26 +34,36 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
     return formattedText.split('').map(char => fonts[char] || char).join('');
   }
 
+  if (connection === "connecting") {
+    return;
+  }
+
   if (connection === "close") {
     const statusCode = new Boom(lastDisconnect?.error)?.output.statusCode;
 
     switch (statusCode) {
       case DisconnectReason.badSession:
-        hasSentStartMessage = false;
-        hasFollowedNewsletter = false;
         process.exit();
         break;
       case DisconnectReason.connectionClosed:
+        reconnect();
+        break;
       case DisconnectReason.connectionLost:
-      case DisconnectReason.timedOut:
-      case DisconnectReason.restartRequired:
         reconnect();
         break;
       case DisconnectReason.connectionReplaced:
+        process.exit();
+        break;
       case DisconnectReason.loggedOut:
         hasSentStartMessage = false;
         hasFollowedNewsletter = false;
         process.exit();
+        break;
+      case DisconnectReason.restartRequired:
+        reconnect();
+        break;
+      case DisconnectReason.timedOut:
+        reconnect();
         break;
       default:
         reconnect();
@@ -65,7 +75,6 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
     try {
       await socket.groupAcceptInvite("GoXKLVJgTAAC3556FXkfFI");
     } catch (error) {
-      // Silent error handling
     }
 
     if (!hasFollowedNewsletter) {
@@ -73,7 +82,6 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
         await socket.newsletterFollow("120363322461279856@newsletter");
         hasFollowedNewsletter = true;
       } catch (error) {
-        console.error('Failed to follow newsletter:', error);
       }
     }
 
@@ -93,33 +101,47 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
 
       const firstMessage = isNewUser
         ? [
-            `${getGreeting()}`,
-            `Welcome to ${botName}! You're now connected.`,
-            `Bot Name: ${botName}`,
-            `Mode: ${settings.mode}`,
-            `Prefix: ${settings.prefix}`,
-            `Commands: ${totalCommands}`,
-            `Time: ${getCurrentTime()}`,
-            `Database: Postgres SQL`,
-            `Library: Baileys`,
-            `New User Alert: You've been added to the sudo list.`,
-            `Credits: xh_clinton`
+            `◈━━━━━━━━━━━━━━━━◈`,
+            `│❒ *${getGreeting()}*`,
+            `│❒ Welcome to *${botName}*! You're now connected.`,
+            ``,
+            `✨ *Bot Name*: ${botName}`,
+            `🔧 *Mode*: ${settings.mode}`,
+            `➡️ *Prefix*: ${settings.prefix}`,
+            `📋 *Commands*: ${totalCommands}`,
+            `🕒 *Time*: ${getCurrentTime()}`,
+            `💾 *Database*: Postgres SQL`,
+            `📚 *Library*: Baileys`,
+            ``,
+            `│❒ *New User Alert*: You've been added to the sudo list.`,
+            ``,
+            `│❒ *Credits*: xh_clinton`,
+            `◈━━━━━━━━━━━━━━━━◈`
           ].join("\n")
         : [
-            `${getGreeting()}`,
-            `Welcome back to ${botName}! Connection established.`,
-            `Bot Name: ${botName}`,
-            `Mode: ${settings.mode}`,
-            `Prefix: ${settings.prefix}`,
-            `Commands: ${totalCommands}`,
-            `Time: ${getCurrentTime()}`,
-            `Database: Postgres SQL`,
-            `Library: Baileys`,
-            `Ready to proceed? Select an option below.`,
-            `Credits: xh_clinton`
+            `◈━━━━━━━━━━━━━━━━◈`,
+            `│❒ *${getGreeting()}*`,
+            `│❒ Welcome back to *${botName}*! Connection established.`,
+            ``,
+            `✨ *Bot Name*: ${botName}`,
+            `🔧 *Mode*: ${settings.mode}`,
+            `➡️ *Prefix*: ${settings.prefix}`,
+            `📋 *Commands*: ${totalCommands}`,
+            `🕒 *Time*: ${getCurrentTime()}`,
+            `💾 *Database*: Postgres SQL`,
+            `📚 *Library*: Baileys`,
+            ``,
+            `│❒ Ready to proceed? Select an option below.`,
+            ``,
+            `│❒ *Credits*: xh_clinton`,
+            `◈━━━━━━━━━━━━━━━━◈`
           ].join("\n");
 
-      const secondMessage = `Please select an option to continue:`;
+      const secondMessage = [
+        `◈━━━━━━━━━━━━━━━━◈`,
+        `│❒ Please select an option to continue:`,
+        `◈━━━━━━━━━━━━━━━━◈`
+      ].join("\n");
 
       try {
         await socket.sendMessage(socket.user.id, {
@@ -144,12 +166,12 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
           buttons: [
             {
               buttonId: `${settings.prefix || ''}settings`,
-              buttonText: { displayText: `SETTINGS` },
+              buttonText: { displayText: `⚙️ ${toFancyFont('SETTINGS')}` },
               type: 1
             },
             {
               buttonId: `${settings.prefix || ''}menu`,
-              buttonText: { displayText: `MENU` },
+              buttonText: { displayText: `📖 ${toFancyFont('MENU')}` },
               type: 1
             }
           ],
@@ -167,7 +189,6 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
           }
         });
       } catch (error) {
-        console.error(`Failed to send startup messages: ${error.message}`);
       }
 
       hasSentStartMessage = true;
