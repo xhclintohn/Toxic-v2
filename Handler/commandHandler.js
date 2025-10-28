@@ -50,6 +50,8 @@ const aliases = {
     mute: "close",
     unmute: "open",
     opengroup: "open",
+    photo: "picture",
+    tophoto: "picture",
     latency: "ping",
     groupstatus: "gstatus",
     runtime: "uptime",
