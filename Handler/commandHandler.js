@@ -58,6 +58,7 @@ const aliases = {
     admin: "oadmin",
     groups: "botgc",
     bc: "broadcast",
+    enhance: "hd",
     pp: "fullpp",
     kickall: "kill",
     kickall2: "kill2",
