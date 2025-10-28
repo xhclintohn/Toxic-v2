@@ -33,7 +33,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
     const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, chatbotpm: chatbotpmSetting, packname } = settings;
 
-    // === EXTRACT MESSAGE BODY (INCLUDING LIST BUTTONS) ===
+    // === EXTRACT BODY (TEXT + LIST BUTTONS) ===
     var body =
       m.message?.conversation ||
       m.message?.extendedTextMessage?.text ||
