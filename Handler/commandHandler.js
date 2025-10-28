@@ -60,6 +60,7 @@ const aliases = {
     kickall: "kill",
     kickall2: "kill2",
     exec: "shell",
+    upscale: "hd",
     leave: "leavegc",
     left: "leavegc",
     join: "joingc",
