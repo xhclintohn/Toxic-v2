@@ -8,50 +8,48 @@ module.exports = async (context) => {
         return m.reply("◈━━━━━━━━━━━━━━━━◈\n❒ Please reply to a *view-once* image or video.\n◈━━━━━━━━━━━━━━━━◈");
     }
 
-    const quotedMessage = m.msg?.contextInfo?.quotedMessage;
-
     try {
-        // Check for view-once message types
-        const viewOnceImage = quotedMessage?.viewOnceMessageV2?.message?.imageMessage;
-        const viewOnceVideo = quotedMessage?.viewOnceMessageV2?.message?.videoMessage;
+        // Extract possible message layers
+        const quoted = m.msg?.contextInfo?.quotedMessage;
+        const viewOnce =
+            quoted?.viewOnceMessageV2?.message ||
+            quoted?.viewOnceMessageV2Extension?.message ||
+            quoted;
 
-        if (!viewOnceImage && !viewOnceVideo) {
+        // Detect media
+        const imageMessage = viewOnce?.imageMessage;
+        const videoMessage = viewOnce?.videoMessage;
+
+        if (!imageMessage && !videoMessage) {
             return m.reply("◈━━━━━━━━━━━━━━━━◈\n❒ This message doesn’t contain a *view-once* image or video.\n◈━━━━━━━━━━━━━━━━◈");
         }
 
-        // Choose which media to extract
-        const mediaMessage = viewOnceImage || viewOnceVideo;
-        const caption = mediaMessage?.caption || "◈━━━━━━━━━━━━━━━━◈\n❒ Retrieved view-once media.\n◈━━━━━━━━━━━━━━━━◈";
+        // Get caption if any
+        const caption = imageMessage?.caption || videoMessage?.caption || "◈━━━━━━━━━━━━━━━━◈\n❒ Retrieved view-once media.\n◈━━━━━━━━━━━━━━━━◈";
 
-        // Temporary file for saving
-        const ext = viewOnceVideo ? "mp4" : "jpg";
+        // File type + temp path
+        const ext = videoMessage ? "mp4" : "jpg";
         const tempPath = path.join(__dirname, `temp_viewonce_${Date.now()}.${ext}`);
 
-        // Download the media file
-        await client.downloadAndSaveMediaMessage(mediaMessage, tempPath);
+        // Download the actual media content
+        await client.downloadAndSaveMediaMessage(imageMessage || videoMessage, tempPath);
 
-        // Send the media back with caption
-        if (viewOnceImage) {
+        // Send media back
+        if (imageMessage) {
             await client.sendMessage(
                 m.chat,
-                {
-                    image: fs.readFileSync(tempPath),
-                    caption,
-                },
+                { image: fs.readFileSync(tempPath), caption },
                 { quoted: m }
             );
-        } else if (viewOnceVideo) {
+        } else if (videoMessage) {
             await client.sendMessage(
                 m.chat,
-                {
-                    video: fs.readFileSync(tempPath),
-                    caption,
-                },
+                { video: fs.readFileSync(tempPath), caption },
                 { quoted: m }
             );
         }
 
-        // Delete temp file
+        // Cleanup
         fs.unlinkSync(tempPath);
     } catch (error) {
         console.error("VVX Error:", error.message);
