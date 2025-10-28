@@ -13,23 +13,16 @@ async function uploadImage(buffer) {
 
     try {
         const response = await axios.post('https://qu.ax/upload.php', form, {
-            headers: {
-                ...form.getHeaders(),
-            },
+            headers: form.getHeaders(),
         });
 
-        const link = response.data.files[0].url;
+        const link = response.data?.files?.[0]?.url;
         if (!link) throw new Error('No URL returned in response');
 
-        if (fs.existsSync(tempFilePath)) {
-            fs.unlinkSync(tempFilePath);
-        }
-
+        fs.unlinkSync(tempFilePath);
         return { url: link };
     } catch (error) {
-        if (fs.existsSync(tempFilePath)) {
-            fs.unlinkSync(tempFilePath);
-        }
+        if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
         throw new Error(`Upload error: ${error.message}`);
     }
 }
@@ -37,50 +30,51 @@ async function uploadImage(buffer) {
 module.exports = async (context) => {
     const { client, mime, m } = context;
 
-    // Check if the input is an image
-    if (!/image/.test(mime)) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Please send or reply to an image.\n◈━━━━━━━━━━━━━━━━◈`);
+    // Determine whether the image is from quoted or current message
+    const quoted = m.quoted ? m.quoted : m;
+    const quotedMime = quoted.mimetype || mime || '';
+
+    if (!/image/.test(quotedMime)) {
+        return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Please reply to or send an image with this command.\n◈━━━━━━━━━━━━━━━━◈');
     }
 
-    // Send processing message
-    await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Enhancing your image. Wait! 🗿\n◈━━━━━━━━━━━━━━━━◈`);
+    await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Enhancing your image. Please wait... 🗿\n◈━━━━━━━━━━━━━━━━◈');
 
     try {
-        // Step 1: Download the image buffer
-        const media = await m.quoted.download();
+        // Step 1: Download image
+        const media = await quoted.download();
 
-        // Step 2: Check file size (limit to 10MB)
+        if (!media) {
+            return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Failed to download the image. Try again.\n◈━━━━━━━━━━━━━━━━◈');
+        }
+
+        // Step 2: Size limit check
         if (media.length > 10 * 1024 * 1024) {
-            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Media is too large. Maximum size is 10MB.\n◈━━━━━━━━━━━━━━━━◈`);
+            return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ The image is too large (max 10MB).\n◈━━━━━━━━━━━━━━━━◈');
         }
 
         // Step 3: Upload image to get a public URL
-        const uploadResult = await uploadImage(media);
-        const imageUrl = uploadResult.url;
+        const { url: imageUrl } = await uploadImage(media);
 
-        // Step 4: Call the upscale API with the image URL
-        const response = await axios.get("https://fgsi.koyeb.app/api/tools/upscale", {
+        // Step 4: Call the upscale API
+        const response = await axios.get('https://fgsi.koyeb.app/api/tools/upscale', {
             params: {
-                apikey: "fgsiapi-2dcdfa06-6d",
+                apikey: 'fgsiapi-2dcdfa06-6d',
                 url: imageUrl,
             },
-            headers: {
-                accept: "application/json",
-            },
-            responseType: 'arraybuffer', // Expect binary image data
+            headers: { accept: 'application/json' },
+            responseType: 'arraybuffer',
         });
 
-        // Step 5: Handle the binary response
         const enhancedImage = Buffer.from(response.data);
 
-        // Step 6: Send the enhanced image to the user
-        await client.sendMessage(m.chat, {
-            image: enhancedImage,
-            caption: `◈━━━━━━━━━━━━━━━━◈\n❒ Image has been enhanced to HD.\n◈━━━━━━━━━━━━━━━━◈`,
-        }, { quoted: m });
-
+        // Step 5: Send enhanced image
+        await client.sendMessage(
+            m.chat,
+            { image: enhancedImage, caption: '◈━━━━━━━━━━━━━━━━◈\n❒ Your image has been enhanced to HD.\n◈━━━━━━━━━━━━━━━━◈' },
+            { quoted: m }
+        );
     } catch (err) {
-        // Send error message with styling
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ An error occurred while processing the image: ${err.message}\n◈━━━━━━━━━━━━━━━━◈`);
+        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Error: ${err.message}\n◈━━━━━━━━━━━━━━━━◈`);
     }
 };
