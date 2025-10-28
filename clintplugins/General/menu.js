@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
 const { getSettings } = require('../../Database/config');
 
 module.exports = {
@@ -14,7 +13,7 @@ module.exports = {
       await sock.sendMessage(
         m.chat,
         {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo ${m.pushName}, what's with the extra bullshit? Just say *${prefix}menu*, moron. 🖕\n┗━━━━━━━━━━━━━━━┛`,
+          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo ${m.pushName}, what's with the extra bullshit? Just say *${prefix}menu*, moron.\n┗━━━━━━━━━━━━━━━┛`,
         },
         { quoted: m, ad: true }
       );
@@ -24,23 +23,8 @@ module.exports = {
     const settings = await getSettings();
     const effectivePrefix = settings.prefix || '.'; 
 
-    // Fancy font
-    const toFancyFont = (text, isUpperCase = false) => {
-      const fonts = {
-        A: '𝘼', B: '𝘽', C: '𝘾', D: '𝘿', E: '𝙀', F: '𝙁', G: '𝙂', H: '𝙃', I: '𝙄', J: '𝙅', K: '𝙆', L: '𝙇', M: '𝙈',
-        N: '𝙉', O: '𝙊', P: '𝙋', Q: '𝙌', R: '𝙍', S: '𝙎', T: '𝙏', U: '𝙐', V: '𝙑', W: '𝙒', X: '𝙓', Y: '𝙔', Z: '𝙕',
-        a: '𝙖', b: '𝙗', c: '𝙘', d: '𝙙', e: '𝙚', f: '𝙛', g: '𝙜', h: '𝙝', i: '𝙞', j: '𝙟', k: '𝙠', l: '𝙡', m: '𝙢',
-        n: '𝙣', o: '𝙤', p: '𝙥', q: '𝙦', r: '𝙧', s: '𝙨', t: '𝙩', u: '𝙪', v: '𝙫', w: '𝙬', x: '𝙭', y: '𝙮', z: '𝙯',
-      };
-      return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
-        .split('')
-        .map((char) => fonts[char] || char)
-        .join('');
-    };
-
     const ownername = "xh_clinton"; 
 
-  
     await sock.relayMessage(m.chat, {
       interactiveMessage: {
         contextInfo: {
@@ -69,12 +53,8 @@ module.exports = {
           },
           hasMediaAttachment: true,
         },
-        body: {
-          text: null
-        },
-        footer: {
-          text: "Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ"
-        },
+        body: { text: null },
+        footer: { text: "Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ" },
         nativeFlowMessage: {
           messageParamsJson: JSON.stringify({
             limited_time_offer: {
@@ -104,13 +84,13 @@ module.exports = {
                 title: "list selection",
                 sections: [
                   {
-                    title: "𝙏𝙊𝙓𝙄𝘾 𝙈𝘿 𝙈𝙀𝙉𝙐 🔥",
-                    highlight_label: "☣️",
+                    title: "𝙏𝙊𝙓𝙄𝘾 𝙈𝘿 𝙈𝙀𝙉𝙐",
+                    highlight_label: "Toxic",
                     rows: [
-                      { title: "𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮", description: ".fullmenu", id: `${prefix}fullmenu` },
-                      { title: "𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫", description: ".dev", id: `${prefix}dev` },
-                      { title: "𝐏𝐢𝐧𝐠", description: ".ping", id: `${prefix}ping` },
-                      { title: "𝐑𝐞𝐩𝐨", description: ".repo", id: `${prefix}repo` },
+                      { title: "𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮", description: ".fullmenu", id: `${effectivePrefix}fullmenu` },
+                      { title: "𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫", description: ".dev", id: `${effectivePrefix}dev` },
+                      { title: "𝐏𝐢𝐧𝐠", description: ".ping", id: `${effectivePrefix}ping` },
+                      { title: "𝐑𝐞𝐩𝐨", description: ".repo", id: `${effectivePrefix}repo` },
                     ]
                   }
                 ]
@@ -143,7 +123,7 @@ module.exports = {
       }
     }, { userJid: m.sender });
 
-   
+    // === AUDIO ===
     const possibleAudioPaths = [
       path.join(__dirname, 'xh_clinton', 'menu.mp3'),
       path.join(process.cwd(), 'xh_clinton', 'menu.mp3'),
@@ -159,16 +139,12 @@ module.exports = {
     }
 
     if (audioPath) {
-      await sock.sendMessage(
-        m.chat,
-        {
-          audio: { url: audioPath },
-          ptt: true,
-          mimetype: 'audio/mpeg',
-          fileName: 'menu.mp3',
-        },
-        { quoted: m }
-      );
+      await sock.sendMessage(m.chat, {
+        audio: { url: audioPath },
+        ptt: true,
+        mimetype: 'audio/mpeg',
+        fileName: 'menu.mp3',
+      }, { quoted: m });
     }
   },
 };
