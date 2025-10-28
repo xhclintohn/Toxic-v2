@@ -22,9 +22,9 @@ module.exports = {
     }
 
     const settings = await getSettings();
-    const effectivePrefix = settings.prefix || '.'; // Dynamic prefix from database
+    const effectivePrefix = settings.prefix || '.'; 
 
-    // Fancy font converter (unchanged)
+    // Fancy font
     const toFancyFont = (text, isUpperCase = false) => {
       const fonts = {
         A: '𝘼', B: '𝘽', C: '𝘾', D: '𝘿', E: '𝙀', F: '𝙁', G: '𝙂', H: '𝙃', I: '𝙄', J: '𝙅', K: '𝙆', L: '𝙇', M: '𝙈',
@@ -38,9 +38,9 @@ module.exports = {
         .join('');
     };
 
-    const ownername = "xh_clinton"; // Change if needed
+    const ownername = "xh_clinton"; 
 
-    // === YOUR FRIEND'S INTERACTIVE MESSAGE STRUCTURE ===
+  
     await sock.relayMessage(m.chat, {
       interactiveMessage: {
         contextInfo: {
@@ -62,7 +62,7 @@ module.exports = {
             fileLength: "999999999999",
             pageCount: 0,
             mediaKey: "MWO6fI223TY8T0i9onNcwNBBPldWfwp1j1FPKCiJFzw=",
-            fileName: "whyuxD",
+            fileName: "ToxicMDz",
             fileEncSha256: "ZS8v9tio2un1yWVOOG3lwBxiP+mNgaKPY9+wl5pEoi8=",
             directPath: "/v/t62.7119-24/539012045_745537058346694_1512031191239726227_n.enc",
             mediaKeyTimestamp: "1756370084",
@@ -73,12 +73,12 @@ module.exports = {
           text: null
         },
         footer: {
-          text: "gtw mw taro ap"
+          text: "Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ"
         },
         nativeFlowMessage: {
           messageParamsJson: JSON.stringify({
             limited_time_offer: {
-              text: "gtw mw taro ap",
+              text: "Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
               url: "https://t.me/xhclintonv",
               copy_code: "xhclintonXD",
               expiration_time: Date.now() * 999
@@ -107,10 +107,10 @@ module.exports = {
                     title: "🔥 TOXIC-MD COMMANDS",
                     highlight_label: "🤤",
                     rows: [
-                      { title: "📜 Full Menu", description: "All commands", id: `${effectivePrefix}fullmenu` },
-                      { title: "👨‍💻 Developer", description: "Contact owner", id: `${effectivePrefix}dev` },
-                      { title: "🏓 Ping", description: "Check speed", id: `${effectivePrefix}ping` },
-                      { title: "📦 Repo", description: "GitHub link", id: `${effectivePrefix}repo` },
+                      { title: "📜 Full Menu", description: "All commands", id: `${prefix}fullmenu` },
+                      { title: "👨‍💻 Developer", description: "Contact owner", id: `${prefix}dev` },
+                      { title: "💧 Ping", description: "Check speed", id: `${prefix}ping` },
+                      { title: "📦 Repo", description: "GitHub link", id: `${prefix}repo` },
                     ]
                   }
                 ]
@@ -120,7 +120,7 @@ module.exports = {
               name: "cta_url",
               buttonParamsJson: JSON.stringify({
                 display_text: "🌐 Visit Site",
-                url: "https://toxicmd.site",
+                url: "https://github.com/xhclintohn/Toxic-MD",
               })
             },
             {
@@ -143,7 +143,7 @@ module.exports = {
       }
     }, { userJid: m.sender });
 
-    // === AUDIO MESSAGE (unchanged) ===
+   
     const possibleAudioPaths = [
       path.join(__dirname, 'xh_clinton', 'menu.mp3'),
       path.join(process.cwd(), 'xh_clinton', 'menu.mp3'),
