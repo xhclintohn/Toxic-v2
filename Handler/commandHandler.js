@@ -56,6 +56,7 @@ const aliases = {
     groupstatus: "gstatus",
     runtime: "uptime",
     admin: "oadmin",
+    ghibli: "toghibli",
     groups: "botgc",
     bc: "broadcast",
     enhance: "hd",
