@@ -80,6 +80,7 @@ const aliases = {
     list: "menu",
     repo: "script",
     sc: "script",
+    translate: "trt",
     linkgc: "link",
     gclink: "link",
     grouplink: "link",
