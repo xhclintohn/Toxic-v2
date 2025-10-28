@@ -3,7 +3,6 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
-// === UPLOAD TO qu.ax ===
 async function uploadImage(buffer) {
     const tempFilePath = path.join(__dirname, `temp_${Date.now()}.jpg`);
     fs.writeFileSync(tempFilePath, buffer);
@@ -32,40 +31,44 @@ module.exports = {
     aliases: ['anime', 'toon', 'cartoon'],
     description: 'Convert a replied image to anime style',
     run: async (context) => {
-        const { client, m, mime } = context;
+        const { client, m } = context;
 
-        // === 1. MUST REPLY TO A MESSAGE ===
+        // === 1. MUST REPLY ===
         if (!m.quoted) {
-            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❌ You must *reply* to an image!\n│Example: Reply image → \`.toanime\`\n┗━━━━━━━━━━━━━━━┛`);
+            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│You must *reply* to an image!\n│Example: Reply image → \`.toanime\`\n┗━━━━━━━━━━━━━━━┛`);
         }
 
-        // === 2. REPLIED MESSAGE MUST BE IMAGE ===
         const quoted = m.quoted;
-        const quotedMime = quoted.mtype === 'imageMessage' 
-            ? quoted.msg.mimetype 
-            : quoted.mimetype;
+
+        // === 2. SAFE MIME CHECK ===
+        let quotedMime = '';
+        if (quoted.mtype === 'imageMessage' && quoted.msg?.mimetype) {
+            quotedMime = quoted.msg.mimetype;
+        } else if (quoted.mimetype) {
+            quotedMime = quoted.mimetype;
+        }
 
         if (!quotedMime || !quotedMime.startsWith('image/')) {
-            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❌ The replied message is not an image!\n│Please reply to a *photo*.\n┗━━━━━━━━━━━━━━━┛`);
+            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│The replied message is *not an image*!\n│Please reply to a *photo*.\n┗━━━━━━━━━━━━━━━┛`);
         }
 
-        // === 3. SEND PROCESSING MESSAGE ===
+        // === 3. PROCESSING ===
         const processing = await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│Converting to anime...\n│Please wait!\n┗━━━━━━━━━━━━━━━┛`);
 
         try {
-            // === 4. DOWNLOAD IMAGE ===
+            // === 4. DOWNLOAD ===
             const media = await quoted.download();
-            if (!media || media.length === 0) throw new Error('Failed to download image');
+            if (!media || media.length === 0) throw new Error('Failed to download');
 
-            // === 5. SIZE LIMIT ===
+            // === 5. SIZE ===
             if (media.length > 10 * 1024 * 1024) {
                 return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│Image too large! Max 10MB.\n┗━━━━━━━━━━━━━━━┛`);
             }
 
-            // === 6. UPLOAD TO qu.ax ===
+            // === 6. UPLOAD ===
             const { url: imageUrl } = await uploadImage(media);
 
-            // === 7. CALL TO-ANIME API ===
+            // === 7. API CALL ===
             const apiResponse = await axios.get('https://fgsi.koyeb.app/api/ai/image/toAnime', {
                 params: {
                     apikey: 'fgsiapi-2dcdfa06-6d',
@@ -84,7 +87,7 @@ module.exports = {
                 mentions: [m.sender]
             }, { quoted: m });
 
-            // === 9. DELETE PROCESSING MSG ===
+            // === 9. CLEANUP ===
             await client.sendMessage(m.chat, { delete: processing.key });
 
         } catch (err) {
@@ -92,7 +95,7 @@ module.exports = {
 
             const errorMsg = err.response
                 ? `API Error: ${err.response.status}`
-                : err.message.includes('timeout') ? 'API timed out. Try again.'
+                : err.message.includes('timeout') ? 'API timed out.'
                 : `Failed: ${err.message}`;
 
             await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│${errorMsg}\n┗━━━━━━━━━━━━━━━┛`);
