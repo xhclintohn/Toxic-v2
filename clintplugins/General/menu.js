@@ -104,13 +104,13 @@ module.exports = {
                 title: "list selection",
                 sections: [
                   {
-                    title: "🔥 TOXIC-MD COMMANDS",
-                    highlight_label: "🤤",
+                    title: "𝙏𝙊𝙓𝙄𝘾 𝙈𝘿 𝙈𝙀𝙉𝙐 🔥",
+                    highlight_label: "☣️",
                     rows: [
-                      { title: "📜 Full Menu", description: "All commands", id: `${prefix}fullmenu` },
-                      { title: "👨‍💻 Developer", description: "Contact owner", id: `${prefix}dev` },
-                      { title: "💧 Ping", description: "Check speed", id: `${prefix}ping` },
-                      { title: "📦 Repo", description: "GitHub link", id: `${prefix}repo` },
+                      { title: "𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮", description: ".fullmenu", id: `${prefix}fullmenu` },
+                      { title: "𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫", description: ".dev", id: `${prefix}dev` },
+                      { title: "𝐏𝐢𝐧𝐠", description: ".ping", id: `${prefix}ping` },
+                      { title: "𝐑𝐞𝐩𝐨", description: ".repo", id: `${prefix}repo` },
                     ]
                   }
                 ]
@@ -119,7 +119,7 @@ module.exports = {
             {
               name: "cta_url",
               buttonParamsJson: JSON.stringify({
-                display_text: "🌐 Visit Site",
+                display_text: "𝐎𝐏𝐄𝐍 𝐑𝐄𝐏𝐎",
                 url: "https://github.com/xhclintohn/Toxic-MD",
               })
             },
@@ -127,7 +127,7 @@ module.exports = {
               name: "cta_copy",
               buttonParamsJson: JSON.stringify({
                 display_text: "📋 Copy Code",
-                copy_code: '𝚋𝚢 xh_clinton',
+                copy_code: 'ToxicMD',
               })
             },
           ],
@@ -136,7 +136,7 @@ module.exports = {
               in_thread_buttons_limit: 1,
               divider_indices: [1, 2, 3],
               list_title: "List Button",
-              button_title: "How are you?"
+              button_title: "𝐎𝐏𝐄𝐍 𝐌𝐄𝐍𝐔"
             }
           })
         }
