@@ -55,7 +55,7 @@ module.exports = async (context) => {
         {
           name: "cta_url",
           buttonParamsJson: JSON.stringify({
-            display_text: `👤 ${toFancyFont('ContactDeveloper')}`,
+            display_text: `👤 ${toFancyFont('Developer')}`,
             url: "https://wa.me/254735342808"
           }),
         },
