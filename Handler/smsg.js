@@ -15,6 +15,17 @@ const path = require('path');
 const filePath = path.resolve(__dirname, '../toxic.jpg'); 
 const kali = readFileSync(filePath);
 
+// ✅ Small helper for LID-based IDs
+function safeDecodeJid(jid) {
+  try {
+    if (!jid) return jid;
+    const result = jidDecode(jid) || {};
+    return (result.user && result.server) ? `${result.user}@${result.server}` : jid;
+  } catch {
+    return jid;
+  }
+}
+
 function smsg(conn, m, store) {
   if (!m) return m;
   let M = proto.WebMessageInfo;
@@ -25,33 +36,28 @@ function smsg(conn, m, store) {
     m.chat = m.key.remoteJid;
     m.fromMe = m.key.fromMe;
     m.isGroup = m.chat.endsWith("@g.us");
-    m.sender = conn.decodeJid((m.fromMe && conn.user.id) || m.participant || m.key.participant || m.chat || "");
-    if (m.isGroup) m.participant = conn.decodeJid(m.key.participant) || "";
+    // ✅ Only this line modified for LID support
+    m.sender = safeDecodeJid((m.fromMe && conn.user.id) || m.participant || m.key.participant || m.chat || "");
+    if (m.isGroup) m.participant = safeDecodeJid(m.key.participant) || "";
   }
 
   if (m.message) {
     m.mtype = getContentType(m.message);
 
-    // FIX!
     m.msg = (m.mtype === "viewOnceMessage" || m.mtype === "viewOnceMessageV2")
       ? m.message[m.mtype]?.message?.[getContentType(m.message[m.mtype]?.message)]
       : m.message[m.mtype];
 
-    // Now extract body correctly
     m.body =
       m.message.conversation ||
       m.msg?.caption ||
       m.msg?.text ||
-      // LIST BUTTON
       (m.mtype === "listResponseMessage" && m.msg?.singleSelectReply?.selectedRowId) ||
-      // BUTTON
       (m.mtype === "buttonsResponseMessage" && m.msg?.selectedButtonId) ||
-      // VIEW ONCE
       (m.mtype === "viewOnceMessage" && m.msg?.caption) ||
       m.text ||
       "";
 
-    // For text fallback
     m.text =
       m.msg?.text ||
       m.msg?.caption ||
@@ -78,8 +84,9 @@ function smsg(conn, m, store) {
       m.quoted.id = m.msg?.contextInfo?.stanzaId;
       m.quoted.chat = m.msg?.contextInfo?.remoteJid || m.chat;
       m.quoted.isBaileys = m.quoted.id ? m.quoted.id.startsWith("BAE5") && m.quoted.id.length === 16 : false;
-      m.quoted.sender = conn.decodeJid(m.msg?.contextInfo?.participant);
-      m.quoted.fromMe = m.quoted.sender === conn.decodeJid(conn.user.id);
+      // ✅ Updated for LID safety
+      m.quoted.sender = safeDecodeJid(m.msg?.contextInfo?.participant);
+      m.quoted.fromMe = m.quoted.sender === safeDecodeJid(conn.user.id);
       m.quoted.text = m.quoted.text || m.quoted.caption || m.quoted.conversation || m.quoted.contentText || m.quoted.selectedDisplayText || m.quoted.title || "";
       m.quoted.mentionedJid = m.msg?.contextInfo ? m.msg.contextInfo.mentionedJid : [];
 
