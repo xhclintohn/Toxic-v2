@@ -14,7 +14,7 @@ module.exports = async (context) => {
       .join('');
   };
 
-  // Prevent extra words
+  // prevent extra text after command
   if (text && text.trim().length > 0) {
     return client.sendMessage(m.chat, {
       text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, what’s with the extra garbage? Just say .script, you idiot.`
@@ -40,7 +40,7 @@ module.exports = async (context) => {
     const createdDate = new Date(repoInfo.createdAt).toLocaleDateString('en-GB');
     const lastUpdateDate = new Date(repoInfo.lastUpdate).toLocaleDateString('en-GB');
 
-    const replyText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botname} Repository Info*\n\n` +
+    const replyText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${toFancyFont(botname)} Repository Info*\n\n` +
       `🌟 *Stars:* ${repoInfo.stars}\n` +
       `🍴 *Forks:* ${repoInfo.forks}\n` +
       `📅 *Created:* ${createdDate}\n` +
@@ -56,14 +56,14 @@ module.exports = async (context) => {
         {
           name: "cta_copy",
           buttonParamsJson: JSON.stringify({
-            display_text: `📋 ${toFancyFont('Copy Repo Link')}`,
+            display_text: "📋 Copy Repo Link",
             id: repoInfo.htmlUrl
           }),
         },
         {
           name: "cta_url",
           buttonParamsJson: JSON.stringify({
-            display_text: `👤 ${toFancyFont('Contact Developer')}`,
+            display_text: "👤 Contact Developer",
             url: "https://wa.me/254735342808"
           }),
         },
@@ -85,7 +85,7 @@ module.exports = async (context) => {
   } catch (error) {
     console.error('Error in script command:', error);
     await client.sendMessage(m.chat, {
-      text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Couldn’t fetch repo info. Check it manually:\n${repoUrl}`
+      text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Couldn’t fetch repo info. Check manually:\n${repoUrl}`
     }, { quoted: m });
   }
 };
