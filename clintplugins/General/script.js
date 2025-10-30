@@ -14,8 +14,11 @@ module.exports = async (context) => {
       .join('');
   };
 
-  if (text) {
-    return client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, what’s with the extra garbage? Just say !repo, you idiot.` }, { quoted: m });
+  // Prevent extra words
+  if (text && text.trim().length > 0) {
+    return client.sendMessage(m.chat, {
+      text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, what’s with the extra garbage? Just say .script, you idiot.`
+    }, { quoted: m });
   }
 
   try {
@@ -23,9 +26,7 @@ module.exports = async (context) => {
     const response = await fetch(repoUrl);
     const repoData = await response.json();
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch repository data');
-    }
+    if (!response.ok) throw new Error('Failed to fetch repository data');
 
     const repoInfo = {
       stars: repoData.stargazers_count,
@@ -39,23 +40,30 @@ module.exports = async (context) => {
     const createdDate = new Date(repoInfo.createdAt).toLocaleDateString('en-GB');
     const lastUpdateDate = new Date(repoInfo.lastUpdate).toLocaleDateString('en-GB');
 
-    const replyText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botname} Repo*\n\n` +
-                     `🌟 *Sƚαɾʂ*: ${repoInfo.stars} (y’all better star)\n` +
-                     `🔗 *Fσɾƙʂ*: ${repoInfo.forks} (do fork)\n` +
-                     `📅 *Cɾҽαƚҽԃ*: ${createdDate} (born to rule)\n` +
-                     `🕒 *Lαʂƚ Uρԃαƚҽԃ*: ${lastUpdateDate} (still fresh)\n` +
-                     `👤 *Oɯɳҽɾ*: ${repoInfo.owner} (that’s me)\n` +
-                     `🔍 *Vιʂιƚ*: ${repoInfo.htmlUrl} (check the repo)\n\n` +
-                     `│❒ Wanna know the genius behind this? Hit the button below!`;
+    const replyText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botname} Repository Info*\n\n` +
+      `🌟 *Stars:* ${repoInfo.stars}\n` +
+      `🍴 *Forks:* ${repoInfo.forks}\n` +
+      `📅 *Created:* ${createdDate}\n` +
+      `🕒 *Updated:* ${lastUpdateDate}\n` +
+      `👤 *Owner:* ${repoInfo.owner}\n\n` +
+      `📦 *Repository:* ${repoInfo.htmlUrl}\n` +
+      `◈━━━━━━━━━━━━━━━━◈`;
 
     await client.sendMessage(m.chat, {
       text: replyText,
-      footer: `Pσɯҽɾҽԃ Ⴆყ ${botname}`,
+      footer: `Powered by ${botname}`,
       buttons: [
+        {
+          name: "cta_copy",
+          buttonParamsJson: JSON.stringify({
+            display_text: `📋 ${toFancyFont('Copy Repo Link')}`,
+            id: repoInfo.htmlUrl
+          }),
+        },
         {
           name: "cta_url",
           buttonParamsJson: JSON.stringify({
-            display_text: `👤 ${toFancyFont('Developer')}`,
+            display_text: `👤 ${toFancyFont('Contact Developer')}`,
             url: "https://wa.me/254735342808"
           }),
         },
@@ -66,15 +74,18 @@ module.exports = async (context) => {
         externalAdReply: {
           showAdAttribution: false,
           title: `${botname}`,
-          body: `Yo! Don’t fuck this up.`,
-          sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
+          body: "Official Toxic-MD GitHub Repository",
+          sourceUrl: repoInfo.htmlUrl,
           mediaType: 1,
           renderLargerThumbnail: true
         }
       }
     }, { quoted: m });
+
   } catch (error) {
-    console.error('Error in repo command:', error);
-    await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Couldn’t grab repo info, something’s fucked up. Check it yourself: https://github.com/xhclintohn/Toxic-MD` }, { quoted: m });
+    console.error('Error in script command:', error);
+    await client.sendMessage(m.chat, {
+      text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Couldn’t fetch repo info. Check it manually:\n${repoUrl}`
+    }, { quoted: m });
   }
 };
