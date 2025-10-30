@@ -52,7 +52,13 @@ module.exports = async (context) => {
       text: replyText,
       footer: `Pσɯҽɾҽԃ Ⴆყ ${botname}`,
       buttons: [
-        { buttonId: `${prefix}dev`, buttonText: { displayText: `👤 ${toFancyFont('DEV')}` }, type: 1 }
+        {
+          name: "cta_url",
+          buttonParamsJson: JSON.stringify({
+            display_text: `👤 ${toFancyFont('ContactDeveloper')}`,
+            url: "https://wa.me/254735342808"
+          }),
+        },
       ],
       headerType: 1,
       viewOnce: true,
