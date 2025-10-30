@@ -15,7 +15,7 @@ return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
 };
 
 if (text) {
-return client.sendMessage(m.chat, { text: ◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, what’s with the extra garbage? Just say !repo, you idiot. }, { quoted: m });
+return client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, what’s with the extra garbage? Just say !repo, you idiot.` }, { quoted: m });
 }
 
 try {
@@ -70,6 +70,6 @@ await client.sendMessage(m.chat, {
 
 } catch (error) {
 console.error('Error in repo command:', error);
-await client.sendMessage(m.chat, { text: ◈━━━━━━━━━━━━━━━━◈\n│❒ Couldn’t grab repo info, something’s fucked up. Check it yourself: https://github.com/xhclintohn/Toxic-MD }, { quoted: m });
+await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Couldn’t grab repo info, something’s fucked up. Check it yourself: https://github.com/xhclintohn/Toxic-MD` }, { quoted: m });
 }
 };
