@@ -76,7 +76,7 @@ module.exports = async (context) => {
                         name: "cta_url",
                         buttonParamsJson: JSON.stringify({
                             display_text: "Open Pairing Guide",
-                            url: "https://toxicpairing.com"
+                            url: "https://youtube.com/shorts/0G_lBt7DhWI?feature=share"
                         }),
                     },
                 ],
