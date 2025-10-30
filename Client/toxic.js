@@ -1,4 +1,4 @@
-const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType, jidDecode } = require("@whiskeysockets/baileys");
+const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType } = require("@whiskeysockets/baileys");
 const fs = require("fs");
 const util = require("util");
 const chalk = require("chalk");
@@ -31,17 +31,6 @@ setInterval(() => {
     cleanupOldMessages();
 }, 24 * 60 * 60 * 1000);
 
-// ✅ Small helper to safely decode LIDs or plain JIDs
-function safeDecodeJid(jid) {
-    try {
-        if (!jid) return jid;
-        const result = jidDecode(jid) || {};
-        return (result.user && result.server) ? `${result.user}@${result.server}` : jid;
-    } catch {
-        return jid;
-    }
-}
-
 module.exports = toxic = async (client, m, chatUpdate, store) => {
     try {
         const sudoUsers = await getSudoUsers();
@@ -68,8 +57,11 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         body = typeof body === 'string' ? body : '';
 
-        const Tag = m.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+        const Tag =
+            m.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+
         var msgToxic = m.message?.extendedTextMessage?.contextInfo?.quotedMessage || null;
+
         var budy = typeof m.text == "string" ? m.text : "";
 
         const timestamp = speed();
@@ -84,13 +76,11 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const resolvedCommandName = aliases[commandName] || commandName;
 
         const cmd = commands[resolvedCommandName];
+
         const args = body.trim().split(/ +/).slice(1);
         const pushname = m.pushName || "No Name";
-
-        // ✅ Use safeDecodeJid instead of direct decode
-        const botNumber = safeDecodeJid(client.user?.id);
+        const botNumber = await client.decodeJid(client.user.id);
         const itsMe = m.sender == botNumber ? true : false;
-
         let text = (q = args.join(" "));
         const arg = budy.trim().substring(budy.indexOf(" ") + 1);
         const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
@@ -103,8 +93,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 return {};
             }) : {};
             const participants = m.metadata?.participants || [];
-            m.isAdmin = Boolean(participants.find(p => p.admin !== null && p.id === m.sender));
-            m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && p.id === botNumber));
+            m.isAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === m.sender));
+            m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === botNumber));
         } catch (error) {
             console.error("Toxic-MD: Error fetching group metadata:", error);
             m.metadata = {};
@@ -113,12 +103,11 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         }
 
         const clint = (m.quoted || m);
-        const quoted = (clint.mtype == 'buttonsMessage') ? clint[Object.keys(clint)[1]] : 
-                       (clint.mtype == 'templateMessage') ? clint.hydratedTemplate[Object.keys(clint.hydratedTemplate)[1]] : 
-                       (clint.mtype == 'product') ? clint[Object.keys(clint)[0]] : 
-                       m.quoted ? m.quoted : m;
+        const quoted = (clint.mtype == 'buttonsMessage') ? clint[Object.keys(clint)[1]] : (clint.mtype == 'templateMessage') ? clint.hydratedTemplate[Object.keys(clint.hydratedTemplate)[1]] : (clint.mtype == 'product') ? clint[Object.keys(clint)[0]] : m.quoted ? m.quoted : m;
 
-        const color = (text, color) => (!color ? chalk.green(text) : chalk.keyword(color)(text));
+        const color = (text, color) => {
+            return !color ? chalk.green(text) : chalk.keyword(color)(text);
+        };
         const mime = (quoted.msg || quoted).mimetype || "";
         const qmsg = (quoted.msg || quoted);
 
@@ -128,7 +117,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const groupMetadata = m.isGroup ? m.metadata : "";
         const groupName = m.isGroup && groupMetadata ? groupMetadata.subject : "";
         const participants = m.isGroup && groupMetadata ? groupMetadata.participants : "";
-        const groupAdmin = m.isGroup ? (participants.filter(p => p.admin !== null).map(p => p.id) || []) : [];
+        const groupAdmin = m.isGroup ? (participants.filter(p => p.admin !== null).map(p => p.jid) || []) : [];
         const isBotAdmin = m.isBotAdmin;
         const isAdmin = m.isAdmin;
         const IsGroup = m.isGroup;
@@ -155,7 +144,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
             packname, generateProfilePicture, groupMetadata, toxicspeed, mycode,
             fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag, antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate,
-            getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.id), pict, Tag
+            getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.jid), pict, Tag
         };
 
         // Command handling
