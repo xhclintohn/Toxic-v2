@@ -39,10 +39,11 @@ const { commands, totalCommands } = require('../Handler/commandHandler');
 authenticationn();
 
 const path = require('path');
+
 const sessionName = path.join(__dirname, '..', 'Session');
 
 const groupEvents = require("../Handler/eventHandler");
-const groupEvents2 = require("../Handler/eventHandler2");
+const groupEvents2 = require("../Handler/eventHandler");
 const connectionHandler = require('../Handler/connectionHandler');
 const antidelete = require('../Functions/antidelete');
 const antilink = require('../Functions/antilink');
@@ -52,8 +53,8 @@ async function startToxic() {
   if (!settingss) {
     console.log(
       `◈━━━━━━━━━━━━━━━━◈\n` +
-      `│ TOXIC-MD FAILED TO CONNECT\n` +
-      `│ Settings not found, check your database!\n` +
+      `│❒ TOXIC-MD FAILED TO CONNECT 😵\n` +
+      `│❒ Settings not found, check your database! 🖕\n` +
       `┗━━━━━━━━━━━━━━━┛`
     );
     return;
@@ -112,7 +113,7 @@ async function startToxic() {
     setInterval(() => {
       const date = new Date();
       client.updateProfileStatus(
-        `${botname} is active 24/7\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} It's a ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi' })}.`
+        `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi' })}.`
       );
     }, 10 * 1000);
   }
@@ -127,18 +128,30 @@ async function startToxic() {
     const callerJid = json.content[0].attrs['call-creator'];
     const callerNumber = callerJid.replace(/[@.a-z]/g, "");
 
-    if (processedCalls.has(callId)) return;
+    if (processedCalls.has(callId)) {
+      return;
+    }
     processedCalls.add(callId);
 
     const fakeQuoted = {
-      key: { participant: '0@s.whatsapp.net', remoteJid: '0@s.whatsapp.net', id: callId },
-      message: { conversation: "Toxic Verified By WhatsApp" },
-      contextInfo: { mentionedJid: [callerJid], forwardingScore: 999, isForwarded: true }
+      key: {
+        participant: '0@s.whatsapp.net',
+        remoteJid: '0@s.whatsapp.net',
+        id: callId
+      },
+      message: {
+        conversation: "Toxic Verified By WhatsApp"
+      },
+      contextInfo: {
+        mentionedJid: [callerJid],
+        forwardingScore: 999,
+        isForwarded: true
+      }
     };
 
     await client.rejectCall(callId, callerJid);
     await client.sendMessage(callerJid, { 
-      text: "> You Have been banned for calling without permission!" 
+      text: "> You Have been banned for calling without permission ⚠️!" 
     }, { quoted: fakeQuoted });
 
     const bannedUsers = await getBannedUsers();
@@ -147,7 +160,6 @@ async function startToxic() {
     }
   });
 
-  // === MAIN MESSAGE HANDLER ===
   client.ev.on("messages.upsert", async ({ messages }) => {
     let settings = await getSettings();
     if (!settings) return;
@@ -159,22 +171,25 @@ async function startToxic() {
 
     mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
-    // === FIXED FOR LID ===
-    const remoteJid = mek.key.remoteJid || mek.key.lid || "";
-    const sender = mek.key.participant || mek.participant || remoteJid;
+    const remoteJid = mek.key.remoteJid;
+    const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
     const Myself = client.decodeJid(client.user.id);
+
+    if (typeof antidelete !== 'function') {
+      console.error('Toxic-MD Error: antidelete is not a function');
+      return;
+    }
+    if (typeof antilink !== 'function') {
+      console.error('Toxic-MD Error: antilink is not a function');
+      return;
+    }
 
     await antidelete(client, mek, store, fs.readFileSync(path.resolve(__dirname, '../toxic.jpg')));
     await antilink(client, mek, store);
 
-    // === STATUS REACTIONS ===
     if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
-      const nickk = client.decodeJid(client.user.id);
-      const emojis = [
-        '💀','⌚','💎','👣','😂','💔','🤍','❤️‍🔥','💣','🧠','🦅','🌻','❄️','🛑','🧸','👑',
-        '📌','😅','🎭','🎉','😳','💯','🔥','💫','👽','💘','❤️‍🔥','🥀','👀','🙌','👌','⭐',
-        '💧','🦄','🟢','🎎','✅','🥱','🌚','💚','🎀','😉','😔'
-      ];
+      const nickk = await client.decodeJid(client.user.id);
+      const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
       const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
       await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key } }, { statusJidList: [mek.key.participant, nickk] });
     }
@@ -204,6 +219,40 @@ async function startToxic() {
     require("./toxic")(client, m, { type: "notify" }, store);
   });
 
+  client.ev.on("messages.upsert", async ({ messages }) => {
+    const msg = messages[0];
+    if (!msg.message) return;
+
+    if (msg.message.listResponseMessage) {
+      const selectedCmd = msg.message.listResponseMessage.singleSelectReply.selectedRowId;
+
+      const settings = await getSettings();
+      const effectivePrefix = settings?.prefix || '.';
+
+      let command = selectedCmd.startsWith(effectivePrefix)
+        ? selectedCmd.slice(effectivePrefix.length).toLowerCase()
+        : selectedCmd.toLowerCase();
+
+      const m = {
+        ...msg,
+        body: selectedCmd,
+        text: selectedCmd,
+        command: command,
+        prefix: effectivePrefix,
+        sender: msg.key.remoteJid,
+        from: msg.key.remoteJid,
+        chat: msg.key.remoteJid,
+        isGroup: msg.key.remoteJid.endsWith('@g.us')
+      };
+
+      try {
+        require("./toxic")(client, m, { type: "notify" }, store);
+      } catch (error) {
+        console.error('Error processing list selection:', error);
+      }
+    }
+  });
+
   const unhandledRejections = new Map();
   process.on("unhandledRejection", (reason, promise) => {
     unhandledRejections.set(promise, reason);
@@ -212,21 +261,14 @@ async function startToxic() {
   process.on("rejectionHandled", (promise) => {
     unhandledRejections.delete(promise);
   });
+  process.on("Something went wrong", function (err) {});
 
-  // === UPDATED decodeJid FOR LID SUPPORT ===
-  client.decodeJid = (jidOrLid) => {
-    if (!jidOrLid) return jidOrLid;
-    try {
-      if (typeof jidOrLid === "object" && jidOrLid.server) {
-        return jidOrLid.user + "@" + jidOrLid.server;
-      }
-      if (/:\d+@/gi.test(jidOrLid)) {
-        let decode = jidDecode(jidOrLid) || {};
-        return (decode.user && decode.server && decode.user + "@" + decode.server) || jidOrLid;
-      } else return jidOrLid;
-    } catch {
-      return jidOrLid;
-    }
+  client.decodeJid = (jid) => {
+    if (!jid) return jid;
+    if (/:\d+@/gi.test(jid)) {
+      let decode = jidDecode(jid) || {};
+      return (decode.user && decode.server && decode.user + "@" + decode.server) || jid;
+    } else return jid;
   };
 
   client.getName = (jid, withoutContact = false) => {
@@ -249,6 +291,7 @@ async function startToxic() {
   };
 
   client.public = true;
+
   client.serializeM = (m) => smsg(client, m, store);
 
   client.ev.on("group-participants.update", async (m) => {
@@ -316,9 +359,11 @@ async function startToxic() {
 }
 
 app.use(express.static('public'));
+
 app.get("/", (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
+
 app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 
 startToxic();
