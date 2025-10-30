@@ -27,8 +27,8 @@ module.exports = async (context) => {
             }, { quoted: m });
         }
 
-        // create a temporary folder for session
-        const tempPath = path.join(__dirname, 'temp', number);
+        // Create a temporary folder for session
+        const tempPath = path.join(__dirname, 'temps', number);
         if (!fs.existsSync(tempPath)) fs.mkdirSync(tempPath, { recursive: true });
 
         // Baileys setup
@@ -43,7 +43,7 @@ module.exports = async (context) => {
             },
             printQRInTerminal: false,
             logger: pino({ level: 'silent' }),
-            browser: Browsers.macOS('Safari'),
+            browser: ['Ubuntu', 'Chrome'],
             syncFullHistory: false,
             connectTimeoutMs: 60000,
             keepAliveIntervalMs: 30000,
@@ -51,18 +51,18 @@ module.exports = async (context) => {
 
         Toxic_MD_Client.ev.on('creds.update', saveCreds);
 
-        // request the pairing code
+       
         await delay(1500);
         const code = await Toxic_MD_Client.requestPairingCode(number);
 
         if (!code) throw new Error("Failed to get pairing code.");
 
-        // send pairing code message with CTA copy button
+        // Send pairing code message with CTA copy button
         await client.sendMessage(m.chat, {
             interactiveMessage: {
                 header: "🔐 Toxic-MD Pairing Code",
                 title: `✅ Pairing code for *${number}*\n\n> ${code}\n\nFollow the link below to learn how to use it 👇`,
-                footer: "◈ Powered by 𝐓𝐎XIC-MD 𝐕3",
+                footer: "◈ Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
                 buttons: [
                     {
                         name: "cta_copy",
