@@ -147,7 +147,7 @@ async function startToxic() {
     }
   });
 
-  // === MAIN MESSAGE HANDLER (ONLY ONE) ===
+  // === MAIN MESSAGE HANDLER ===
   client.ev.on("messages.upsert", async ({ messages }) => {
     let settings = await getSettings();
     if (!settings) return;
@@ -159,16 +159,22 @@ async function startToxic() {
 
     mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
-    const remoteJid = mek.key.remoteJid;
-    const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
+    // === FIXED FOR LID ===
+    const remoteJid = mek.key.remoteJid || mek.key.lid || "";
+    const sender = mek.key.participant || mek.participant || remoteJid;
     const Myself = client.decodeJid(client.user.id);
 
     await antidelete(client, mek, store, fs.readFileSync(path.resolve(__dirname, '../toxic.jpg')));
     await antilink(client, mek, store);
 
+    // === STATUS REACTIONS ===
     if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
-      const nickk = await client.decodeJid(client.user.id);
-      const emojis = ['skull', 'watch', 'gem', 'footprints', 'face_with_tears_of_joy', 'broken_heart', 'white_heart', 'heart_on_fire', 'bomb', 'brain', 'eagle', 'sunflower', 'ice', 'stop_sign', 'teddy_bear', 'crown', 'pushpin', 'grinning_face_with_sweat', 'performing_arts', 'party_popper', 'flushed_face', 'hundred_points', 'fire', 'dizzy', 'alien', 'heart_with_arrow', 'heart_on_fire', 'wilted_flower', 'eyes', 'raising_hands', 'person_gesturing_OK', 'star', 'droplet', 'unicorn', 'green_circle', 'japanese_dolls', 'check_mark_button', 'yawning_face', 'new_moon_face', 'green_heart', 'heart_with_ribbon', 'winking_face', 'pensive_face'];
+      const nickk = client.decodeJid(client.user.id);
+      const emojis = [
+        '💀','⌚','💎','👣','😂','💔','🤍','❤️‍🔥','💣','🧠','🦅','🌻','❄️','🛑','🧸','👑',
+        '📌','😅','🎭','🎉','😳','💯','🔥','💫','👽','💘','❤️‍🔥','🥀','👀','🙌','👌','⭐',
+        '💧','🦄','🟢','🎎','✅','🥱','🌚','💚','🎀','😉','😔'
+      ];
       const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
       await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key } }, { statusJidList: [mek.key.participant, nickk] });
     }
@@ -207,12 +213,20 @@ async function startToxic() {
     unhandledRejections.delete(promise);
   });
 
-  client.decodeJid = (jid) => {
-    if (!jid) return jid;
-    if (/:\d+@/gi.test(jid)) {
-      let decode = jidDecode(jid) || {};
-      return (decode.user && decode.server && decode.user + "@" + decode.server) || jid;
-    } else return jid;
+  // === UPDATED decodeJid FOR LID SUPPORT ===
+  client.decodeJid = (jidOrLid) => {
+    if (!jidOrLid) return jidOrLid;
+    try {
+      if (typeof jidOrLid === "object" && jidOrLid.server) {
+        return jidOrLid.user + "@" + jidOrLid.server;
+      }
+      if (/:\d+@/gi.test(jidOrLid)) {
+        let decode = jidDecode(jidOrLid) || {};
+        return (decode.user && decode.server && decode.user + "@" + decode.server) || jidOrLid;
+      } else return jidOrLid;
+    } catch {
+      return jidOrLid;
+    }
   };
 
   client.getName = (jid, withoutContact = false) => {
