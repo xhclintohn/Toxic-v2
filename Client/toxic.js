@@ -1,4 +1,4 @@
-const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType } = require("@whiskeysockets/baileys");
+const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType, jidDecode } = require("@whiskeysockets/baileys");
 const fs = require("fs");
 const util = require("util");
 const chalk = require("chalk");
@@ -18,131 +18,189 @@ const chatbotpm = require('../Functions/chatbotpm');
 
 const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require('../Database/config');
 const { botname, mycode } = require('../Env/settings');
+
+// 🆕 Import cleanup function
 const { cleanupOldMessages } = require('../lib/Store');
 
 process.setMaxListeners(0);
+
+// Run cleanup immediately at startup
 cleanupOldMessages();
-setInterval(() => cleanupOldMessages(), 24 * 60 * 60 * 1000);
+// Schedule cleanup every 24 hours
+setInterval(() => {
+    cleanupOldMessages();
+}, 24 * 60 * 60 * 1000);
+
+// ✅ Small helper to safely decode LIDs or plain JIDs
+function safeDecodeJid(jid) {
+    try {
+        if (!jid) return jid;
+        const result = jidDecode(jid) || {};
+        return (result.user && result.server) ? `${result.user}@${result.server}` : jid;
+    } catch {
+        return jid;
+    }
+}
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
-  try {
-    const sudoUsers = await getSudoUsers();
-    const bannedUsers = await getBannedUsers();
-    let settings = await getSettings();
-    if (!settings) return console.error("Settings not found!");
-
-    const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, chatbotpm: chatbotpmSetting, packname } = settings;
-
-    // === EXTRACT BODY (TEXT + LIST BUTTONS) ===
-    var body =
-      m.message?.conversation ||
-      m.message?.extendedTextMessage?.text ||
-      m.message?.imageMessage?.caption ||
-      m.message?.videoMessage?.caption ||
-      m.message?.documentMessage?.caption ||
-      m.message?.buttonsResponseMessage?.selectedButtonId ||
-      m.message?.listResponseMessage?.singleSelectReply?.selectedRowId ||  // LIST BUTTONS
-      m.text ||
-      "";
-
-    body = typeof body === 'string' ? body.trim() : '';
-
-    const timestamp = speed();
-    const toxicspeed = speed() - timestamp;
-    const pict = fs.readFileSync(require('path').resolve(__dirname, '../toxic.jpg'));
-
-    // === COMMAND DETECTION (TEXT + LIST BUTTONS) ===
-    let commandName = null;
-
-    if (body && (body.startsWith(prefix) || body.startsWith('/'))) {
-      commandName = body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase();
-    } 
-    else if (m.message?.listResponseMessage?.singleSelectReply?.selectedRowId) {
-      const selectedId = m.message.listResponseMessage.singleSelectReply.selectedRowId;
-      commandName = selectedId.replace(new RegExp(`^\\${prefix}`), '').trim().toLowerCase();
-    }
-
-    const resolvedCommandName = aliases[commandName] || commandName;
-    const cmd = commands[resolvedCommandName];
-
-    const args = body.trim().split(/ +/).slice(1);
-    const pushname = m.pushName || "No Name";
-    const botNumber = await client.decodeJid(client.user.id);
-    const itsMe = m.sender == botNumber;
-
-    // Group metadata
     try {
-      m.isGroup = m.chat.endsWith("g.us");
-      m.metadata = m.isGroup ? await client.groupMetadata(m.chat) : {};
-      const participants = m.metadata?.participants || [];
-      m.isAdmin = participants.some(p => p.admin && p.id === m.sender);
-      m.isBotAdmin = participants.some(p => p.admin && p.id === botNumber);
-    } catch (e) {
-      m.metadata = {}; m.isAdmin = false; m.isBotAdmin = false;
+        const sudoUsers = await getSudoUsers();
+        const bannedUsers = await getBannedUsers();
+
+        let settings = await getSettings();
+        if (!settings) {
+            console.error("Toxic-MD: Settings not found, cannot proceed!");
+            return;
+        }
+
+        const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, chatbotpm: chatbotpmSetting, packname } = settings;
+
+        var body =
+            m.message?.conversation ||
+            m.message?.extendedTextMessage?.text ||
+            m.message?.imageMessage?.caption ||
+            m.message?.videoMessage?.caption ||
+            m.message?.documentMessage?.caption ||
+            m.message?.buttonsResponseMessage?.selectedButtonId ||
+            m.message?.listResponseMessage?.singleSelectReply?.selectedRowId ||
+            m.text ||
+            "";
+
+        body = typeof body === 'string' ? body : '';
+
+        const Tag = m.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+        var msgToxic = m.message?.extendedTextMessage?.contextInfo?.quotedMessage || null;
+        var budy = typeof m.text == "string" ? m.text : "";
+
+        const timestamp = speed();
+        const toxicspeed = speed() - timestamp;
+
+        const filePath = require('path').resolve(__dirname, '../toxic.jpg');
+        const pict = fs.readFileSync(filePath);
+
+        const commandName = body && (body.startsWith(prefix) || body.startsWith('/')) ? 
+            body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase() : 
+            null;
+        const resolvedCommandName = aliases[commandName] || commandName;
+
+        const cmd = commands[resolvedCommandName];
+        const args = body.trim().split(/ +/).slice(1);
+        const pushname = m.pushName || "No Name";
+
+        // ✅ Use safeDecodeJid instead of direct decode
+        const botNumber = safeDecodeJid(client.user?.id);
+        const itsMe = m.sender == botNumber ? true : false;
+
+        let text = (q = args.join(" "));
+        const arg = budy.trim().substring(budy.indexOf(" ") + 1);
+        const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
+
+        // Group metadata handling
+        try {
+            m.isGroup = m.chat.endsWith("g.us");
+            m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => {
+                console.error("Toxic-MD: Group metadata fetch error:", e);
+                return {};
+            }) : {};
+            const participants = m.metadata?.participants || [];
+            m.isAdmin = Boolean(participants.find(p => p.admin !== null && p.id === m.sender));
+            m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && p.id === botNumber));
+        } catch (error) {
+            console.error("Toxic-MD: Error fetching group metadata:", error);
+            m.metadata = {};
+            m.isAdmin = false;
+            m.isBotAdmin = false;
+        }
+
+        const clint = (m.quoted || m);
+        const quoted = (clint.mtype == 'buttonsMessage') ? clint[Object.keys(clint)[1]] : 
+                       (clint.mtype == 'templateMessage') ? clint.hydratedTemplate[Object.keys(clint.hydratedTemplate)[1]] : 
+                       (clint.mtype == 'product') ? clint[Object.keys(clint)[0]] : 
+                       m.quoted ? m.quoted : m;
+
+        const color = (text, color) => (!color ? chalk.green(text) : chalk.keyword(color)(text));
+        const mime = (quoted.msg || quoted).mimetype || "";
+        const qmsg = (quoted.msg || quoted);
+
+        const DevToxic = Array.isArray(sudoUsers) ? sudoUsers : [];
+        const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
+
+        const groupMetadata = m.isGroup ? m.metadata : "";
+        const groupName = m.isGroup && groupMetadata ? groupMetadata.subject : "";
+        const participants = m.isGroup && groupMetadata ? groupMetadata.participants : "";
+        const groupAdmin = m.isGroup ? (participants.filter(p => p.admin !== null).map(p => p.id) || []) : [];
+        const isBotAdmin = m.isBotAdmin;
+        const isAdmin = m.isAdmin;
+        const IsGroup = m.isGroup;
+
+        // Fake quoted blue tick
+        const fakeQuoted = {
+            key: {
+                participant: '0@s.whatsapp.net',
+                remoteJid: '0@s.whatsapp.net',
+                id: m.id
+            },
+            message: {
+                conversation: "Toxic Verified By WhatsApp"
+            },
+            contextInfo: {
+                mentionedJid: [m.sender],
+                forwardingScore: 999,
+                isForwarded: true
+            }
+        };
+
+        const context = {
+            client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
+            pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
+            packname, generateProfilePicture, groupMetadata, toxicspeed, mycode,
+            fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag, antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate,
+            getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.id), pict, Tag
+        };
+
+        // Command handling
+        if (cmd) {
+            const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
+            if (bannedUsers.includes(senderNumber)) {
+                await client.sendMessage(m.chat, { 
+                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost! 💀` 
+                }, { quoted: fakeQuoted });
+                return;
+            }
+        }
+
+        // Relax mode check
+        if (cmd && mode === 'private' && !itsMe && !Owner && !sudoUsers.includes(m.sender)) {
+            return;
+        }
+
+        // Execute various functions
+        if (antideleteSetting === true) {
+            await antidelete(client, m, store, pict);
+        }
+        await antilink(client, m, store);
+        await chatbotpm(client, m, store, chatbotpmSetting);
+        await status_saver(client, m, Owner, prefix);
+        await gcPresence(client, m);
+        await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
+
+        if (cmd) {
+            await commands[resolvedCommandName](context);
+        }
+
+    } catch (err) {
+        console.error('Toxic-MD Error:', util.format(err));
     }
 
-    const DevToxic = Array.isArray(sudoUsers) ? sudoUsers : [];
-    const Owner = DevToxic.map(v => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
-
-    const groupMetadata = m.isGroup ? m.metadata : "";
-    const groupName = m.isGroup ? groupMetadata.subject : "";
-    const participants = m.isGroup ? groupMetadata.participants : [];
-    const isBotAdmin = m.isBotAdmin;
-    const isAdmin = m.isAdmin;
-    const IsGroup = m.isGroup;
-
-    const fakeQuoted = {
-      key: { participant: '0@s.whatsapp.net', remoteJid: '0@s.whatsapp.net', id: m.id },
-      message: { conversation: "Toxic Verified By WhatsApp" },
-      contextInfo: { mentionedJid: [m.sender], forwardingScore: 999, isForwarded: true }
-    };
-
-    const context = {
-      client, m, text: args.join(" "), Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
-      pushname, body, totalCommands, args, botNumber, itsMe, packname, generateProfilePicture,
-      groupMetadata, toxicspeed, mycode, fetchJson, exec, getRandom, UploadFileUgu, TelegraPh,
-      prefix, cmd, botname, mode, gcpresence, antitag, antidelete: antideleteSetting,
-      fetchBuffer, store, uploadtoimgur, chatUpdate, pict,
-      getGroupAdmins: () => participants.filter(p => p.admin).map(p => p.id)
-    };
-
-    // === BANNED USER CHECK ===
-    if (cmd) {
-      const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
-      if (bannedUsers.includes(senderNumber)) {
-        await client.sendMessage(m.chat, { 
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost!` 
-        }, { quoted: fakeQuoted });
-        return;
-      }
-    }
-
-    // === PRIVATE MODE CHECK ===
-    if (cmd && mode === 'private' && !itsMe && !Owner && !DevToxic.includes(m.sender)) {
-      return;
-    }
-
-    // === RUN FEATURES ===
-    if (antideleteSetting === true) await antidelete(client, m, store, pict);
-    await antilink(client, m, store);
-    await chatbotpm(client, m, store, chatbotpmSetting);
-    await status_saver(client, m, Owner, prefix);
-    await gcPresence(client, m);
-    await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
-
-    // === EXECUTE COMMAND ===
-    if (cmd) {
-      await commands[resolvedCommandName](context);
-    }
-
-  } catch (err) {
-    console.error('Toxic-MD Error:', util.format(err));
-  }
+    process.on('uncaughtException', function (err) {
+        let e = String(err);
+        if (e.includes("conflict")) return;
+        if (e.includes("not-authorized")) return;
+        if (e.includes("Socket connection timeout")) return;
+        if (e.includes("rate-overlimit")) return;
+        if (e.includes("Connection Closed")) return;
+        if (e.includes("Timed Out")) return;
+        if (e.includes("Value not found")) return;
+        console.error('Toxic-MD Caught exception:', err);
+    });
 };
-
-process.on('uncaughtException', (err) => {
-  if (!err.message.includes('conflict') && !err.message.includes('not-authorized') && 
-      !err.message.includes('rate-overlimit') && !err.message.includes('Connection Closed')) {
-    console.error('Caught exception:', err);
-  }
-});
