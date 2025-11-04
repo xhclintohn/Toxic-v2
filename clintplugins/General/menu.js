@@ -23,13 +23,12 @@ module.exports = {
 
     const settings = await getSettings();
     const effectivePrefix = settings.prefix || '.'; 
-
     const ownername = "xh_clinton"; 
 
-    // Use local toxic.jpg image path
-    const imagePath = path.join(__dirname, 'toxic.jpg'); 
+    // Use path.resolve to get the correct file path for toxic.jpg
+    const imagePath = path.resolve(__dirname, '../toxic.jpg'); 
 
-    // Check if the image exists and prepare the media
+    // Check if the image exists
     if (fs.existsSync(imagePath)) {
       const imageBuffer = await prepareWAMessageMedia({ image: fs.createReadStream(imagePath) }, { upload: sock.waUploadToServer });
 
@@ -73,7 +72,7 @@ module.exports = {
 
       await sock.sendMessage(m.chat, buttonMessage, { quoted: m });
     } else {
-      console.error('Image "toxic.jpg" not found!');
+      console.error('Image "toxic.jpg" not found at:', imagePath);
       await sock.sendMessage(m.chat, { text: 'Error: The image could not be found.' }, { quoted: m });
     }
 
