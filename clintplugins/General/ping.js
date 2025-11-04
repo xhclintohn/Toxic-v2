@@ -33,7 +33,7 @@ module.exports = {
       const pingText = `
 *— Bot Status ⌬*
 • *Runtime :* ${botUptime}
-• *Response Speed :* ${pingSpeed} 
+• *Response Speed :* ${pingSpeed} ms
 • *CPU Usage :* ${randomCpuUsage}
 
 _⌬_ 
