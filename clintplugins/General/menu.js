@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const { getSettings } = require('../../Database/config');
-const { prepareWAMessageMedia } = require('@whiskeysockets/baileys');
 
 module.exports = {
   name: 'menu',
@@ -27,12 +26,13 @@ module.exports = {
 
     // Try multiple possible locations for toxic.jpg
     const possibleImagePaths = [
-      path.resolve(__dirname, '../toxic.jpg'),      // Parent directory of current file
-      path.resolve(__dirname, '../../toxic.jpg'),   // Project root (if menu.js is in subfolder)
-      path.resolve(process.cwd(), 'toxic.jpg'),     // Current working directory (project root)
+      path.resolve(__dirname, '../toxic.jpg'),
+      path.resolve(__dirname, '../../toxic.jpg'),
+      path.resolve(process.cwd(), 'toxic.jpg'),
       path.join(__dirname, '../toxic.jpg'),
       path.join(__dirname, '../../toxic.jpg'),
       path.join(process.cwd(), 'toxic.jpg'),
+      '/app/toxic.jpg', // Direct path from your logs
     ];
 
     let imagePath = null;
@@ -46,8 +46,9 @@ module.exports = {
 
     if (imagePath) {
       try {
-        const imageBuffer = await prepareWAMessageMedia({ image: fs.createReadStream(imagePath) }, { upload: sock.waUploadToServer });
-
+        // Read the image file directly
+        const imageBuffer = fs.readFileSync(imagePath);
+        
         const buttons = [
           {
             buttonId: `${effectivePrefix}fullmenu`,
@@ -112,12 +113,17 @@ module.exports = {
     }
 
     if (audioPath) {
-      await sock.sendMessage(m.chat, {
-        audio: { url: audioPath },
-        ptt: true,
-        mimetype: 'audio/mpeg',
-        fileName: 'menu.mp3',
-      }, { quoted: m });
+      try {
+        const audioBuffer = fs.readFileSync(audioPath);
+        await sock.sendMessage(m.chat, {
+          audio: audioBuffer,
+          ptt: true,
+          mimetype: 'audio/mpeg',
+          fileName: 'menu.mp3',
+        }, { quoted: m });
+      } catch (audioError) {
+        console.error('Error sending audio:', audioError);
+      }
     }
   },
 };
