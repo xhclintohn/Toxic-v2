@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
 const { getSettings } = require('../../Database/config');
 
 module.exports = {
@@ -7,13 +8,13 @@ module.exports = {
   aliases: ['help', 'commands', 'list'],
   description: 'Displays the Toxic-MD command menu with interactive buttons',
   run: async (context) => {
-    const { client: sock, m, mode, pict, botname, text, prefix } = context;
+    const { client, m, mode, pict, botname, text, prefix } = context;
 
     if (text) {
-      await sock.sendMessage(
+      await client.sendMessage(
         m.chat,
         {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo ${m.pushName}, what's with the extra bullshit? Just say *${prefix}menu*, moron.\n┗━━━━━━━━━━━━━━━┛`,
+          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo ${m.pushName}, what's with the extra bullshit? Just say *${prefix}menu*, moron. 🖕\n┗━━━━━━━━━━━━━━━┛`,
         },
         { quoted: m, ad: true }
       );
@@ -21,143 +22,123 @@ module.exports = {
     }
 
     const settings = await getSettings();
-    const effectivePrefix = settings.prefix || '.'; 
-    const ownername = "xh_clinton";
+    const effectivePrefix = settings.prefix || '.'; // Dynamic prefix from database
 
-    // Menu text🗿
-    const menuText = `( 💬 ) - Hello, ${m.pushName || "you nameless fuck"}...
+    // Fancy font converter
+    const toFancyFont = (text, isUpperCase = false) => {
+      const fonts = {
+        A: '𝘼', B: '𝘽', C: '𝘾', D: '𝘿', E: '𝙀', F: '𝙁', G: '𝙂', H: '𝙃', I: '𝙄', J: '𝙅', K: '𝙆', L: '𝙇', M: '𝙈',
+        N: '𝙉', O: '𝙊', P: '𝙋', Q: '𝙌', R: '𝙍', S: '𝙎', T: '𝙏', U: '𝙐', V: '𝙑', W: '𝙒', X: '𝙓', Y: '𝙔', Z: '𝙕',
+        a: '𝙖', b: '𝙗', c: '𝙘', d: '𝙙', e: '𝙚', f: '𝙛', g: '𝙜', h: '𝙝', i: '𝙞', j: '𝙟', k: '𝙠', l: '𝙡', m: '𝙢',
+        n: '𝙣', o: '𝙤', p: '𝙥', q: '𝙦', r: '𝙧', s: '𝙨', t: '𝙩', u: '𝙪', v: '𝙫', w: '𝙬', x: '𝙭', y: '𝙮', z: '𝙯',
+      };
+      return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
+        .split('')
+        .map((char) => fonts[char] || char)
+        .join('');
+    };
 
-You're using *${botname}* - not that you deserve it.
+    // Menu text with Toxic-MD flair
+    const menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, B*tches!* 😈\n\n` +
+      `🤖 *Bσƚ*: ${botname} (bow down)\n` +
+      `🔣 *Pɾҽϝιx*: ${effectivePrefix} (learn it, dumbass)\n` +
+      `🌐 *Mσԃҽ*: ${mode} (deal with it)\n` +
+      `\n◈━━━━━━━━━━━━━━━━◈\n\n` +
+      `*Select an option Below, Loser.* 😈`;
 
-        *- 計さ INFORMATION BOT*
-        
- ⌬ Botname :
-  ${botname} (bow down)
-  
- ⌬ Owner : 
- 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 (my creator, respect him)
- 
- ⌬ Prefix : 
- ${effectivePrefix} (don't forget it, idiot)
- 
- ⌬ Mode : 
- ${mode} (deal with it)
- 
- ⌬ Runtime: 
- ${runtime(process.uptime())} (longer than your attention span)
-
-ɴᴏᴡ ꜱᴛᴏᴘ ꜱᴛᴀʀɪɴɢ ᴀɴᴅ ᴘɪᴄᴋ ᴀ ꜰᴜᴄᴋɪɴɢ ᴏᴘᴛɪᴏɴ ᴀʟʀᴇᴀᴅʏ (ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ).`;
-
-    // Runtime function
-    function runtime(seconds) {
-      seconds = Math.floor(seconds);
-      const days = Math.floor(seconds / (3600 * 24));
-      const hours = Math.floor((seconds % (3600 * 24)) / 3600);
-      const minutes = Math.floor((seconds % 3600) / 60);
-      const secs = seconds % 60;
-
-      const parts = [];
-      if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
-      if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
-      if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
-      if (secs > 0) parts.push(`${secs} second${secs > 1 ? 's' : ''}`);
-
-      return parts.join(' ') || '0 seconds';
-    }
-
-    
-    const possibleImagePaths = [
-      path.resolve(__dirname, '../toxic.jpg'),
-      path.resolve(__dirname, '../../toxic.jpg'),
-      path.resolve(process.cwd(), 'toxic.jpg'),
-      path.join(__dirname, '../toxic.jpg'),
-      path.join(__dirname, '../../toxic.jpg'),
-      path.join(process.cwd(), 'toxic.jpg'),
-      '/app/toxic.jpg',
-    ];
-
-    let imagePath = null;
-    for (const possiblePath of possibleImagePaths) {
-      if (fs.existsSync(possiblePath)) {
-        imagePath = possiblePath;
-        console.log('Found image at:', imagePath);
-        break;
-      }
-    }
-
-    if (imagePath) {
-      try {
-       
-        const imageBuffer = fs.readFileSync(imagePath);
-
-        const buttonMessage = {
-          image: imageBuffer,
-          caption: menuText,
-          footer: 'Pσɯҽɾԃ Ⴆý Tσxιƈ-ɱԃȥ',
-          headerType: 4,
+    // Interactive message with buttons using dynamic prefix
+    const msg = generateWAMessageFromContent(
+      m.chat,
+      {
+        interactiveMessage: {
+          header: {
+            documentMessage: {
+              url: 'https://mmg.whatsapp.net/v/t62.7119-24/539012045_745537058346694_1512031191239726227_n.enc?ccb=11-4&oh=01_Q5Aa2QGGiJj--6eHxoTTTTzuWtBgCrkcXBz9hN_y2s_Z1lrABA&oe=68D7901C&_nc_sid=5e03e0&mms3=true',
+              mimetype: 'image/png',
+              fileSha256: '+gmvvCB6ckJSuuG3ZOzHsTBgRAukejv1nnfwGSSSS/4=',
+              fileLength: '1435',
+              pageCount: 0,
+              mediaKey: 'MWO6fI223TY8T0i9onNcwNBBPldWfwp1j1FPKCiJFzw=',
+              fileName: 'Toxic-MD',
+              fileEncSha256: 'ZS8v9tio2un1yWVOOG3lwBxiP+mNgaKPY9+wl5pEoi8=',
+              directPath: '/v/t62.7119-24/539012045_745537058346694_1512031191239726227_n.enc?ccb=11-4&oh=01_Q5Aa2QGGiJj--6eHxoTTTTzuWtBgCrkcXBz9hN_y2s_Z1lrABA&oe=68D7901C&_nc_sid=5e03e0',
+              mediaKeyTimestamp: '1756370084',
+              jpegThumbnail: pict,
+            },
+            hasMediaAttachment: true,
+          },
+          body: { text: menuText },
+          footer: { text: `Pσɯҽɾҽԃ Ⴆყ ${botname}` },
+          nativeFlowMessage: {
+            buttons: [
+              {
+                name: 'cta_url',
+                buttonParamsJson: JSON.stringify({
+                  display_text: 'GitHub Repo',
+                  url: 'https://github.com/xhclintohn/Toxic-MD',
+                  merchant_url: 'https://github.com/xhclintohn/Toxic-MD',
+                }),
+              },
+              {
+                name: 'single_select',
+                buttonParamsJson: JSON.stringify({
+                  title: 'VIEW OPTIONS',
+                  sections: [
+                    {
+                      title: '🔥 CORE COMMANDS',
+                      highlight_label: '© Toxic-MD',
+                      rows: [
+                        { title: '📜 FULL MENU', description: 'Show all commands', id: `${prefix}fullmenu` },
+                        { title: '⚠️ DEV', description: "Send developer's contact", id: `${effectivePrefix}dev` },
+                      ],
+                    },
+                    {
+                      title: 'ℹ BOT INFO',
+                      highlight_label: '© Toxic-MD',
+                      rows: [
+                        { title: '🔥 PING', description: 'Check bot speed', id: `${effectivePrefix}ping` },
+                        { title: '💯 REPO', description: 'Get bot repository', id: `${effectivePrefix}repo` },
+                      ],
+                    },
+                  ],
+                }),
+              },
+            ],
+            messageParamsJson: JSON.stringify({
+              limited_time_offer: {
+                text: 'Toxic-MD',
+                url: 'https://github.com/xhclintohn/Toxic-MD',
+                copy_code: 'TOXIC',
+                expiration_time: Date.now() * 1000,
+              },
+              bottom_sheet: {
+                in_thread_buttons_limit: 2,
+                divider_indices: [1, 2],
+                list_title: 'Select Command',
+                button_title: 'Toxic-MD',
+              },
+            }),
+          },
           contextInfo: {
-            mentionedJid: [m.sender]
-          }
-        };
+            externalAdReply: {
+              title: `${botname}`,
+              body: `Yo, ${m.pushName}! Ready to fuck shit up?`,
+              mediaType: 1,
+              thumbnail: pict,
+              mediaUrl: '',
+              sourceUrl: 'https://github.com/xhclintohn/Toxic-MD',
+              showAdAttribution: false,
+              renderLargerThumbnail: true,
+            },
+          },
+        },
+      },
+      { quoted: m }
+    );
 
-        const nativeFlowButton = {
-          buttonId: 'toxicmenu',
-          buttonText: { displayText: 'Pick Your Poison ☇' },
-          type: 4,
-          nativeFlowInfo: {
-            name: 'single_select',
-            paramsJson: JSON.stringify({
-              title: 'ᴄʜᴏᴏꜱᴇ ᴀ ʙᴜᴛᴛᴏɴ',
-              sections: [
-                {
-                  title: '⌜ BASIC COMMANDS ☣️ ⌟',
-                  rows: [
-                    {
-                      header: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮',
-                      title: 'Full Command List',
-                      description: 'All commands because you can\'t remember shit',
-                      id: `${effectivePrefix}fullmenu`
-                    },
-                    {
-                      header: '𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫',
-                      title: 'Bot Creator',
-                      description: 'Send the contact of the developer ',
-                      id: `${effectivePrefix}dev`
-                    },
-                    {
-                      header: '𝐏𝐢𝐧𝐠',
-                      title: 'Check Bot Speed',
-                      description: 'See how fast I respond to your dumb ass',
-                      id: `${effectivePrefix}ping`
-                    },
-                    {
-                      header: '𝐑𝐞𝐩𝐨',
-                      title: 'Source Code',
-                      description: 'Get the code, not that you\'ll understand it',
-                      id: `${effectivePrefix}repo`
-                    }
-                  ]
-                }
-              ]
-            })
-          }
-        };
+    await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
 
-        await sock.sendMessage(m.chat, {
-          ...buttonMessage,
-          buttons: [nativeFlowButton]
-        }, { quoted: m });
-
-      } catch (error) {
-        console.error('Error processing image:', error);
-        await sendTextOnlyMenu(sock, m, botname, effectivePrefix, ownername, menuText);
-      }
-    } else {
-      console.error('Image "toxic.jpg" not found. Checked paths:', possibleImagePaths);
-      await sendTextOnlyMenu(sock, m, botname, effectivePrefix, ownername, menuText);
-    }
-
-    // === AUDIO ===
+    // Audio message logic
     const possibleAudioPaths = [
       path.join(__dirname, 'xh_clinton', 'menu.mp3'),
       path.join(process.cwd(), 'xh_clinton', 'menu.mp3'),
@@ -173,35 +154,16 @@ You're using *${botname}* - not that you deserve it.
     }
 
     if (audioPath) {
-      try {
-        const audioBuffer = fs.readFileSync(audioPath);
-        await sock.sendMessage(m.chat, {
-          audio: audioBuffer,
+      await client.sendMessage(
+        m.chat,
+        {
+          audio: { url: audioPath },
           ptt: true,
           mimetype: 'audio/mpeg',
           fileName: 'menu.mp3',
-        }, { quoted: m });
-      } catch (audioError) {
-        console.error('Error sending audio:', audioError);
-      }
+        },
+        { quoted: m }
+      );
     }
   },
 };
-
-// Fallback function for text-only menu
-async function sendTextOnlyMenu(sock, m, botname, effectivePrefix, ownername, menuText) {
-  const textMenu = `
-${menuText}
-
-*Available Commands (you better remember these):*
-
-*${effectivePrefix}fullmenu* - All commands because your memory is trash
-*${effectivePrefix}dev* - My creator, worship him
-*${effectivePrefix}ping* - Check if I give a fuck about responding
-*${effectivePrefix}repo* - The code that makes me better than you
-
-Now stop bothering me and pick one.
-  `.trim();
-
-  await sock.sendMessage(m.chat, { text: textMenu }, { quoted: m });
-}
