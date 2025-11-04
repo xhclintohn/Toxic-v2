@@ -1,3 +1,5 @@
+const { prepareWAMessageMedia } = require('@whiskeysockets/baileys');
+
 const fs = require('fs');
 const path = require('path');
 const { getSettings } = require('../../Database/config');
@@ -22,10 +24,12 @@ module.exports = {
 
     const settings = await getSettings();
     const effectivePrefix = settings.prefix || '.'; 
-
     const ownername = "xh_clinton"; 
 
-    // Define your button structure like you did with `ReplyImageX`
+    // Use prepareWAMessageMedia for proper media handling
+    const imageUrl = "https://qu.ax/XxQwp.jpg";
+    const imageBuffer = await prepareWAMessageMedia({ image: imageUrl }, { upload: sock.waUploadToServer });
+
     const buttons = [
       {
         buttonId: `${effectivePrefix}fullmenu`,
@@ -40,18 +44,17 @@ module.exports = {
         buttonText: { displayText: '𝐏𝐢𝐧𝐠' }
       },
       {
-        buttonId: `${prefix}repo`,
+        buttonId: `${effectivePrefix}repo`,
         buttonText: { displayText: '𝐑𝐞𝐩𝐨' }
       }
     ];
 
-    // Define the message
     const buttonMessage = {
-      image: "https://qu.ax/XxQwp.jpg", // Thumbnail image for the button message
+      image: imageBuffer,
       caption: `Welcome to ${botname}!\nPlease select an option below:`,
       footer: `Pσɯҽɾԃ Ⴆý Tσxιƈ-ɱԃȥ`,
       buttons: buttons,
-      headerType: 4, // This will include an image with the button message
+      headerType: 4,
       contextInfo: {
         mentionedJid: [m.sender],
         externalAdReply: {
