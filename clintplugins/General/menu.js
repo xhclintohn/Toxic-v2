@@ -38,15 +38,19 @@ module.exports = {
         .join('');
     };
 
-    // Menu text with Toxic-MD flair
-    const menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, B*tches!* 😈\n\n` +
-      `🤖 *Bσƚ*: ${botname} (bow down)\n` +
-      `🔣 *Pɾҽϝιx*: ${effectivePrefix} (learn it, dumbass)\n` +
-      `🌐 *Mσԃҽ*: ${mode} (deal with it)\n` +
+    // Menu text - FIXED SYNTAX
+    const menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *( 💬 ) - Hello, @${m.pushName}* Welcome to the bots Menu\n\n` + 
+      `- 計さ Bot INFORMATION\n\n` +
+      `⌬ *Bσƚ*: \n` +
+      `𝐓𝐨𝐱𝐢𝐜-𝐌𝐃 (bow down)\n` +
+      `⌬ *Pɾҽϝιx*: \n` +
+      `${effectivePrefix} (learn it, dumbass)\n` +
+      `⌬ *Mσԃҽ*: \n` +
+      `${mode} ( ! )\n` +
       `\n◈━━━━━━━━━━━━━━━━◈\n\n` +
-      `*Select an option Below, Loser.* 😈`;
+      ` ( ! ) *Select a button below.* `;
 
-    // Interactive message with buttons using dynamic prefix
+    // Interactive message with buttons
     const msg = generateWAMessageFromContent(
       m.chat,
       {
@@ -82,22 +86,22 @@ module.exports = {
               {
                 name: 'single_select',
                 buttonParamsJson: JSON.stringify({
-                  title: 'VIEW OPTIONS',
+                  title: '𝐕𝐈𝐄𝐖☇ 𝐎𝐏𝐓𝐈𝐎𝐍𝐒',
                   sections: [
                     {
-                      title: '🔥 CORE COMMANDS',
-                      highlight_label: '© Toxic-MD',
+                      title: '⌜ 𝘾𝙤𝙧𝙚 𝘾𝙤𝙢𝙢𝙖𝙣𝙙𝙨 ⌟',
+                      highlight_label: '© 丨几匚',
                       rows: [
-                        { title: '📜 FULL MENU', description: 'Show all commands', id: `${prefix}fullmenu` },
-                        { title: '⚠️ DEV', description: "Send developer's contact", id: `${effectivePrefix}dev` },
+                        { title: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮', description: '', id: `${prefix}fullmenu` },
+                        { title: '𝐃𝐞𝐯', description: "", id: `${prefix}dev` },
                       ],
                     },
                     {
-                      title: 'ℹ BOT INFO',
-                      highlight_label: '© Toxic-MD',
+                      title: 'ℹ 𝙄𝙣𝙛𝙤 𝘽𝙤𝙩',
+                      highlight_label: '© 丨几匚',
                       rows: [
-                        { title: '🔥 PING', description: 'Check bot speed', id: `${effectivePrefix}ping` },
-                        { title: '💯 REPO', description: 'Get bot repository', id: `${effectivePrefix}repo` },
+                        { title: '𝐏𝐢𝐧𝐠', description: '', id: `${prefix}ping` },
+                        { title: '𝐑𝐞𝐩𝐨', description: '', id: `${prefix}repo` },
                       ],
                     },
                   ],
