@@ -38,15 +38,18 @@ module.exports = {
         .join('');
     };
 
-    // Menu text - FIXED SYNTAX
+    // Menu text
     const menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *( 💬 ) - Hello, @${m.pushName}* Welcome to the bots Menu\n\n` + 
       `- 計さ Bot INFORMATION\n\n` +
       `⌬ *Bσƚ*: \n` +
       `𝐓𝐨𝐱𝐢𝐜-𝐌𝐃 (bow down)\n` +
+
       `⌬ *Pɾҽϝιx*: \n` +
       `${effectivePrefix} (learn it, dumbass)\n` +
+
       `⌬ *Mσԃҽ*: \n` +
       `${mode} ( ! )\n` +
+
       `\n◈━━━━━━━━━━━━━━━━◈\n\n` +
       ` ( ! ) *Select a button below.* `;
 
