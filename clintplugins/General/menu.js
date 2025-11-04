@@ -25,55 +25,75 @@ module.exports = {
     const effectivePrefix = settings.prefix || '.'; 
     const ownername = "xh_clinton"; 
 
-    // Use path.resolve to get the correct file path for toxic.jpg
-    const imagePath = path.resolve(__dirname, '../toxic.jpg'); 
+    // Try multiple possible locations for toxic.jpg
+    const possibleImagePaths = [
+      path.resolve(__dirname, '../toxic.jpg'),      // Parent directory of current file
+      path.resolve(__dirname, '../../toxic.jpg'),   // Project root (if menu.js is in subfolder)
+      path.resolve(process.cwd(), 'toxic.jpg'),     // Current working directory (project root)
+      path.join(__dirname, '../toxic.jpg'),
+      path.join(__dirname, '../../toxic.jpg'),
+      path.join(process.cwd(), 'toxic.jpg'),
+    ];
 
-    // Check if the image exists
-    if (fs.existsSync(imagePath)) {
-      const imageBuffer = await prepareWAMessageMedia({ image: fs.createReadStream(imagePath) }, { upload: sock.waUploadToServer });
+    let imagePath = null;
+    for (const possiblePath of possibleImagePaths) {
+      if (fs.existsSync(possiblePath)) {
+        imagePath = possiblePath;
+        console.log('Found image at:', imagePath);
+        break;
+      }
+    }
 
-      const buttons = [
-        {
-          buttonId: `${effectivePrefix}fullmenu`,
-          buttonText: { displayText: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮' }
-        },
-        {
-          buttonId: `${effectivePrefix}dev`,
-          buttonText: { displayText: '𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫' }
-        },
-        {
-          buttonId: `${effectivePrefix}ping`,
-          buttonText: { displayText: '𝐏𝐢𝐧𝐠' }
-        },
-        {
-          buttonId: `${effectivePrefix}repo`,
-          buttonText: { displayText: '𝐑𝐞𝐩𝐨' }
-        }
-      ];
+    if (imagePath) {
+      try {
+        const imageBuffer = await prepareWAMessageMedia({ image: fs.createReadStream(imagePath) }, { upload: sock.waUploadToServer });
 
-      const buttonMessage = {
-        image: imageBuffer,
-        caption: `Welcome to ${botname}!\nPlease select an option below:`,
-        footer: `Pσɯҽɾԃ Ⴆý Tσxιƈ-ɱԃȥ`,
-        buttons: buttons,
-        headerType: 4,
-        contextInfo: {
-          mentionedJid: [m.sender],
-          externalAdReply: {
-            title: ownername,
-            body: '',
-            thumbnailUrl: "https://qu.ax/XxQwp.jpg", // Keep an external thumbnail or remove if not needed
-            sourceUrl: `https://toxicmd.site`,
-            mediaType: 1,
-            renderLargerThumbnail: true
+        const buttons = [
+          {
+            buttonId: `${effectivePrefix}fullmenu`,
+            buttonText: { displayText: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮' }
+          },
+          {
+            buttonId: `${effectivePrefix}dev`,
+            buttonText: { displayText: '𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫' }
+          },
+          {
+            buttonId: `${effectivePrefix}ping`,
+            buttonText: { displayText: '𝐏𝐢𝐧𝐠' }
+          },
+          {
+            buttonId: `${effectivePrefix}repo`,
+            buttonText: { displayText: '𝐑𝐞𝐩𝐨' }
           }
-        },
-      };
+        ];
 
-      await sock.sendMessage(m.chat, buttonMessage, { quoted: m });
+        const buttonMessage = {
+          image: imageBuffer,
+          caption: `Welcome to ${botname}!\nPlease select an option below:`,
+          footer: `Pσɯҽɾԃ Ⴆý Tσxιƈ-ɱԃȥ`,
+          buttons: buttons,
+          headerType: 4,
+          contextInfo: {
+            mentionedJid: [m.sender],
+            externalAdReply: {
+              title: ownername,
+              body: '',
+              thumbnailUrl: "https://qu.ax/XxQwp.jpg",
+              sourceUrl: `https://toxicmd.site`,
+              mediaType: 1,
+              renderLargerThumbnail: true
+            }
+          },
+        };
+
+        await sock.sendMessage(m.chat, buttonMessage, { quoted: m });
+      } catch (error) {
+        console.error('Error processing image:', error);
+        await sendTextOnlyMenu(sock, m, botname, effectivePrefix, ownername);
+      }
     } else {
-      console.error('Image "toxic.jpg" not found at:', imagePath);
-      await sock.sendMessage(m.chat, { text: 'Error: The image could not be found.' }, { quoted: m });
+      console.error('Image "toxic.jpg" not found. Checked paths:', possibleImagePaths);
+      await sendTextOnlyMenu(sock, m, botname, effectivePrefix, ownername);
     }
 
     // === AUDIO ===
@@ -101,3 +121,24 @@ module.exports = {
     }
   },
 };
+
+// Fallback function for text-only menu
+async function sendTextOnlyMenu(sock, m, botname, effectivePrefix, ownername) {
+  const textMenu = `
+╭───「 *${botname}* 」───
+│ 
+│ Hello *${m.pushName}*! 👋
+│ 
+│ *Available Commands:*
+│ 
+│ 🔘 *${effectivePrefix}fullmenu* - Full command list
+│ 🔘 *${effectivePrefix}dev* - Developer info
+│ 🔘 *${effectivePrefix}ping* - Check bot speed
+│ 🔘 *${effectivePrefix}repo* - Bot repository
+│
+│ *Owner:* ${ownername}
+╰─────────────────
+  `.trim();
+
+  await sock.sendMessage(m.chat, { text: textMenu }, { quoted: m });
+}
