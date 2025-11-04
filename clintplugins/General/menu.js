@@ -24,34 +24,19 @@ module.exports = {
     const effectivePrefix = settings.prefix || '.'; 
     const ownername = "xh_clinton";
 
-    // Fancy font converter
-    const toFancyFont = (text, isUpperCase = false) => {
-      const fonts = {
-        A: '𝘼', B: '𝘽', C: '𝘾', D: '𝘿', E: '𝙀', F: '𝙁', G: '𝙂', H: '𝙃', I: '𝙄', J: '𝙅', K: '𝙆', L: '𝙇', M: '𝙈',
-        N: '𝙉', O: '𝙊', P: '𝙋', Q: '𝙌', R: '𝙍', S: '𝙎', T: '𝙏', U: '𝙐', V: '𝙑', W: '𝙒', X: '𝙓', Y: '𝙔', Z: '𝙕',
-        a: '𝙖', b: '𝙗', c: '𝙘', d: '𝙙', e: '𝙚', f: '𝙛', g: '𝙜', h: '𝙝', i: '𝙞', j: '𝙟', k: '𝙠', l: '𝙡', m: '𝙢',
-        n: '𝙣', o: '𝙤', p: '𝙥', q: '𝙦', r: '𝙧', s: '𝙨', t: '𝙩', u: '𝙪', v: '𝙫', w: '𝙬', x: '𝙭', y: '𝙮', z: '𝙯',
-      };
-      return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
-        .split('')
-        .map((char) => fonts[char] || char)
-        .join('');
-    };
+    // Menu text - Toxic AF
+    const menuText = `Listen up, dumbass ${m.pushName || "you nameless fuck"}...
 
-    // Menu text
-    const menuText = `( 💬 ) - Hello, ${m.pushName || "No Name"}!
-Welcome to ${botname},
-I was created with the aim of helping my owner.
+You're using *${botname}* - not that you deserve it.
 
-*- 計さ INFORMATION BOT*
- ⌬ Botname : ${botname}
- ⌬ Owner : ${ownername}
- ⌬ Version : 1.0.0
- ⌬ Prefix : ${effectivePrefix}
- ⌬ Mode : ${mode}
- ⌬ Runtime: ${runtime(process.uptime())}
+*- 計さ BOT MENU FOR YOUR DUMB ASS*
+ ⌬ Botname : ${botname} (bow down)
+ ⌬ Owner : ${ownername} (my creator, respect him)
+ ⌬ Prefix : ${effectivePrefix} (don't forget it, idiot)
+ ⌬ Mode : ${mode} (deal with it)
+ ⌬ Runtime: ${runtime(process.uptime())} (longer than your attention span)
 
-( ! ) Please press the button below`;
+Now stop staring and pick a fucking option already.`;
 
     // Runtime function
     function runtime(seconds) {
@@ -98,82 +83,48 @@ I was created with the aim of helping my owner.
         const buttonMessage = {
           image: imageBuffer,
           caption: menuText,
-          footer: 'Pσɯҽɾԃ Ⴆý Tσxιƈ-ɱԃȥ',
+          footer: 'Pσɯҽɾԃ Ⴆý Tσxιƈ-ɱԃȥ - Now stop wasting my time',
           headerType: 4,
           contextInfo: {
-            forwardingScore: 99999,
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-              newsletterJid: "120363322461279856@newsletter",
-              serverMessageId: null,
-              newsletterName: `🩸⃟༑⌁⃰𝐓͢𝐨𝐱𝐢𝐜-𝐌𝐃ͯ 𝐄͢𝐱𝐞𝐜𝐮͢𝐭𝐢𝐨𝐧 𝐕ͮ𝐚͢𝐮𝐥𝐭ཀ͜͡🦠️`
-            },
-            externalAdReply: {
-              showAdAttribution: true,
-              title: '𝗧𝗼𝘅𝗶𝗰-𝗠𝗗 𝗩𝟭',
-              body: '𝗫𝗵_𝗖𝗹𝗶𝗻𝘁𝗼𝗻 𝗗𝗲𝘃',
-              mediaType: 1,
-              renderLargerThumbnail: false,
-              thumbnail: imageBuffer,
-              sourceUrl: 'https://www.youtube.com/@xh_clinton'
-            },
             mentionedJid: [m.sender]
-          },
-          viewOnce: true
+          }
         };
 
         const nativeFlowButton = {
           buttonId: 'toxicmenu',
-          buttonText: { displayText: 'Open Menu ☇' },
+          buttonText: { displayText: 'Pick Your Poison ☇' },
           type: 4,
           nativeFlowInfo: {
             name: 'single_select',
             paramsJson: JSON.stringify({
-              title: 'Select ☇ Menu',
+              title: 'Choose Your Fate, Moron',
               sections: [
                 {
-                  title: '⌜𝐓𝐨𝐱𝐢𝐜-𝐌𝐃 𝐁𝐨𝐭🎭 ⌟',
+                  title: '⌜ BASIC COMMANDS ⌟',
                   rows: [
                     {
-                      header: '𝐅𝐔𝐋𝐋 𝐌𝐄𝐍𝐔',
-                      title: 'Full Menu',
-                      description: 'Menampilkan semua command',
+                      header: 'FULL MENU',
+                      title: 'Full Command List',
+                      description: 'All commands because you can\'t remember shit',
                       id: `${effectivePrefix}fullmenu`
                     },
                     {
-                      header: '𝐃𝐄𝐕𝐄𝐋𝐎𝐏𝐄𝐑',
-                      title: 'Developer',
-                      description: 'Menampilkan developer bot',
+                      header: 'DEVELOPER',
+                      title: 'Bot Creator',
+                      description: 'The genius who made this masterpiece',
                       id: `${effectivePrefix}dev`
                     },
                     {
-                      header: '𝐏𝐈𝐍𝐆',
-                      title: 'Ping Bot',
-                      description: 'Check bot response time',
+                      header: 'PING',
+                      title: 'Check Bot Speed',
+                      description: 'See how fast I respond to your dumb ass',
                       id: `${effectivePrefix}ping`
                     },
                     {
-                      header: '𝐑𝐄𝐏𝐎',
-                      title: 'Repository',
-                      description: 'Get bot source code',
+                      header: 'REPO',
+                      title: 'Source Code',
+                      description: 'Get the code, not that you\'ll understand it',
                       id: `${effectivePrefix}repo`
-                    }
-                  ]
-                },
-                {
-                  title: '⌜ 𝐎𝐖𝐍𝐄𝐑 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒🦠 ⌟',
-                  rows: [
-                    {
-                      header: '𝐎𝐖𝐍𝐄𝐑 𝐌𝐄𝐍𝐔',
-                      title: 'Owner Menu',
-                      description: 'Menampilkan owner commands',
-                      id: `${effectivePrefix}owner`
-                    },
-                    {
-                      header: '𝐁𝐎𝐓 𝐒𝐓𝐀𝐓𝐔𝐒',
-                      title: 'Bot Status',
-                      description: 'Check bot statistics',
-                      id: `${effectivePrefix}status`
                     }
                   ]
                 }
@@ -232,16 +183,14 @@ async function sendTextOnlyMenu(sock, m, botname, effectivePrefix, ownername, me
   const textMenu = `
 ${menuText}
 
-*Quick Commands:*
+*Available Commands (you better remember these):*
 
-📖 *${effectivePrefix}fullmenu* - Full command list
-👨‍💻 *${effectivePrefix}dev* - Developer info  
-🏓 *${effectivePrefix}ping* - Check bot speed
-📂 *${effectivePrefix}repo* - Bot repository
-⚡ *${effectivePrefix}owner* - Owner commands
-📊 *${effectivePrefix}status* - Bot status
+*${effectivePrefix}fullmenu* - All commands because your memory is trash
+*${effectivePrefix}dev* - My creator, worship him
+*${effectivePrefix}ping* - Check if I give a fuck about responding
+*${effectivePrefix}repo* - The code that makes me better than you
 
-*Owner:* ${ownername}
+Now stop bothering me and pick one.
   `.trim();
 
   await sock.sendMessage(m.chat, { text: textMenu }, { quoted: m });
