@@ -24,19 +24,29 @@ module.exports = {
     const effectivePrefix = settings.prefix || '.'; 
     const ownername = "xh_clinton";
 
-    // Menu text - Toxic AF
-    const menuText = `Listen up, dumbass ${m.pushName || "you nameless fuck"}...
+    // Menu text🗿
+    const menuText = `( 💬 ) - Hello, ${m.pushName || "you nameless fuck"}...
 
 You're using *${botname}* - not that you deserve it.
 
-*- 計さ BOT MENU FOR YOUR DUMB ASS*
- ⌬ Botname : ${botname} (bow down)
- ⌬ Owner : ${ownername} (my creator, respect him)
- ⌬ Prefix : ${effectivePrefix} (don't forget it, idiot)
- ⌬ Mode : ${mode} (deal with it)
- ⌬ Runtime: ${runtime(process.uptime())} (longer than your attention span)
+        *- 計さ INFORMATION BOT*
+        
+ ⌬ Botname :
+  ${botname} (bow down)
+  
+ ⌬ Owner : 
+ 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 (my creator, respect him)
+ 
+ ⌬ Prefix : 
+ ${effectivePrefix} (don't forget it, idiot)
+ 
+ ⌬ Mode : 
+ ${mode} (deal with it)
+ 
+ ⌬ Runtime: 
+ ${runtime(process.uptime())} (longer than your attention span)
 
-Now stop staring and pick a fucking option already.`;
+ɴᴏᴡ ꜱᴛᴏᴘ ꜱᴛᴀʀɪɴɢ ᴀɴᴅ ᴘɪᴄᴋ ᴀ ꜰᴜᴄᴋɪɴɢ ᴏᴘᴛɪᴏɴ ᴀʟʀᴇᴀᴅʏ (ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ).`;
 
     // Runtime function
     function runtime(seconds) {
@@ -45,17 +55,17 @@ Now stop staring and pick a fucking option already.`;
       const hours = Math.floor((seconds % (3600 * 24)) / 3600);
       const minutes = Math.floor((seconds % 3600) / 60);
       const secs = seconds % 60;
-      
+
       const parts = [];
       if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
       if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
       if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
       if (secs > 0) parts.push(`${secs} second${secs > 1 ? 's' : ''}`);
-      
+
       return parts.join(' ') || '0 seconds';
     }
 
-    // Try multiple possible locations for toxic.jpg
+    
     const possibleImagePaths = [
       path.resolve(__dirname, '../toxic.jpg'),
       path.resolve(__dirname, '../../toxic.jpg'),
@@ -77,13 +87,13 @@ Now stop staring and pick a fucking option already.`;
 
     if (imagePath) {
       try {
-        // Read the image file directly
+       
         const imageBuffer = fs.readFileSync(imagePath);
-        
+
         const buttonMessage = {
           image: imageBuffer,
           caption: menuText,
-          footer: 'Pσɯҽɾԃ Ⴆý Tσxιƈ-ɱԃȥ - Now stop wasting my time',
+          footer: 'Pσɯҽɾԃ Ⴆý Tσxιƈ-ɱԃȥ',
           headerType: 4,
           contextInfo: {
             mentionedJid: [m.sender]
@@ -97,31 +107,31 @@ Now stop staring and pick a fucking option already.`;
           nativeFlowInfo: {
             name: 'single_select',
             paramsJson: JSON.stringify({
-              title: 'Choose Your Fate, Moron',
+              title: 'ᴄʜᴏᴏꜱᴇ ᴀ ʙᴜᴛᴛᴏɴ',
               sections: [
                 {
-                  title: '⌜ BASIC COMMANDS ⌟',
+                  title: '⌜ BASIC COMMANDS ☣️ ⌟',
                   rows: [
                     {
-                      header: 'FULL MENU',
+                      header: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮',
                       title: 'Full Command List',
                       description: 'All commands because you can\'t remember shit',
                       id: `${effectivePrefix}fullmenu`
                     },
                     {
-                      header: 'DEVELOPER',
+                      header: '𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫',
                       title: 'Bot Creator',
-                      description: 'The genius who made this masterpiece',
+                      description: 'Send the contact of the developer ',
                       id: `${effectivePrefix}dev`
                     },
                     {
-                      header: 'PING',
+                      header: '𝐏𝐢𝐧𝐠',
                       title: 'Check Bot Speed',
                       description: 'See how fast I respond to your dumb ass',
                       id: `${effectivePrefix}ping`
                     },
                     {
-                      header: 'REPO',
+                      header: '𝐑𝐞𝐩𝐨',
                       title: 'Source Code',
                       description: 'Get the code, not that you\'ll understand it',
                       id: `${effectivePrefix}repo`
