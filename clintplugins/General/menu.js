@@ -39,12 +39,36 @@ module.exports = {
     };
 
     // Menu text
-    const menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, B*tches!* 😈\n\n` +
-      `🤖 *Bσƚ*: ${botname} (bow down)\n` +
-      `🔣 *Pɾҽϝιx*: ${effectivePrefix} (learn it, dumbass)\n` +
-      `🌐 *Mσԃҽ*: ${mode} (deal with it)\n` +
-      `\n◈━━━━━━━━━━━━━━━━◈\n\n` +
-      `*Select an option Below, Loser.* 😈`;
+    const menuText = `( 💬 ) - Hello, ${m.pushName || "No Name"}!
+Welcome to ${botname},
+I was created with the aim of helping my owner.
+
+*- 計さ INFORMATION BOT*
+ ⌬ Botname : ${botname}
+ ⌬ Owner : ${ownername}
+ ⌬ Version : 1.0.0
+ ⌬ Prefix : ${effectivePrefix}
+ ⌬ Mode : ${mode}
+ ⌬ Runtime: ${runtime(process.uptime())}
+
+( ! ) Please press the button below`;
+
+    // Runtime function
+    function runtime(seconds) {
+      seconds = Math.floor(seconds);
+      const days = Math.floor(seconds / (3600 * 24));
+      const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      
+      const parts = [];
+      if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
+      if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+      if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+      if (secs > 0) parts.push(`${secs} second${secs > 1 ? 's' : ''}`);
+      
+      return parts.join(' ') || '0 seconds';
+    }
 
     // Try multiple possible locations for toxic.jpg
     const possibleImagePaths = [
@@ -54,7 +78,7 @@ module.exports = {
       path.join(__dirname, '../toxic.jpg'),
       path.join(__dirname, '../../toxic.jpg'),
       path.join(process.cwd(), 'toxic.jpg'),
-      '/app/toxic.jpg', // Direct path from your logs
+      '/app/toxic.jpg',
     ];
 
     let imagePath = null;
@@ -71,34 +95,98 @@ module.exports = {
         // Read the image file directly
         const imageBuffer = fs.readFileSync(imagePath);
         
-        const buttons = [
-          {
-            buttonId: `${effectivePrefix}fullmenu`,
-            buttonText: { displayText: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮' }
-          },
-          {
-            buttonId: `${effectivePrefix}dev`,
-            buttonText: { displayText: '𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫' }
-          },
-          {
-            buttonId: `${effectivePrefix}ping`,
-            buttonText: { displayText: '𝐏𝐢𝐧𝐠' }
-          },
-          {
-            buttonId: `${effectivePrefix}repo`,
-            buttonText: { displayText: '𝐑𝐞𝐩𝐨' }
-          }
-        ];
-
         const buttonMessage = {
           image: imageBuffer,
           caption: menuText,
-          footer: `Pσɯҽɾԃ Ⴆý Tσxιƈ-ɱԃȥ`,
-          buttons: buttons,
-          headerType: 4
+          footer: 'Pσɯҽɾԃ Ⴆý Tσxιƈ-ɱԃȥ',
+          headerType: 4,
+          contextInfo: {
+            forwardingScore: 99999,
+            isForwarded: true,
+            forwardedNewsletterMessageInfo: {
+              newsletterJid: "120363322461279856@newsletter",
+              serverMessageId: null,
+              newsletterName: `🩸⃟༑⌁⃰𝐓͢𝐨𝐱𝐢𝐜-𝐌𝐃ͯ 𝐄͢𝐱𝐞𝐜𝐮͢𝐭𝐢𝐨𝐧 𝐕ͮ𝐚͢𝐮𝐥𝐭ཀ͜͡🦠️`
+            },
+            externalAdReply: {
+              showAdAttribution: true,
+              title: '𝗧𝗼𝘅𝗶𝗰-𝗠𝗗 𝗩𝟭',
+              body: '𝗫𝗵_𝗖𝗹𝗶𝗻𝘁𝗼𝗻 𝗗𝗲𝘃',
+              mediaType: 1,
+              renderLargerThumbnail: false,
+              thumbnail: imageBuffer,
+              sourceUrl: 'https://www.youtube.com/@xh_clinton'
+            },
+            mentionedJid: [m.sender]
+          },
+          viewOnce: true
         };
 
-        await sock.sendMessage(m.chat, buttonMessage, { quoted: m });
+        const nativeFlowButton = {
+          buttonId: 'toxicmenu',
+          buttonText: { displayText: 'Open Menu ☇' },
+          type: 4,
+          nativeFlowInfo: {
+            name: 'single_select',
+            paramsJson: JSON.stringify({
+              title: 'Select ☇ Menu',
+              sections: [
+                {
+                  title: '⌜𝐓𝐨𝐱𝐢𝐜-𝐌𝐃 𝐁𝐨𝐭🎭 ⌟',
+                  rows: [
+                    {
+                      header: '𝐅𝐔𝐋𝐋 𝐌𝐄𝐍𝐔',
+                      title: 'Full Menu',
+                      description: 'Menampilkan semua command',
+                      id: `${effectivePrefix}fullmenu`
+                    },
+                    {
+                      header: '𝐃𝐄𝐕𝐄𝐋𝐎𝐏𝐄𝐑',
+                      title: 'Developer',
+                      description: 'Menampilkan developer bot',
+                      id: `${effectivePrefix}dev`
+                    },
+                    {
+                      header: '𝐏𝐈𝐍𝐆',
+                      title: 'Ping Bot',
+                      description: 'Check bot response time',
+                      id: `${effectivePrefix}ping`
+                    },
+                    {
+                      header: '𝐑𝐄𝐏𝐎',
+                      title: 'Repository',
+                      description: 'Get bot source code',
+                      id: `${effectivePrefix}repo`
+                    }
+                  ]
+                },
+                {
+                  title: '⌜ 𝐎𝐖𝐍𝐄𝐑 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒🦠 ⌟',
+                  rows: [
+                    {
+                      header: '𝐎𝐖𝐍𝐄𝐑 𝐌𝐄𝐍𝐔',
+                      title: 'Owner Menu',
+                      description: 'Menampilkan owner commands',
+                      id: `${effectivePrefix}owner`
+                    },
+                    {
+                      header: '𝐁𝐎𝐓 𝐒𝐓𝐀𝐓𝐔𝐒',
+                      title: 'Bot Status',
+                      description: 'Check bot statistics',
+                      id: `${effectivePrefix}status`
+                    }
+                  ]
+                }
+              ]
+            })
+          }
+        };
+
+        await sock.sendMessage(m.chat, {
+          ...buttonMessage,
+          buttons: [nativeFlowButton]
+        }, { quoted: m });
+
       } catch (error) {
         console.error('Error processing image:', error);
         await sendTextOnlyMenu(sock, m, botname, effectivePrefix, ownername, menuText);
@@ -150,6 +238,8 @@ ${menuText}
 👨‍💻 *${effectivePrefix}dev* - Developer info  
 🏓 *${effectivePrefix}ping* - Check bot speed
 📂 *${effectivePrefix}repo* - Bot repository
+⚡ *${effectivePrefix}owner* - Owner commands
+📊 *${effectivePrefix}status* - Bot status
 
 *Owner:* ${ownername}
   `.trim();
