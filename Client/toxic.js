@@ -44,6 +44,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, chatbotpm: chatbotpmSetting, packname } = settings;
 
+        // 🆕 UPDATED BODY EXTRACTION WITH NATIVE FLOW SUPPORT
         var body =
             m.message?.conversation ||
             m.message?.extendedTextMessage?.text ||
@@ -52,10 +53,30 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             m.message?.documentMessage?.caption ||
             m.message?.buttonsResponseMessage?.selectedButtonId ||
             m.message?.listResponseMessage?.singleSelectReply?.selectedRowId ||
+            // 🆕 NATIVE FLOW BUTTON SUPPORT
+            m.message?.templateButtonReplyMessage?.selectedId ||
+            m.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson ||
             m.text ||
             "";
 
         body = typeof body === 'string' ? body : '';
+
+        // 🆕 HANDLE NATIVE FLOW BUTTON RESPONSES
+        if (m.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson) {
+            try {
+                const params = JSON.parse(m.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson);
+                body = params.id || body;
+                console.log('Native flow button clicked:', body);
+            } catch (e) {
+                console.error('Error parsing native flow response:', e);
+            }
+        }
+
+        // 🆕 HANDLE TEMPLATE BUTTON REPLIES
+        if (m.message?.templateButtonReplyMessage?.selectedId) {
+            body = m.message.templateButtonReplyMessage.selectedId;
+            console.log('Template button clicked:', body);
+        }
 
         const Tag =
             m.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
