@@ -1,117 +1,92 @@
 const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
-const AdmZip = require("adm-zip");
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
+
+const { HEROKU_API_KEY, HEROKU_APP_NAME } = process.env;
 
 module.exports = async (context) => {
     const { client, m } = context;
     await ownerMiddleware(context, async () => {
         try {
-            await m.reply("🔍 *Checking for updates...*");
-
-            // Path to store last commit
-            const lastCommitPath = path.join(__dirname, "../../last_commit.txt");
-
-            // 1. Check latest commit SHA from GitHub
-            const repoUrl = "https://api.github.com/repos/xhclintohn/Toxic-v2/commits/main";
-            const { data: commitData } = await axios.get(repoUrl, {
-                headers: { "User-Agent": "Toxic-v2-Bot" }
-            });
-            
-            const latestSha = commitData.sha;
-
-            // 2. Compare with stored SHA
-            let currentSha = "";
-            if (fs.existsSync(lastCommitPath)) {
-                currentSha = fs.readFileSync(lastCommitPath, "utf-8").trim();
+            if (!HEROKU_API_KEY || !HEROKU_APP_NAME) {
+                return await m.reply("⚠️ *Heroku credentials missing!* Set HEROKU_API_KEY and HEROKU_APP_NAME in environment variables.");
             }
 
-            if (latestSha === currentSha) {
-                return await m.reply("✅ *No updates available!* Your Toxic-v2 is already up to date. 🔥");
+            const args = m.body?.split(' ') || [];
+            const subcommand = args[1]?.toLowerCase();
+
+            if (subcommand === 'now') {
+                await m.reply("🚀 *Updating Toxic-v2 now!* Please wait 1-2 minutes for deployment...");
+
+                // Trigger Heroku build from GitHub
+                await axios.post(
+                    `https://api.heroku.com/apps/${HEROKU_APP_NAME}/builds`,
+                    {
+                        source_blob: {
+                            url: 'https://github.com/xhclintohn/Toxic-v2/tarball/main'
+                        }
+                    },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${HEROKU_API_KEY}`,
+                            Accept: 'application/vnd.heroku+json; version=3',
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+
+                return await m.reply("✅ *Redeploy triggered successfully!* Your bot will restart with the latest version.");
+
+            } else {
+                // Check for updates
+                await m.reply("🔍 *Checking GitHub for updates...*");
+
+                // Get latest commit from GitHub
+                const githubRes = await axios.get(
+                    'https://api.github.com/repos/xhclintohn/Toxic-v2/commits/main'
+                );
+                const latestCommit = githubRes.data;
+                const latestSha = latestCommit.sha;
+
+                // Get latest Heroku build info
+                const herokuRes = await axios.get(
+                    `https://api.heroku.com/apps/${HEROKU_APP_NAME}/builds`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${HEROKU_API_KEY}`,
+                            Accept: 'application/vnd.heroku+json; version=3'
+                        }
+                    }
+                );
+
+                const lastBuild = herokuRes.data[0];
+                const deployedSha = lastBuild?.source_blob?.url || '';
+                const alreadyDeployed = deployedSha.includes(latestSha);
+
+                if (alreadyDeployed) {
+                    return await m.reply("✅ *No updates available!* Toxic-v2 is already running the latest version. 🔥");
+                }
+
+                // New update available
+                return await m.reply(
+                    `🆕 *New update available!*\n\n` +
+                    `*Commit Message:* ${latestCommit.commit.message}\n` +
+                    `*Author:* ${latestCommit.commit.author.name}\n` +
+                    `*Date:* ${new Date(latestCommit.commit.author.date).toLocaleString()}\n\n` +
+                    `Type *${process.env.PREFIX || '.'}update now* to update your bot! 🔄`
+                );
             }
-
-            await m.reply("🔄 *Update found!* Downloading latest version...");
-
-            // 3. Download and extract update
-            const zipPath = path.join(__dirname, "../../update.zip");
-            const extractPath = path.join(__dirname, "../../latest");
-            const botRoot = path.join(__dirname, "../..");
-
-            // Download ZIP
-            const { data: zipData } = await axios.get("https://github.com/xhclintohn/Toxic-v2/archive/main.zip", {
-                responseType: "arraybuffer"
-            });
-            
-            fs.writeFileSync(zipPath, zipData);
-
-            // Extract ZIP
-            await m.reply("📦 *Extracting files...*");
-            const zip = new AdmZip(zipPath);
-            zip.extractAllTo(extractPath, true);
-
-            // The extracted folder will be "Toxic-v2-main" from your GitHub repo
-            const sourcePath = path.join(extractPath, "Toxic-v2-main");
-
-            if (!fs.existsSync(sourcePath)) {
-                // List what's actually there for debugging
-                const extractedItems = fs.readdirSync(extractPath);
-                throw new Error(`Toxic-v2-main folder not found. Extracted items: ${extractedItems.join(', ')}`);
-            }
-
-            // Copy files (preserving configs)
-            await m.reply("🔄 *Copying files...*");
-            copyFolderSync(sourcePath, botRoot);
-
-            // Save new SHA
-            fs.writeFileSync(lastCommitPath, latestSha);
-
-            // Cleanup
-            fs.unlinkSync(zipPath);
-            fs.rmSync(extractPath, { recursive: true, force: true });
-
-            await m.reply("✅ *Update complete!* The bot will apply changes automatically. No restart needed! 🔥");
-
-            // Don't restart on Heroku - just let the changes take effect
-            // Heroku will automatically restart the dyno if needed
 
         } catch (error) {
             console.error("Update error:", error);
-            await m.reply(`❌ *Update failed:* ${error.message}`);
+            const errorMessage = error.response?.data?.message || error.message;
+            
+            if (errorMessage.includes('API key')) {
+                await m.reply("❌ *Invalid Heroku API Key!* Check your HEROKU_API_KEY environment variable.");
+            } else if (errorMessage.includes('not found')) {
+                await m.reply("❌ *App not found!* Check your HEROKU_APP_NAME environment variable.");
+            } else {
+                await m.reply(`❌ *Update failed:* ${errorMessage}`);
+            }
         }
     });
 };
-
-// Helper function to copy files while preserving important ones
-function copyFolderSync(source, target) {
-    if (!fs.existsSync(source)) {
-        throw new Error(`Source folder does not exist: ${source}`);
-    }
-
-    if (!fs.existsSync(target)) {
-        fs.mkdirSync(target, { recursive: true });
-    }
-
-    const items = fs.readdirSync(source);
-    
-    for (const item of items) {
-        const srcPath = path.join(source, item);
-        const destPath = path.join(target, item);
-
-        // Skip important files and folders
-        const skipItems = [".env", "Procfile", "package.json", "package-lock.json", "Session", "node_modules", "last_commit.txt"];
-        if (skipItems.includes(item)) {
-            console.log(`Skipping ${item}`);
-            continue;
-        }
-
-        const stat = fs.lstatSync(srcPath);
-        
-        if (stat.isDirectory()) {
-            copyFolderSync(srcPath, destPath);
-        } else {
-            fs.copyFileSync(srcPath, destPath);
-            console.log(`Copied: ${item}`);
-        }
-    }
-}
