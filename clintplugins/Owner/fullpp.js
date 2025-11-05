@@ -3,20 +3,20 @@ const { S_WHATSAPP_NET } = require('@whiskeysockets/baileys');
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
-        const { client, m, text, Owner, generateProfilePicture, botNumber, mime, msgDreaded } = context;
+        const { client, m, text, Owner, generateProfilePicture, botNumber, mime, msgToxic } = context;
 
 try {
 const fs = require("fs");
 
-if(!msgDreaded) { m.reply('Quote an image...') ; return } ;
+if(!msgToxic) { m.reply('REPLY TO A FUCKING IMAGE RIGHT NOW!'); return } ;
 
 
 let media;
-if (msgDreaded.imageMessage) {
-     media = msgDreaded.imageMessage
+if (msgToxic.imageMessage) {
+     media = msgToxic.imageMessage
 
   } else {
-    m.reply('This is not an image...'); return
+    m.reply('THIS IS NOT A FUCKING IMAGE! REPLY TO AN IMAGE!'); return
   } ;
 
 var medis = await client.downloadAndSaveMediaMessage(media);
@@ -48,7 +48,7 @@ client.query({
                     }
                 ]
             })
-                    
+
                     fs.unlinkSync(medis)
                     m.reply("Bot Profile Picture Updated")
 
