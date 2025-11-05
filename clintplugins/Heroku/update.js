@@ -46,11 +46,21 @@ module.exports = async (context) => {
             fs.writeFileSync(zipPath, zipData);
 
             // Extract ZIP
+            await m.reply("📦 *Extracting files...*");
             const zip = new AdmZip(zipPath);
             zip.extractAllTo(extractPath, true);
 
+            // The extracted folder will be "Toxic-v2-main" from your GitHub repo
+            const sourcePath = path.join(extractPath, "Toxic-v2-main");
+
+            if (!fs.existsSync(sourcePath)) {
+                // List what's actually there for debugging
+                const extractedItems = fs.readdirSync(extractPath);
+                throw new Error(`Toxic-v2-main folder not found. Extracted items: ${extractedItems.join(', ')}`);
+            }
+
             // Copy files (preserving configs)
-            const sourcePath = path.join(extractPath, "Toxic-v2");
+            await m.reply("🔄 *Copying files...*");
             copyFolderSync(sourcePath, botRoot);
 
             // Save new SHA
@@ -60,7 +70,7 @@ module.exports = async (context) => {
             fs.unlinkSync(zipPath);
             fs.rmSync(extractPath, { recursive: true, force: true });
 
-            await m.reply("✅ *Update complete!* Restarting bot...");
+            await m.reply("✅ *Update complete!* Restarting bot in 3 seconds...");
 
             // Restart after delay
             setTimeout(() => {
@@ -76,25 +86,34 @@ module.exports = async (context) => {
 
 // Helper function to copy files while preserving important ones
 function copyFolderSync(source, target) {
+    if (!fs.existsSync(source)) {
+        throw new Error(`Source folder does not exist: ${source}`);
+    }
+
     if (!fs.existsSync(target)) {
         fs.mkdirSync(target, { recursive: true });
     }
 
     const items = fs.readdirSync(source);
+    
     for (const item of items) {
         const srcPath = path.join(source, item);
         const destPath = path.join(target, item);
 
-        // Skip important files
-        if ([".env", "Procfile", "package.json", "Session", "node_modules"].includes(item)) {
+        // Skip important files and folders
+        const skipItems = [".env", "Procfile", "package.json", "package-lock.json", "Session", "node_modules", "last_commit.txt"];
+        if (skipItems.includes(item)) {
             console.log(`Skipping ${item}`);
             continue;
         }
 
-        if (fs.lstatSync(srcPath).isDirectory()) {
+        const stat = fs.lstatSync(srcPath);
+        
+        if (stat.isDirectory()) {
             copyFolderSync(srcPath, destPath);
         } else {
             fs.copyFileSync(srcPath, destPath);
+            console.log(`Copied: ${item}`);
         }
     }
 }
