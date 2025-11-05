@@ -70,12 +70,10 @@ module.exports = async (context) => {
             fs.unlinkSync(zipPath);
             fs.rmSync(extractPath, { recursive: true, force: true });
 
-            await m.reply("✅ *Update complete!* Restarting bot in 3 seconds...");
+            await m.reply("✅ *Update complete!* The bot will apply changes automatically. No restart needed! 🔥");
 
-            // Restart after delay
-            setTimeout(() => {
-                process.exit(0);
-            }, 3000);
+            // Don't restart on Heroku - just let the changes take effect
+            // Heroku will automatically restart the dyno if needed
 
         } catch (error) {
             console.error("Update error:", error);
