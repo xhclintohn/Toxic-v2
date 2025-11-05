@@ -34,40 +34,52 @@ module.exports = async (context) => {
     }
 
     try {
-        const encodedUrl = encodeURIComponent(text);
-        const response = await fetchWithRetry(
-            `https://api.privatezia.biz.id/api/downloader/fbdownload?url=${encodedUrl}`,
-            { headers: { Accept: "application/json" }, timeout: 15000 }
-        );
+        const encodedUrl = encodeURIComponent(text.trim());
+        const apiUrl = `https://api.rikishop.my.id/download/facebook?url=${encodedUrl}`;
+
+        const response = await fetchWithRetry(apiUrl, {
+            headers: { Accept: "application/json" },
+            timeout: 20000
+        });
 
         const data = await response.json();
 
-        // Check if the API response is valid and contains the expected data
-        if (!data || !data.status || !data.data || !data.data.downloads || data.data.downloads.length === 0) {
-            return m.reply(formatStylishReply("API’s actin’ shady, no video found! 😢 Try again later."));
+        // Validate API response
+        if (!data.status || !data.result || !data.result.video || data.result.video.length === 0) {
+            return m.reply(formatStylishReply("No video found or API failed. Try another link! 😢"));
         }
 
-        // Extract the best quality video URL
-        const fbvid = data.data.best_quality || data.data.downloads.find(d => d.quality === "720p (HD)")?.url;
-        const title = data.data.title || "No title available";
-        const thumbnail = data.data.thumbnail || null;
+        const result = data.result;
 
-        if (!fbvid) {
-            return m.reply(formatStylishReply("Invalid Facebook video data. Make sure the video exists, fam!"));
-        }
+        // Prefer 720p HD, fallback to highest available
+        let videoUrl = result.media; // fallback to base media
+        const hdVideo = result.video.find(v => v.quality.includes("720p"));
+        if (hdVideo) videoUrl = hdVideo.url;
 
-        // Send the video with a caption
+        const title = result.title || "Facebook Video";
+        const duration = result.duration || "Unknown";
+        const thumbnail = result.thumbnail || null;
+
+        // Send video
         await client.sendMessage(
             m.chat,
             {
-                video: { url: fbvid },
-                caption: formatStylishReply(`🎥 Facebook Video\n\n📌 *Title:* ${title}\n📸 *Thumbnail:* ${thumbnail || "Not available"}`),
+                video: { url: videoUrl },
+                caption: formatStylishReply(
+                    `🎥 *Facebook Video Downloaded*\n\n` +
+                    `📌 *Title:* ${title}\n` +
+                    `⏱ *Duration:* ${duration}\n` +
+                    `🎞 *Quality:* HD Preferred\n` +
+                    `📥 Powered by Toxic-MD`
+                ),
                 gifPlayback: false,
+                jpegThumbnail: thumbnail ? await (await fetch(thumbnail)).buffer() : null
             },
             { quoted: m }
         );
+
     } catch (e) {
-        console.error("Facebook download error:", e);
-        m.reply(formatStylishReply(`Yo, we hit a snag: ${e.message}. Check the URL and try again! 😎`));
+        console.error("Rikishop FB DL Error:", e);
+        m.reply(formatStylishReply(`Download failed: ${e.message}\n\nCheck URL or try again later! 🚫`));
     }
 };
