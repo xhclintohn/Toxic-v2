@@ -11,53 +11,47 @@ module.exports = {
             return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
         };
 
-        /**
-         * Extract text from message
-         */
         const text = m.body.replace(new RegExp(`^${prefix}(brat|bratsticker|brattext)\\s*`, 'i'), '').trim();
         
         if (!text) {
             return client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, @${m.sender.split('@')[0]}! 😤 You forgot the text!\n│❒ Example: ${prefix}brat Hello there\n│❒ Or: ${prefix}bratsticker Your text here\n◈━━━━━━━━━━━━━━━━◈`,
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, @${m.sender.split('@')[0]}! 😤 You forgot the text!\n│❒ Example: ${prefix}brat Hello there\n◈━━━━━━━━━━━━━━━━◈`,
                 mentions: [m.sender]
             }, { quoted: m });
         }
 
         try {
-            /**
-             * Send loading message
-             */
             const loadingMsg = await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Creating brat sticker... 🎨\nText: "${text}"\nPlease wait... ⏳`)
+                text: formatStylishReply(`Creating brat sticker... 🎨\nText: "${text}"`)
             }, { quoted: m });
 
-            /**
-             * Call the brat API - let it return whatever it wants
-             */
             const apiUrl = `https://api.ootaizumi.web.id/generator/brat?text=${encodeURIComponent(text)}`;
             
-            // Just fetch whatever the API returns
+            // Get the image as buffer
             const response = await fetch(apiUrl);
-            
-            if (!response.ok) {
-                throw new Error(`API returned status: ${response.status}`);
-            }
-
-            // Get whatever the API sends
-            const resultBuffer = await response.buffer();
+            if (!response.ok) throw new Error(`API status: ${response.status}`);
+            const imageBuffer = await response.buffer();
 
             // Delete loading message
-            await client.sendMessage(m.chat, { 
-                delete: loadingMsg.key 
-            });
+            await client.sendMessage(m.chat, { delete: loadingMsg.key });
 
             /**
-             * Just send whatever the API returns without any processing
+             * Send with proper sticker metadata
              */
             await client.sendMessage(
                 m.chat,
                 {
-                    sticker: resultBuffer
+                    sticker: imageBuffer,
+                    contextInfo: {
+                        externalAdReply: {
+                            title: 'Brat Sticker',
+                            body: `Text: ${text}`,
+                            mediaType: 1,
+                            thumbnail: imageBuffer,
+                            sourceUrl: apiUrl,
+                            renderLargerThumbnail: true
+                        }
+                    }
                 },
                 { quoted: m }
             );
@@ -65,17 +59,12 @@ module.exports = {
         } catch (error) {
             console.error('Brat command error:', error);
             
-            // Try to delete loading message
             try {
-                await client.sendMessage(m.chat, { 
-                    delete: loadingMsg.key 
-                });
-            } catch (e) {
-                // Ignore delete errors
-            }
-
+                await client.sendMessage(m.chat, { delete: loadingMsg.key });
+            } catch (e) {}
+            
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Brat Creation Failed! 😤\nError: ${error.message}\n\nTry again with different text.`)
+                text: formatStylishReply(`Failed! 😤\nError: ${error.message}`)
             }, { quoted: m });
         }
     }
