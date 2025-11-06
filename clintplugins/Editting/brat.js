@@ -39,20 +39,19 @@ module.exports = {
             }, { quoted: m });
 
             /**
-             * Call the brat API
+             * Call the brat API - it returns image directly, not JSON
              */
             const apiUrl = `https://api.ootaizumi.web.id/generator/brat?text=${encodeURIComponent(text)}`;
+            
+            // First, try to get the image as buffer
             const response = await fetch(apiUrl);
-            const data = await response.json();
-
-            /**
-             * Handle API response
-             */
-            if (!data.status || !data.result) {
-                throw new Error(data.message || 'Failed to generate brat sticker');
+            
+            if (!response.ok) {
+                throw new Error(`API returned status: ${response.status}`);
             }
 
-            const resultUrl = data.result;
+            // Get the image buffer
+            const imageBuffer = await response.buffer();
 
             // Delete loading message
             await client.sendMessage(m.chat, { 
@@ -60,47 +59,25 @@ module.exports = {
             });
 
             /**
-             * Check if result is an image URL and send accordingly
+             * Try to send as sticker first, then fallback to image
              */
-            if (resultUrl.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
-                // It's an image - send as sticker
-                try {
-                    await client.sendMessage(
-                        m.chat,
-                        {
-                            sticker: { url: resultUrl },
-                            caption: formatStylishReply(`Brat Sticker Created! ✨\nText: "${text}"`)
-                        },
-                        { quoted: m }
-                    );
-                } catch (stickerError) {
-                    console.error('Sticker send failed, sending as image:', stickerError);
-                    // Fallback to image if sticker fails
-                    await client.sendMessage(
-                        m.chat,
-                        {
-                            image: { url: resultUrl },
-                            caption: formatStylishReply(`Brat Image Created! 🖼️\nText: "${text}"`)
-                        },
-                        { quoted: m }
-                    );
-                }
-            } else if (resultUrl.match(/\.(mp4|webm|gif)$/i)) {
-                // It's a video/GIF
+            try {
                 await client.sendMessage(
                     m.chat,
                     {
-                        video: { url: resultUrl },
-                        caption: formatStylishReply(`Brat Video Created! 🎬\nText: "${text}"`)
+                        sticker: imageBuffer,
+                        caption: formatStylishReply(`Brat Sticker Created! ✨\nText: "${text}"`)
                     },
                     { quoted: m }
                 );
-            } else {
-                // Unknown format or text response - send as text
+            } catch (stickerError) {
+                console.error('Sticker send failed, sending as image:', stickerError);
+                // Fallback to image if sticker fails
                 await client.sendMessage(
                     m.chat,
                     {
-                        text: formatStylishReply(`Brat Result: ${resultUrl}\n\nText: "${text}"`)
+                        image: imageBuffer,
+                        caption: formatStylishReply(`Brat Image Created! 🖼️\nText: "${text}"`)
                     },
                     { quoted: m }
                 );
@@ -120,8 +97,8 @@ module.exports = {
 
             let errorMessage = 'An unexpected error occurred';
             
-            if (error.message.includes('Failed to generate')) {
-                errorMessage = 'The brat generator failed to create your sticker.';
+            if (error.message.includes('status')) {
+                errorMessage = 'The brat generator API is not responding properly.';
             } else if (error.message.includes('Network Error') || error.message.includes('fetch')) {
                 errorMessage = 'Network error. Please check your connection.';
             } else if (error.message.includes('timeout')) {
