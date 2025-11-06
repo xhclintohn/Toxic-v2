@@ -1,5 +1,3 @@
-const { translate } = require('@vitalets/google-translate-api');
-
 module.exports = {
     name: 'translate',
     aliases: ['tr', 'trans'],
@@ -11,129 +9,72 @@ module.exports = {
             return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
         };
 
-        /**
-         * Extract arguments from message
-         */
-        const args = m.body.replace(new RegExp(`^${prefix}(translate|tr|trans)\\s*`, 'i'), '').trim().split(' ');
-        
-        const defaultLang = 'id';
-        let err = formatStylishReply(`How to use:\n${prefix}tr id hello world\n\nExample:\n${prefix}tr ja Hello how are you?\n${prefix}tr fr Thank you very much`);
-
-        let lang = args[0];
-        let text = args.slice(1).join(' ');
-        
-        // If first argument is not a 2-letter language code, use default language
-        if ((args[0] || '').length !== 2) {
-            lang = defaultLang;
-            text = args.join(' ');
-        }
-        
-        // If no text provided, check if there's a quoted message
-        if (!text && m.quoted && m.quoted.text) {
-            text = m.quoted.text;
-        }
-
-        // Validate inputs
-        if (!text) {
-            return client.sendMessage(m.chat, {
-                text: formatStylishReply(`Yo, @${m.sender.split('@')[0]}! 😤 You forgot the text to translate!\n\n${err}`),
-                mentions: [m.sender]
-            }, { quoted: m });
-        }
-
-        if (!lang || lang.length !== 2) {
-            return client.sendMessage(m.chat, {
-                text: formatStylishReply(`Invalid language code! 😤\nLanguage code must be 2 letters (e.g., en, id, ja, fr)\n\n${err}`),
-                mentions: [m.sender]
-            }, { quoted: m });
-        }
+        console.log('Translate command triggered!'); // Debug log
 
         try {
-            /**
-             * Send loading message
-             */
-            const loadingMsg = await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Translating to ${lang.toUpperCase()}... 🔄\nPlease wait...`)
-            }, { quoted: m });
+            // Test if we can require the package
+            console.log('Attempting to require translate package...');
+            const { translate } = require('@vitalets/google-translate-api');
+            console.log('Package required successfully!');
 
-            /**
-             * Perform translation
-             */
-            let result = await translate(text, { 
-                to: lang, 
-                autoCorrect: true 
-            }).catch(_ => null);
+            const fullText = m.body.replace(new RegExp(`^${prefix}(translate|tr|trans)\\s*`, 'i'), '').trim();
+            console.log('Full text:', fullText);
 
-            if (!result) {
-                await client.sendMessage(m.chat, { delete: loadingMsg.key });
+            if (!fullText && !m.quoted?.text) {
+                console.log('No text provided, sending help');
                 return client.sendMessage(m.chat, {
-                    text: formatStylishReply('Translation failed! 😢\nPlease try again with different text.')
+                    text: formatStylishReply(`How to use:\n• ${prefix}tr id hello world\n• ${prefix}tr ja Hello how are you?\n• Reply to a message with: ${prefix}tr en`)
                 }, { quoted: m });
             }
 
-            // Delete loading message
-            await client.sendMessage(m.chat, { delete: loadingMsg.key });
+            let lang, text;
 
-            /**
-             * Get language name for better display
-             */
+            if (m.quoted?.text) {
+                lang = fullText || 'en';
+                text = m.quoted.text;
+                console.log('Using quoted text, lang:', lang);
+            } else {
+                const parts = fullText.split(' ');
+                if (parts.length >= 2 && parts[0].length === 2) {
+                    lang = parts[0];
+                    text = parts.slice(1).join(' ');
+                } else {
+                    lang = 'en';
+                    text = fullText;
+                }
+                console.log('Using command text, lang:', lang, 'text:', text);
+            }
+
+            // Send loading message
+            await client.sendMessage(m.chat, {
+                text: formatStylishReply(`Translating to ${lang.toUpperCase()}... 🔄`)
+            }, { quoted: m });
+
+            console.log('Calling translate API...');
+            const result = await translate(text, { to: lang });
+            console.log('Translation successful!');
+
+            // Language names
             const languageNames = {
-                'id': 'Indonesian',
-                'en': 'English',
-                'ja': 'Japanese',
-                'fr': 'French',
-                'es': 'Spanish',
-                'de': 'German',
-                'it': 'Italian',
-                'pt': 'Portuguese',
-                'ru': 'Russian',
-                'zh': 'Chinese',
-                'ko': 'Korean',
-                'ar': 'Arabic',
-                'hi': 'Hindi',
-                'tr': 'Turkish',
-                'nl': 'Dutch',
-                'sv': 'Swedish',
-                'pl': 'Polish',
-                'th': 'Thai',
-                'vi': 'Vietnamese'
+                'id': 'Indonesian', 'en': 'English', 'ja': 'Japanese', 'fr': 'French',
+                'es': 'Spanish', 'de': 'German', 'it': 'Italian', 'pt': 'Portuguese',
+                'ru': 'Russian', 'zh': 'Chinese', 'ko': 'Korean', 'ar': 'Arabic',
+                'hi': 'Hindi', 'tr': 'Turkish'
             };
 
             const fromLang = languageNames[result.from.language.iso] || result.from.language.iso.toUpperCase();
             const toLang = languageNames[lang] || lang.toUpperCase();
 
-            /**
-             * Send translation result
-             */
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Translation Result 🌐\n\nFrom: ${fromLang}\nTo: ${toLang}\n\nOriginal Text:\n${text}\n\nTranslated Text:\n${result.text}`)
+                text: formatStylishReply(`🌐 Translation\n\n📥 ${fromLang}: ${text}\n📤 ${toLang}: ${result.text}`)
             }, { quoted: m });
 
-            // If there's autocorrect, show it
-            if (result.raw && result.raw.sentences && result.raw.sentences[0] && result.raw.sentences[0].trans) {
-                const transLiteration = result.raw.sentences[0].trans;
-                if (transLiteration && transLiteration !== result.text) {
-                    await client.sendMessage(m.chat, {
-                        text: formatStylishReply(`Transliteration:\n${transLiteration}`)
-                    }, { quoted: m });
-                }
-            }
-
-        } catch (e) {
-            console.error('Translation error:', e);
+        } catch (error) {
+            console.error('TRANSLATE ERROR:', error);
             
-            let errorMessage = 'Translation failed!';
-            
-            if (e.message.includes('Invalid target language')) {
-                errorMessage = 'Invalid language code! Use 2-letter codes like: en, id, ja, fr, es, etc.';
-            } else if (e.message.includes('Network Error')) {
-                errorMessage = 'Network error! Please check your connection.';
-            } else if (e.message.includes('Too many requests')) {
-                errorMessage = 'Too many requests! Please wait a moment and try again.';
-            }
-
+            // Send detailed error to chat for debugging
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`${errorMessage}\n\nExample usage:\n${prefix}tr id Hello world\n${prefix}tr ja How are you?`)
+                text: formatStylishReply(`❌ Error Details:\n${error.message}\n\nStack: ${error.stack}`)
             }, { quoted: m });
         }
     }
