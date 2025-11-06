@@ -31,17 +31,17 @@ module.exports = {
       }, { quoted: m });
 
       /**
-       * Calls the Sora AI API.
+       * Calls the new Sora AI API.
        */
-      const apiUrl = `https://api.elrayyxml.web.id/api/ai/chatgptvideo?prompt=${encodeURIComponent(prompt)}`;
+      const apiUrl = `https://anabot.my.id/api/ai/sora?prompt=${encodeURIComponent(prompt)}&apikey=freeApikey`;
       const response = await fetch(apiUrl);
       const data = await response.json();
 
-      if (!data.status || !data.result) {
+      if (!data.success || !data.data?.result?.url) {
         throw new Error(data.message || 'Failed to generate video');
       }
 
-      const videoUrl = data.result;
+      const videoUrl = data.data.result.url;
 
       /**
        * Sends the generated video.
@@ -60,7 +60,7 @@ module.exports = {
     } catch (error) {
       console.error('Sora command error:', error);
       await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, @${m.sender.split('@')[0]}! 😤 Couldn’t generate the video.\n│❒ Error: ${error.message}\n┗━━━━━━━━━━━━━━━┛`,
+        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, @${m.sender.split('@')[0]}! 😤 Couldn't generate the video.\n│❒ Error: ${error.message}\n┗━━━━━━━━━━━━━━━┛`,
         mentions: [m.sender]
       }, { quoted: m });
     }
