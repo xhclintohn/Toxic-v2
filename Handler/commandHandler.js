@@ -37,6 +37,8 @@ const aliases = {
     porn: "xvideos",
     bug: "crash",
     developer: "dev",
+    ssweb: "screenshot",
+    get: "fetch",
     cmd: "getcmd",
     s: "sticker",
     m: "menu",
