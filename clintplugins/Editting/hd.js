@@ -27,54 +27,116 @@ async function uploadImage(buffer) {
     }
 }
 
-module.exports = async (context) => {
-    const { client, mime, m } = context;
+module.exports = {
+    name: 'hd',
+    aliases: ['enhance', 'upscale'],
+    description: 'Enhances image quality to HD using AI upscaling',
+    run: async (context) => {
+        const { client, m, mime } = context;
 
-    // Determine whether the image is from quoted or current message
-    const quoted = m.quoted ? m.quoted : m;
-    const quotedMime = quoted.mimetype || mime || '';
+        // Determine whether the image is from quoted or current message
+        const quoted = m.quoted ? m.quoted : m;
+        const quotedMime = quoted.mimetype || mime || '';
 
-    if (!/image/.test(quotedMime)) {
-        return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Please reply to or send an image with this command.\n◈━━━━━━━━━━━━━━━━◈');
-    }
-
-    await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Enhancing your image. Please wait... 🗿\n◈━━━━━━━━━━━━━━━━◈');
-
-    try {
-        // Step 1: Download image
-        const media = await quoted.download();
-
-        if (!media) {
-            return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Failed to download the image. Try again.\n◈━━━━━━━━━━━━━━━━◈');
+        if (!/image/.test(quotedMime)) {
+            return client.sendMessage(m.chat, {
+                text: '◈━━━━━━━━━━━━━━━━◈\n│❒ Please reply to or send an image with this command!\n│❒ Example: Reply to an image with .hd\n┗━━━━━━━━━━━━━━━┛'
+            }, { quoted: m });
         }
 
-        // Step 2: Size limit check
-        if (media.length > 10 * 1024 * 1024) {
-            return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ The image is too large (max 10MB).\n◈━━━━━━━━━━━━━━━━◈');
+        // Send loading message
+        const loadingMsg = await client.sendMessage(m.chat, {
+            text: '◈━━━━━━━━━━━━━━━━◈\n│❒ Enhancing your image to HD...\n│❒ This may take a moment ⏳\n┗━━━━━━━━━━━━━━━┛'
+        }, { quoted: m });
+
+        try {
+            // Step 1: Download image
+            const media = await quoted.download();
+
+            if (!media) {
+                await client.sendMessage(m.chat, { delete: loadingMsg.key });
+                return client.sendMessage(m.chat, {
+                    text: '◈━━━━━━━━━━━━━━━━◈\n│❒ Failed to download the image!\n│❒ Please try again with a different image\n┗━━━━━━━━━━━━━━━┛'
+                }, { quoted: m });
+            }
+
+            // Step 2: Size limit check
+            if (media.length > 10 * 1024 * 1024) {
+                await client.sendMessage(m.chat, { delete: loadingMsg.key });
+                return client.sendMessage(m.chat, {
+                    text: '◈━━━━━━━━━━━━━━━━◈\n│❒ Image is too large!\n│❒ Maximum size: 10MB\n┗━━━━━━━━━━━━━━━┛'
+                }, { quoted: m });
+            }
+
+            // Step 3: Upload image to get a public URL
+            const { url: imageUrl } = await uploadImage(media);
+
+            // Step 4: Call the new upscale API
+            const encodedUrl = encodeURIComponent(imageUrl);
+            const upscaleApiUrl = `https://api.zenzxz.my.id/api/tools/upscale?url=${encodedUrl}`;
+            
+            const response = await axios.get(upscaleApiUrl, {
+                headers: { 
+                    'accept': 'application/json',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                timeout: 60000 // 60 second timeout for processing
+            });
+
+            // Validate API response
+            if (!response.data.success || !response.data.data?.url) {
+                throw new Error('Upscale API failed to process the image');
+            }
+
+            const enhancedImageUrl = response.data.data.url;
+
+            // Step 5: Download the enhanced image
+            const enhancedResponse = await axios.get(enhancedImageUrl, {
+                responseType: 'arraybuffer',
+                timeout: 30000
+            });
+
+            const enhancedImage = Buffer.from(enhancedResponse.data);
+
+            // Step 6: Delete loading message and send enhanced image
+            await client.sendMessage(m.chat, { delete: loadingMsg.key });
+
+            await client.sendMessage(
+                m.chat,
+                { 
+                    image: enhancedImage, 
+                    caption: '◈━━━━━━━━━━━━━━━━◈\n│❒ Image Enhanced to HD! 🎨\n│❒ Quality improved successfully\n┗━━━━━━━━━━━━━━━┛' 
+                },
+                { quoted: m }
+            );
+
+        } catch (err) {
+            console.error('HD enhancement error:', err);
+            
+            // Delete loading message on error
+            try {
+                await client.sendMessage(m.chat, { delete: loadingMsg.key });
+            } catch (e) {
+                // Ignore delete errors
+            }
+
+            let errorMessage = 'An unexpected error occurred';
+            
+            if (err.message.includes('timeout')) {
+                errorMessage = 'Processing timed out. The image might be too large or the server is busy.';
+            } else if (err.message.includes('Network Error')) {
+                errorMessage = 'Network error. Please check your connection and try again.';
+            } else if (err.message.includes('Upload error')) {
+                errorMessage = 'Failed to upload image for processing.';
+            } else if (err.message.includes('Upscale API failed')) {
+                errorMessage = 'The enhancement service failed to process your image.';
+            } else {
+                errorMessage = err.message;
+            }
+
+            await client.sendMessage(m.chat, {
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Enhancement Failed! 😤\n│❒ Error: ${errorMessage}\n┗━━━━━━━━━━━━━━━┛`
+            }, { quoted: m });
         }
-
-        // Step 3: Upload image to get a public URL
-        const { url: imageUrl } = await uploadImage(media);
-
-        // Step 4: Call the upscale API
-        const response = await axios.get('https://fgsi.koyeb.app/api/tools/upscale', {
-            params: {
-                apikey: 'fgsiapi-2dcdfa06-6d',
-                url: imageUrl,
-            },
-            headers: { accept: 'application/json' },
-            responseType: 'arraybuffer',
-        });
-
-        const enhancedImage = Buffer.from(response.data);
-
-        // Step 5: Send enhanced image
-        await client.sendMessage(
-            m.chat,
-            { image: enhancedImage, caption: '◈━━━━━━━━━━━━━━━━◈\n❒ Your image has been enhanced to HD.\n◈━━━━━━━━━━━━━━━━◈' },
-            { quoted: m }
-        );
-    } catch (err) {
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Error: ${err.message}\n◈━━━━━━━━━━━━━━━━◈`);
     }
 };
