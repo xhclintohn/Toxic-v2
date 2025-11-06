@@ -23,13 +23,6 @@ module.exports = {
             }, { quoted: m });
         }
 
-        // Limit text length
-        if (text.length > 50) {
-            return client.sendMessage(m.chat, {
-                text: formatStylishReply('Text too long! 😤\nMaximum 50 characters allowed.')
-            }, { quoted: m });
-        }
-
         try {
             /**
              * Send loading message
@@ -39,19 +32,19 @@ module.exports = {
             }, { quoted: m });
 
             /**
-             * Call the brat API - it returns image directly, not JSON
+             * Call the brat API - let it return whatever it wants
              */
             const apiUrl = `https://api.ootaizumi.web.id/generator/brat?text=${encodeURIComponent(text)}`;
             
-            // First, try to get the image as buffer
+            // Just fetch whatever the API returns
             const response = await fetch(apiUrl);
             
             if (!response.ok) {
                 throw new Error(`API returned status: ${response.status}`);
             }
 
-            // Get the image buffer
-            const imageBuffer = await response.buffer();
+            // Get whatever the API sends
+            const resultBuffer = await response.buffer();
 
             // Delete loading message
             await client.sendMessage(m.chat, { 
@@ -59,29 +52,15 @@ module.exports = {
             });
 
             /**
-             * Try to send as sticker first, then fallback to image
+             * Just send whatever the API returns without any processing
              */
-            try {
-                await client.sendMessage(
-                    m.chat,
-                    {
-                        sticker: imageBuffer,
-                        caption: formatStylishReply(`Brat Sticker Created! ✨\nText: "${text}"`)
-                    },
-                    { quoted: m }
-                );
-            } catch (stickerError) {
-                console.error('Sticker send failed, sending as image:', stickerError);
-                // Fallback to image if sticker fails
-                await client.sendMessage(
-                    m.chat,
-                    {
-                        image: imageBuffer,
-                        caption: formatStylishReply(`Brat Image Created! 🖼️\nText: "${text}"`)
-                    },
-                    { quoted: m }
-                );
-            }
+            await client.sendMessage(
+                m.chat,
+                {
+                    sticker: resultBuffer
+                },
+                { quoted: m }
+            );
 
         } catch (error) {
             console.error('Brat command error:', error);
@@ -95,20 +74,8 @@ module.exports = {
                 // Ignore delete errors
             }
 
-            let errorMessage = 'An unexpected error occurred';
-            
-            if (error.message.includes('status')) {
-                errorMessage = 'The brat generator API is not responding properly.';
-            } else if (error.message.includes('Network Error') || error.message.includes('fetch')) {
-                errorMessage = 'Network error. Please check your connection.';
-            } else if (error.message.includes('timeout')) {
-                errorMessage = 'Request timed out. Try again later.';
-            } else {
-                errorMessage = error.message;
-            }
-
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Brat Creation Failed! 😤\nError: ${errorMessage}\n\nTry again with different text.`)
+                text: formatStylishReply(`Brat Creation Failed! 😤\nError: ${error.message}\n\nTry again with different text.`)
             }, { quoted: m });
         }
     }
