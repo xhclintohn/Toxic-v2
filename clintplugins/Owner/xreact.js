@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 module.exports = {
-    name: 'react',
+    name: 'xreact',
     aliases: ['engagement', 'autoreact', 'whatsappreact'],
     description: 'Auto-reacts to WhatsApp channel posts',
     run: async (context) => {
@@ -12,29 +12,32 @@ module.exports = {
         };
 
         /**
-         * Extract link and emojis from message
+         * Extract link and emojis from message - FIXED VERSION
          */
-        const text = m.body.replace(new RegExp(`^${prefix}(react|engagement|autoreact|whatsappreact)\\s*`, 'i'), '').trim();
+        const fullText = m.body.replace(new RegExp(`^${prefix}(xreact|engagement|autoreact|whatsappreact)\\s*`, 'i'), '').trim();
         
-        if (!text.includes(' ')) {
+        if (!fullText) {
             return client.sendMessage(m.chat, {
-                text: formatStylishReply(`Please provide link and emojis correctly!\n\nUsage:\n${prefix}react https://whatsapp.com/channel/0029Vb6dsyP3rZZgNJUD2F1A 🇲🇦,😘,☝🏻,🧞\n\nFormat: ${prefix}react <link> <emojis>`)
+                text: formatStylishReply(`Please provide link and emojis!\n\nUsage:\n${prefix}xreact https://whatsapp.com/channel/0029Vb6dsyP3rZZgNJUD2F1A ❤️,😘,👍\n\nFormat: ${prefix}xreact <link> <emojis>`)
             }, { quoted: m });
         }
 
-        let [link, ...emojisArray] = text.split(' ');
-        let emojis = emojisArray.join(' ').trim();
-
-        if (!link || !emojis) {
+        // Better parsing: find the first URL and everything after it are emojis
+        const urlMatch = fullText.match(/(https?:\/\/[^\s]+)/);
+        
+        if (!urlMatch) {
             return client.sendMessage(m.chat, {
-                text: formatStylishReply(`Missing link or emojis!\n\nExample:\n${prefix}react https://whatsapp.com/channel/0029Vb6dsyP3rZZgNJUD2F1A 🇲🇦,😘,☝🏻,🧞`)
+                text: formatStylishReply(`No valid URL found!\n\nExample:\n${prefix}xreact https://whatsapp.com/channel/0029Vb6dsyP3rZZgNJUD2F1A ❤️,😘,👍`)
             }, { quoted: m });
         }
 
-        // Add https if missing
-        link = link.trim();
-        if (!link.startsWith('http')) {
-            link = 'https://' + link;
+        const link = urlMatch[0];
+        const emojis = fullText.replace(link, '').trim();
+
+        if (!emojis) {
+            return client.sendMessage(m.chat, {
+                text: formatStylishReply(`Missing emojis!\n\nExample:\n${prefix}xreact ${link} ❤️,😘,👍`)
+            }, { quoted: m });
         }
 
         try {
@@ -74,7 +77,7 @@ module.exports = {
             }, { quoted: m });
 
         } catch (error) {
-            console.error('React command error:', error);
+            console.error('XReact command error:', error);
             
             // Try to delete loading message
             try {
