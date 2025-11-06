@@ -43,7 +43,7 @@ const aliases = {
     h: "menu",
     d: "del",
     delete: "del",
-    >: "eval",
+    evl: "eval",
     reactemoji: "reaction",
     autoviewstatus: "autoview",
     addowner: "addsudo",
