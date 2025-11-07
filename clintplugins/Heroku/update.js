@@ -24,7 +24,7 @@ module.exports = async (context) => {
 
             if (subcommand === 'now') {
                 await client.sendMessage(m.chat, {
-                    text: formatStylishReply("🚀 Updating *Toxic-v2* now!\nPlease wait 1–2 minutes for deployment..."),
+                    text: formatStylishReply("🚀 Updating *Toxic-MD* now!\nPlease wait 1–2 minutes for deployment..."),
                 }, { quoted: m });
 
                 // Trigger Heroku build from GitHub
@@ -78,7 +78,7 @@ module.exports = async (context) => {
 
                 if (alreadyDeployed) {
                     return await client.sendMessage(m.chat, {
-                        text: formatStylishReply("✅ No updates available!\n*Toxic-v2* is already running the latest version. 🔥"),
+                        text: formatStylishReply("✅ No updates available!\n*Toxic-MD* is already running the latest version. 🔥"),
                     }, { quoted: m });
                 }
 
