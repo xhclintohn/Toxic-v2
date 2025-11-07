@@ -4,18 +4,28 @@ const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 const { HEROKU_API_KEY, HEROKU_APP_NAME } = process.env;
 
 module.exports = async (context) => {
-    const { client, m } = context;
+    const { client, m, prefix } = context;
+
+    // Helper for consistent Spotify-style reply format
+    const formatStylishReply = (message) => {
+        return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
+    };
+
     await ownerMiddleware(context, async () => {
         try {
             if (!HEROKU_API_KEY || !HEROKU_APP_NAME) {
-                return await m.reply("⚠️ *Heroku credentials missing!* Set HEROKU_API_KEY and HEROKU_APP_NAME in environment variables.");
+                return await client.sendMessage(m.chat, {
+                    text: formatStylishReply("⚠️ Heroku credentials missing!\nSet *HEROKU_API_KEY* and *HEROKU_APP_NAME* in environment variables."),
+                }, { quoted: m });
             }
 
             const args = m.body?.split(' ') || [];
             const subcommand = args[1]?.toLowerCase();
 
             if (subcommand === 'now') {
-                await m.reply("🚀 *Updating Toxic-v2 now!* Please wait 1-2 minutes for deployment...");
+                await client.sendMessage(m.chat, {
+                    text: formatStylishReply("🚀 Updating *Toxic-v2* now!\nPlease wait 1–2 minutes for deployment..."),
+                }, { quoted: m });
 
                 // Trigger Heroku build from GitHub
                 await axios.post(
@@ -34,11 +44,15 @@ module.exports = async (context) => {
                     }
                 );
 
-                return await m.reply("✅ *Redeploy triggered successfully!* Your bot will restart with the latest version.");
+                return await client.sendMessage(m.chat, {
+                    text: formatStylishReply("✅ Redeploy triggered successfully!\nYour bot will restart with the latest version."),
+                }, { quoted: m });
 
             } else {
                 // Check for updates
-                await m.reply("🔍 *Checking GitHub for updates...*");
+                await client.sendMessage(m.chat, {
+                    text: formatStylishReply("🔍 Checking GitHub for updates..."),
+                }, { quoted: m });
 
                 // Get latest commit from GitHub
                 const githubRes = await axios.get(
@@ -63,30 +77,39 @@ module.exports = async (context) => {
                 const alreadyDeployed = deployedSha.includes(latestSha);
 
                 if (alreadyDeployed) {
-                    return await m.reply("✅ *No updates available!* Toxic-v2 is already running the latest version. 🔥");
+                    return await client.sendMessage(m.chat, {
+                        text: formatStylishReply("✅ No updates available!\n*Toxic-v2* is already running the latest version. 🔥"),
+                    }, { quoted: m });
                 }
 
                 // New update available
-                return await m.reply(
-                    `🆕 *New update available!*\n\n` +
-                    `*Commit Message:* ${latestCommit.commit.message}\n` +
-                    `*Author:* ${latestCommit.commit.author.name}\n` +
-                    `*Date:* ${new Date(latestCommit.commit.author.date).toLocaleString()}\n\n` +
-                    `Type *${process.env.PREFIX || '.'}update now* to update your bot! 🔄`
-                );
+                return await client.sendMessage(m.chat, {
+                    text: formatStylishReply(
+                        `🆕 New update available!\n\n` +
+                        `*Commit Message:* ${latestCommit.commit.message}\n` +
+                        `*Author:* ${latestCommit.commit.author.name}\n` +
+                        `*Date:* ${new Date(latestCommit.commit.author.date).toLocaleString()}\n\n` +
+                        `Type *${prefix}update now* to update your bot! 🔄`
+                    ),
+                }, { quoted: m });
             }
 
         } catch (error) {
             console.error("Update error:", error);
             const errorMessage = error.response?.data?.message || error.message;
-            
+
+            let msg;
             if (errorMessage.includes('API key')) {
-                await m.reply("❌ *Invalid Heroku API Key!* Check your HEROKU_API_KEY environment variable.");
+                msg = "❌ Invalid Heroku API Key!\nCheck your *HEROKU_API_KEY* environment variable.";
             } else if (errorMessage.includes('not found')) {
-                await m.reply("❌ *App not found!* Check your HEROKU_APP_NAME environment variable.");
+                msg = "❌ App not found!\nCheck your *HEROKU_APP_NAME* environment variable.";
             } else {
-                await m.reply(`❌ *Update failed:* ${errorMessage}`);
+                msg = `❌ Update failed:\n${errorMessage}`;
             }
+
+            await client.sendMessage(m.chat, {
+                text: formatStylishReply(msg),
+            }, { quoted: m });
         }
     });
 };
