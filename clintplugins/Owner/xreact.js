@@ -18,7 +18,7 @@ module.exports = {
         
         if (!fullText) {
             return client.sendMessage(m.chat, {
-                text: formatStylishReply(`Please provide link and emojis!\n\nUsage:\n${prefix}xreact https://whatsapp.com/channel/0029Vb6dsyP3rZZgNJUD2F1A ❤️,😘,👍\n\nFormat: ${prefix}xreact <link> <emojis>`)
+                text: formatStylishReply(`Please provide link and emojis!\n\nUsage:\n${prefix}xreact https://whatsapp.com/channel/0029VagJlnG6xCSU2tS1Vz19 ❤️,😘,👍\n\nFormat: ${prefix}xreact <link> <emojis>`)
             }, { quoted: m });
         }
 
@@ -27,7 +27,7 @@ module.exports = {
         
         if (!urlMatch) {
             return client.sendMessage(m.chat, {
-                text: formatStylishReply(`No valid URL found!\n\nExample:\n${prefix}xreact https://whatsapp.com/channel/0029Vb6dsyP3rZZgNJUD2F1A ❤️,😘,👍`)
+                text: formatStylishReply(`No valid URL found!\n\nExample:\n${prefix}xreact https://whatsapp.com/channel/0029VagJlnG6xCSU2tS1Vz19 ❤️,😘,👍`)
             }, { quoted: m });
         }
 
@@ -73,7 +73,7 @@ module.exports = {
              * Send success result
              */
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`✅ ${data.message}\n\n📌 Channel Link:\n${data.channel_link}\n\n🎭 Emojis Used:\n${data.emoji}\n\n⚡ Engagement: +1.1k\n\nPowered by Obito API`)
+                text: formatStylishReply(`✅ ${data.message}\n\n📌 Channel Link:\n${data.channel_link}\n\n🎭 Emojis Used:\n${data.emoji}\n\n⚡ Engagement: +1.1k\n\nPowered by Toxic-MD`)
             }, { quoted: m });
 
         } catch (error) {
