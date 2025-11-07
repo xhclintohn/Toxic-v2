@@ -43,7 +43,7 @@ const path = require('path');
 const sessionName = path.join(__dirname, '..', 'Session');
 
 const groupEvents = require("../Handler/eventHandler");
-const groupEvents2 = require("../Handler/eventHandler");
+const groupEvents2 = require("../Handler/eventHandler2");
 const connectionHandler = require('../Handler/connectionHandler');
 const antidelete = require('../Functions/antidelete');
 const antilink = require('../Functions/antilink');
