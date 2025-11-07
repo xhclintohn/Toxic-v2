@@ -1,3 +1,5 @@
+const { getSettings } = require("../Database/config");
+
 module.exports = async (client, m, store) => {
     try {
         console.log('🔍 Antilink triggered - Checking message...');
@@ -25,6 +27,15 @@ module.exports = async (client, m, store) => {
             return;
         }
 
+        // DEBUG: Check if admin properties exist
+        console.log('🔍 Available m properties:', {
+            isGroup: m.isGroup,
+            isAdmin: m.isAdmin,
+            isBotAdmin: m.isBotAdmin,
+            hasIsAdmin: 'isAdmin' in m,
+            hasIsBotAdmin: 'isBotAdmin' in m
+        });
+
         // USE THE SAME ADMIN DETECTION AS YOUR MIDDLEWARE
         const isAdmin = m.isAdmin; // This should be available if your middleware works
         const isBotAdmin = m.isBotAdmin; // This should be available if your middleware works
@@ -32,16 +43,53 @@ module.exports = async (client, m, store) => {
         console.log('✅ Is sender admin?', isAdmin);
         console.log('✅ Is bot admin?', isBotAdmin);
 
-        // Allow admins to send links
-        if (isAdmin) {
-            console.log('✅ Sender is admin, allowing link');
-            return;
-        }
+        // If admin properties are undefined, fall back to group metadata check
+        if (isAdmin === undefined || isBotAdmin === undefined) {
+            console.log('⚠️ Admin properties not found in m object, falling back to group metadata check');
+            const groupMetadata = await client.groupMetadata(m.chat).catch(() => null);
+            if (!groupMetadata) {
+                console.log('❌ Could not fetch group metadata');
+                return;
+            }
 
-        // Bot needs to be admin to delete messages
-        if (!isBotAdmin) {
-            console.log('❌ Bot is not admin, cannot delete messages');
-            return;
+            const participants = groupMetadata.participants || [];
+            const botJid = client.decodeJid(client.user.id);
+            
+            const fallbackIsAdmin = participants.some(p => 
+                p.id === m.sender && p.admin
+            );
+            
+            const fallbackIsBotAdmin = participants.some(p => 
+                p.id === botJid && p.admin
+            );
+
+            console.log('🔄 Fallback - Is sender admin?', fallbackIsAdmin);
+            console.log('🔄 Fallback - Is bot admin?', fallbackIsBotAdmin);
+
+            // Allow admins to send links
+            if (fallbackIsAdmin) {
+                console.log('✅ Sender is admin, allowing link');
+                return;
+            }
+
+            // Bot needs to be admin to delete messages
+            if (!fallbackIsBotAdmin) {
+                console.log('❌ Bot is not admin, cannot delete messages');
+                return;
+            }
+        } else {
+            // Use the original admin properties from m object
+            // Allow admins to send links
+            if (isAdmin) {
+                console.log('✅ Sender is admin, allowing link');
+                return;
+            }
+
+            // Bot needs to be admin to delete messages
+            if (!isBotAdmin) {
+                console.log('❌ Bot is not admin, cannot delete messages');
+                return;
+            }
         }
 
         // Rest of your antilink logic...
