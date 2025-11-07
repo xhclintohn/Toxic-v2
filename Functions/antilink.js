@@ -47,20 +47,35 @@ module.exports = async (client, m, store) => {
         console.log('👥 Group participants:', groupMetadata.participants?.length);
 
         const participants = groupMetadata.participants || [];
-        const admins = participants.filter(p => p.admin).map(p => p.id);
         
-        console.log('👑 Admins:', admins);
-        console.log('✅ Is sender admin?', admins.includes(sender));
-        console.log('✅ Is bot admin?', admins.includes(botNumber));
+        // Normalize JID formats for comparison
+        const normalizeJid = (jid) => {
+            if (!jid) return '';
+            // Remove any suffixes and keep only the number part
+            return jid.replace(/@[^.]+\.net$/, '').replace(/@lid$/, '');
+        };
+
+        const botNormalized = normalizeJid(botNumber);
+        const senderNormalized = normalizeJid(sender);
+        
+        const admins = participants
+            .filter(p => p.admin)
+            .map(p => normalizeJid(p.id));
+        
+        console.log('👑 Normalized Admins:', admins);
+        console.log('🤖 Normalized Bot:', botNormalized);
+        console.log('👤 Normalized Sender:', senderNormalized);
+        console.log('✅ Is sender admin?', admins.includes(senderNormalized));
+        console.log('✅ Is bot admin?', admins.includes(botNormalized));
 
         // Allow admins to send links
-        if (admins.includes(sender)) {
+        if (admins.includes(senderNormalized)) {
             console.log('✅ Sender is admin, allowing link');
             return;
         }
 
         // Bot needs to be admin to delete messages
-        if (!admins.includes(botNumber)) {
+        if (!admins.includes(botNormalized)) {
             console.log('❌ Bot is not admin, cannot delete messages');
             return;
         }
