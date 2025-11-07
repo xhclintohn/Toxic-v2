@@ -9,12 +9,8 @@ module.exports = {
       return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
     };
 
-    /**
-     * Extract song query from message
-     */
     const query = m.body.replace(new RegExp(`^${prefix}(spotify|spotifydl|spoti|spt)\\s*`, 'i'), '').trim();
-    
-    // Check if song name is provided
+
     if (!query) {
       return client.sendMessage(m.chat, {
         text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, @${m.sender.split('@')[0]}! 😤 What song you tryna download? 🎶\n│❒ Example: ${prefix}spotify Alone Pt II\n│❒ Or: ${prefix}spoti Alan Walker Ava Max\n◈━━━━━━━━━━━━━━━━◈`,
@@ -22,24 +18,18 @@ module.exports = {
       }, { quoted: m });
     }
 
-    // Limit query length to keep it chill
     if (query.length > 100) {
       return client.sendMessage(m.chat, {
-        text: formatStylishReply("Keep the song name short, homie! Max 100 chars. 📝")
+        text: formatStylishReply("Bruh, that song name’s too long 😤 — keep it under 100 chars!")
       }, { quoted: m });
     }
 
     try {
-      /**
-       * Send loading message
-       */
+      // Realistic cranky loading message
       const loadingMsg = await client.sendMessage(m.chat, {
-        text: formatStylishReply(`Searching for "${query}" on Spotify... 🔍\nHold tight! 🎵`)
+        text: formatStylishReply(`Alright, gimme a sec... I'm digging through Spotify for "${query}" 🎧\nThis might take a bit, don’t rush me 😤`)
       }, { quoted: m });
 
-      /**
-       * Fetch song from new API
-       */
       const apiUrl = `https://api.ootaizumi.web.id/downloader/spotifyplay?query=${encodeURIComponent(query)}`;
       const data = await fetchJson(apiUrl);
 
@@ -49,23 +39,16 @@ module.exports = {
         const filename = song.title || "Unknown Song";
         const artist = song.artists || "Unknown Artist";
         const album = song.album || "Unknown Album";
-        const duration = song.duration_ms ? `${Math.floor(song.duration_ms / 60000)}:${((song.duration_ms % 60000) / 1000).toFixed(0).padStart(2, '0')}` : "Unknown";
+        const duration = song.duration_ms
+          ? `${Math.floor(song.duration_ms / 60000)}:${((song.duration_ms % 60000) / 1000)
+              .toFixed(0)
+              .padStart(2, '0')}`
+          : "Unknown";
 
-        // Delete loading message
-        await client.sendMessage(m.chat, { 
-          delete: loadingMsg.key 
-        });
+        // Delete loading message once ready
+        await client.sendMessage(m.chat, { delete: loadingMsg.key });
 
-        /**
-         * Send success message with song info
-         */
-        await client.sendMessage(m.chat, {
-          text: formatStylishReply(`Song Found! 🎵\nTitle: *${filename}*\nArtist: ${artist}\nAlbum: ${album}\nDuration: ${duration}\nDownloading now... ⬇️`)
-        }, { quoted: m });
-
-        /**
-         * Send as audio with metadata
-         */
+        // Send audio (MP3)
         try {
           await client.sendMessage(
             m.chat,
@@ -88,12 +71,9 @@ module.exports = {
           );
         } catch (audioError) {
           console.error('Audio send failed:', audioError);
-          // Continue with document if audio fails
         }
 
-        /**
-         * Send as document for better quality
-         */
+        // Send document version with caption
         try {
           await client.sendMessage(
             m.chat,
@@ -101,55 +81,37 @@ module.exports = {
               document: { url: audioUrl },
               mimetype: "audio/mpeg",
               fileName: `${filename} - ${artist}.mp3`.replace(/[<>:"/\\|?*]/g, '_'),
-              caption: formatStylishReply(`Spotify Download 🎧\nTitle: ${filename}\nArtist: ${artist}\nAlbum: ${album}\nPowered by ${botname}`)
+              caption: formatStylishReply(
+                `Spotify Download Complete ✅\nTitle: ${filename}\nArtist: ${artist}\nAlbum: ${album}\nDuration: ${duration}\n\nPowered by ${botname}`
+              ),
             },
             { quoted: m }
           );
         } catch (docError) {
           console.error('Document send failed:', docError);
-          throw new Error('Failed to download the song file');
+          throw new Error('Failed to send the song file');
         }
 
-        /**
-         * Send song info card with image
-         */
-        if (song.image) {
-          await client.sendMessage(
-            m.chat,
-            {
-              image: { url: song.image },
-              caption: formatStylishReply(`${filename} 🎵\nArtist: ${artist}\nAlbum: ${album}\nReleased: ${song.release_date || 'Unknown'}\nDuration: ${duration}\n\nEnjoy your music! 🎧`)
-            },
-            { quoted: m }
-          );
-        }
+        // Image message removed completely ✅
 
       } else {
-        await client.sendMessage(m.chat, { 
-          delete: loadingMsg.key 
-        });
-        
+        await client.sendMessage(m.chat, { delete: loadingMsg.key });
+
         await client.sendMessage(m.chat, {
-          text: formatStylishReply(`No results found for "${query}"! 😢\nTry a different song name or add the artist.`)
+          text: formatStylishReply(`Couldn’t find "${query}" 😩\nTry spelling it better or include the artist name.`)
         }, { quoted: m });
       }
 
     } catch (error) {
       console.error("Spotify command error:", error);
-      
-      // Try to delete loading message
+
       try {
-        await client.sendMessage(m.chat, { 
-          delete: loadingMsg.key 
-        });
-      } catch (e) {
-        // Ignore delete errors
-      }
+        await client.sendMessage(m.chat, { delete: loadingMsg.key });
+      } catch (_) {}
 
       let errorMessage = 'An unexpected error occurred';
-      
       if (error.message.includes('Failed to download')) {
-        errorMessage = 'Song download failed. The file might be unavailable.';
+        errorMessage = 'Song download failed. Might be unavailable.';
       } else if (error.message.includes('ENOTFOUND')) {
         errorMessage = 'Cannot connect to Spotify service.';
       } else if (error.message.includes('timeout')) {
@@ -159,7 +121,7 @@ module.exports = {
       }
 
       await client.sendMessage(m.chat, {
-        text: formatStylishReply(`Download Failed! 😤\nSong: "${query}"\nError: ${errorMessage}\n\nTips:\n• Use exact song name\n• Include artist name\n• Check spelling`)
+        text: formatStylishReply(`Download Failed 😤\nSong: "${query}"\nError: ${errorMessage}\n\nTips:\n• Use exact song name\n• Include artist name\n• Check spelling`)
       }, { quoted: m });
     }
   }
