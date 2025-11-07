@@ -1,14 +1,12 @@
-const { getSettings } = require("../Database/config");
-
 module.exports = async (client, m, store) => {
     try {
         console.log('🔍 Antilink triggered - Checking message...');
-        
+
         if (!m?.message) {
             console.log('❌ No message content');
             return;
         }
-        
+
         if (m.key.fromMe) {
             console.log('❌ Message from bot itself');
             return;
@@ -16,7 +14,7 @@ module.exports = async (client, m, store) => {
 
         const settings = await getSettings();
         console.log('⚙️ Settings:', settings);
-        
+
         if (!settings?.antilink) {
             console.log('❌ Antilink feature is disabled in settings');
             return;
@@ -27,62 +25,28 @@ module.exports = async (client, m, store) => {
             return;
         }
 
-        const botNumber = await client.decodeJid(client.user.id);
-        const sender = m.sender ? await client.decodeJid(m.sender) : null;
-        
-        console.log('👤 Sender:', sender);
-        console.log('🤖 Bot number:', botNumber);
+        // USE THE SAME ADMIN DETECTION AS YOUR MIDDLEWARE
+        const isAdmin = m.isAdmin; // This should be available if your middleware works
+        const isBotAdmin = m.isBotAdmin; // This should be available if your middleware works
 
-        if (!sender) {
-            console.log('❌ No sender found');
-            return;
-        }
-
-        const groupMetadata = await client.groupMetadata(m.chat).catch(() => null);
-        if (!groupMetadata) {
-            console.log('❌ Could not fetch group metadata');
-            return;
-        }
-
-        console.log('👥 Group participants:', groupMetadata.participants?.length);
-
-        const participants = groupMetadata.participants || [];
-        
-        // Normalize JID formats for comparison
-        const normalizeJid = (jid) => {
-            if (!jid) return '';
-            // Remove any suffixes and keep only the number part
-            return jid.replace(/@[^.]+\.net$/, '').replace(/@lid$/, '');
-        };
-
-        const botNormalized = normalizeJid(botNumber);
-        const senderNormalized = normalizeJid(sender);
-        
-        const admins = participants
-            .filter(p => p.admin)
-            .map(p => normalizeJid(p.id));
-        
-        console.log('👑 Normalized Admins:', admins);
-        console.log('🤖 Normalized Bot:', botNormalized);
-        console.log('👤 Normalized Sender:', senderNormalized);
-        console.log('✅ Is sender admin?', admins.includes(senderNormalized));
-        console.log('✅ Is bot admin?', admins.includes(botNormalized));
+        console.log('✅ Is sender admin?', isAdmin);
+        console.log('✅ Is bot admin?', isBotAdmin);
 
         // Allow admins to send links
-        if (admins.includes(senderNormalized)) {
+        if (isAdmin) {
             console.log('✅ Sender is admin, allowing link');
             return;
         }
 
         // Bot needs to be admin to delete messages
-        if (!admins.includes(botNormalized)) {
+        if (!isBotAdmin) {
             console.log('❌ Bot is not admin, cannot delete messages');
             return;
         }
 
-        // Extract message text from different message types
+        // Rest of your antilink logic...
         let messageContent = '';
-        
+
         if (m.message.conversation) {
             messageContent = m.message.conversation;
         } else if (m.message.extendedTextMessage?.text) {
@@ -99,7 +63,7 @@ module.exports = async (client, m, store) => {
 
         const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+|whatsapp\.com\/[^\s]+)/gi;
         const hasLink = urlRegex.test(messageContent.toLowerCase());
-        
+
         console.log('🔗 Has link?', hasLink);
 
         if (!hasLink) {
@@ -116,7 +80,7 @@ module.exports = async (client, m, store) => {
                     remoteJid: m.chat,
                     fromMe: false,
                     id: m.key.id,
-                    participant: sender
+                    participant: m.sender
                 }
             });
             console.log('✅ Message deleted successfully');
@@ -127,7 +91,7 @@ module.exports = async (client, m, store) => {
         // Send warning message
         await client.sendMessage(m.chat, {
             text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Links are not allowed here! ⚠️\n│❒ Your message has been deleted.\n┗━━━━━━━━━━━━━━━┛`,
-            mentions: [sender]
+            mentions: [m.sender]
         });
 
         console.log('✅ Antilink action completed');
