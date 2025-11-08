@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
 const { getSettings } = require('../../Database/config');
 
 module.exports = {
@@ -8,13 +7,13 @@ module.exports = {
   aliases: ['help', 'commands', 'list'],
   description: 'Displays the Toxic-MD command menu with interactive buttons',
   run: async (context) => {
-    const { client, m, mode, pict, botname, text, prefix } = context;
+    const { client: sock, m, mode, pict, botname, text, prefix } = context;
 
     if (text) {
-      await client.sendMessage(
+      await sock.sendMessage(
         m.chat,
         {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo ${m.pushName}, what's with the extra bullshit? Just say *${prefix}menu*, moron. 🖕\n┗━━━━━━━━━━━━━━━┛`,
+          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo ${m.pushName}, what's with the extra bullshit? Just say *${prefix}menu*, moron.\n┗━━━━━━━━━━━━━━━┛`,
         },
         { quoted: m, ad: true }
       );
@@ -22,102 +21,94 @@ module.exports = {
     }
 
     const settings = await getSettings();
-    const effectivePrefix = settings.prefix || '.'; // Dynamic prefix from database
+    const effectivePrefix = settings.prefix || '.'; 
+    const ownername = "xh_clinton";
+
+    // Fancy font converter
+    const toFancyFont = (text, isUpperCase = false) => {
+      const fonts = {
+        A: '𝘼', B: '𝘽', C: '𝘾', D: '𝘿', E: '𝙀', F: '𝙁', G: '𝙂', H: '𝙃', I: '𝙄', J: '𝙅', K: '𝙆', L: '𝙇', M: '𝙈',
+        N: '𝙉', O: '𝙊', P: '𝙋', Q: '𝙌', R: '𝙍', S: '𝙎', T: '𝙏', U: '𝙐', V: '𝙑', W: '𝙒', X: '𝙓', Y: '𝙔', Z: '𝙕',
+        a: '𝙖', b: '𝙗', c: '𝙘', d: '𝙙', e: '𝙚', f: '𝙛', g: '𝙜', h: '𝙝', i: '𝙞', j: '𝙟', k: '𝙠', l: '𝙡', m: '𝙢',
+        n: '𝙣', o: '𝙤', p: '𝙥', q: '𝙦', r: '𝙧', s: '𝙨', t: '𝙩', u: '𝙪', v: '𝙫', w: '𝙬', x: '𝙭', y: '𝙮', z: '𝙯',
+      };
+      return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
+        .split('')
+        .map((char) => fonts[char] || char)
+        .join('');
+    };
 
     // Menu text
-    const menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *( 💬 ) - Hello, @${m.pushName}* Welcome to the bots Menu\n\n` + 
-      `- 計さ Bot INFORMATION✓\n\n` +
-      `⌬ *Bσƚ*: \n` +
-      `𝐓𝐨𝐱𝐢𝐜-𝐌𝐃 (bow down)\n` +
-
-      `⌬ *Pɾҽϝιx*: \n` +
-      `${effectivePrefix} (learn it, dumbass)\n` +
-
-      `⌬ *Mσԃҽ*: \n` +
-      `${mode} ( ! )\n` +
-
+    const menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *Welcome to ${botname}, B*tches!* 😈\n\n` +
+      `🤖 *Bσƚ*: ${botname} (bow down)\n` +
+      `🔣 *Pɾҽϝιx*: ${effectivePrefix} (learn it, dumbass)\n` +
+      `🌐 *Mσԃҽ*: ${mode} (deal with it)\n` +
       `\n◈━━━━━━━━━━━━━━━━◈\n\n` +
-      ` ( ! ) *Select a button below.* `;
+      `*Select an option Below, Loser.* 😈`;
 
-    // Interactive message with buttons as per new format
-    const msg = generateWAMessageFromContent(
-      m.chat,
-      {
-        interactiveMessage: {
-          header: "Welcome to Toxic-MD",
-          title: "Main Menu",
-          footer: "Pσɯҽɾҽԃ Ⴆყ Toxic-MD",
-          image: { url: "https://example.com/image.jpg" },
-          nativeFlowMessage: {
-            messageParamsJson: JSON.stringify({
-              limited_time_offer: {
-                text: "Exclusive offer just for you!",
-                url: "https://t.me/xhclintohn",
-                copy_code: "TOXIC",
-                expiration_time: Date.now() * 999
-              },
-              bottom_sheet: {
-                in_thread_buttons_limit: 2,
-                divider_indices: [1, 2, 3, 4],
-                list_title: "Select a Command",
-                button_title: "Toxic-MD Options"
-              },
-              tap_target_configuration: {
-                title: "X",
-                description: "Unlock more features",
-                canonical_url: "https://t.me/xhclintohn",
-                domain: "https://example.com",
-                button_index: 0
-              }
-            }),
-            buttons: [
-              {
-                name: "single_select",
-                buttonParamsJson: JSON.stringify({
-                  has_multiple_buttons: true
-                })
-              },
-              {
-                name: "call_permission_request",
-                buttonParamsJson: JSON.stringify({
-                  has_multiple_buttons: true
-                })
-              },
-              {
-                name: "single_select",
-                buttonParamsJson: JSON.stringify({
-                  title: "Core Commands",
-                  sections: [
-                    {
-                      title: "Main Commands",
-                      highlight_label: "✨",
-                      rows: [
-                        { title: 'Full Menu', description: 'All commands listed', id: `${prefix}fullmenu` },
-                        { title: 'Developer', description: 'Dev-specific commands', id: `${prefix}dev` }
-                      ]
-                    }
-                  ],
-                  has_multiple_buttons: true
-                })
-              },
-              {
-                name: "cta_copy",
-                buttonParamsJson: JSON.stringify({
-                  display_text: "Copy Code",
-                  id: "123456789",
-                  copy_code: "TOXIC"
-                })
-              }
-            ]
+    // Try multiple possible locations for toxic.jpg
+    const possibleImagePaths = [
+      path.resolve(__dirname, '../toxic.jpg'),
+      path.resolve(__dirname, '../../toxic.jpg'),
+      path.resolve(process.cwd(), 'toxic.jpg'),
+      path.join(__dirname, '../toxic.jpg'),
+      path.join(__dirname, '../../toxic.jpg'),
+      path.join(process.cwd(), 'toxic.jpg'),
+      '/app/toxic.jpg', // Direct path from your logs
+    ];
+
+    let imagePath = null;
+    for (const possiblePath of possibleImagePaths) {
+      if (fs.existsSync(possiblePath)) {
+        imagePath = possiblePath;
+        console.log('Found image at:', imagePath);
+        break;
+      }
+    }
+
+    if (imagePath) {
+      try {
+        // Read the image file directly
+        const imageBuffer = fs.readFileSync(imagePath);
+
+        const buttons = [
+          {
+            buttonId: `${effectivePrefix}fullmenu`,
+            buttonText: { displayText: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮' }
+          },
+          {
+            buttonId: `${effectivePrefix}dev`,
+            buttonText: { displayText: '𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫' }
+          },
+          {
+            buttonId: `${effectivePrefix}ping`,
+            buttonText: { displayText: '𝐏𝐢𝐧𝐠' }
+          },
+          {
+            buttonId: `${effectivePrefix}repo`,
+            buttonText: { displayText: '𝐑𝐞𝐩𝐨' }
           }
-        }
-      },
-      { quoted: m }
-    );
+        ];
 
-    await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
+        const buttonMessage = {
+          image: imageBuffer,
+          caption: menuText,
+          footer: `Pσɯҽɾԃ Ⴆý Tσxιƈ-ɱԃȥ`,
+          buttons: buttons,
+          headerType: 4
+        };
 
-    // Audio message logic (optional)
+        await sock.sendMessage(m.chat, buttonMessage, { quoted: m });
+      } catch (error) {
+        console.error('Error processing image:', error);
+        await sendTextOnlyMenu(sock, m, botname, effectivePrefix, ownername, menuText);
+      }
+    } else {
+      console.error('Image "toxic.jpg" not found. Checked paths:', possibleImagePaths);
+      await sendTextOnlyMenu(sock, m, botname, effectivePrefix, ownername, menuText);
+    }
+
+    // === AUDIO ===
     const possibleAudioPaths = [
       path.join(__dirname, 'xh_clinton', 'menu.mp3'),
       path.join(process.cwd(), 'xh_clinton', 'menu.mp3'),
@@ -133,16 +124,35 @@ module.exports = {
     }
 
     if (audioPath) {
-      await client.sendMessage(
-        m.chat,
-        {
-          audio: { url: audioPath },
+      try {
+        const audioBuffer = fs.readFileSync(audioPath);
+        await sock.sendMessage(m.chat, {
+          audio: audioBuffer,
           ptt: true,
           mimetype: 'audio/mpeg',
           fileName: 'menu.mp3',
-        },
-        { quoted: m }
-      );
+        }, { quoted: m });
+      } catch (audioError) {
+        console.error('Error sending audio:', audioError);
+      }
     }
   },
 };
+
+// Fallback function for text-only menu
+async function sendTextOnlyMenu(sock, m, botname, effectivePrefix, ownername, menuText) {
+  const textMenu = `
+${menuText}
+
+*Quick Commands:*
+
+📖 *${effectivePrefix}fullmenu* - Full command list
+👨‍💻 *${effectivePrefix}dev* - Developer info  
+🏓 *${effectivePrefix}ping* - Check bot speed
+📂 *${effectivePrefix}repo* - Bot repository
+
+*Owner:* ${ownername}
+  `.trim();
+
+  await sock.sendMessage(m.chat, { text: textMenu }, { quoted: m });
+}
