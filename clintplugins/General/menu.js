@@ -24,21 +24,7 @@ module.exports = {
     const settings = await getSettings();
     const effectivePrefix = settings.prefix || '.'; // Dynamic prefix from database
 
-    // Fancy font converter
-    const toFancyFont = (text, isUpperCase = false) => {
-      const fonts = {
-        A: '𝘼', B: '𝘽', C: '𝘾', D: '𝘿', E: '𝙀', F: '𝙁', G: '𝙂', H: '𝙃', I: '𝙄', J: '𝙅', K: '𝙆', L: '𝙇', M: '𝙈',
-        N: '𝙉', O: '𝙊', P: '𝙋', Q: '𝙌', R: '𝙍', S: '𝙎', T: '𝙏', U: '𝙐', V: '𝙑', W: '𝙒', X: '𝙓', Y: '𝙔', Z: '𝙕',
-        a: '𝙖', b: '𝙗', c: '𝙘', d: '𝙙', e: '𝙚', f: '𝙛', g: '𝙜', h: '𝙝', i: '𝙞', j: '𝙟', k: '𝙠', l: '𝙡', m: '𝙢',
-        n: '𝙣', o: '𝙤', p: '𝙥', q: '𝙦', r: '𝙧', s: '𝙨', t: '𝙩', u: '𝙪', v: '𝙫', w: '𝙬', x: '𝙭', y: '𝙮', z: '𝙯',
-      };
-      return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
-        .split('')
-        .map((char) => fonts[char] || char)
-        .join('');
-    };
-
-    // Menu text (KEEPING YOUR ORIGINAL TEXT)
+    // Menu text (keeping your original)
     const menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *( 💬 ) - Hello, @${m.pushName}* Welcome to the bots Menu\n\n` + 
       `- 計さ Bot INFORMATION✓\n\n` +
       `⌬ *Bσƚ*: \n` +
@@ -53,7 +39,7 @@ module.exports = {
       `\n◈━━━━━━━━━━━━━━━━◈\n\n` +
       ` ( ! ) *Select a button below.* `;
 
-    // Interactive message with 4 buttons like your friend's
+    // Interactive message with 4 specific buttons
     const msg = generateWAMessageFromContent(
       m.chat,
       {
@@ -79,51 +65,45 @@ module.exports = {
           nativeFlowMessage: {
             buttons: [
               {
-                name: 'cta_url',
+                name: 'quick_reply',
                 buttonParamsJson: JSON.stringify({
-                  display_text: 'GitHub Repo',
-                  url: 'https://github.com/xhclintohn/Toxic-MD',
-                  merchant_url: 'https://github.com/xhclintohn/Toxic-MD',
+                  display_text: '📋 Full Menu',
+                  id: `${prefix}fullmenu`,
                 }),
               },
               {
                 name: 'quick_reply',
                 buttonParamsJson: JSON.stringify({
-                  display_text: 'Owner Commands',
-                  id: `${prefix}owner`,
+                  display_text: '🔗 Repo',
+                  id: `${prefix}repo`,
                 }),
               },
               {
                 name: 'quick_reply',
                 buttonParamsJson: JSON.stringify({
-                  display_text: 'Group Commands',
-                  id: `${prefix}group`,
+                  display_text: '👨‍💻 Dev',
+                  id: `${prefix}dev`,
                 }),
               },
               {
                 name: 'quick_reply',
                 buttonParamsJson: JSON.stringify({
-                  display_text: 'All Commands',
-                  id: `${prefix}allcmd`,
+                  display_text: '📊 Ping',
+                  id: `${prefix}ping`,
                 }),
               },
             ],
             messageParamsJson: JSON.stringify({
-              limited_time_offer: {
-                text: 'Toxic-MD',
-                url: 'https://github.com/xhclintohn/Toxic-MD',
-                copy_code: 'TOXIC',
-                expiration_time: Date.now() * 1000,
-              },
               bottom_sheet: {
                 in_thread_buttons_limit: 4,
                 divider_indices: [1, 2, 3],
-                list_title: 'Toxic-MD Menu',
-                button_title: 'Select Category',
+                list_title: 'Toxic-MD Commands',
+                button_title: 'Select Command',
               },
             }),
           },
           contextInfo: {
+            mentionedJid: [m.sender],
             externalAdReply: {
               title: `${botname}`,
               body: `Yo, ${m.pushName}! Ready to fuck shit up?`,
@@ -142,7 +122,7 @@ module.exports = {
 
     await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
 
-    // Audio message logic (KEEPING YOUR ORIGINAL AUDIO LOGIC)
+    // Audio message logic (keeping your original)
     const possibleAudioPaths = [
       path.join(__dirname, 'xh_clinton', 'menu.mp3'),
       path.join(process.cwd(), 'xh_clinton', 'menu.mp3'),
