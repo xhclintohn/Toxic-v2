@@ -51,16 +51,14 @@ module.exports = async (context) => {
 
         const result = data.result;
 
-        // Prefer 720p HD, fallback to highest available
-        let videoUrl = result.media; // fallback to base media
-        const hdVideo = result.video.find(v => v.quality.includes("720p"));
-        if (hdVideo) videoUrl = hdVideo.url;
+        // Use the first available video URL from the API
+        const videoUrl = result.video[0].url;
 
         const title = result.title || "Facebook Video";
         const duration = result.duration || "Unknown";
-        const thumbnail = result.thumbnail || null;
+        const quality = result.video[0].quality || "HD";
 
-        // Send video
+        // Send video - let WhatsApp handle everything
         await client.sendMessage(
             m.chat,
             {
@@ -69,11 +67,10 @@ module.exports = async (context) => {
                     `🎥 *Facebook Video Downloaded*\n\n` +
                     `📌 *Title:* ${title}\n` +
                     `⏱ *Duration:* ${duration}\n` +
-                    `🎞 *Quality:* HD Preferred\n` +
+                    `🎞 *Quality:* ${quality}\n` +
                     `📥 Powered by Toxic-MD`
                 ),
-                gifPlayback: false,
-                jpegThumbnail: thumbnail ? await (await fetch(thumbnail)).buffer() : null
+                gifPlayback: false
             },
             { quoted: m }
         );
