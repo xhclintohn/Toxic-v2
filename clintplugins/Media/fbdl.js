@@ -30,12 +30,12 @@ module.exports = async (context) => {
     }
 
     if (!text.includes("facebook.com")) {
-        return m.reply(formatStylishReply("That’s not a valid Facebook link, you clueless twit! Try again."));
+        return m.reply(formatStylishReply("That's not a valid Facebook link, you clueless twit! Try again."));
     }
 
     try {
         const encodedUrl = encodeURIComponent(text.trim());
-        const apiUrl = `https://api.rikishop.my.id/download/facebook?url=${encodedUrl}`;
+        const apiUrl = `https://api.fikmydomainsz.xyz/download/facebook?url=${encodedUrl}`;
 
         const response = await fetchWithRetry(apiUrl, {
             headers: { Accept: "application/json" },
@@ -79,7 +79,7 @@ module.exports = async (context) => {
         );
 
     } catch (e) {
-        console.error("Rikishop FB DL Error:", e);
+        console.error("FikXzMods FB DL Error:", e);
         m.reply(formatStylishReply(`Download failed: ${e.message}\n\nCheck URL or try again later! 🚫`));
     }
 };
