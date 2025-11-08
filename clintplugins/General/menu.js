@@ -38,7 +38,7 @@ module.exports = {
         .join('');
     };
 
-    // Menu text
+    // Menu text (KEEPING YOUR ORIGINAL TEXT)
     const menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *( 💬 ) - Hello, @${m.pushName}* Welcome to the bots Menu\n\n` + 
       `- 計さ Bot INFORMATION✓\n\n` +
       `⌬ *Bσƚ*: \n` +
@@ -53,7 +53,7 @@ module.exports = {
       `\n◈━━━━━━━━━━━━━━━━◈\n\n` +
       ` ( ! ) *Select a button below.* `;
 
-    // Interactive message with buttons
+    // Interactive message with 4 buttons like your friend's
     const msg = generateWAMessageFromContent(
       m.chat,
       {
@@ -87,27 +87,24 @@ module.exports = {
                 }),
               },
               {
-                name: 'single_select',
+                name: 'quick_reply',
                 buttonParamsJson: JSON.stringify({
-                  title: '𝐕𝐈𝐄𝐖☇ 𝐎𝐏𝐓𝐈𝐎𝐍𝐒',
-                  sections: [
-                    {
-                      title: '⌜ 𝘾𝙤𝙧𝙚 𝘾𝙤𝙢𝙢𝙖𝙣𝙙𝙨 ⌟',
-                      highlight_label: '© 丨几匚',
-                      rows: [
-                        { title: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮', description: '', id: `${prefix}fullmenu` },
-                        { title: '𝐃𝐞𝐯', description: "", id: `${prefix}dev` },
-                      ],
-                    },
-                    {
-                      title: 'ℹ 𝙄𝙣𝙛𝙤 𝘽𝙤𝙩',
-                      highlight_label: '© 丨几匚',
-                      rows: [
-                        { title: '𝐏𝐢𝐧𝐠', description: '', id: `${prefix}ping` },
-                        { title: '𝐑𝐞𝐩𝐨', description: '', id: `${prefix}repo` },
-                      ],
-                    },
-                  ],
+                  display_text: 'Owner Commands',
+                  id: `${prefix}owner`,
+                }),
+              },
+              {
+                name: 'quick_reply',
+                buttonParamsJson: JSON.stringify({
+                  display_text: 'Group Commands',
+                  id: `${prefix}group`,
+                }),
+              },
+              {
+                name: 'quick_reply',
+                buttonParamsJson: JSON.stringify({
+                  display_text: 'All Commands',
+                  id: `${prefix}allcmd`,
                 }),
               },
             ],
@@ -119,10 +116,10 @@ module.exports = {
                 expiration_time: Date.now() * 1000,
               },
               bottom_sheet: {
-                in_thread_buttons_limit: 2,
-                divider_indices: [1, 2],
-                list_title: 'Select Command',
-                button_title: 'Toxic-MD',
+                in_thread_buttons_limit: 4,
+                divider_indices: [1, 2, 3],
+                list_title: 'Toxic-MD Menu',
+                button_title: 'Select Category',
               },
             }),
           },
@@ -145,7 +142,7 @@ module.exports = {
 
     await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
 
-    // Audio message logic
+    // Audio message logic (KEEPING YOUR ORIGINAL AUDIO LOGIC)
     const possibleAudioPaths = [
       path.join(__dirname, 'xh_clinton', 'menu.mp3'),
       path.join(process.cwd(), 'xh_clinton', 'menu.mp3'),
