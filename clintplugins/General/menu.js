@@ -89,14 +89,14 @@ module.exports = {
               {
                 name: 'single_select',
                 buttonParamsJson: JSON.stringify({
-                  title: '𝐕𝐈𝐄𝐖☇ 𝐎𝐏𝐓𝐈𝐎𝐍𝐒',
+                  title: '𝐕𝐈𝐄𝐖☇ 𝐎𝐏𝐓𝐈𝐎𝐍𝐒 ☑',
                   sections: [
                     {
                       title: '⌜ 𝘾𝙤𝙧𝙚 𝘾𝙤𝙢𝙢𝙖𝙣𝙙𝙨 ⌟',
                       highlight_label: '© 丨几匚',
                       rows: [
-                        { title: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮', description: '', id: `${prefix}fullmenu` },
-                        { title: '𝐃𝐞𝐯', description: "", id: `${prefix}dev` },
+                        { title: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮', description: 'Display all commands', id: `${prefix}fullmenu` },
+                        { title: '𝐃𝐞𝐯', description: "send developer contact", id: `${prefix}dev` },
                       ],
                     },
                     {
@@ -104,7 +104,7 @@ module.exports = {
                       highlight_label: '© 丨几匚',
                       rows: [
                         { title: '𝐏𝐢𝐧𝐠', description: '', id: `${prefix}ping` },
-                        { title: '𝐑𝐞𝐩𝐨', description: '', id: `${prefix}repo` },
+                        { title: '𝐒𝐞𝐭𝐭𝐢𝐧𝐠𝐬', description: 'show bot settings', id: `${prefix}settings` },
                       ],
                     },
                   ],
