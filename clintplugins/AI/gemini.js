@@ -44,7 +44,7 @@ module.exports = async (context) => {
     // Send the response with creator attribution
     await client.sendMessage(
       m.chat,
-      { text: formatStylishReply(`${data.data.response}\n\n> Powered by Gemini | Created by ${data.creator}`) },
+      { text: formatStylishReply(`${data.data.response}\n\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`) },
       { quoted: m, ad: true }
     );
   } catch (error) {
