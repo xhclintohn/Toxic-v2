@@ -25,15 +25,15 @@ module.exports = async (context) => {
   }
 
   try {
-    // Hit the new Gemini API
-    const { data } = await axios.get("https://api.privatezia.biz.id/api/ai/gemini", {
-      params: { query: text },
+    // Hit thev api
+    const { data } = await axios.get("https://api.zenzxz.my.id/api/ai/gemini", {
+      params: { text: text, id: "string" },
       headers: { Accept: "application/json" },
       timeout: 10000,
     });
 
     // Check if response is valid
-    if (!data.status || !data.response) {
+    if (!data.success || !data.data?.response) {
       return client.sendMessage(
         m.chat,
         { text: formatStylishReply("API’s acting shady, no response! 😢 Try again.") },
@@ -44,7 +44,7 @@ module.exports = async (context) => {
     // Send the response with creator attribution
     await client.sendMessage(
       m.chat,
-      { text: formatStylishReply(`${data.response}\n\n> Powered by ${data.model} | Created by ${data.creator}`) },
+      { text: formatStylishReply(`${data.data.response}\n\n> Powered by Gemini | Created by ${data.creator}`) },
       { quoted: m, ad: true }
     );
   } catch (error) {
