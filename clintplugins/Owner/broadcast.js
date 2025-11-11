@@ -22,7 +22,7 @@ let txt = `BROADCAST MESSAGE (Toxic) \n\n🀄 Message: ${text}\n\nWritten by: ${
 
 await client.sendMessage(i, { 
                  image: { 
-                     url: "https://telegra.ph/file/c75efecf7f0aef851fc02.jpg" 
+                     url: "https://qu.ax/XxQwp.jpg" 
                  }, mentions: participants.map(a => a.id),
                  caption: `${txt}` 
              }) 
