@@ -19,7 +19,7 @@ const { botname, mycode } = require('../Env/settings');
 const { cleanupOldMessages } = require('../lib/Store');
 
 // 🆕 Import Owner Middleware for eval
-const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
+const ownerMiddleware = require('../utility/botUtil/Ownermiddleware');
 
 process.setMaxListeners(0);
 cleanupOldMessages();
