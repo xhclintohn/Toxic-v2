@@ -1,24 +1,9 @@
-const {
-    BufferJSON,
-    WA_DEFAULT_EPHEMERAL,
-    generateWAMessageFromContent,
-    proto,
-    generateWAMessageContent,
-    generateWAMessage,
-    prepareWAMessageMedia,
-    areJidsSameUser,
-    getContentType
-} = require("@whiskeysockets/baileys");
-
+const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType } = require("@whiskeysockets/baileys");
 const fs = require("fs");
 const util = require("util");
 const chalk = require("chalk");
 const speed = require("performance-now");
-const {
-    smsg, formatp, tanggal, formatDate, getTime, sleep, clockString,
-    fetchJson, getBuffer, jsonformat, generateProfilePicture,
-    parseMention, getRandom, fetchBuffer
-} = require('../lib/botFunctions.js');
+const { smsg, formatp, tanggal, formatDate, getTime, sleep, clockString, fetchJson, getBuffer, jsonformat, generateProfilePicture, parseMention, getRandom, fetchBuffer } = require('../lib/botFunctions.js');
 const { exec, spawn, execSync } = require("child_process");
 const { TelegraPh, UploadFileUgu } = require("../lib/toUrl");
 const uploadtoimgur = require('../lib/Imgur');
@@ -26,35 +11,31 @@ const { commands, aliases, totalCommands } = require('../Handler/commandHandler'
 const status_saver = require('../Functions/status_saver');
 const gcPresence = require('../Functions/gcPresence');
 const antitaggc = require('../Functions/antitag');
-const { antidelete } = require('../Functions/antidelete'); // ✅ Clean import
+const antidelete = require('../Functions/antidelete');
 const antilink = require('../Functions/antilink');
 const chatbotpm = require('../Functions/chatbotpm');
 const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require('../Database/config');
 const { botname, mycode } = require('../Env/settings');
+const { cleanupOldMessages } = require('../lib/Store');
 
-// 🆕 Owner middleware for eval
-const ownerMiddleware = require('../utility/botUtil/Ownermiddleware');
+// 🆕 Import Owner Middleware for eval
+const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 process.setMaxListeners(0);
+cleanupOldMessages();
+setInterval(() => cleanupOldMessages(), 24 * 60 * 60 * 1000);
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
     try {
         const sudoUsers = await getSudoUsers();
         const bannedUsers = await getBannedUsers();
         let settings = await getSettings();
-
         if (!settings) {
             console.error("Toxic-MD: Settings not found, cannot proceed!");
             return;
         }
 
-        const {
-            prefix, mode, gcpresence, antitag,
-            antidelete: antideleteSetting,
-            antilink: antilinkSetting,
-            chatbotpm: chatbotpmSetting,
-            packname
-        } = settings;
+        const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, chatbotpm: chatbotpmSetting, packname } = settings;
 
         var body =
             m.message?.conversation ||
@@ -66,7 +47,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             m.message?.listResponseMessage?.singleSelectReply?.selectedRowId ||
             m.message?.templateButtonReplyMessage?.selectedId ||
             m.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson ||
-            m.text || "";
+            m.text ||
+            "";
 
         body = typeof body === 'string' ? body : '';
 
@@ -153,17 +135,15 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         };
 
         const context = {
-            client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup,
-            participants, pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic,
-            botNumber, itsMe, packname, generateProfilePicture, groupMetadata, toxicspeed,
-            mycode, fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix, cmd,
-            botname, mode, gcpresence, antitag, antidelete: antideleteSetting, fetchBuffer,
-            store, uploadtoimgur, chatUpdate,
-            getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.jid),
-            pict, Tag
+            client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
+            pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
+            packname, generateProfilePicture, groupMetadata, toxicspeed, mycode, fetchJson, exec,
+            getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag,
+            antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate,
+            getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.jid), pict, Tag
         };
 
-        // 🧠 Eval system for owner
+    
         if ((body.startsWith('>') || body.startsWith('$')) && Owner) {
             try {
                 await ownerMiddleware(context, async () => {
@@ -178,12 +158,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         await m.reply("Error during eval execution:\n" + String(err));
                     }
                 });
-                return;
+                return; // prevent command handler from continuing
             } catch (e) {
                 console.error('Eval middleware error:', e);
             }
         }
 
+        // Continue normal flow if not eval
         if (cmd) {
             const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
             if (bannedUsers.includes(senderNumber)) {
@@ -196,7 +177,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         if (cmd && mode === 'private' && !itsMe && !Owner && !sudoUsers.includes(m.sender)) return;
 
-        // ✅ Antidelete, antilink, chatbot, presence
         if (antideleteSetting === true) await antidelete(client, m, store, pict);
         await antilink(client, m, store);
         await chatbotpm(client, m, store, chatbotpmSetting);
