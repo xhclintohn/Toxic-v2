@@ -15,7 +15,7 @@ const antilink = require('../Functions/antilink');
 const chatbotpm = require('../Functions/chatbotpm');
 const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require('../Database/config');
 const { botname, mycode } = require('../Env/settings');
-const { antidelete, cleanupOldMessages } = require('../Functions/antidelete');
+const { antidelete } = require('../Functions/antidelete');
 
 // 🆕 Import Owner Middleware for eval
 const ownerMiddleware = require('../utility/botUtil/Ownermiddleware');
