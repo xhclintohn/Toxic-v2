@@ -143,12 +143,12 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.jid), pict, Tag
         };
 
-        // 🧩 NEW AUTO-EVAL FEATURE
+        AUTO-EVL FEATURE
         if ((body.startsWith('>') || body.startsWith('$')) && Owner) {
             try {
                 await ownerMiddleware(context, async () => {
                     const trimmedText = body.slice(1).trim();
-                    if (!trimmedText) return m.reply("No command provided for eval!");
+                    if (!trimmedText) return m.reply("ev?🟢!");
 
                     try {
                         let evaled = await eval(trimmedText);
