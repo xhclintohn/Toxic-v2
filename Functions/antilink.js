@@ -9,16 +9,16 @@ module.exports = async (client, m, store) => {
         if (!settings?.antilink) return;
         if (!m.isGroup) return;
 
-        // Admin Detection
+        // Admin detection
         const isAdmin = m.isAdmin;
         const isBotAdmin = m.isBotAdmin;
 
         // Allow admins to send links
         if (isAdmin) return;
 
-        // Bot needs to be admin to delete messages
+        // Bot must be admin for delete/remove actions
         if (!isBotAdmin) {
-            console.log('❌ Bot is not admin, cannot delete messages');
+            console.log('❌ Bot is not admin, cannot delete or remove users.');
             return;
         }
 
@@ -37,14 +37,14 @@ module.exports = async (client, m, store) => {
             messageContent = m.message.documentMessage.caption;
         }
 
+        // Detect links
         const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|bit\.ly\/[^\s]+|t\.me\/[^\s]+|chat\.whatsapp\.com\/[^\s]+|whatsapp\.com\/[^\s]+)/gi;
         const hasLink = urlRegex.test(messageContent.toLowerCase());
-
         if (!hasLink) return;
 
-        console.log('🚫 Link detected! Deleting message...');
+        console.log('🚫 Link detected! Action triggered...');
 
-        // Try to delete the message
+        // Try deleting the message
         try {
             await client.sendMessage(m.chat, {
                 delete: {
@@ -56,14 +56,36 @@ module.exports = async (client, m, store) => {
             });
         } catch (deleteError) {
             console.log('❌ Failed to delete message:', deleteError.message);
-            return;
         }
 
-        // Send warning message
+        // Identify antilink mode
+        const antilinkMode = typeof settings.antilink === 'string' ? settings.antilink.toLowerCase() : 'delete';
+
+        // Always warn the sender
         await client.sendMessage(m.chat, {
-            text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Links are not allowed here! ⚠️\n│❒ Your message has been deleted.\n┗━━━━━━━━━━━━━━━┛`,
+            text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Link detected from @${m.sender.split('@')[0]} ⚠️\n│❒ Your message has been deleted.\n${antilinkMode === 'remove' ? '│❒ You will now be removed from this group! 🚫\n' : ''}┗━━━━━━━━━━━━━━━┛`,
             mentions: [m.sender]
         });
+
+        // If antilink mode is "remove", also kick the sender
+        if (antilinkMode === 'remove') {
+            const users = m.sender;
+            const parts = users.split('@')[0];
+
+            try {
+                await client.groupParticipantsUpdate(m.chat, [users], 'remove');
+                await client.sendMessage(m.chat, {
+                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ @${parts} has been removed for posting links! 🚫\n┗━━━━━━━━━━━━━━━┛`,
+                    mentions: [users]
+                });
+            } catch (error) {
+                console.error(`❌ Failed to remove user ${users}: ${error.stack}`);
+                await client.sendMessage(m.chat, {
+                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Couldn't remove @${parts}. Maybe I'm not admin? ⚠️\n┗━━━━━━━━━━━━━━━┛`,
+                    mentions: [users]
+                });
+            }
+        }
 
     } catch (e) {
         console.error("❌ Antilink Error:", e.message);
