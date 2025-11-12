@@ -19,7 +19,7 @@ const { botname, mycode } = require('../Env/settings');
 const { cleanupOldMessages } = require('../lib/Store');
 
 // 🆕 Import Owner Middleware for eval
-const ownerMiddleware = require('../utility/botUtil/Ownermiddleware');
+const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 process.setMaxListeners(0);
 cleanupOldMessages();
@@ -143,12 +143,12 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.jid), pict, Tag
         };
 
-        AUTO-EVL FEATURE
+   
         if ((body.startsWith('>') || body.startsWith('$')) && Owner) {
             try {
                 await ownerMiddleware(context, async () => {
                     const trimmedText = body.slice(1).trim();
-                    if (!trimmedText) return m.reply("ev?🟢!");
+                    if (!trimmedText) return m.reply("W eval?🟢!");
 
                     try {
                         let evaled = await eval(trimmedText);
