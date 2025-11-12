@@ -19,11 +19,14 @@ module.exports = async (context) => {
         );
       }
 
+      // Normalize the value
       const value = args.join(" ").toLowerCase();
       const validModes = ["off", "delete", "remove"];
 
+      // Update mode if argument is provided
       if (validModes.includes(value)) {
-        if (settings.antilink === value) {
+        const currentMode = String(settings.antilink || "off").toLowerCase();
+        if (currentMode === value) {
           return await client.sendMessage(
             m.chat,
             { text: formatStylishReply(`Antilink is already set to '${value.toUpperCase()}', dumbass.`) },
@@ -39,7 +42,8 @@ module.exports = async (context) => {
         );
       }
 
-      const currentStatus = settings.antilink || "off";
+      // Ensure currentStatus is always a string
+      const currentStatus = String(settings.antilink || "off").toLowerCase();
 
       const buttons = [
         { buttonId: `${prefix}antilink delete`, buttonText: { displayText: "DELETE 🗑️" }, type: 1 },
@@ -47,10 +51,16 @@ module.exports = async (context) => {
         { buttonId: `${prefix}antilink off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
       ];
 
+      // Choose emoji based on current mode
+      const emoji =
+        currentStatus === "delete" ? "🗑️" :
+        currentStatus === "remove" ? "🚫" :
+        "😴";
+
       await client.sendMessage(
         m.chat,
         {
-          text: formatStylishReply(`Antilink Mode: ${currentStatus.toUpperCase()}.\nPick your poison. 💀`),
+          text: formatStylishReply(`Antilink Mode: ${currentStatus.toUpperCase()} ${emoji}\nPick your poison. 💀`),
           footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
           buttons,
           headerType: 1,
