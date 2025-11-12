@@ -11,12 +11,11 @@ const { commands, aliases, totalCommands } = require('../Handler/commandHandler'
 const status_saver = require('../Functions/status_saver');
 const gcPresence = require('../Functions/gcPresence');
 const antitaggc = require('../Functions/antitag');
-const antidelete = require('../Functions/antidelete');
 const antilink = require('../Functions/antilink');
 const chatbotpm = require('../Functions/chatbotpm');
 const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require('../Database/config');
 const { botname, mycode } = require('../Env/settings');
-const { cleanupOldMessages } = require('../lib/Store');
+const { antidelete, cleanupOldMessages } = require('../Functions/antidelete');
 
 // 🆕 Import Owner Middleware for eval
 const ownerMiddleware = require('../utility/botUtil/Ownermiddleware');
@@ -56,15 +55,11 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             try {
                 const params = JSON.parse(m.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson);
                 body = params.id || body;
-                console.log('Native flow button clicked:', body);
-            } catch (e) {
-                console.error('Error parsing native flow response:', e);
-            }
+            } catch (e) {}
         }
 
         if (m.message?.templateButtonReplyMessage?.selectedId) {
             body = m.message.templateButtonReplyMessage.selectedId;
-            console.log('Template button clicked:', body);
         }
 
         const Tag = m.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
@@ -86,70 +81,39 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const pushname = m.pushName || "No Name";
         const botNumber = await client.decodeJid(client.user.id);
         const itsMe = m.sender == botNumber;
-        let text = (q = args.join(" "));
-        const arg = budy.trim().substring(budy.indexOf(" ") + 1);
-        const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
+        let text = args.join(" ");
 
         try {
             m.isGroup = m.chat.endsWith("g.us");
-            m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => {
-                console.error("Toxic-MD: Group metadata fetch error:", e);
-                return {};
-            }) : {};
+            m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => { return {}; }) : {};
             const participants = m.metadata?.participants || [];
             m.isAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === m.sender));
             m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === botNumber));
         } catch (error) {
-            console.error("Toxic-MD: Error fetching group metadata:", error);
             m.metadata = {};
             m.isAdmin = false;
             m.isBotAdmin = false;
         }
 
         const clint = (m.quoted || m);
-        const quoted = (clint.mtype == 'buttonsMessage')
-            ? clint[Object.keys(clint)[1]]
-            : (clint.mtype == 'templateMessage')
-                ? clint.hydratedTemplate[Object.keys(clint.hydratedTemplate)[1]]
-                : (clint.mtype == 'product')
-                    ? clint[Object.keys(clint)[0]]
-                    : m.quoted
-                        ? m.quoted
-                        : m;
+        const quoted = clint;
 
         const mime = (quoted.msg || quoted).mimetype || "";
         const qmsg = (quoted.msg || quoted);
         const DevToxic = Array.isArray(sudoUsers) ? sudoUsers : [];
         const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
 
-        const groupMetadata = m.isGroup ? m.metadata : "";
-        const participants = m.isGroup && groupMetadata ? groupMetadata.participants : "";
-        const isBotAdmin = m.isBotAdmin;
-        const isAdmin = m.isAdmin;
-        const IsGroup = m.isGroup;
-
-        const fakeQuoted = {
-            key: { participant: '0@s.whatsapp.net', remoteJid: '0@s.whatsapp.net', id: m.id },
-            message: { conversation: "Toxic Verified By WhatsApp" },
-            contextInfo: { mentionedJid: [m.sender], forwardingScore: 999, isForwarded: true }
-        };
-
         const context = {
-            client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
+            client, m, text, Owner, chatUpdate, store, isBotAdmin: m.isBotAdmin, isAdmin: m.isAdmin,
             pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
-            packname, generateProfilePicture, groupMetadata, toxicspeed, mycode, fetchJson, exec,
-            getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag,
-            antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate,
-            getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.jid), pict, Tag
         };
 
-   
+        // Owner eval
         if ((body.startsWith('>') || body.startsWith('$')) && Owner) {
             try {
                 await ownerMiddleware(context, async () => {
                     const trimmedText = body.slice(1).trim();
                     if (!trimmedText) return m.reply("W eval?🟢!");
-
                     try {
                         let evaled = await eval(trimmedText);
                         if (typeof evaled !== 'string') evaled = require('util').inspect(evaled);
@@ -158,31 +122,28 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         await m.reply("Error during eval execution:\n" + String(err));
                     }
                 });
-                return; // prevent command handler from continuing
-            } catch (e) {
-                console.error('Eval middleware error:', e);
-            }
-        }
-
-        // Continue normal flow if not eval
-        if (cmd) {
-            const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
-            if (bannedUsers.includes(senderNumber)) {
-                await client.sendMessage(m.chat, {
-                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost! 💀`
-                }, { quoted: fakeQuoted });
                 return;
-            }
+            } catch (e) {}
         }
 
-        if (cmd && mode === 'private' && !itsMe && !Owner && !sudoUsers.includes(m.sender)) return;
+        // Ban check
+        const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
+        if (bannedUsers.includes(senderNumber)) {
+            await client.sendMessage(m.chat, {
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, cannot use commands.`
+            }, { quoted: m });
+            return;
+        }
 
-        if (antideleteSetting === true) await antidelete(client, m, store, pict);
+        // Run antidelete
+        if (antideleteSetting === true) await antidelete(client, m, store);
+
+        // Other features
         await antilink(client, m, store);
         await chatbotpm(client, m, store, chatbotpmSetting);
         await status_saver(client, m, Owner, prefix);
         await gcPresence(client, m);
-        await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
+        await antitaggc(client, m, m.isBotAdmin, itsMe, m.isAdmin, Owner, body);
 
         if (cmd) await commands[resolvedCommandName](context);
 
