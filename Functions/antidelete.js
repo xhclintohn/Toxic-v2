@@ -1,23 +1,26 @@
 const fs = require("fs");
 const path = require("path");
-const { getSettings, updateSetting } = require("../Database/config");
+const axios = require("axios");
+const FormData = require("form-data");
 const { proto, getContentType, generateWAMessageID } = require("@whiskeysockets/baileys");
+const { getSettings, updateSetting } = require("../Database/config");
 
 const MESSAGE_STORE_PATH = path.join(__dirname, "../Database/messageStore.json");
+const MAX_UPLOAD_SIZE = 256 * 1024 * 1024; // 256MB
 
-// 🧩 Ensure JSON store file exists
+// 🧩 Ensure the JSON store exists
 function ensureStoreFile() {
   try {
     if (!fs.existsSync(MESSAGE_STORE_PATH)) {
       fs.writeFileSync(MESSAGE_STORE_PATH, JSON.stringify({}, null, 2), "utf8");
-      console.log("✅ messageStore.json created successfully.");
+      console.log("✅ Created messageStore.json");
     }
   } catch (err) {
     console.error("❌ Error ensuring message store file:", err);
   }
 }
 
-// 🧩 Read message store safely
+// 🧩 Safe read/write helpers
 function readStore() {
   ensureStoreFile();
   try {
@@ -29,7 +32,6 @@ function readStore() {
   }
 }
 
-// 🧩 Write message store safely
 function writeStore(data) {
   try {
     fs.writeFileSync(MESSAGE_STORE_PATH, JSON.stringify(data, null, 2), "utf8");
@@ -38,117 +40,138 @@ function writeStore(data) {
   }
 }
 
-// 🧩 Cleanup old messages (> 24 hours)
+// 🧹 Cleanup messages older than 24 hours
 function cleanupOldMessages() {
   try {
     const data = readStore();
     const now = Date.now();
-    const cutoff = 24 * 60 * 60 * 1000; // 24 hours
-
-    let cleanedCount = 0;
+    const cutoff = 24 * 60 * 60 * 1000;
+    let removed = 0;
 
     for (const chatId in data) {
       for (const msgId in data[chatId]) {
         const msg = data[chatId][msgId];
-        const msgTimestamp =
-          (msg.messageTimestamp || msg.timestamp || now / 1000) * 1000;
-
-        if (now - msgTimestamp > cutoff) {
+        const ts = (msg.timestamp || msg.messageTimestamp || now / 1000) * 1000;
+        if (now - ts > cutoff) {
           delete data[chatId][msgId];
-          cleanedCount++;
+          removed++;
         }
       }
-      // remove empty chat objects
-      if (Object.keys(data[chatId]).length === 0) {
-        delete data[chatId];
-      }
+      if (Object.keys(data[chatId]).length === 0) delete data[chatId];
     }
 
-    if (cleanedCount > 0) {
+    if (removed > 0) {
       writeStore(data);
-      console.log(`🧹 Cleaned ${cleanedCount} old messages from messageStore.json`);
+      console.log(`🧹 Cleaned ${removed} old messages from store`);
     }
   } catch (err) {
-    console.error("⚠️ Error during cleanup:", err);
+    console.error("Cleanup error:", err);
   }
 }
 
-// Schedule cleanup every 24h
-setInterval(cleanupOldMessages, 24 * 60 * 60 * 1000);
+setInterval(cleanupOldMessages, 24 * 60 * 60 * 1000); // once per day
 
-// 🧩 Helper: reply style
-const formatStylishReply = (message) => {
-  return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
-};
+// 🧩 Upload function for media
+async function uploadMedia(buffer) {
+  const tempPath = path.join(__dirname, `temp_${Date.now()}`);
+  fs.writeFileSync(tempPath, buffer);
+
+  try {
+    const form = new FormData();
+    form.append("files[]", fs.createReadStream(tempPath));
+    const res = await axios.post("https://qu.ax/upload.php", form, {
+      headers: { ...form.getHeaders() },
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    });
+
+    const link = res.data?.files?.[0]?.url;
+    if (!link) throw new Error("Upload failed — no URL returned.");
+    return link;
+  } finally {
+    if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+  }
+}
+
+// 🧩 Stylish reply
+const fancyReply = (msg) => `◈━━━━━━━━━━━━━━━━◈\n│❒ ${msg}\n┗━━━━━━━━━━━━━━━┛`;
 
 module.exports = async (context) => {
   const { client, m, args } = context;
 
   try {
-    if (!m || !m.key || !m.key.remoteJid) {
-      console.log("⚠️ Skipping antidelete: invalid message object");
-      return;
-    }
+    if (!m?.key?.remoteJid) return;
 
     const myself = client.decodeJid(client.user.id);
-
-    // Only bot owner (fromMe) can toggle command
     if (m.key.fromMe) {
       const subCommand = args[0]?.toLowerCase();
       const settings = await getSettings();
 
       if (subCommand === "status") {
         return await m.reply(
-          formatStylishReply(
+          fancyReply(
             `🔍 *Anti-Delete Status*\n\n` +
               `• Enabled: ${settings.antidelete ? "✅ Yes" : "❌ No"}\n` +
-              `• Storage: Local JSON\n` +
-              `• Cleanup: Every 24 Hours`
+              `• Cleanup: Every 24 hours\n` +
+              `• Storage: messageStore.json + qu.ax for media`
           )
         );
       }
 
       const newState = !settings.antidelete;
       await updateSetting("antidelete", newState);
-
       return await m.reply(
-        formatStylishReply(
-          `Antidelete ${newState ? "ENABLED" : "DISABLED"} globally!\n\n` +
-            `${newState ? "Deleted messages will be recovered 🔒" : "Antidelete disabled 😎"}`
+        fancyReply(
+          `Antidelete ${newState ? "ENABLED ✅" : "DISABLED ❌"} globally!\n\n` +
+            `${newState ? "Deleted messages will be recovered 🔒" : "Anti-delete is now off 😎"}`
         )
       );
     }
   } catch (err) {
-    console.error("❌ Error in antidelete command section:", err);
+    console.error("Antidelete command error:", err);
   }
 
-  // ⚙️ EVENT HANDLER SECTION
+  // 🚀 Message listener
   client.ev.on("messages.upsert", async ({ messages }) => {
     const msg = messages?.[0];
-    if (!msg || !msg.key || !msg.key.remoteJid) return;
+    if (!msg || !msg.key || !msg.key.remoteJid) return; // Only skip truly invalid messages
 
     const storeData = readStore();
 
-    // ✅ STORE ALL NORMAL MESSAGES
     try {
+      // ✅ Handle normal incoming messages
       if (msg.message && !msg.message.protocolMessage) {
         const chatId = msg.key.remoteJid;
         const msgId = msg.key.id;
+        const contentType = getContentType(msg.message);
 
         if (!storeData[chatId]) storeData[chatId] = {};
 
-        // Add timestamp if not present
-        if (!msg.messageTimestamp) msg.messageTimestamp = Math.floor(Date.now() / 1000);
+        let storedMsg = msg;
+        // 🧩 Handle media uploads automatically
+        if (["imageMessage", "videoMessage", "audioMessage", "documentMessage", "stickerMessage"].includes(contentType)) {
+          const mediaMsg = msg.message[contentType];
+          if (mediaMsg && mediaMsg.url) {
+            const buffer = await client.downloadMediaMessage(msg);
+            if (buffer && buffer.length < MAX_UPLOAD_SIZE) {
+              const link = await uploadMedia(buffer);
+              storedMsg = {
+                messageType: contentType,
+                url: link,
+                caption: mediaMsg.caption || "",
+                mimetype: mediaMsg.mimetype,
+                timestamp: msg.messageTimestamp,
+              };
+              console.log(`📤 Uploaded media (${contentType}) to ${link}`);
+            }
+          }
+        }
 
-        storeData[chatId][msgId] = msg;
+        storeData[chatId][msgId] = storedMsg;
         writeStore(storeData);
       }
-    } catch (err) {
-      console.error("⚠️ Error saving message to store:", err);
-    }
 
-    // 🚫 HANDLE DELETED MESSAGES
-    try {
+      // 🚫 Handle deleted messages
       const settings = await getSettings();
       if (!settings.antidelete) return;
 
@@ -157,43 +180,44 @@ module.exports = async (context) => {
         const chatId = deletedKey.remoteJid;
         const deletedMsgId = deletedKey.id;
 
-        const chatStore = storeData[chatId];
-        const deletedMsg = chatStore ? chatStore[deletedMsgId] : null;
-
-        if (!deletedMsg) {
-          console.log(`⚠️ No stored message found for ID ${deletedMsgId} in ${chatId}`);
-          return;
-        }
+        const deletedMsg = storeData?.[chatId]?.[deletedMsgId];
+        if (!deletedMsg) return;
 
         const botJid = client.decodeJid(client.user.id);
         const sender = deletedKey.participant || chatId;
         const isGroup = chatId.endsWith("@g.us");
-        const messageType = getContentType(deletedMsg.message);
 
-        const caption =
-          `⚠️ *Anti-Delete Detection*\n\n` +
+        const info =
+          `⚠️ *Anti-Delete Alert*\n\n` +
           `• From: @${sender.split("@")[0]}\n` +
           `• Chat: ${isGroup ? "Group" : "Private"}\n` +
-          `• Type: ${messageType}\n` +
           `• Time: ${new Date(
-            (deletedMsg.messageTimestamp || Date.now() / 1000) * 1000
-          ).toLocaleString("en-US", { timeZone: "Africa/Nairobi" })}\n\n` +
-          `*Recovered Message:*`;
+            (deletedMsg.timestamp || Date.now() / 1000) * 1000
+          ).toLocaleString("en-US", { timeZone: "Africa/Nairobi" })}\n\n`;
 
-        await client.sendMessage(botJid, { text: caption, mentions: [sender] });
+        // 🧩 Send recovered message
+        if (deletedMsg.url) {
+          await client.sendMessage(botJid, {
+            text: `${info}*Recovered Media:* ${deletedMsg.caption || ""}\n\n${deletedMsg.url}`,
+            mentions: [sender],
+          });
+        } else {
+          const textMsg =
+            deletedMsg.message?.conversation ||
+            deletedMsg.message?.extendedTextMessage?.text ||
+            "[No text content found]";
+          await client.sendMessage(botJid, {
+            text: `${info}*Recovered Message:*\n\n${textMsg}`,
+            mentions: [sender],
+          });
+        }
 
-        const msgObj = proto.WebMessageInfo.fromObject(deletedMsg);
-        await client.relayMessage(botJid, msgObj.message, {
-          messageId: generateWAMessageID(),
-        });
-
-        console.log(`✅ Recovered deleted ${messageType} message ${deletedMsgId} from ${chatId}`);
+        console.log(`✅ Recovered deleted message (${deletedMsgId}) from ${chatId}`);
       }
     } catch (err) {
-      console.error("❌ Error recovering deleted message:", err);
+      console.error("❌ Antidelete listener error:", err);
     }
   });
 
-  // 🧹 Initial cleanup run at startup
   cleanupOldMessages();
 };
