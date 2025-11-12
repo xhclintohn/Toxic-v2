@@ -1,37 +1,34 @@
 const fs = require('fs');
 const path = require('path');
+const { proto, generateWAMessageID, getContentType } = require('@whiskeysockets/baileys');
+const axios = require('axios');
+const FormData = require('form-data');
 
-const STORE_PATH = path.join(__dirname, '../store.json');
+// Path to store messages
+const STORE_PATH = path.join(__dirname, '../Database/antidelete_store.json');
 
+// Ensure the JSON store exists
 if (!fs.existsSync(STORE_PATH)) {
-    fs.writeFileSync(STORE_PATH, JSON.stringify({ messages: {}, enabledChats: [] }, null, 2));
+    fs.writeFileSync(STORE_PATH, JSON.stringify({}));
 }
 
-function loadStore() {
-    try {
-        return JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
-    } catch {
-        return { messages: {}, enabledChats: [] };
-    }
-}
+// Load store
+let messageStore = JSON.parse(fs.readFileSync(STORE_PATH, 'utf-8'));
 
-function saveStore(data) {
-    fs.writeFileSync(STORE_PATH, JSON.stringify(data, null, 2));
-}
-
-let store = loadStore();
-
+// Config
 const config = {
     maxStorageTime: 24 * 60 * 60 * 1000, // 24h
-    maxMessagesPerChat: 1000,
-    debug: false,
+    maxMessagesPerChat: 1000
 };
 
-function logDebug(msg) {
-    if (config.debug) console.log(`[AntiDelete Debug] ${msg}`);
+// Helper: save store to disk
+function saveStore() {
+    fs.writeFileSync(STORE_PATH, JSON.stringify(messageStore, null, 2));
 }
 
-function getType(message) {
+// Helper: get message type
+function getMessageType(message) {
+    if (!message) return 'unknown';
     if (message.conversation) return 'text';
     if (message.imageMessage) return 'image';
     if (message.videoMessage) return 'video';
@@ -41,129 +38,142 @@ function getType(message) {
     if (message.contactMessage) return 'contact';
     if (message.locationMessage) return 'location';
     if (message.extendedTextMessage) return 'extendedText';
-    if (message.reactionMessage) return 'reaction';
     return 'unknown';
 }
 
-function cleanupOld() {
+// Cleanup old messages
+function cleanupOldMessages() {
     const now = Date.now();
-    let removed = 0;
-    for (const id in store.messages) {
-        const msg = store.messages[id];
+    let deletedCount = 0;
+
+    for (const key in messageStore) {
+        const msg = messageStore[key];
         if (now - msg.timestamp > config.maxStorageTime) {
-            delete store.messages[id];
-            removed++;
+            delete messageStore[key];
+            deletedCount++;
         }
     }
-    if (removed > 0) {
-        saveStore(store);
-        logDebug(`Cleaned ${removed} expired messages`);
-    }
+
+    if (deletedCount > 0) saveStore();
 }
-setInterval(cleanupOld, 60 * 60 * 1000);
 
-async function execute(sock, msg, args) {
-    const chatId = msg.key.remoteJid;
+// Run cleanup every hour
+setInterval(cleanupOldMessages, 60 * 60 * 1000);
 
-    if (args[0] === 'status') {
-        const enabled = store.enabledChats.includes(chatId);
-        const total = Object.values(store.messages).filter(m => m.from === chatId).length;
-        await sock.sendMessage(chatId, {
-            text: `🔍 *AntiDelete Status*\n\n` +
-                  `• Enabled: ${enabled ? '✅ Yes' : '❌ No'}\n` +
-                  `• Stored messages: ${total}\n` +
-                  `• Storage time: 24 hours`
-        });
-        return;
+// Upload media helper (images/videos)
+async function uploadMedia(q) {
+    const mime = (q.msg || q).mimetype;
+    if (!mime) return null;
+
+    const buffer = await q.download();
+    const tempFilePath = path.join(__dirname, `temp_${Date.now()}`);
+    fs.writeFileSync(tempFilePath, buffer);
+
+    const form = new FormData();
+    form.append('files[]', fs.createReadStream(tempFilePath));
+
+    const response = await axios.post('https://qu.ax/upload.php', form, {
+        headers: { ...form.getHeaders() },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
+    });
+
+    fs.unlinkSync(tempFilePath);
+
+    if (!response.data?.files?.[0]?.url) throw new Error('No URL returned by API');
+    return response.data.files[0].url;
+}
+
+// Main antidelete function
+async function antidelete(context) {
+    const { client, m } = context;
+    if (!m || !m.key || !m.key.remoteJid || !m.key.id) return;
+
+    const chatId = m.key.remoteJid;
+    const msgId = m.key.id;
+
+    // Store message
+    if (!messageStore[chatId]) messageStore[chatId] = {};
+    if (Object.keys(messageStore[chatId]).length >= config.maxMessagesPerChat) {
+        // Delete oldest message
+        const oldest = Object.entries(messageStore[chatId]).sort((a, b) => a[1].timestamp - b[1].timestamp)[0];
+        if (oldest) delete messageStore[chatId][oldest[0]];
     }
 
-    if (args[0] === 'clear') {
-        const before = Object.keys(store.messages).length;
-        for (const id in store.messages) {
-            if (store.messages[id].from === chatId) delete store.messages[id];
+    const storedMsg = {
+        id: msgId,
+        message: m.message,
+        participant: m.key.participant || m.key.remoteJid,
+        type: chatId.endsWith('@g.us') ? 'group' : 'private',
+        timestamp: m.messageTimestamp || Date.now(),
+        messageType: getMessageType(m.message)
+    };
+
+    // Upload media if it's an image or video
+    if (storedMsg.messageType === 'image' || storedMsg.messageType === 'video') {
+        try {
+            const mediaUrl = await uploadMedia(m.quoted || m);
+            storedMsg.mediaUrl = mediaUrl;
+        } catch (err) {
+            console.error('Media upload error:', err);
         }
-        saveStore(store);
-        await sock.sendMessage(chatId, { text: `🧹 Cleared ${before} stored messages.` });
-        return;
     }
 
-    if (args[0] === 'debug') {
-        config.debug = !config.debug;
-        return sock.sendMessage(chatId, { text: `Debug mode ${config.debug ? 'ON' : 'OFF'}` });
-    }
-
-    if (store.enabledChats.includes(chatId)) {
-        store.enabledChats = store.enabledChats.filter(id => id !== chatId);
-        saveStore(store);
-        await sock.sendMessage(chatId, { text: '❌ Anti-delete disabled for this chat.' });
-    } else {
-        store.enabledChats.push(chatId);
-        saveStore(store);
-        await sock.sendMessage(chatId, { text: '✅ Anti-delete enabled. Deleted messages will be restored.' });
-    }
+    messageStore[chatId][msgId] = storedMsg;
+    saveStore();
 }
 
+// Setup listeners
 function setupAntiDeleteListeners(sock) {
+    // Store all messages
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const m = messages[0];
-        const chatId = m.key.remoteJid;
-        if (!m.message || !store.enabledChats.includes(chatId)) return;
-
-        const type = getType(m.message);
-        store.messages[m.key.id] = {
-            id: m.key.id,
-            message: m.message,
-            from: chatId,
-            sender: m.key.participant || chatId,
-            timestamp: m.messageTimestamp || Date.now(),
-            type
-        };
-
-        const msgs = Object.values(store.messages).filter(m => m.from === chatId);
-        if (msgs.length > config.maxMessagesPerChat) {
-            const oldest = msgs.sort((a, b) => a.timestamp - b.timestamp)[0];
-            delete store.messages[oldest.id];
-        }
-
-        saveStore(store);
-        logDebug(`Stored ${m.key.id} (${type})`);
+        if (!m?.message) return;
+        await antidelete({ client: sock, m });
     });
 
-    sock.ev.on('messages.delete', async (update) => {
-        const { keys } = update;
-        if (!keys?.length) return;
+    // Detect deleted messages
+    sock.ev.on('messages.delete', async ({ keys }) => {
+        if (!keys || keys.length === 0) return;
 
         for (const key of keys) {
-            const msg = store.messages[key.id];
-            if (!msg || !store.enabledChats.includes(msg.from)) continue;
+            const chatId = key.remoteJid;
+            const msgId = key.id;
+            const deletedMsg = messageStore[chatId]?.[msgId];
+            if (!deletedMsg) continue;
 
-            const caption = `⚠️ *Message Deleted!*\n• Type: ${msg.type}\n• Time: ${new Date(msg.timestamp * 1000).toLocaleString()}\n\n*Restored message:*`;
+            const botJid = sock.user.id.split(':')[0] + '@s.whatsapp.net';
+            const sender = deletedMsg.participant;
+            const type = deletedMsg.messageType;
 
-            await sock.sendMessage(msg.from, { text: caption });
+            let caption = `⚠️ *Anti-Delete Detection*\n\n`;
+            if (deletedMsg.type === 'group') caption += `• From: @${sender.split('@')[0]}\n• Chat: Group\n`;
+            else caption += `• Chat: Private\n`;
+            caption += `• Type: ${type}\n• Time: ${new Date(deletedMsg.timestamp).toLocaleString()}\n\n*Original Message:*`;
 
-            const forward = msg.message;
             try {
-                if (msg.type === 'text') {
-                    await sock.sendMessage(msg.from, { text: forward.conversation });
-                } else if (msg.type === 'extendedText') {
-                    await sock.sendMessage(msg.from, { text: forward.extendedTextMessage.text });
-                } else if (msg.type === 'image') {
-                    await sock.sendMessage(msg.from, { image: forward.imageMessage, caption: forward.imageMessage.caption || '' });
-                } else if (msg.type === 'video') {
-                    await sock.sendMessage(msg.from, { video: forward.videoMessage, caption: forward.videoMessage.caption || '' });
-                } else if (msg.type === 'sticker') {
-                    await sock.sendMessage(msg.from, { sticker: forward.stickerMessage });
-                } else {
-                    await sock.sendMessage(msg.from, { text: '[Unsupported message type]' });
-                }
-            } catch (err) {
-                console.error(`Error reposting deleted message:`, err);
-            }
+                // Send deleted message to bot's DM
+                await sock.sendMessage(botJid, { text: caption, mentions: deletedMsg.type === 'group' ? [sender] : [] });
 
-            delete store.messages[key.id];
-            saveStore(store);
+                if (type === 'text') await sock.sendMessage(botJid, { text: deletedMsg.message.conversation });
+                else if (type === 'extendedText') await sock.sendMessage(botJid, { text: deletedMsg.message.extendedTextMessage.text });
+                else if (type === 'image' || type === 'video') {
+                    const url = deletedMsg.mediaUrl;
+                    if (url) await sock.sendMessage(botJid, { 
+                        image: deletedMsg.message.imageMessage || deletedMsg.message.videoMessage,
+                        caption: url
+                    });
+                } else {
+                    await sock.sendMessage(botJid, { text: `[Deleted ${type} message]` });
+                }
+
+                delete messageStore[chatId][msgId];
+                saveStore();
+            } catch (err) {
+                console.error('Error resending deleted message:', err);
+            }
         }
     });
 }
 
-module.exports = { execute, setupAntiDeleteListeners };
+module.exports = { antidelete, setupAntiDeleteListeners };
