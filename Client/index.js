@@ -45,7 +45,8 @@ const sessionName = path.join(__dirname, '..', 'Session');
 const groupEvents = require("../Handler/eventHandler");
 const groupEvents2 = require("../Handler/eventHandler");
 const connectionHandler = require('../Handler/connectionHandler');
-const antidelete = require('../Functions/antidelete');
+// *** IMPORTANT: destructure antidelete exports to get the function(s) we need ***
+const { antidelete, cleanupOldMessages } = require('../Functions/antidelete');
 const antilink = require('../Functions/antilink');
 
 async function startToxic() {
@@ -109,6 +110,16 @@ async function startToxic() {
     store.writeToFile("store.json");
   }, 3000);
 
+  // Run antidelete cleanup at startup if available
+  try {
+    if (typeof cleanupOldMessages === 'function') {
+      cleanupOldMessages();
+      setInterval(() => cleanupOldMessages(), 24 * 60 * 60 * 1000);
+    }
+  } catch (e) {
+    console.error("Error running antidelete cleanup:", e);
+  }
+
   if (autobio) {
     setInterval(() => {
       const date = new Date();
@@ -169,23 +180,37 @@ async function startToxic() {
     let mek = messages[0];
     if (!mek || !mek.key || !mek.message) return;
 
+    // normalize ephemeral messages
     mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
     const remoteJid = mek.key.remoteJid;
     const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
     const Myself = client.decodeJid(client.user.id);
 
+    // Validate antidelete function
     if (typeof antidelete !== 'function') {
       console.error('Toxic-MD Error: antidelete is not a function');
-      return;
-    }
-    if (typeof antilink !== 'function') {
-      console.error('Toxic-MD Error: antilink is not a function');
-      return;
+      // still continue with other handlers to avoid breaking everything
+      // but skip calling antidelete
+    } else {
+      try {
+        // call antidelete safely - it will internally store needed message info
+        await antidelete(client, mek, store);
+      } catch (err) {
+        console.error('Error in antidelete call:', err);
+      }
     }
 
-    await antidelete(client, mek, store, fs.readFileSync(path.resolve(__dirname, '../toxic.jpg')));
-    await antilink(client, mek, store);
+    // Validate antilink
+    if (typeof antilink !== 'function') {
+      console.error('Toxic-MD Error: antilink is not a function');
+    } else {
+      try {
+        await antilink(client, mek, store);
+      } catch (err) {
+        console.error('Error in antilink call:', err);
+      }
+    }
 
     if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
       const nickk = await client.decodeJid(client.user.id);
@@ -215,7 +240,7 @@ async function startToxic() {
 
     if (!client.public && !mek.key.fromMe && messages.type === "notify") return;
 
-    m = smsg(client, mek, store);
+    const m = smsg(client, mek, store);
     require("./toxic")(client, m, { type: "notify" }, store);
   });
 
