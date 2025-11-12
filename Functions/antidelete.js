@@ -1,71 +1,73 @@
 const fs = require("fs");
 const path = require("path");
+const moment = require("moment");
 
-const STORE_PATH = path.join(__dirname, "..", "store.json");
+const STORE_PATH = path.join(__dirname, "../Database/store.json");
 
-// Ensure store.json exists
-function ensureStore() {
-  if (!fs.existsSync(STORE_PATH)) {
-    fs.writeFileSync(STORE_PATH, JSON.stringify({ messages: {} }, null, 2));
-  }
+// ✅ Ensure store file exists
+function ensureStoreFile() {
+    if (!fs.existsSync(STORE_PATH)) {
+        fs.writeFileSync(STORE_PATH, JSON.stringify({}), "utf8");
+    }
 }
 
-// Save a message when received
-function saveMessage(msg) {
-  ensureStore();
-  const store = JSON.parse(fs.readFileSync(STORE_PATH));
-  if (!msg.key || !msg.key.id) return;
-
-  const id = msg.key.id;
-  store.messages[id] = {
-    key: msg.key,
-    message: msg.message,
-    fromMe: msg.key.fromMe || false,
-    remoteJid: msg.key.remoteJid
-  };
-
-  fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
+// ✅ Load stored messages
+function loadStore() {
+    ensureStoreFile();
+    return JSON.parse(fs.readFileSync(STORE_PATH, "utf8"));
 }
 
-// Handle deleted messages
-async function handleDelete(sock, deletedMsg) {
-  ensureStore();
-  const store = JSON.parse(fs.readFileSync(STORE_PATH));
-  const id = deletedMsg.key.id;
-  const data = store.messages[id];
-  if (!data) return;
-
-  const chat = data.remoteJid;
-  const sender = data.key.participant || data.key.remoteJid;
-
-  await sock.sendMessage(chat, {
-    text: `🧩 *Anti-Delete Detected!*\nA message from @${sender.split("@")[0]} was deleted.\n\nReposting it below 👇`,
-    mentions: [sender]
-  });
-
-  try {
-    await sock.sendMessage(chat, { forward: data });
-  } catch {
-    await sock.sendMessage(chat, { text: "⚠️ Unable to restore deleted message content." });
-  }
+// ✅ Save store back to file
+function saveStore(store) {
+    fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), "utf8");
 }
 
-// Main antidelete setup
-async function antidelete(sock, msg) {
-  // Listen for new messages
-  sock.ev.on("messages.upsert", async ({ messages }) => {
-    const m = messages[0];
-    if (!m || !m.message) return;
-    saveMessage(m);
-  });
+// ✅ Main AntiDelete function
+async function antidelete(client, m, store, pict) {
+    ensureStoreFile();
 
-  // Listen for deletions
-  sock.ev.on("message-revoke", async (event) => {
-    if (!event || !event.key) return;
-    await handleDelete(sock, event);
-  });
+    const chats = loadStore();
 
-  console.log("✅ Anti-Delete system active!");
+    // 1️⃣ Store incoming messages
+    if (!m.messageStubType && !m.key.fromMe && m.message) {
+        const messageID = m.key.id;
+        const jid = m.chat;
+        const sender = m.sender;
+
+        if (!chats[jid]) chats[jid] = {};
+        chats[jid][messageID] = {
+            sender,
+            type: Object.keys(m.message)[0],
+            content: m.message,
+            timestamp: moment().format("YYYY-MM-DD HH:mm:ss")
+        };
+
+        saveStore(chats);
+        return; // nothing else to do until a delete event
+    }
+
+    // 2️⃣ Detect deleted message
+    if (m.messageStubType === 68 && m.messageStubParameters) {
+        const jid = m.key.remoteJid;
+        const deletedID = m.messageStubParameters[0];
+
+        const storedChat = chats[jid];
+        if (!storedChat || !storedChat[deletedID]) return;
+
+        const deletedMsg = storedChat[deletedID];
+        const sender = deletedMsg.sender;
+        const type = deletedMsg.type;
+
+        // 3️⃣ Restore deleted message
+        try {
+            await client.sendMessage(jid, {
+                text: `💀 *Anti-Delete Detected!*\n\nFrom: @${sender.split("@")[0]}\nType: ${type}`,
+                mentions: [sender]
+            }, { quoted: { key: { participant: sender, fromMe: false }, message: deletedMsg.content } });
+        } catch (err) {
+            console.error("Toxic-MD: Error restoring deleted message:", err);
+        }
+    }
 }
 
 module.exports = { antidelete };
