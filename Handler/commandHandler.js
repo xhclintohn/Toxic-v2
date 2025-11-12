@@ -45,6 +45,8 @@ const aliases = {
     h: "menu",
     d: "del",
     whatmusic: "shazam",
+    findmusic: "shazam",
+    fmusic: "shazam",
     invite: "link",
     delete: "del",
     evl: "eval",
