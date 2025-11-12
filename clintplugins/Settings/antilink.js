@@ -20,35 +20,37 @@ module.exports = async (context) => {
       }
 
       const value = args.join(" ").toLowerCase();
-      const isEnabled = settings.antilink === true;
+      const validModes = ["off", "delete", "remove"];
 
-      if (value === 'on' || value === 'off') {
-        const action = value === 'on';
-        if (isEnabled === action) {
+      if (validModes.includes(value)) {
+        if (settings.antilink === value) {
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`Yo, genius! 😈 Antilink is already ${value.toUpperCase()}! Stop wasting my time, moron. 🖕`) },
+            { text: formatStylishReply(`Antilink is already set to '${value.toUpperCase()}', dumbass.`) },
             { quoted: m, ad: true }
           );
         }
 
-        await updateSetting('antilink', action);
+        await updateSetting('antilink', value);
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply(`Antilink ${value.toUpperCase()}! 🔥 ${action ? 'Links in groups? They’re toast now! 💀' : 'Links can roam free, you’re not worth policing. 😴'}`) },
+          { text: formatStylishReply(`Antilink mode updated to '${value.toUpperCase()}'. 🔥`) },
           { quoted: m, ad: true }
         );
       }
 
+      const currentStatus = settings.antilink || "off";
+
       const buttons = [
-        { buttonId: `${prefix}antilink on`, buttonText: { displayText: "ON 🥶" }, type: 1 },
+        { buttonId: `${prefix}antilink delete`, buttonText: { displayText: "DELETE 🗑️" }, type: 1 },
+        { buttonId: `${prefix}antilink remove`, buttonText: { displayText: "REMOVE 🚫" }, type: 1 },
         { buttonId: `${prefix}antilink off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
       ];
 
       await client.sendMessage(
         m.chat,
         {
-          text: formatStylishReply(`Antilink Status: ${isEnabled ? 'ON 🥶' : 'OFF 😴'}. Pick a vibe, noob! 😈`),
+          text: formatStylishReply(`Antilink Mode: ${currentStatus.toUpperCase()}.\nPick your poison. 💀`),
           footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
           buttons,
           headerType: 1,
@@ -57,6 +59,7 @@ module.exports = async (context) => {
         { quoted: m, ad: true }
       );
     } catch (error) {
+      console.error("❌ Error in Antilink command:", error);
       await client.sendMessage(
         m.chat,
         { text: formatStylishReply("Shit broke, couldn’t update antilink. Database or something’s fucked. Try later.") },
