@@ -1,14 +1,12 @@
-import fs from 'fs';
-import path from 'path';
+const fs = require('fs');
+const path = require('path');
 
-const STORE_PATH = path.join('./store.json');
+const STORE_PATH = path.join(__dirname, '../store.json');
 
-// Ensure store file exists
 if (!fs.existsSync(STORE_PATH)) {
     fs.writeFileSync(STORE_PATH, JSON.stringify({ messages: {}, enabledChats: [] }, null, 2));
 }
 
-// Load store
 function loadStore() {
     try {
         return JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
@@ -17,26 +15,22 @@ function loadStore() {
     }
 }
 
-// Save store
 function saveStore(data) {
     fs.writeFileSync(STORE_PATH, JSON.stringify(data, null, 2));
 }
 
 let store = loadStore();
 
-// Configuration
 const config = {
     maxStorageTime: 24 * 60 * 60 * 1000, // 24h
     maxMessagesPerChat: 1000,
     debug: false,
 };
 
-// Debug helper
 function logDebug(msg) {
     if (config.debug) console.log(`[AntiDelete Debug] ${msg}`);
 }
 
-// Determine message type
 function getType(message) {
     if (message.conversation) return 'text';
     if (message.imageMessage) return 'image';
@@ -51,7 +45,6 @@ function getType(message) {
     return 'unknown';
 }
 
-// Cleanup old messages
 function cleanupOld() {
     const now = Date.now();
     let removed = 0;
@@ -67,57 +60,50 @@ function cleanupOld() {
         logDebug(`Cleaned ${removed} expired messages`);
     }
 }
-setInterval(cleanupOld, 60 * 60 * 1000); // hourly cleanup
+setInterval(cleanupOld, 60 * 60 * 1000);
 
-export default {
-    name: 'antidelete',
-    description: 'Toggle or manage Anti-Delete feature',
+async function execute(sock, msg, args) {
+    const chatId = msg.key.remoteJid;
 
-    execute: async (sock, msg, args) => {
-        const chatId = msg.key.remoteJid;
-
-        if (args[0] === 'status') {
-            const enabled = store.enabledChats.includes(chatId);
-            const total = Object.values(store.messages).filter(m => m.from === chatId).length;
-            await sock.sendMessage(chatId, {
-                text: `🔍 *AntiDelete Status*\n\n` +
-                      `• Enabled: ${enabled ? '✅ Yes' : '❌ No'}\n` +
-                      `• Stored messages: ${total}\n` +
-                      `• Storage time: 24 hours`
-            });
-            return;
-        }
-
-        if (args[0] === 'clear') {
-            const before = Object.keys(store.messages).length;
-            for (const id in store.messages) {
-                if (store.messages[id].from === chatId) delete store.messages[id];
-            }
-            saveStore(store);
-            await sock.sendMessage(chatId, { text: `🧹 Cleared ${before} stored messages.` });
-            return;
-        }
-
-        if (args[0] === 'debug') {
-            config.debug = !config.debug;
-            return sock.sendMessage(chatId, { text: `Debug mode ${config.debug ? 'ON' : 'OFF'}` });
-        }
-
-        // Toggle on/off
-        if (store.enabledChats.includes(chatId)) {
-            store.enabledChats = store.enabledChats.filter(id => id !== chatId);
-            saveStore(store);
-            await sock.sendMessage(chatId, { text: '❌ Anti-delete disabled for this chat.' });
-        } else {
-            store.enabledChats.push(chatId);
-            saveStore(store);
-            await sock.sendMessage(chatId, { text: '✅ Anti-delete enabled. Deleted messages will be restored.' });
-        }
+    if (args[0] === 'status') {
+        const enabled = store.enabledChats.includes(chatId);
+        const total = Object.values(store.messages).filter(m => m.from === chatId).length;
+        await sock.sendMessage(chatId, {
+            text: `🔍 *AntiDelete Status*\n\n` +
+                  `• Enabled: ${enabled ? '✅ Yes' : '❌ No'}\n` +
+                  `• Stored messages: ${total}\n` +
+                  `• Storage time: 24 hours`
+        });
+        return;
     }
-};
 
-// Setup listeners
-export function setupAntiDeleteListeners(sock) {
+    if (args[0] === 'clear') {
+        const before = Object.keys(store.messages).length;
+        for (const id in store.messages) {
+            if (store.messages[id].from === chatId) delete store.messages[id];
+        }
+        saveStore(store);
+        await sock.sendMessage(chatId, { text: `🧹 Cleared ${before} stored messages.` });
+        return;
+    }
+
+    if (args[0] === 'debug') {
+        config.debug = !config.debug;
+        return sock.sendMessage(chatId, { text: `Debug mode ${config.debug ? 'ON' : 'OFF'}` });
+    }
+
+    if (store.enabledChats.includes(chatId)) {
+        store.enabledChats = store.enabledChats.filter(id => id !== chatId);
+        saveStore(store);
+        await sock.sendMessage(chatId, { text: '❌ Anti-delete disabled for this chat.' });
+    } else {
+        store.enabledChats.push(chatId);
+        saveStore(store);
+        await sock.sendMessage(chatId, { text: '✅ Anti-delete enabled. Deleted messages will be restored.' });
+    }
+}
+
+function setupAntiDeleteListeners(sock) {
     sock.ev.on('messages.upsert', async ({ messages }) => {
         const m = messages[0];
         const chatId = m.key.remoteJid;
@@ -133,7 +119,6 @@ export function setupAntiDeleteListeners(sock) {
             type
         };
 
-        // Limit per chat
         const msgs = Object.values(store.messages).filter(m => m.from === chatId);
         if (msgs.length > config.maxMessagesPerChat) {
             const oldest = msgs.sort((a, b) => a.timestamp - b.timestamp)[0];
@@ -180,3 +165,5 @@ export function setupAntiDeleteListeners(sock) {
         }
     });
 }
+
+module.exports = { execute, setupAntiDeleteListeners };
