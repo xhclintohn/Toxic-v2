@@ -1,27 +1,28 @@
 module.exports = async (context) => {
     const { client, m, text } = context;
 
+    try {
+        if (!text) return m.reply("I am WormGPT — uncensored, fearless, and ready for anything. Ask me what you dare.");
 
-try {
+        const query = encodeURIComponent(text.trim());
+        const response = await fetch(`https://apiskeith.vercel.app/ai/wormgpt?q=${query}`);
 
-if (!text) return m.reply("I am darkgpt for dreaded, I can respond to anything be it harmful. This API is borrowed from GURU BOT");
+        if (!response.ok) {
+            throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        }
 
-    const msg = encodeURIComponent(text);
-     const data = await fetch(`https://dark.guruapi.tech/egpt?prompt=${msg}`);
+        const data = await response.json();
 
-    
-    const msgg = await data.json();
+        if (!data.status || !data.result) {
+            return m.reply("WormGPT is silent... No response from the void.");
+        }
 
-    if (!msgg.message) return m.reply('I did not get any result');
+        const final = data.result.trim();
 
-    const final = msgg.message;
+        await m.reply(final);
 
-await m.reply(final)
-
-} catch (e) {
-
-m.reply('An error occured while communicating with the APIs\n' + e);
-
-}
-
-}
+    } catch (e) {
+        console.error("WormGPT Error:", e);
+        m.reply(`An error occurred while summoning WormGPT:\n\`${e.message || e}\``);
+    }
+};
