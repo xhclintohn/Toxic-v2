@@ -51,6 +51,7 @@ const aliases = {
     invite: "link",
     delete: "del",
     evl: "eval",
+    k: "remove",
     reactemoji: "reaction",
     autoviewstatus: "autoview",
     addowner: "addsudo",
