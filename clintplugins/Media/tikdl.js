@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const AbortController = require("abort-controller");
 
 module.exports = async (context) => {
     const { client, botname, m, text } = context;
@@ -7,20 +8,38 @@ module.exports = async (context) => {
         return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
     };
 
-    const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+  
+    const fetchWithRetry = async (url, options = {}, retries = 3, delay = 1500) => {
         for (let attempt = 1; attempt <= retries; attempt++) {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), options.timeout || 15000);
+
             try {
-                const response = await fetch(url, options);
-                if (!response.ok) {
-                    throw new Error(`API failed with status ${response.status}`);
-                }
-                return response;
-            } catch (error) {
-                if (attempt === retries || error.type !== "request-timeout") {
-                    throw error;
-                }
-                console.error(`Attempt ${attempt} failed: ${error.message}. Retrying in ${delay}ms...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
+                const res = await fetch(url, {
+                    ...options,
+                    signal: controller.signal,
+                    headers: {
+                        "User-Agent":
+                            "Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 Chrome/120.0",
+                        Accept: "application/json, text/plain, */*",
+                        ...(options.headers || {})
+                    }
+                });
+
+                clearTimeout(timeout);
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res;
+
+            } catch (err) {
+                clearTimeout(timeout);
+
+                if (attempt === retries) throw err;
+
+                console.log(
+                    `Retry attempt ${attempt} failed: ${err.message} – retrying in ${delay}ms`
+                );
+                await new Promise(r => setTimeout(r, delay));
             }
         }
     };
@@ -35,43 +54,41 @@ module.exports = async (context) => {
 
     try {
         const encodedUrl = encodeURIComponent(text);
-        const response = await fetchWithRetry(
+
+        const metadataResponse = await fetchWithRetry(
             `https://api.privatezia.biz.id/api/downloader/alldownload?url=${encodedUrl}`,
-            { headers: { Accept: "application/json" }, timeout: 15000 }
+            { timeout: 15000 }
         );
 
-        const data = await response.json();
+        const data = await metadataResponse.json();
 
-        if (!data || !data.status || !data.result || !data.result.video || !data.result.video.url) {
-            return m.reply(formatStylishReply("API’s actin’ shady, no video found! 😢 Try again later."));
+        if (!data?.status || !data?.result?.video?.url) {
+            return m.reply(formatStylishReply("API acting shady, no video found! 😢 Try later."));
         }
 
-        const tikVideoUrl = data.result.video.url;
+        const videoUrl = data.result.video.url;
         const tikDescription = data.result.title || "No description available";
-        const tikAuthor = "Unknown Author";
-        const tikLikes = "N/A";
-        const tikComments = "N/A";
-        const tikShares = "N/A";
 
-        const caption = formatStylishReply(`🎥 TikTok Video\n\n📌 *Description:* ${tikDescription}\n👤 *Author:* ${tikAuthor}\n❤️ *Likes:* ${tikLikes}\n💬 *Comments:* ${tikComments}\n🔗 *Shares:* ${tikShares}`);
+        const caption = formatStylishReply(`🎥 TikTok Video\n\n📌 *Description:* ${tikDescription}`);
 
         m.reply(formatStylishReply("Snaggin’ the TikTok video, fam! Hold tight! 🔥📽️"));
 
-        const videoResponse = await fetchWithRetry(tikVideoUrl, { timeout: 15000 });
-        if (!videoResponse.ok) {
-            throw new Error(`Failed to download video: HTTP ${videoResponse.status}`);
-        }
+        // Download video with retries + timeout
+        const videoRes = await fetchWithRetry(videoUrl, { timeout: 20000 });
+        const buffer = Buffer.from(await videoRes.arrayBuffer());
 
-        const arrayBuffer = await videoResponse.arrayBuffer();
-        const videoBuffer = Buffer.from(arrayBuffer);
+        await client.sendMessage(
+            m.chat,
+            {
+                video: buffer,
+                mimetype: "video/mp4",
+                caption
+            },
+            { quoted: m }
+        );
 
-        await client.sendMessage(m.chat, {
-            video: videoBuffer,
-            mimetype: "video/mp4",
-            caption: caption,
-        }, { quoted: m });
     } catch (error) {
         console.error("TikTok download error:", error);
-        m.reply(formatStylishReply(`Yo, we hit a snag: ${error.message}. Check the URL and try again! 😎`));
+        m.reply(formatStylishReply(`Yo, we hit a snag: ${error.message}. Try again! 😎`));
     }
 };
