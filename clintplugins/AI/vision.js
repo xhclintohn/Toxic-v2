@@ -7,60 +7,61 @@ module.exports = async (context) => {
     const { client, m, text } = context;
 
     try {
-        // Ensure there is a quoted message and text prompt
-        if (!m.quoted) return m.reply("📸 Quote an image or send one with your prompt.");
-        if (!text) return m.reply("📝 Please add a caption or prompt — e.g. `what’s in this image?`");
+        if (!m.quoted) 
+            return m.reply("📸 *Quote an image first, genius.*");
 
-        const q = m.quoted ? m.quoted : m;
-        const mime = (q.msg || q).mimetype || '';
+        if (!text) 
+            return m.reply("📝 *At least tell me what to analyze… I can’t read minds (yet).*");
 
-        if (!mime.startsWith('image/')) {
-            return m.reply("⚠️ Please quote or send a valid image file.");
-        }
+        const q = m.quoted || m;
+        const mime = (q.msg || q).mimetype || "";
 
-        // Download image
+        if (!mime.startsWith("image/"))
+            return m.reply("⚠️ *That's not an image. Unless you're blind too?*");
+
+        // download
         const mediaBuffer = await q.download();
 
-        // Save media temporarily
-        const tempFilePath = path.join(__dirname, `temp_${Date.now()}`);
-        fs.writeFileSync(tempFilePath, mediaBuffer);
+        // temp save
+        const tempFile = path.join(__dirname, `temp_${Date.now()}`);
+        fs.writeFileSync(tempFile, mediaBuffer);
 
-        // Upload image to qu.ax
+        // upload to qu.ax
         const form = new FormData();
-        form.append('files[]', fs.createReadStream(tempFilePath));
+        form.append("files[]", fs.createReadStream(tempFile));
 
-        const uploadResponse = await axios.post('https://qu.ax/upload.php', form, {
-            headers: {
-                ...form.getHeaders(),
-            },
+        const upload = await axios.post("https://qu.ax/upload.php", form, {
+            headers: form.getHeaders(),
             maxContentLength: Infinity,
             maxBodyLength: Infinity,
         });
 
-        // Clean up file
-        if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
+        // remove temp
+        fs.existsSync(tempFile) && fs.unlinkSync(tempFile);
 
-        // Get uploaded image URL
-        const uploaded = uploadResponse.data?.files?.[0]?.url;
-        if (!uploaded) return m.reply("❌ Failed to upload image.");
+        const uploadedURL = upload.data?.files?.[0]?.url;
+        if (!uploadedURL)
+            return m.reply("❌ *Image upload flopped harder than your grades.*");
 
-        await m.reply("🧠 Analyzing image, please wait...");
+        await m.reply("🧠 *Hold up — cooking the analysis…*");
 
-        // Call GPTNano Vision API
-        const apiUrl = `https://api.ootaizumi.web.id/ai/gptnano?prompt=${encodeURIComponent(text)}&imageUrl=${encodeURIComponent(uploaded)}`;
-        const response = await axios.get(apiUrl);
+        // GPTNano Vision
+        const api = `https://api.ootaizumi.web.id/ai/gptnano?prompt=${encodeURIComponent(text)}&imageUrl=${encodeURIComponent(uploadedURL)}`;
+        const result = await axios.get(api);
 
-        // Handle success
-        if (response.data && response.data.result) {
-            await client.sendMessage(m.chat, {
-                text: `*Vision Analysis (Toxic-MD)* ⚠️\n\n${response.data.result}\n\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃ`,
-            }, { quoted: m });
-        } else {
-            await m.reply("⚠️ Failed to interpret the response from the API.");
+        if (result.data?.result) {
+            return client.sendMessage(
+                m.chat,
+                {
+                    text: `*🔍 Toxic-MD Vision Result*\n\n${result.data.result}\n\n> 🧪 *Served with extra toxicity.*`,
+                },
+                { quoted: m }
+            );
         }
 
-    } catch (error) {
-        console.error("Vision command error:", error);
-        await m.reply(`❌ Error: ${error.message}`);
+        m.reply("⚠️ *API returned nonsense. Must be contagious—like your bad decisions.*");
+
+    } catch (err) {
+        await m.reply(`❌ *Error: ${err.message}\nFix your chaos and try again.*`);
     }
 };
