@@ -9,7 +9,7 @@ module.exports = async (context) => {
 
   try {
     const encodedText = encodeURIComponent(text);
-    const apiUrl = `https://www.varshade.biz.id/api/search/lyrics?query=${encodedText}`;
+    const apiUrl = `https://api.deline.web.id/tools/lyrics?title==${encodedText}`;
     const response = await fetch(apiUrl);
     const data = await response.json();
 
