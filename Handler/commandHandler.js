@@ -92,6 +92,7 @@ const aliases = {
     help: "menu",
     commands: "menu",
     list: "menu",
+    owner: "dev",
     repo: "script",
     getmusic: "shazam",
     gmusic: "shazam",
