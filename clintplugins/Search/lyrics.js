@@ -9,27 +9,29 @@ module.exports = async (context) => {
 
   try {
     const encodedText = encodeURIComponent(text);
-    const apiUrl = `https://api.deline.web.id/tools/lyrics?title==${encodedText}`;
+    const apiUrl = `https://api.deline.web.id/tools/lyrics?title=${encodedText}`;  // Fixed: Removed extra '='
     const response = await fetch(apiUrl);
     const data = await response.json();
 
-    // Check if API returned valid results
-    if (!data.success || !data.results || data.results.length === 0) {
+    // Check if API returned valid results (fixed: use 'status' and 'result')
+    if (!data.status || !data.result || data.result.length === 0) {
       return m.reply(`No lyrics found for "${text}"`);
     }
 
-    // Get the first result
-    const song = data.results[0];
-    const { plainLyrics } = song;
+    // Pick the result with the longest plainLyrics (handles multiples better)
+    const song = data.result.reduce((best, current) => {
+      return (current.plainLyrics?.length || 0) > (best.plainLyrics?.length || 0) ? current : best;
+    }, data.result[0]);
 
-    // Use plain lyrics (clean version without timestamps)
+    const { plainLyrics, artistName, name } = song;
     const cleanLyrics = plainLyrics || "No lyrics available";
 
-    // Send ONLY the lyrics, nothing else
-    await m.reply(cleanLyrics);
+    // Send lyrics with a simple header (remove if you want ONLY lyrics)
+    const header = `Lyrics for "${name}" by ${artistName}:\n\n`;
+    await m.reply(header + cleanLyrics);
 
   } catch (error) {
-    console.error(`Lyrics API error: ${error.stack}`);
+    console.error(`Lyrics API error: ${error.message}`);  // Fixed: Use message for cleaner log
     await m.reply(`Couldn't get lyrics for "${text}". Try again later.`);
   }
 };
