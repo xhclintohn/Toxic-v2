@@ -52,15 +52,13 @@ module.exports = async (context) => {
       throw new Error("Invalid YouTube URL");
     }
 
-    // Use the new API endpoint
-    const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytplaymp3?query=${encodeURIComponent(video.url)}`;
-    
-    // Call the API
+    // 🔄 NEW API (Nekolabs)
+    const apiUrl = `https://api.nekolabs.web.id/downloader/youtube/play/v1?q=${encodeURIComponent(video.title)}`;
+
     const response = await axios.get(apiUrl);
     const apiData = response.data;
 
-    // Check if the API call was successful
-    if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) {
+    if (!apiData.success || !apiData.result || !apiData.result.downloadUrl) {
       throw new Error("API failed to process the video");
     }
 
@@ -68,7 +66,7 @@ module.exports = async (context) => {
     const fileName = `audio_${timestamp}.mp3`;
     const filePath = path.join(tempDir, fileName);
 
-    // Download the audio file from the API's download URL
+    // Download audio
     const audioResponse = await axios({
       method: "get",
       url: apiData.result.downloadUrl,
@@ -89,7 +87,7 @@ module.exports = async (context) => {
 
     await client.sendMessage(
       m.chat,
-      { text: formatStylishReply(`Droppin' *${apiData.result.title}* for ya, fam! Crank it up! 🔥🎧`) },
+      { text: formatStylishReply(`Droppin' *${apiData.result.metadata.title}* for ya, fam! Crank it up! 🔥🎧`) },
       { quoted: m, ad: true }
     );
 
@@ -98,13 +96,13 @@ module.exports = async (context) => {
       {
         audio: { url: filePath },
         mimetype: "audio/mpeg",
-        fileName: `${apiData.result.title.substring(0, 100)}.mp3`,
+        fileName: `${apiData.result.metadata.title.substring(0, 100)}.mp3`,
         contextInfo: {
           externalAdReply: {
-            title: apiData.result.title,
-            body: `${video.author.name || "Unknown Artist"} | Powered by Toxic-MD`,
-            thumbnailUrl: apiData.result.thumbnail || video.thumbnail || "https://via.placeholder.com/120x90",
-            sourceUrl: video.url,
+            title: apiData.result.metadata.title,
+            body: `${apiData.result.metadata.channel || "Unknown Artist"} | Powered by Toxic-MD`,
+            thumbnailUrl: apiData.result.metadata.cover || video.thumbnail,
+            sourceUrl: apiData.result.metadata.url,
             mediaType: 1,
             renderLargerThumbnail: true,
           },
