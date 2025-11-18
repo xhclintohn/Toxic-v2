@@ -5,14 +5,23 @@ module.exports = async (context) => {
 
     if (!text)
         return m.reply(
-            "Provide your TOKEN.\nExample:\n.tempinbox YOUR_TOKEN"
+            "Provide your token.\nExample:\n.tempinbox YOUR_TOKEN"
         );
 
     try {
-        const url = `https://tempmail.apinepdev.workers.dev/api/getmessage?emaill=${encodeURIComponent(text)}`;
+        const url = `https://tempmail.apinepdev.workers.dev/api/getmessage?emaill=${encodeURIComponent(
+            text
+        )}`;
 
         const res = await fetch(url);
-        const data = await res.json();
+        const raw = await res.text();
+
+        // Detect API returning HTML
+        if (raw.startsWith("<")) {
+            return m.reply("⚠ TempMail API returned HTML (likely down). Try again later.");
+        }
+
+        const data = JSON.parse(raw);
 
         if (data.error) {
             return m.reply(`API Error: ${data.error}`);
@@ -39,6 +48,6 @@ module.exports = async (context) => {
         }
     } catch (err) {
         console.error(err);
-        return m.reply("Something went wrong while fetching inbox.");
+        return m.reply("⚠ Error fetching inbox. Try again later.");
     }
 };
