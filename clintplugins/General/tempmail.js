@@ -1,27 +1,34 @@
-//tempmail.js
+// tempmail.js
 
 module.exports = async (context) => {
-        const { client, m } = context;
+    const { client, m } = context;
 
+    try {
+        const res = await fetch("https://tempmail.apinepdev.workers.dev/api/gen");
+        const data = await res.json();
 
-const  { TempMail } = require("tempmail.lol");
+        if (!data.email || !data.token) {
+            return m.reply("Failed to generate temp mail. Try again.");
+        }
 
-const tempmail = new TempMail();
+        const email = data.email;
+        const token = data.token;
 
-      const inbox = await tempmail.createInbox();
-      const emailMessage = `${inbox.address}`;
+        // Send email
+        await m.reply(`📧 Your Temp Email:\n${email}`);
 
-await m.reply(emailMessage);
+        // Send token in quoted message
+        const msg = await client.sendMessage(m.chat, { text: token });
 
-
-const mas = await client.sendMessage(m.chat, { text: `${inbox.token}` });
-      
-
-
-      
-await client.sendMessage(m.chat, { text: `Quoted text is your token. To fetch messages in your email use <.tempinbox your-token>`}, { quoted: mas});
-
-
-
-}
-
+        await client.sendMessage(
+            m.chat,
+            {
+                text: `Quoted text above is your *TOKEN*.\nUse:\n.tempinbox ${token}\nTo fetch inbox messages.`,
+            },
+            { quoted: msg }
+        );
+    } catch (err) {
+        console.error(err);
+        return m.reply("API error. Could not generate temp email.");
+    }
+};
