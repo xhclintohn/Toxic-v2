@@ -152,7 +152,7 @@ const audioLinks = [
   'https://qu.ax/CXWfS',
   'https://qu.ax/ytTHs',
   'https://qu.ax/JGkPc',
-  'https://qu.ax/EAsSX'
+  'https://qu.ax/aESvq'
 ];
 
 // Select random audio from the array
