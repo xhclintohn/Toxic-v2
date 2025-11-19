@@ -24,14 +24,12 @@ module.exports = async (context) => {
                 const quotedMime = quoted.mimetype || mime || '';
 
                 if (!/image|video/.test(quotedMime)) {
-                    return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Please send or reply to an image or a short video.\n◈━━━━━━━━━━━━━━━━◈');
+                    return m.reply('Where's the fvcking image or short video idiot.😑');
                 }
 
                 if (quoted.videoMessage && quoted.videoMessage.seconds > 30) {
-                    return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Videos must be 30 seconds or shorter.\n◈━━━━━━━━━━━━━━━━◈');
+                    return m.reply('Videos must be 30 seconds or shorter.');
                 }
-
-                await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Creating your sticker... please wait.\n◈━━━━━━━━━━━━━━━━◈');
 
                 const tempFile = path.join(__dirname, `temp-sticker-${Date.now()}.${/image/.test(quotedMime) ? 'jpg' : 'mp4'}`);
                 const media = await client.downloadAndSaveMediaMessage(quoted, tempFile);
@@ -52,7 +50,7 @@ module.exports = async (context) => {
                 await fs.unlink(tempFile).catch(() => {});
             } catch (error) {
                 console.error(`Sticker error: ${error.message}`);
-                await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Error while creating sticker. Try again.\n◈━━━━━━━━━━━━━━━━◈');
+                await m.reply('Error while creating sticker. Try again.');
             }
         }
     });
