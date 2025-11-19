@@ -8,7 +8,7 @@ module.exports = async (context) => {
   const mime = (quoted.msg || quoted).mimetype || '';
 
   if (!/audio|video/.test(mime)) {
-    return m.reply('Send or reply to an audio/video file with the caption _transcribe_');
+    return m.reply('Send or reply to an audio/video file with the caption _transcribe_idiot');
   }
 
   m.reply('*Processing, please wait...*');
