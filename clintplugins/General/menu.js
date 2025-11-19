@@ -145,7 +145,7 @@ const msg = generateWAMessageFromContent(
 
 await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });  
 
-// Random Audio Logic - EASY TO ADD MORE LINKS!
+// Random Audio Logic
 const audioLinks = [
   'https://qu.ax/crnMP',
   'https://qu.ax/caeeD', 
@@ -153,9 +153,6 @@ const audioLinks = [
   'https://qu.ax/ytTHs',
   'https://qu.ax/JGkPc',
   'https://qu.ax/EAsSX'
-  // ADD MORE AUDIO LINKS HERE - JUST ADD NEW LINES LIKE:
-  // 'https://your-new-link-here',
-  // 'https://another-new-link-here',
 ];
 
 // Select random audio from the array
