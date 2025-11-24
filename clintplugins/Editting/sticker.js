@@ -24,7 +24,7 @@ module.exports = async (context) => {
                 const quotedMime = quoted.mimetype || mime || '';
 
                 if (!/image|video/.test(quotedMime)) {
-                    return m.reply('Where's the fvcking image or short video idiot.😑');
+                    return m.reply("Where's the fvcking image or short video idiot.😑");
                 }
 
                 if (quoted.videoMessage && quoted.videoMessage.seconds > 30) {
