@@ -22,7 +22,7 @@ module.exports = async (context) => {
         });
 
         // Hardcoded API details
-        const api_key = "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";
+        const api_key = "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";
         const base_url = "https://openrouter.ai/api/v1";
         const model = "deepseek/deepseek-v3.1-terminus";
 
