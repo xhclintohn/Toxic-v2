@@ -54,7 +54,7 @@ module.exports = async (context) => {
 
     // Use the new API endpoint
     const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytplaymp3?query=${encodeURIComponent(video.url)}`;
-    
+
     // Call the API
     const response = await axios.get(apiUrl);
     const apiData = response.data;
@@ -87,12 +87,7 @@ module.exports = async (context) => {
       throw new Error("Download failed or file is empty");
     }
 
-    await client.sendMessage(
-      m.chat,
-      { text: formatStylishReply(`Droppin' *${apiData.result.title}* for ya, fam! Crank it up! 🔥🎧`) },
-      { quoted: m, ad: true }
-    );
-
+    // Directly send the audio without any loading message
     await client.sendMessage(
       m.chat,
       {
@@ -113,6 +108,7 @@ module.exports = async (context) => {
       { quoted: m, ad: true }
     );
 
+    // Clean up the temporary file
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
