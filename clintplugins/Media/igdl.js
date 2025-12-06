@@ -46,7 +46,7 @@ module.exports = async (context) => {
     };
 
     if (!text) {
-        return m.reply(formatStylishReply("Yo, drop an Instagram link, fam! 📹 Ex: .instagramdl https://www.instagram.com/reel/DOlTuNlEsDm/"));
+        return m.reply(formatStylishReply("Yo, drop an Instagram link, fam! 📹 Ex: .instagramdl https://www.instagram.com/reel/DOlTuNlExm/"));
     }
 
     if (!text.includes("instagram.com")) {
@@ -55,23 +55,28 @@ module.exports = async (context) => {
 
     try {
         const encodedUrl = encodeURIComponent(text);
-        const apiUrl = `https://api.privatezia.biz.id/api/downloader/alldownload?url=${encodedUrl}`;
+        // CHANGED API ONLY - using the new fikmydomainsz.xyz API
+        const apiUrl = `https://api.fikmydomainsz.xyz/download/instagram?url=${encodedUrl}`;
         
         console.log("Fetching from API:", apiUrl);
         
         const response = await fetchWithRetry(apiUrl);
         const data = await response.json();
 
-        if (!data?.status || !data?.result?.video?.url) {
+        // UPDATED: Check for new API response format
+        if (!data?.status || !data?.result?.[0]?.url_download) {
             return m.reply(formatStylishReply("API returned no video! The link might be private or invalid."));
         }
 
-        const igVideoUrl = data.result.video.url;
-        const title = data.result.title || "Instagram Video";
+        // UPDATED: Get video URL from new API response format
+        const igVideoUrl = data.result[0].url_download;
+        
+        // Use title from API or default
+        const title = "Instagram Video"; // You can extract title if available in new API
 
         console.log("Video URL found:", igVideoUrl);
 
-        // Send as URL instead of downloading buffer (Recommended)
+        // Send video using the URL (no changes to this part)
         await client.sendMessage(
             m.chat,
             {
