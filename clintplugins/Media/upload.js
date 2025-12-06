@@ -21,31 +21,47 @@ module.exports = async (context) => {
             return m.reply('Media is too large. Max size is 256MB.');
         }
 
-        // Save media temporarily
-        const tempFilePath = path.join(__dirname, `temp_${Date.now()}`);
+        // Save media temporarily with proper extension
+        const fileExtension = getExtensionFromMime(mime);
+        const tempFilePath = path.join(__dirname, `temp_${Date.now()}${fileExtension}`);
         fs.writeFileSync(tempFilePath, mediaBuffer);
 
-        // Prepare FormData for API - UPDATED FUNCTION
+        // Prepare FormData for API - FIXED: Use the correct field name
         const form = new FormData();
-        form.append('files[]', fs.createReadStream(tempFilePath));
+        form.append('file', fs.createReadStream(tempFilePath)); // Changed from 'files[]' to 'file'
 
-        // Upload to qu.ax API - UPDATED ENDPOINT
-        const response = await axios.post('https://qu.ax/upload', form, {
+        // Upload to qu.ax API - FIXED: Add proper headers
+        const response = await axios.post('https://qu.ax/upload.php', form, {
             headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'application/json',
                 ...form.getHeaders(),
             },
             maxContentLength: Infinity,
             maxBodyLength: Infinity,
+            timeout: 30000,
         });
 
         // Clean up temporary file
         if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
 
-        // Check response
-        const files = response.data?.files;
-        if (!files || !files[0]?.url) throw new Error('No URL returned by API');
+        // Check response - FIXED: Check for different response formats
+        let link;
+        
+        // Try different response formats
+        if (response.data?.files?.[0]?.url) {
+            link = response.data.files[0].url;
+        } else if (response.data?.url) {
+            link = response.data.url;
+        } else if (response.data?.link) {
+            link = response.data.link;
+        } else if (response.data) {
+          
+            link = response.data;
+        } else {
+            throw new Error('No URL returned by API');
+        }
 
-        const link = files[0].url;
         const fileSizeMB = (mediaBuffer.length / (1024 * 1024)).toFixed(2);
 
         // Send success message
@@ -69,6 +85,35 @@ module.exports = async (context) => {
 
     } catch (err) {
         console.error('Upload error:', err);
-        m.reply(`Error during upload: ${err.message}`);
+        
+        // More detailed error message
+        let errorMsg = `Error during upload: ${err.message}`;
+        if (err.response) {
+            errorMsg += `\nStatus: ${err.response.status}`;
+            if (err.response.data) {
+                errorMsg += `\nResponse: ${JSON.stringify(err.response.data)}`;
+            }
+        }
+        
+        m.reply(errorMsg);
     }
 };
+
+
+function getExtensionFromMime(mime) {
+    const mimeToExt = {
+        'image/jpeg': '.jpg',
+        'image/jpg': '.jpg',
+        'image/png': '.png',
+        'image/webp': '.webp',
+        'image/gif': '.gif',
+        'video/mp4': '.mp4',
+        'audio/mpeg': '.mp3',
+        'audio/mp4': '.m4a',
+        'audio/ogg': '.ogg',
+        'application/pdf': '.pdf',
+        'text/plain': '.txt',
+    };
+    
+    return mimeToExt[mime.toLowerCase()] || '.bin';
+}
