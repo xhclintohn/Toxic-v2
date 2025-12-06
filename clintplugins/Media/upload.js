@@ -25,12 +25,12 @@ module.exports = async (context) => {
         const tempFilePath = path.join(__dirname, `temp_${Date.now()}`);
         fs.writeFileSync(tempFilePath, mediaBuffer);
 
-        // Prepare FormData for API
+        // Prepare FormData for API - UPDATED FUNCTION
         const form = new FormData();
         form.append('files[]', fs.createReadStream(tempFilePath));
 
-        // Upload to qu.ax API
-        const response = await axios.post('https://qu.ax/upload.php', form, {
+        // Upload to qu.ax API - UPDATED ENDPOINT
+        const response = await axios.post('https://qu.ax/upload', form, {
             headers: {
                 ...form.getHeaders(),
             },
