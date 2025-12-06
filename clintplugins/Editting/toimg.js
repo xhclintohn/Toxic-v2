@@ -3,7 +3,7 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
-// Upload function to send sticker to qu.ax and get a URL
+// Updated upload function based on the provided configuration
 async function uploadSticker(buffer) {
     const tempFilePath = path.join(__dirname, `temp_sticker_${Date.now()}.webp`);
     fs.writeFileSync(tempFilePath, buffer);
@@ -12,7 +12,7 @@ async function uploadSticker(buffer) {
     form.append('files[]', fs.createReadStream(tempFilePath));
 
     try {
-        const response = await axios.post('https://qu.ax/upload.php', form, {
+        const response = await axios.post('https://qu.ax/upload', form, {
             headers: form.getHeaders(),
         });
 
@@ -54,38 +54,22 @@ module.exports = {
         }
 
         try {
-            /**
-             * Send loading message
-             */
-            const loadingMsg = await client.sendMessage(m.chat, {
-                text: formatStylishReply('Converting sticker to image... 🎨\nThis may take a moment ⏳')
-            }, { quoted: m });
-
             // Step 1: Download sticker
             const stickerBuffer = await m.quoted.download();
 
             if (!stickerBuffer) {
-                await client.sendMessage(m.chat, { delete: loadingMsg.key });
                 return client.sendMessage(m.chat, {
                     text: formatStylishReply('Failed to download the sticker!\nPlease try again.')
                 }, { quoted: m });
             }
 
             // Step 2: Upload sticker to get a public URL
-            await client.sendMessage(m.chat, {
-                text: formatStylishReply('Uploading sticker for conversion... 📤')
-            }, { quoted: m });
-
             const { url: stickerUrl } = await uploadSticker(stickerBuffer);
 
             // Step 3: Call the conversion API
-            await client.sendMessage(m.chat, {
-                text: formatStylishReply('Converting to image format... 🔄')
-            }, { quoted: m });
-
             const encodedUrl = encodeURIComponent(stickerUrl);
             const convertApiUrl = `https://api.elrayyxml.web.id/api/maker/convert?url=${encodedUrl}&format=PNG`;
-            
+
             const response = await axios.get(convertApiUrl, {
                 headers: { 
                     'accept': 'application/json',
@@ -102,10 +86,6 @@ module.exports = {
             const imageUrl = response.data.result;
 
             // Step 4: Download the converted image
-            await client.sendMessage(m.chat, {
-                text: formatStylishReply('Downloading converted image... 📥')
-            }, { quoted: m });
-
             const imageResponse = await axios.get(imageUrl, {
                 responseType: 'arraybuffer',
                 timeout: 20000
@@ -113,9 +93,7 @@ module.exports = {
 
             const imageBuffer = Buffer.from(imageResponse.data);
 
-            // Step 5: Delete loading message and send result
-            await client.sendMessage(m.chat, { delete: loadingMsg.key });
-
+            // Step 5: Send results directly without loading messages
             // Send as image
             await client.sendMessage(
                 m.chat,
@@ -140,16 +118,9 @@ module.exports = {
 
         } catch (err) {
             console.error('ToImg conversion error:', err);
-            
-            // Delete loading message on error
-            try {
-                await client.sendMessage(m.chat, { delete: loadingMsg.key });
-            } catch (e) {
-                // Ignore delete errors
-            }
 
             let errorMessage = 'An unexpected error occurred';
-            
+
             if (err.message.includes('timeout')) {
                 errorMessage = 'Conversion timed out. The sticker might be too large.';
             } else if (err.message.includes('Network Error')) {
