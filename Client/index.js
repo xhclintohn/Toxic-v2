@@ -2,7 +2,7 @@ const {
   default: toxicConnect,
   useMultiFileAuthState,
   DisconnectReason,
-  fetchLatestWaWebVersion,
+  fetchLatestBaileysVersion,
   makeInMemoryStore,
   downloadContentFromMessage,
   jidDecode,
@@ -61,7 +61,7 @@ async function startToxic() {
   }
 
   const { autobio, mode, anticall } = settingss;
-  const { version } = await fetchLatestWaWebVersion();
+  const { version } = await fetchLatestBaileysVersion();
 
   const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
