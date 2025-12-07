@@ -4,34 +4,31 @@ module.exports = async (context) => {
   const { client, m, text } = context;
 
   if (!text) {
-    return m.reply("Please provide a song name. Example: .lyrics Into your arms ft ava max");
+    return m.reply("TELL ME A SONG YOU DUMBASS 🤦🏻 EXAMPLE: .lyrics Alone ft ava max");
   }
 
   try {
     const encodedText = encodeURIComponent(text);
-    const apiUrl = `https://api.deline.web.id/tools/lyrics?title=${encodedText}`;  // Fixed: Removed extra '='
+    const apiUrl = `https://api.elrayyxml.web.id/api/search/lyrics?q=${encodedText}`;
     const response = await fetch(apiUrl);
     const data = await response.json();
 
-    // Check if API returned valid results (fixed: use 'status' and 'result')
     if (!data.status || !data.result || data.result.length === 0) {
-      return m.reply(`No lyrics found for "${text}"`);
+      return m.reply(`NO LYRICS FOUND FOR "${text}" 🤡 MAYBE THE SONG SUCKS`);
     }
 
-    // Pick the result with the longest plainLyrics (handles multiples better)
-    const song = data.result.reduce((best, current) => {
-      return (current.plainLyrics?.length || 0) > (best.plainLyrics?.length || 0) ? current : best;
-    }, data.result[0]);
+    const song = data.result[0];
+    
+    if (!song.lyrics?.plainLyrics) {
+      return m.reply(`NO PLAIN LYRICS FOR THIS ONE 🤦🏻 TRY ANOTHER SONG`);
+    }
 
-    const { plainLyrics, artistName, name } = song;
-    const cleanLyrics = plainLyrics || "No lyrics available";
-
-    // Send lyrics with a simple header (remove if you want ONLY lyrics)
-    const header = `Lyrics for "${name}" by ${artistName}:\n\n`;
-    await m.reply(header + cleanLyrics);
+    const cleanLyrics = song.lyrics.plainLyrics;
+    
+    await m.reply(`*${song.title} - ${song.artist}*\n\n${cleanLyrics}\n\n> Tσxιƈ-ɱԃȥ`);
 
   } catch (error) {
-    console.error(`Lyrics API error: ${error.message}`);  // Fixed: Use message for cleaner log
-    await m.reply(`Couldn't get lyrics for "${text}". Try again later.`);
+    console.error(`LYRICS API ERROR: ${error.message}`);
+    await m.reply(`CANT GET LYRICS FOR "${text}" SHIT BROKE 🤦🏻`);
   }
 };
