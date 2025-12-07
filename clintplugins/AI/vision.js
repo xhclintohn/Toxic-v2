@@ -8,44 +8,37 @@ module.exports = async (context) => {
 
     try {
         if (!m.quoted) 
-            return m.reply("📸 *Quote an image first, genius.*");
+            return m.reply("QUOTE A FUCKING IMAGE FIRST YOU 🤡");
 
         if (!text) 
-            return m.reply("📝 *At least tell me what to analyze… I can’t read minds (yet).*");
+            return m.reply("TELL ME WHAT TO ANALYZE DUMBASS I CANT READ MINDS");
 
         const q = m.quoted || m;
         const mime = (q.msg || q).mimetype || "";
 
         if (!mime.startsWith("image/"))
-            return m.reply("⚠️ *That's not an image. Unless you're blind too?*");
+            return m.reply("THATS NOT AN IMAGE ARE YOU BLIND?");
 
-        // download
         const mediaBuffer = await q.download();
-
-        // temp save
         const tempFile = path.join(__dirname, `temp_${Date.now()}`);
         fs.writeFileSync(tempFile, mediaBuffer);
-
-        // upload to qu.ax
         const form = new FormData();
         form.append("files[]", fs.createReadStream(tempFile));
 
-        const upload = await axios.post("https://qu.ax/upload.php", form, {
+        const upload = await axios.post("https://qu.ax/upload", form, {
             headers: form.getHeaders(),
             maxContentLength: Infinity,
             maxBodyLength: Infinity,
         });
 
-        // remove temp
         fs.existsSync(tempFile) && fs.unlinkSync(tempFile);
 
         const uploadedURL = upload.data?.files?.[0]?.url;
         if (!uploadedURL)
-            return m.reply("❌ *Image upload flopped harder than your grades.*");
+            return m.reply("UPLOAD FAILED LIKE YOUR LIFE 🤦🏻");
 
-        await m.reply("🧠 *Hold up — cooking the analysis…*");
+        await m.reply("ANALYZING YOUR SHIT IMAGE HOLD ON...");
 
-        // GPTNano Vision
         const api = `https://api.ootaizumi.web.id/ai/gptnano?prompt=${encodeURIComponent(text)}&imageUrl=${encodeURIComponent(uploadedURL)}`;
         const result = await axios.get(api);
 
@@ -53,15 +46,15 @@ module.exports = async (context) => {
             return client.sendMessage(
                 m.chat,
                 {
-                    text: `*🔍 Toxic-MD Vision Result*\n\n${result.data.result}\n\n> 🧪 *Served with extra toxicity.*`,
+                    text: `*🤖 IMAGE ANALYSIS*\n\n${result.data.result}\n\n> Tσxιƈ-ɱԃȥ`,
                 },
                 { quoted: m }
             );
         }
 
-        m.reply("⚠️ *API returned nonsense. Must be contagious—like your bad decisions.*");
+        m.reply("API GAVE ME GIBBERISH PROBABLY BECAUSE YOUR IMAGE SUCKS");
 
     } catch (err) {
-        await m.reply(`❌ *Error: ${err.message}\nFix your chaos and try again.*`);
+        await m.reply(`SHIT BROKE 🤦🏻 ERROR: ${err.message}`);
     }
 };
