@@ -41,9 +41,23 @@ module.exports = async (context) => {
         }
         const fileSizeMB = (mediaBuffer.length / (1024 * 1024)).toFixed(2);
         
-  
+        // Send message with cta_copy button
         await client.sendMessage(m.chat, {
-            text: `📤 Media Uploaded Successfully ✅\n\n🔗 Link: ${link}\n📊 Size: ${fileSizeMB} MB\n\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+            interactiveMessage: {
+                header: "📤 Media Uploaded Successfully ✅",
+                title: `🔗 Link: ${link}\n📊 Size: ${fileSizeMB} MB`,
+                footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+                buttons: [
+                    {
+                        name: "cta_copy",
+                        buttonParamsJson: JSON.stringify({
+                            display_text: "📋 Copy Link",
+                            id: `copy_${Date.now()}`,
+                            copy_code: link,
+                        }),
+                    },
+                ],
+            },
         }, { quoted: m });
 
     } catch (err) {
