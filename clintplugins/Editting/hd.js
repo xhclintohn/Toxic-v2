@@ -1,105 +1,116 @@
-const axios = require('axios');
+const fetch = require('node-fetch');
 const FormData = require('form-data');
-const fs = require('fs');
-const path = require('path');
 
-async function uploadImage(buffer) {
-    const tempFilePath = path.join(__dirname, `temp_${Date.now()}.jpg`);
-    fs.writeFileSync(tempFilePath, buffer);
-    const form = new FormData();
-    form.append('files[]', fs.createReadStream(tempFilePath));
-    try {
-        const response = await axios.post('https://qu.ax/upload', form, {
-            headers: form.getHeaders(),
-        });
-        const link = response.data?.files?.[0]?.url;
-        if (!link) throw new Error('No URL returned in response');
-        fs.unlinkSync(tempFilePath);
-        return { url: link };
-    } catch (error) {
-        if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
-        throw new Error(`Upload error: ${error.message}`);
+module.exports = async (context) => {
+    const { client, m, text, botname } = context;
+
+    if (!botname) {
+        return m.reply(`BOT IS BROKEN BLAME THE DEV 🤡`);
     }
-}
 
-module.exports = {
-    name: 'hd',
-    aliases: ['enhance', 'upscale'],
-    description: 'Enhances image quality to HD using AI upscaling',
-    run: async (context) => {
-        const { client, m, mime } = context;
-        const quoted = m.quoted ? m.quoted : m;
-        const quotedMime = quoted.mimetype || mime || '';
-        if (!/image/.test(quotedMime)) {
-            return client.sendMessage(m.chat, {
-                text: '◈━━━━━━━━━━━━━━━━◈\n│❒ Please reply to or send an image with this command!\n│❒ Example: Reply to an image with .hd\n┗━━━━━━━━━━━━━━━┛'
-            }, { quoted: m });
-        }
-        const loadingMsg = await client.sendMessage(m.chat, {
-            text: '◈━━━━━━━━━━━━━━━━◈\n│❒ Enhancing your image to HD...\n│❒ This may take a moment ⏳\n┗━━━━━━━━━━━━━━━┛'
-        }, { quoted: m });
+    if (!text && !m.quoted) {
+        return m.reply(`GIVE ME AN IMAGE YOU DUMBASS 🤦🏻\nEXAMPLE: .remini https://image.com/trash.png OR REPLY TO IMAGE`);
+    }
+
+    let imageUrl = text;
+
+    if (!text && m.quoted && m.quoted.mtype === 'imageMessage') {
         try {
-            const media = await quoted.download();
-            if (!media) {
-                await client.sendMessage(m.chat, { delete: loadingMsg.key });
-                return client.sendMessage(m.chat, {
-                    text: '◈━━━━━━━━━━━━━━━━◈\n│❒ Failed to download the image!\n│❒ Please try again with a different image\n┗━━━━━━━━━━━━━━━┛'
-                }, { quoted: m });
-            }
-            if (media.length > 10 * 1024 * 1024) {
-                await client.sendMessage(m.chat, { delete: loadingMsg.key });
-                return client.sendMessage(m.chat, {
-                    text: '◈━━━━━━━━━━━━━━━━◈\n│❒ Image is too large!\n│❒ Maximum size: 10MB\n┗━━━━━━━━━━━━━━━┛'
-                }, { quoted: m });
-            }
-            const { url: imageUrl } = await uploadImage(media);
-            const encodedUrl = encodeURIComponent(imageUrl);
-            const upscaleApiUrl = `https://api.zenzxz.my.id/api/tools/upscale?url=${encodedUrl}`;
-            const response = await axios.get(upscaleApiUrl, {
-                headers: { 
-                    'accept': 'application/json',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                },
-                timeout: 60000
+            const buffer = await client.downloadMediaMessage(m.quoted);
+            const form = new FormData();
+            form.append('files[]', buffer, { filename: 'image.png' });
+
+            const uploadResponse = await fetch('https://qu.ax/upload', {
+                method: 'POST',
+                body: form,
+                headers: form.getHeaders(),
+                timeout: 10000
             });
-            if (!response.data.success || !response.data.data?.url) {
-                throw new Error('Upscale API failed to process the image');
+            if (!uploadResponse.ok) {
+                throw new Error(`UPLOAD FAILED WITH STATUS ${uploadResponse.status}`);
             }
-            const enhancedImageUrl = response.data.data.url;
-            const enhancedResponse = await axios.get(enhancedImageUrl, {
-                responseType: 'arraybuffer',
-                timeout: 30000
-            });
-            const enhancedImage = Buffer.from(enhancedResponse.data);
-            await client.sendMessage(m.chat, { delete: loadingMsg.key });
-            await client.sendMessage(
-                m.chat,
-                { 
-                    image: enhancedImage, 
-                    caption: '◈━━━━━━━━━━━━━━━━◈\n│❒ Image Enhanced to HD! 🎨\n│❒ Quality improved successfully\n┗━━━━━━━━━━━━━━━┛' 
-                },
-                { quoted: m }
-            );
-        } catch (err) {
-            console.error('HD enhancement error:', err);
-            try {
-                await client.sendMessage(m.chat, { delete: loadingMsg.key });
-            } catch (e) {}
-            let errorMessage = 'An unexpected error occurred';
-            if (err.message.includes('timeout')) {
-                errorMessage = 'Processing timed out. The image might be too large or the server is busy.';
-            } else if (err.message.includes('Network Error')) {
-                errorMessage = 'Network error. Please check your connection and try again.';
-            } else if (err.message.includes('Upload error')) {
-                errorMessage = 'Failed to upload image for processing.';
-            } else if (err.message.includes('Upscale API failed')) {
-                errorMessage = 'The enhancement service failed to process your image.';
-            } else {
-                errorMessage = err.message;
+
+            const uploadData = await uploadResponse.json();
+            if (!uploadData.files?.[0]?.url) {
+                throw new Error('NO URL FROM UPLOAD');
             }
-            await client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Enhancement Failed! 😤\n│❒ Error: ${errorMessage}\n┗━━━━━━━━━━━━━━━┛`
-            }, { quoted: m });
+            imageUrl = uploadData.files[0].url;
+        } catch (uploadError) {
+            console.error(`FAILED UPLOAD: ${uploadError.message}`);
+            return m.reply(`CANT UPLOAD YOUR SHITTY IMAGE 🤦🏻 TRY AGAIN`);
         }
+    }
+
+    if (!imageUrl) {
+        return m.reply(`NO VALID IMAGE YOU CLUELESS TWAT 🤡`);
+    }
+
+    try {
+        const encodedUrl = encodeURIComponent(imageUrl);
+        const apiUrl = `https://api.giftedtech.web.id/api/tools/remini?apikey=gifted_api_se5dccy&url=${encodedUrl}`;
+        const response = await fetch(apiUrl, {
+            timeout: 10000,
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+        });
+        if (!response.ok) {
+            throw new Error(`API PUKE ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!data.success || !data.result || !data.result.image_url) {
+            return m.reply(`API IS USELESS 🤡 ${data.msg || 'NO ENHANCED IMAGE YOU LOSER'}`);
+        }
+
+        const { image_url } = data.result;
+
+        const urlCheck = await fetch(image_url, {
+            method: 'HEAD',
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+        });
+        
+        if (!urlCheck.ok) {
+            const imageResponse = await fetch(image_url, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+            });
+            if (!imageResponse.ok) {
+                throw new Error(`IMAGE URL DEAD ${imageResponse.status}`);
+            }
+            const imageBuffer = await imageResponse.buffer();
+
+            await m.reply(`ENHANCING YOUR TRASH IMAGE...`);
+            try {
+                await client.sendMessage(
+                    m.chat,
+                    {
+                        image: imageBuffer,
+                        fileName: 'enhanced_image.png'
+                    },
+                    { quoted: m }
+                );
+            } catch (sendError) {
+                console.error(`FAILED TO SEND IMAGE: ${sendError.message}`);
+                throw new Error(`CANT SEND ENHANCED IMAGE ${sendError.message}`);
+            }
+        } else {
+            await m.reply(`ENHANCING YOUR TRASH IMAGE...`);
+            try {
+                await client.sendMessage(
+                    m.chat,
+                    {
+                        image: { url: image_url },
+                        fileName: 'enhanced_image.png'
+                    },
+                    { quoted: m }
+                );
+            } catch (sendError) {
+                console.error(`FAILED TO SEND IMAGE: ${sendError.message}`);
+                throw new Error(`CANT SEND ENHANCED IMAGE ${sendError.message}`);
+            }
+        }
+
+        await client.sendMessage(m.chat, { text: `> Tσxιƈ-ɱԃȥ` }, { quoted: m });
+    } catch (error) {
+        console.error(`ERROR IN REMINI: ${error.message}`);
+        await m.reply(`SHIT BROKE 🤦🏻 CANT ENHANCE YOUR IMAGE TRY LATER`);
     }
 };
