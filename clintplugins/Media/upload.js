@@ -16,22 +16,16 @@ module.exports = async (context) => {
         // Download the media
         const mediaBuffer = await q.download();
 
-        // Check for max site upload size (256MB)
-        if (mediaBuffer.length > 256 * 1024 * 1024) {
-            return m.reply('Media is too large. Max size is 256MB.');
-        }
-
-        // Save media temporarily with proper extension
+        // Save media temporarily
         const fileExtension = getExtensionFromMime(mime);
         const tempFilePath = path.join(__dirname, `temp_${Date.now()}${fileExtension}`);
         fs.writeFileSync(tempFilePath, mediaBuffer);
 
-        // Prepare FormData for API - FIXED: Use the correct field name
         const form = new FormData();
-        form.append('file', fs.createReadStream(tempFilePath)); // Changed from 'files[]' to 'file'
+        form.append('files[]', fs.createReadStream(tempFilePath)); 
 
-        // Upload to qu.ax API - FIXED: Add proper headers
-        const response = await axios.post('https://qu.ax/upload.php', form, {
+    
+        const response = await axios.post('https://qu.ax/upload', form, { 
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                 'Accept': 'application/json',
@@ -45,10 +39,10 @@ module.exports = async (context) => {
         // Clean up temporary file
         if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
 
-        // Check response - FIXED: Check for different response formats
+      
         let link;
         
-        // Try different response formats
+    
         if (response.data?.files?.[0]?.url) {
             link = response.data.files[0].url;
         } else if (response.data?.url) {
@@ -56,7 +50,6 @@ module.exports = async (context) => {
         } else if (response.data?.link) {
             link = response.data.link;
         } else if (response.data) {
-          
             link = response.data;
         } else {
             throw new Error('No URL returned by API');
