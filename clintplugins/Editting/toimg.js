@@ -3,22 +3,17 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
-// Updated upload function based on the provided configuration
 async function uploadSticker(buffer) {
     const tempFilePath = path.join(__dirname, `temp_sticker_${Date.now()}.webp`);
     fs.writeFileSync(tempFilePath, buffer);
-
     const form = new FormData();
     form.append('files[]', fs.createReadStream(tempFilePath));
-
     try {
         const response = await axios.post('https://qu.ax/upload', form, {
             headers: form.getHeaders(),
         });
-
         const link = response.data?.files?.[0]?.url;
         if (!link) throw new Error('No URL returned in response');
-
         fs.unlinkSync(tempFilePath);
         return { url: link };
     } catch (error) {
@@ -33,43 +28,31 @@ module.exports = {
     description: 'Converts stickers to images',
     run: async (context) => {
         const { client, m, mime } = context;
-
         const formatStylishReply = (message) => {
             return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
         };
-
-        // Check if message is quoted and is a sticker
         if (!m.quoted) {
             return client.sendMessage(m.chat, {
                 text: formatStylishReply(`Yo, @${m.sender.split('@')[0]}! 😤 Please reply to a sticker!\nExample: Reply to a sticker with .toimg`),
                 mentions: [m.sender]
             }, { quoted: m });
         }
-
         const quotedMime = m.quoted.mimetype || '';
         if (!/webp/.test(quotedMime)) {
             return client.sendMessage(m.chat, {
                 text: formatStylishReply('Thats not a sticker! 😤\nPlease reply to a sticker file.')
             }, { quoted: m });
         }
-
         try {
-            // Step 1: Download sticker
             const stickerBuffer = await m.quoted.download();
-
             if (!stickerBuffer) {
                 return client.sendMessage(m.chat, {
                     text: formatStylishReply('Failed to download the sticker!\nPlease try again.')
                 }, { quoted: m });
             }
-
-            // Step 2: Upload sticker to get a public URL
             const { url: stickerUrl } = await uploadSticker(stickerBuffer);
-
-            // Step 3: Call the conversion API
             const encodedUrl = encodeURIComponent(stickerUrl);
             const convertApiUrl = `https://api.elrayyxml.web.id/api/maker/convert?url=${encodedUrl}&format=PNG`;
-
             const response = await axios.get(convertApiUrl, {
                 headers: { 
                     'accept': 'application/json',
@@ -77,24 +60,15 @@ module.exports = {
                 },
                 timeout: 30000
             });
-
-            // Validate API response
             if (!response.data.status || !response.data.result) {
                 throw new Error('Conversion API failed to process the sticker');
             }
-
             const imageUrl = response.data.result;
-
-            // Step 4: Download the converted image
             const imageResponse = await axios.get(imageUrl, {
                 responseType: 'arraybuffer',
                 timeout: 20000
             });
-
             const imageBuffer = Buffer.from(imageResponse.data);
-
-            // Step 5: Send results directly without loading messages
-            // Send as image
             await client.sendMessage(
                 m.chat,
                 { 
@@ -103,8 +77,6 @@ module.exports = {
                 },
                 { quoted: m }
             );
-
-            // Also send as document for better quality
             await client.sendMessage(
                 m.chat,
                 {
@@ -115,12 +87,9 @@ module.exports = {
                 },
                 { quoted: m }
             );
-
         } catch (err) {
             console.error('ToImg conversion error:', err);
-
             let errorMessage = 'An unexpected error occurred';
-
             if (err.message.includes('timeout')) {
                 errorMessage = 'Conversion timed out. The sticker might be too large.';
             } else if (err.message.includes('Network Error')) {
@@ -134,7 +103,6 @@ module.exports = {
             } else {
                 errorMessage = err.message;
             }
-
             await client.sendMessage(m.chat, {
                 text: formatStylishReply(`Conversion Failed! 😤\nError: ${errorMessage}\n\nTips:\n• Use static stickers only\n• Try with smaller stickers\n• Check your internet connection`)
             }, { quoted: m });
