@@ -52,6 +52,7 @@ const aliases = {
     delete: "del",
     evl: "eval",
     k: "remove",
+    setprefix: "prefix",
     reactemoji: "reaction",
     autoviewstatus: "autoview",
     addowner: "addsudo",
