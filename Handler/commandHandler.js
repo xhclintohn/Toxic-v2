@@ -45,6 +45,7 @@ const aliases = {
     h: "menu",
     d: "del",
     wormgpt: "darkgpt",
+    worm: "darkgpt",
     whatmusic: "shazam",
     findmusic: "shazam",
     fmusic: "shazam",
