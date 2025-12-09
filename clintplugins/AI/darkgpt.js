@@ -23,8 +23,8 @@ module.exports = async (context) => {
 
         // Encode the prompt
         const encodedPrompt = encodeURIComponent(text);
-        const apiUrl = `https://api.fikmydomainsz.xyz/openai/wormgpt?prompt=${encodedPrompt}`;
-        
+        const apiUrl = `https://apiskeith.vercel.app/ai/wormgpt?q=${encodedPrompt}`;
+
         console.log("Calling WormGPT API:", apiUrl);
 
         const response = await axios.get(apiUrl, {
@@ -37,7 +37,7 @@ module.exports = async (context) => {
 
         const data = response.data;
 
-        // Check response
+        // Check response based on new API structure
         if (!data?.status || !data?.result) {
             throw new Error('API returned invalid response');
         }
@@ -65,7 +65,7 @@ module.exports = async (context) => {
         });
 
         let errorMessage = "Failed to get response from WormGPT. ";
-        
+
         if (error.response?.status === 404) {
             errorMessage += "API endpoint not found.";
         } else if (error.response?.status === 429) {
