@@ -147,12 +147,12 @@ await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
 
 // Random Audio Logic
 const audioLinks = [
-  'https://qu.ax/crnMP',
-  'https://qu.ax/caeeD', 
-  'https://qu.ax/CXWfS',
-  'https://qu.ax/ytTHs',
-  'https://qu.ax/JGkPc',
-  'https://qu.ax/aESvq'
+  'https://files.catbox.moe/algwse.mp3',
+  'https://files.catbox.moe/k4hgb9.m4a', 
+  'https://files.catbox.moe/mo669m.m4a',
+  'https://files.catbox.moe/5vv2ed.mp3',
+  'https://files.catbox.moe/0437dt.mp3',
+  'https://files.catbox.moe/4aqafk.m4a'
 ];
 
 // Select random audio from the array
