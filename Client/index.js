@@ -68,7 +68,7 @@ async function startToxic() {
   const client = toxicConnect({
     printQRInTerminal: false, 
     syncFullHistory: true,
-    markOnlineOnConnect: true,
+    markOnlineOnConnect: false,
     connectTimeoutMs: 60000,
     defaultQueryTimeoutMs: 0,
     keepAliveIntervalMs: 10000, 
