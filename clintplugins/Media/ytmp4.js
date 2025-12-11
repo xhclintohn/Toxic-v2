@@ -1,103 +1,73 @@
 const fetch = require("node-fetch");
+const ytdl = require("ytdl-core");
 
 module.exports = async (context) => {
     const { client, m, text } = context;
-
-    const formatStylishReply = (message) => {
-        return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
-    };
 
     const isValidYouTubeUrl = (url) => {
         return /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|shorts\/|embed\/)?[A-Za-z0-9_-]{11}(\?.*)?$/.test(url);
     };
 
-    const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-        for (let attempt = 1; attempt <= retries; attempt++) {
-            try {
-                const response = await fetch(url, options);
-                if (!response.ok) {
-                    throw new Error(`API failed with status ${response.status}`);
-                }
-                return response;
-            } catch (error) {
-                if (attempt === retries || error.type !== "request-timeout") {
-                    throw error;
-                }
-                console.error(`Attempt ${attempt} failed: ${error.message}. Retrying in ${delay}ms...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-    };
-
     if (!text || !isValidYouTubeUrl(text)) {
-        return client.sendMessage(
-            m.chat,
-            { text: formatStylishReply("Yo, drop a valid YouTube URL, fam! 📹 Ex: .ytmp4 https://youtu.be/60ItHLz5WEA") },
-            { quoted: m, ad: true }
-        );
+        return m.reply("That is not a valid YouTube URL. Are you intentionally wasting my time?");
     }
 
     try {
-        await client.sendMessage(
-            m.chat,
-            { text: formatStylishReply("Snaggin’ the video for ya, fam! Hold tight! 🔥📽️") },
-            { quoted: m, ad: true }
-        );
-
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
         const encodedUrl = encodeURIComponent(text);
-        const response = await fetchWithRetry(
-            `https://api.privatezia.biz.id/api/downloader/alldownload?url=${encodedUrl}`,
-            { headers: { Accept: "application/json" }, timeout: 15000 }
-        );
-
+        const response = await fetch(`https://api.ootaizumi.web.id/downloader/youtube?url=${encodedUrl}&format=720`, { headers: { Accept: "application/json" }, timeout: 15000 });
+        if (!response.ok) throw new Error(`API failed: ${response.status}`);
         const data = await response.json();
-
-        if (!data || !data.status || !data.result || !data.result.video || !data.result.video.url) {
-            return client.sendMessage(
-                m.chat,
-                { text: formatStylishReply("We are sorry but the API endpoint didn't respond correctly. Try again later.") },
-                { quoted: m, ad: true }
-            );
-        }
-
-        const videoUrl = data.result.video.url;
-        const title = data.result.title || "No title available";
-        const thumbnailUrl = data.result.thumbnail || `https://i.ytimg.com/vi/${text.match(/[?&]v=([^&]+)/)?.[1]}/hqdefault.jpg` || "https://via.placeholder.com/120x90";
-
-        const videoResponse = await fetchWithRetry(videoUrl, { timeout: 15000 });
-        if (!videoResponse.ok) {
-            throw new Error(`Failed to download video: HTTP ${videoResponse.status}`);
-        }
-
+        if (!data.status || !data.result || !data.result.download) throw new Error('API returned no valid video data.');
+        const title = data.result.title || "No title";
+        const thumbnailUrl = data.result.thumbnail || `https://i.ytimg.com/vi/${text.match(/[?&]v=([^&]+)/)?.[1]}/hqdefault.jpg`;
+        const videoResponse = await fetch(data.result.download, { timeout: 15000 });
+        if (!videoResponse.ok) throw new Error(`Failed to download video: ${videoResponse.status}`);
         const arrayBuffer = await videoResponse.arrayBuffer();
         const videoBuffer = Buffer.from(arrayBuffer);
-
-        await client.sendMessage(
-            m.chat,
-            {
-                video: videoBuffer,
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+        await client.sendMessage(m.chat, {
+            video: videoBuffer,
+            mimetype: "video/mp4",
+            fileName: `${title}.mp4`,
+            contextInfo: {
+                externalAdReply: {
+                    title: title,
+                    body: "Powered by Toxic-MD",
+                    thumbnailUrl,
+                    sourceUrl: text,
+                    mediaType: 2,
+                    renderLargerThumbnail: true,
+                },
+            },
+        }, { quoted: m });
+    } catch (error) {
+        console.error("YouTube video error:", error);
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        try {
+            const info = await ytdl.getInfo(text);
+            const format = ytdl.chooseFormat(info.formats, { filter: "videoandaudio", quality: "highest" });
+            const videoUrl = format.url;
+            const title = info.videoDetails.title;
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+            await client.sendMessage(m.chat, {
+                video: { url: videoUrl },
                 mimetype: "video/mp4",
                 fileName: `${title}.mp4`,
-                caption: formatStylishReply(`Video (${data.result.video.quality || "HD"})`),
                 contextInfo: {
                     externalAdReply: {
-                        title: "YouTube Video",
-                        body: `Quality: ${data.result.video.quality || "HD"} | Powered by Toxic-MD`,
-                        thumbnailUrl,
+                        title: title,
+                        body: "Powered by Toxic-MD (Fallback)",
+                        thumbnailUrl: info.videoDetails.thumbnails[0].url,
                         sourceUrl: text,
                         mediaType: 2,
                         renderLargerThumbnail: true,
                     },
                 },
-            },
-            { quoted: m, ad: true }
-        );
-    } catch (error) {
-        console.error("YouTube video download error:", error);
-        await client.sendMessage(
-            m.chat,
-            { text: formatStylishReply(`Yo, we hit a snag: ${error.message}. Check the URL and try again! 😎`) },
-            { quoted: m, ad: true }
-        );
+            }, { quoted: m });
+        } catch (fallbackError) {
+            console.error(`Fallback error: ${fallbackError.message}`);
+            await m.reply(`All download methods failed. Your request is fundamentally broken. Error: ${fallbackError.message}`);
+        }
     }
 };
