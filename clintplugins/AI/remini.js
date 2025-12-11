@@ -46,71 +46,41 @@ module.exports = async (context) => {
     }
 
     try {
+        await m.reply(`ENHANCING YOUR TRASH IMAGE...`);
+
         const encodedUrl = encodeURIComponent(imageUrl);
-        const apiUrl = `https://api.giftedtech.web.id/api/tools/remini?apikey=gifted_api_se5dccy&url=${encodedUrl}`;
+        const apiUrl = `https://api.elrayyxml.web.id/api/tools/remini?url=${encodedUrl}`;
+        
         const response = await fetch(apiUrl, {
-            timeout: 10000,
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-        });
-        if (!response.ok) {
-            throw new Error(`API PUKE ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (!data.success || !data.result || !data.result.image_url) {
-            return m.reply(`API IS USELESS 🤡 ${data.msg || 'NO ENHANCED IMAGE YOU LOSER'}`);
-        }
-
-        const { image_url } = data.result;
-
-        const urlCheck = await fetch(image_url, {
-            method: 'HEAD',
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+            timeout: 30000,
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'image/*'
+            }
         });
         
-        if (!urlCheck.ok) {
-            const imageResponse = await fetch(image_url, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-            });
-            if (!imageResponse.ok) {
-                throw new Error(`IMAGE URL DEAD ${imageResponse.status}`);
-            }
-            const imageBuffer = await imageResponse.buffer();
-
-            await m.reply(`ENHANCING YOUR TRASH IMAGE...`);
-            try {
-                await client.sendMessage(
-                    m.chat,
-                    {
-                        image: imageBuffer,
-                        fileName: 'enhanced_image.png'
-                    },
-                    { quoted: m }
-                );
-            } catch (sendError) {
-                console.error(`FAILED TO SEND IMAGE: ${sendError.message}`);
-                throw new Error(`CANT SEND ENHANCED IMAGE ${sendError.message}`);
-            }
-        } else {
-            await m.reply(`ENHANCING YOUR TRASH IMAGE...`);
-            try {
-                await client.sendMessage(
-                    m.chat,
-                    {
-                        image: { url: image_url },
-                        fileName: 'enhanced_image.png'
-                    },
-                    { quoted: m }
-                );
-            } catch (sendError) {
-                console.error(`FAILED TO SEND IMAGE: ${sendError.message}`);
-                throw new Error(`CANT SEND ENHANCED IMAGE ${sendError.message}`);
-            }
+        if (!response.ok) {
+            throw new Error(`API PUKE ${response.status} ${response.statusText}`);
         }
 
-        await client.sendMessage(m.chat, { text: `> Tσxιƈ-ɱԃȥ` }, { quoted: m });
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('image')) {
+            throw new Error(`API DIDNT RETURN AN IMAGE 🤦🏻 GOT: ${contentType}`);
+        }
+
+        const imageBuffer = await response.buffer();
+
+        await client.sendMessage(
+            m.chat,
+            {
+                image: imageBuffer,
+                caption: `HERE'S YOUR ENHANCED SHIT 🤡\n> Tσxιƈ-ɱԃȥ`
+            },
+            { quoted: m }
+        );
+
     } catch (error) {
         console.error(`ERROR IN REMINI: ${error.message}`);
-        await m.reply(`SHIT BROKE 🤦🏻 CANT ENHANCE YOUR IMAGE TRY LATER`);
+        await m.reply(`SHIT BROKE 🤦🏻 ERROR: ${error.message}`);
     }
 };
