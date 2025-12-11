@@ -15,14 +15,12 @@ module.exports = async (context) => {
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
         const encodedUrl = encodeURIComponent(text);
-        const response = await fetch(`https://api.ootaizumi.web.id/downloader/youtube?url=${encodedUrl}&format=720`, { headers: { Accept: "application/json" }, timeout: 15000 });
-        if (!response.ok) throw new Error(`API failed: ${response.status}`);
+        const response = await fetch(`https://api.ootaizumi.web.id/downloader/youtube?url=${encodedUrl}&format=720`, { headers: { Accept: "application/json" } });
         const data = await response.json();
         if (!data.status || !data.result || !data.result.download) throw new Error('API returned no valid video data.');
         const title = data.result.title || "No title";
         const thumbnailUrl = data.result.thumbnail || `https://i.ytimg.com/vi/${text.match(/[?&]v=([^&]+)/)?.[1]}/hqdefault.jpg`;
-        const videoResponse = await fetch(data.result.download, { timeout: 15000 });
-        if (!videoResponse.ok) throw new Error(`Failed to download video: ${videoResponse.status}`);
+        const videoResponse = await fetch(data.result.download);
         const arrayBuffer = await videoResponse.arrayBuffer();
         const videoBuffer = Buffer.from(arrayBuffer);
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
