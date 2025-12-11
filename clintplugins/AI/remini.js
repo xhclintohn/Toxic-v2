@@ -1,6 +1,25 @@
 const fetch = require('node-fetch');
 const FormData = require('form-data');
 
+async function uploadToCatbox(buffer) {
+    const form = new FormData();
+    form.append('reqtype', 'fileupload');
+    form.append('fileToUpload', buffer, { filename: 'image.png' });
+
+    const response = await fetch('https://catbox.moe/user/api.php', {
+        method: 'POST',
+        body: form,
+        headers: form.getHeaders(),
+    });
+
+    const text = await response.text();
+    if (!text.includes('catbox')) {
+        throw new Error('UPLOAD FAILED');
+    }
+
+    return text;
+}
+
 module.exports = async (context) => {
     const { client, m, text, botname } = context;
 
@@ -17,24 +36,7 @@ module.exports = async (context) => {
     if (!text && m.quoted && m.quoted.mtype === 'imageMessage') {
         try {
             const buffer = await client.downloadMediaMessage(m.quoted);
-            const form = new FormData();
-            form.append('files[]', buffer, { filename: 'image.png' });
-
-            const uploadResponse = await fetch('https://qu.ax/upload', {
-                method: 'POST',
-                body: form,
-                headers: form.getHeaders(),
-                timeout: 10000
-            });
-            if (!uploadResponse.ok) {
-                throw new Error(`UPLOAD FAILED WITH STATUS ${uploadResponse.status}`);
-            }
-
-            const uploadData = await uploadResponse.json();
-            if (!uploadData.files?.[0]?.url) {
-                throw new Error('NO URL FROM UPLOAD');
-            }
-            imageUrl = uploadData.files[0].url;
+            imageUrl = await uploadToCatbox(buffer);
         } catch (uploadError) {
             console.error(`FAILED UPLOAD: ${uploadError.message}`);
             return m.reply(`CANT UPLOAD YOUR SHITTY IMAGE 🤦🏻 TRY AGAIN`);
