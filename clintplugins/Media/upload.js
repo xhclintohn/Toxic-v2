@@ -1,7 +1,21 @@
 const axios = require('axios');
 const FormData = require('form-data');
-const fs = require('fs');
-const path = require('path');
+
+async function uploadToCatbox(buffer) {
+    const form = new FormData();
+    form.append('reqtype', 'fileupload');
+    form.append('fileToUpload', buffer, { filename: 'file.png' });
+
+    const response = await axios.post('https://catbox.moe/user/api.php', form, {
+        headers: form.getHeaders(),
+    });
+
+    if (!response.data || !response.data.includes('catbox')) {
+        throw new Error('UPLOAD FAILED 🤦🏻');
+    }
+
+    return response.data;
+}
 
 module.exports = async (context) => {
     const { client, m } = context;
@@ -10,37 +24,9 @@ module.exports = async (context) => {
         const q = m.quoted ? m.quoted : m;
         const mediaBuffer = await q.download();
         
-        const tempFilePath = path.join(__dirname, `temp_${Date.now()}.bin`);
-        fs.writeFileSync(tempFilePath, mediaBuffer);
-        
-        const form = new FormData();
-        form.append('files[]', fs.createReadStream(tempFilePath));
-        
-        const response = await axios.post('https://qu.ax/upload', form, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': 'application/json',
-                ...form.getHeaders(),
-            },
-            maxContentLength: Infinity,
-            maxBodyLength: Infinity,
-            timeout: 30000,
-        });
-        
-        if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
-        
-        let link;
-        if (response.data?.files?.[0]?.url) {
-            link = response.data.files[0].url;
-        } else if (response.data?.url) {
-            link = response.data.url;
-        } else if (response.data?.link) {
-            link = response.data.link;
-        } else if (response.data) {
-            link = response.data;
-        } else {
-            throw new Error('No URL returned by API');
-        }
+        await m.reply(`UPLOADING TO CATBOX... 📤`);
+
+        const link = await uploadToCatbox(mediaBuffer);
         
         const fileSizeMB = (mediaBuffer.length / (1024 * 1024)).toFixed(2);
         const fileSizeKB = (mediaBuffer.length / 1024).toFixed(2);
@@ -49,13 +35,14 @@ module.exports = async (context) => {
             text: `╔═════ ✪〘 MEDIA UPLOADED 〙✪ ═════╗
 ║
 ║ 📤 *Upload Status:* ✅ Successful
+║ 🌐 *Service:* Catbox.moe
 ║ 🔗 *Direct Link:* ${link}
 ║ 📊 *File Size:* ${fileSizeMB} MB / ${fileSizeKB} KB
 ║ 📝 *Preview:* ${link.slice(0, 50)}...
 ║
 ╠═══════════════════════════════╝
 ║
-║ 💡 *Tip:* Copy the link above
+║ 💡 *Tip:* Link has NO EXPIRY
 ║ 👤 *Requested by:* @${m.sender.split('@')[0]}
 ║ 🤖 *Powered by:* Tσxιƈ-ɱԃȥ
 ║
@@ -65,13 +52,6 @@ module.exports = async (context) => {
 
     } catch (err) {
         console.error('Upload error:', err);
-        let errorMsg = `❌ Upload Failed:\n${err.message}`;
-        if (err.response) {
-            errorMsg += `\n📡 Status: ${err.response.status}`;
-            if (err.response.data) {
-                errorMsg += `\n📄 Response: ${JSON.stringify(err.response.data)}`;
-            }
-        }
-        m.reply(errorMsg);
+        await m.reply(`UPLOAD FAILED 🤦🏻 ERROR: ${err.message}`);
     }
 };
