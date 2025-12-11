@@ -36,6 +36,9 @@ module.exports = async (context) => {
   }
 
   try {
+ 
+    await client.sendReaction(m.chat, m.key, '⌛');
+
     const searchQuery = `${text} official`;
     const searchResult = await yts(searchQuery);
     const video = searchResult.videos[0];
@@ -47,19 +50,19 @@ module.exports = async (context) => {
       );
     }
 
-    // Validate YouTube URL
+
     if (!isValidYouTubeUrl(video.url)) {
       throw new Error("Invalid YouTube URL");
     }
 
-    // Use the new API endpoint
+   
     const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytplaymp3?query=${encodeURIComponent(video.url)}`;
 
     // Call the API
     const response = await axios.get(apiUrl);
     const apiData = response.data;
 
-    // Check if the API call was successful
+  
     if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) {
       throw new Error("API failed to process the video");
     }
@@ -68,7 +71,7 @@ module.exports = async (context) => {
     const fileName = `audio_${timestamp}.mp3`;
     const filePath = path.join(tempDir, fileName);
 
-    // Download the audio file from the API's download URL
+   
     const audioResponse = await axios({
       method: "get",
       url: apiData.result.downloadUrl,
@@ -87,7 +90,7 @@ module.exports = async (context) => {
       throw new Error("Download failed or file is empty");
     }
 
-    // Directly send the audio without any loading message
+  
     await client.sendMessage(
       m.chat,
       {
@@ -108,7 +111,7 @@ module.exports = async (context) => {
       { quoted: m, ad: true }
     );
 
-    // Clean up the temporary file
+  
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
