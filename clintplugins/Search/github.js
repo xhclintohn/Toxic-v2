@@ -1,3 +1,5 @@
+const fetch = require('node-fetch');
+
 module.exports = async (context) => {
   const { client, m, text } = context;
 
@@ -15,6 +17,12 @@ module.exports = async (context) => {
     }
 
     const response = await fetch(`https://api.github.com/users/${text}`);
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Unable to fetch data - GitHub API returned non-JSON response');
+    }
+    
     const data = await response.json();
 
     if (!data.login) {
