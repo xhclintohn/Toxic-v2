@@ -8,26 +8,29 @@ module.exports = {
     const { client, m, toxicspeed } = context;
 
     try {
-      // Format uptime for bot
+     
+      await client.sendReaction(m.chat, m.key, '⚡');
+
+    
       const formatUptime = (seconds) => {
         const days = Math.floor(seconds / (3600 * 24));
         const hours = Math.floor((seconds % (3600 * 24)) / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = Math.floor(seconds % 60);
-        
+
         const parts = [];
         if (days > 0) parts.push(`${days} days`);
         if (hours > 0) parts.push(`${hours} hours`);
         if (minutes > 0) parts.push(`${minutes} minutes`);
         if (secs > 0) parts.push(`${secs} seconds`);
-        
+
         return parts.join(', ') || '0 seconds';
       };
 
       const botUptime = formatUptime(process.uptime());
       const pingSpeed = (toxicspeed || 0.0094).toFixed(4);
-      
-      // Random CPU usage between 5% and 45%
+
+    
       const randomCpuUsage = (Math.floor(Math.random() * 40) + 5) + '%';
 
       const pingText = `
