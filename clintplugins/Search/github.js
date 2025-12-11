@@ -1,5 +1,55 @@
 const fetch = require('node-fetch');
 
+async function githubstalk(user) {
+  return new Promise((resolve, reject) => {
+    fetch('https://api.github.com/users/' + user)
+      .then(async (response) => {
+        const text = await response.text();
+        if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
+          reject(new Error('GitHub API returned HTML page'));
+          return;
+        }
+        const data = JSON.parse(text);
+        let hasil = {
+          username: data.login,
+          name: data.name,
+          bio: data.bio,
+          id: data.id,
+          nodeId: data.node_id,
+          profile_pic: data.avatar_url,
+          html_url: data.html_url,
+          type: data.type,
+          admin: data.site_admin,
+          company: data.company,
+          blog: data.blog,
+          location: data.location,
+          email: data.email,
+          public_repo: data.public_repos,
+          public_gists: data.public_gists,
+          followers: data.followers,
+          following: data.following,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+        resolve(hasil);
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+}
+
+async function getBuffer(url) {
+  try {
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  } catch (error) {
+    console.error('Error fetching buffer:', error);
+    return null;
+  }
+}
+
 module.exports = async (context) => {
   const { client, m, text } = context;
 
@@ -16,51 +66,54 @@ module.exports = async (context) => {
       return;
     }
 
-    const response = await fetch(`https://api.github.com/users/${text}`);
-    
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error('Unable to fetch data - GitHub API returned non-JSON response');
-    }
-    
-    const data = await response.json();
+    const request = await githubstalk(text);
+    const {
+      username,
+      following,
+      followers,
+      type,
+      bio,
+      company,
+      blog,
+      location,
+      email,
+      public_repo,
+      public_gists,
+      profile_pic,
+      created_at,
+      updated_at,
+      html_url,
+      name
+    } = request;
 
-    if (!data.login) {
-      m.reply(
-        "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
-        "│ ❒ ERROR\n" +
-        "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
-        "│ ❌ User not found. Please check the username and try again.\n" +
-        "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈"
-      );
-      return;
+    const thumb = await getBuffer(profile_pic);
+    if (!thumb) {
+      return m.reply('Failed to fetch profile picture.');
     }
-
-    const pic = `https://github.com/${data.login}.png`;
 
     const userInfo =
       "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
       "│ ❒ GITHUB USER PROFILE\n" +
       "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
-      "│ 🔖 Username    : " + (data.login || "N/A") + "\n" +
-      "│ ♦️ Name        : " + (data.name || "N/A") + "\n" +
-      "│ ✨ Bio         : " + (data.bio || "N/A") + "\n" +
-      "│ 🏢 Company     : " + (data.company || "N/A") + "\n" +
-      "│ 📍 Location    : " + (data.location || "N/A") + "\n" +
-      "│ 📧 Email       : " + (data.email || "N/A") + "\n" +
-      "│ 📰 Blog        : " + (data.blog || "N/A") + "\n" +
-      "│ 🔓 Public Repos: " + (data.public_repos || 0) + "\n" +
-      "│ 👪 Followers   : " + (data.followers || 0) + "\n" +
-      "│ 🫶 Following   : " + (data.following || 0) + "\n" +
+      "│ 🔖 Username    : " + (username || "N/A") + "\n" +
+      "│ ♦️ Name        : " + (name || "N/A") + "\n" +
+      "│ ✨ Bio         : " + (bio || "N/A") + "\n" +
+      "│ 🏢 Company     : " + (company || "N/A") + "\n" +
+      "│ 📍 Location    : " + (location || "N/A") + "\n" +
+      "│ 📧 Email       : " + (email || "N/A") + "\n" +
+      "│ 📰 Blog        : " + (blog || "N/A") + "\n" +
+      "│ 🔓 Public Repos: " + (public_repo || 0) + "\n" +
+      "│ 👪 Followers   : " + (followers || 0) + "\n" +
+      "│ 🫶 Following   : " + (following || 0) + "\n" +
       "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈";
 
-    await client.sendMessage(m.chat, { image: { url: pic }, caption: userInfo }, { quoted: m });
+    await client.sendMessage(m.chat, { image: thumb, caption: userInfo }, { quoted: m });
   } catch (e) {
     m.reply(
       "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
       "│ ❒ ERROR\n" +
-      "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
-      "│ ❌ An error occurred: " + e.message + "\n" +
+      "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
+      "│ ❌ " + e.message + "\n" +
       "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈"
     );
   }
