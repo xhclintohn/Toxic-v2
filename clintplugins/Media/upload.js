@@ -8,14 +8,14 @@ module.exports = async (context) => {
 
     try {
         const q = m.quoted ? m.quoted : m;
-        const mime = (q.msg || q).mimetype || '';
-        if (!mime) return m.reply('Please quote or send a media file to upload.');
         const mediaBuffer = await q.download();
-        const fileExtension = getExtensionFromMime(mime);
-        const tempFilePath = path.join(__dirname, `temp_${Date.now()}${fileExtension}`);
+        
+        const tempFilePath = path.join(__dirname, `temp_${Date.now()}.bin`);
         fs.writeFileSync(tempFilePath, mediaBuffer);
+        
         const form = new FormData();
         form.append('files[]', fs.createReadStream(tempFilePath));
+        
         const response = await axios.post('https://qu.ax/upload', form, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -26,7 +26,9 @@ module.exports = async (context) => {
             maxBodyLength: Infinity,
             timeout: 30000,
         });
+        
         if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
+        
         let link;
         if (response.data?.files?.[0]?.url) {
             link = response.data.files[0].url;
@@ -39,53 +41,37 @@ module.exports = async (context) => {
         } else {
             throw new Error('No URL returned by API');
         }
-        const fileSizeMB = (mediaBuffer.length / (1024 * 1024)).toFixed(2);
         
-        // Send message with cta_copy button
+        const fileSizeMB = (mediaBuffer.length / (1024 * 1024)).toFixed(2);
+        const fileSizeKB = (mediaBuffer.length / 1024).toFixed(2);
+        
         await client.sendMessage(m.chat, {
-            interactiveMessage: {
-                header: "📤 Media Uploaded Successfully ✅",
-                title: `🔗 Link: ${link}\n📊 Size: ${fileSizeMB} MB`,
-                footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
-                buttons: [
-                    {
-                        name: "cta_copy",
-                        buttonParamsJson: JSON.stringify({
-                            display_text: "📋 Copy Link",
-                            id: `copy_${Date.now()}`,
-                            copy_code: link,
-                        }),
-                    },
-                ],
-            },
+            text: `╔═════ ✪〘 MEDIA UPLOADED 〙✪ ═════╗
+║
+║ 📤 *Upload Status:* ✅ Successful
+║ 🔗 *Direct Link:* ${link}
+║ 📊 *File Size:* ${fileSizeMB} MB / ${fileSizeKB} KB
+║ 📝 *Preview:* ${link.slice(0, 50)}...
+║
+╠═══════════════════════════════╝
+║
+║ 💡 *Tip:* Copy the link above
+║ 👤 *Requested by:* @${m.sender.split('@')[0]}
+║ 🤖 *Powered by:* Tσxιƈ-ɱԃȥ
+║
+╚═══════════════════════════════╝`,
+            mentions: [m.sender]
         }, { quoted: m });
 
     } catch (err) {
         console.error('Upload error:', err);
-        let errorMsg = `Error during upload: ${err.message}`;
+        let errorMsg = `❌ Upload Failed:\n${err.message}`;
         if (err.response) {
-            errorMsg += `\nStatus: ${err.response.status}`;
+            errorMsg += `\n📡 Status: ${err.response.status}`;
             if (err.response.data) {
-                errorMsg += `\nResponse: ${JSON.stringify(err.response.data)}`;
+                errorMsg += `\n📄 Response: ${JSON.stringify(err.response.data)}`;
             }
         }
         m.reply(errorMsg);
     }
 };
-
-function getExtensionFromMime(mime) {
-    const mimeToExt = {
-        'image/jpeg': '.jpg',
-        'image/jpg': '.jpg',
-        'image/png': '.png',
-        'image/webp': '.webp',
-        'image/gif': '.gif',
-        'video/mp4': '.mp4',
-        'audio/mpeg': '.mp3',
-        'audio/mp4': '.m4a',
-        'audio/ogg': '.ogg',
-        'application/pdf': '.pdf',
-        'text/plain': '.txt',
-    };
-    return mimeToExt[mime.toLowerCase()] || '.bin';
-}
