@@ -1,25 +1,13 @@
 const axios = require('axios');
 const FormData = require('form-data');
-const fs = require('fs');
-const path = require('path');
 
-async function uploadSticker(buffer) {
-    const tempFilePath = path.join(__dirname, `temp_sticker_${Date.now()}.webp`);
-    fs.writeFileSync(tempFilePath, buffer);
+async function uploadToCatbox(buffer) {
     const form = new FormData();
-    form.append('files[]', fs.createReadStream(tempFilePath));
-    try {
-        const response = await axios.post('https://qu.ax/upload', form, {
-            headers: form.getHeaders(),
-        });
-        const link = response.data?.files?.[0]?.url;
-        if (!link) throw new Error('No URL returned in response');
-        fs.unlinkSync(tempFilePath);
-        return { url: link };
-    } catch (error) {
-        if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
-        throw new Error(`Upload error: ${error.message}`);
-    }
+    form.append('reqtype', 'fileupload');
+    form.append('fileToUpload', buffer, { filename: 'sticker.webp' });
+    const response = await axios.post('https://catbox.moe/user/api.php', form, { headers: form.getHeaders() });
+    if (!response.data || !response.data.includes('catbox')) throw new Error('Upload Refused');
+    return response.data;
 }
 
 module.exports = {
@@ -28,84 +16,38 @@ module.exports = {
     description: 'Converts stickers to images',
     run: async (context) => {
         const { client, m, mime } = context;
-        const formatStylishReply = (message) => {
-            return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
-        };
-        if (!m.quoted) {
-            return client.sendMessage(m.chat, {
-                text: formatStylishReply(`Yo, @${m.sender.split('@')[0]}! 😤 Please reply to a sticker!\nExample: Reply to a sticker with .toimg`),
-                mentions: [m.sender]
-            }, { quoted: m });
-        }
-        const quotedMime = m.quoted.mimetype || '';
-        if (!/webp/.test(quotedMime)) {
-            return client.sendMessage(m.chat, {
-                text: formatStylishReply('Thats not a sticker! 😤\nPlease reply to a sticker file.')
-            }, { quoted: m });
-        }
         try {
+            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+            if (!m.quoted) return m.reply('Are you illiterate? QUOTE A STICKER. The command is not a suggestion.');
+            const quotedMime = m.quoted.mimetype || '';
+            if (!/webp/.test(quotedMime)) return m.reply('That is not a sticker. Do you need glasses? That is clearly not a .webp file.');
+            const statusMsg = await m.reply('Converting your garbage sticker. Try to contain your excitement.');
             const stickerBuffer = await m.quoted.download();
             if (!stickerBuffer) {
-                return client.sendMessage(m.chat, {
-                    text: formatStylishReply('Failed to download the sticker!\nPlease try again.')
-                }, { quoted: m });
+                await client.sendMessage(m.chat, { delete: statusMsg.key });
+                return m.reply('Failed to download the sticker. Your phone is probably as useless as you are.');
             }
-            const { url: stickerUrl } = await uploadSticker(stickerBuffer);
+            const stickerUrl = await uploadToCatbox(stickerBuffer);
             const encodedUrl = encodeURIComponent(stickerUrl);
             const convertApiUrl = `https://api.elrayyxml.web.id/api/maker/convert?url=${encodedUrl}&format=PNG`;
-            const response = await axios.get(convertApiUrl, {
-                headers: { 
-                    'accept': 'application/json',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                },
-                timeout: 30000
-            });
-            if (!response.data.status || !response.data.result) {
-                throw new Error('Conversion API failed to process the sticker');
-            }
+            const response = await axios.get(convertApiUrl, { headers: { 'accept': 'application/json', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }, timeout: 30000 });
+            if (!response.data.status || !response.data.result) throw new Error('The conversion service laughed at your sticker.');
             const imageUrl = response.data.result;
-            const imageResponse = await axios.get(imageUrl, {
-                responseType: 'arraybuffer',
-                timeout: 20000
-            });
+            const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 20000 });
             const imageBuffer = Buffer.from(imageResponse.data);
-            await client.sendMessage(
-                m.chat,
-                { 
-                    image: imageBuffer, 
-                    caption: formatStylishReply('Sticker converted to image! 🖼️\nNow you can use it as a normal image!')
-                },
-                { quoted: m }
-            );
-            await client.sendMessage(
-                m.chat,
-                {
-                    document: imageBuffer,
-                    mimetype: 'image/png',
-                    fileName: `converted_sticker_${Date.now()}.png`,
-                    caption: formatStylishReply('PNG Version (Better Quality)\nUse this for best results!')
-                },
-                { quoted: m }
-            );
+            await client.sendMessage(m.chat, { delete: statusMsg.key });
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+            await client.sendMessage(m.chat, { image: imageBuffer, caption: 'Your sticker is now an image. A miraculous achievement.\n—\nTσxιƈ-ɱԃȥ' }, { quoted: m });
+            await client.sendMessage(m.chat, { document: imageBuffer, mimetype: 'image/png', fileName: `sticker_${Date.now()}.png`, caption: 'PNG version. Slightly less terrible.\n—\nTσxιƈ-ɱԃȥ' }, { quoted: m });
         } catch (err) {
-            console.error('ToImg conversion error:', err);
-            let errorMessage = 'An unexpected error occurred';
-            if (err.message.includes('timeout')) {
-                errorMessage = 'Conversion timed out. The sticker might be too large.';
-            } else if (err.message.includes('Network Error')) {
-                errorMessage = 'Network error. Please check your connection.';
-            } else if (err.message.includes('Upload error')) {
-                errorMessage = 'Failed to upload sticker for processing.';
-            } else if (err.message.includes('Conversion API failed')) {
-                errorMessage = 'The conversion service failed to process this sticker.';
-            } else if (err.message.includes('animated')) {
-                errorMessage = 'Animated stickers are not supported yet!';
-            } else {
-                errorMessage = err.message;
-            }
-            await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Conversion Failed! 😤\nError: ${errorMessage}\n\nTips:\n• Use static stickers only\n• Try with smaller stickers\n• Check your internet connection`)
-            }, { quoted: m });
+            console.error('ToImg error:', err);
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+            let userMessage = 'The conversion failed. Shocking.';
+            if (err.message.includes('timeout')) userMessage = 'Took too long. Your sticker is probably as bloated as your ego.';
+            if (err.message.includes('Network Error')) userMessage = 'Network error. Is your router powered by hopes and dreams?';
+            if (err.message.includes('Upload Refused')) userMessage = "Couldn't even upload your sticker. It's that bad.";
+            if (err.message.includes('conversion service laughed')) userMessage = 'The converter rejected your sticker. Try one that isn\'t abstract garbage.';
+            await m.reply(`${userMessage}\nError: ${err.message}`);
         }
     }
 };
