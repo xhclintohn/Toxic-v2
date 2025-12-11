@@ -1,25 +1,20 @@
 const axios = require('axios');
 const FormData = require('form-data');
-const fs = require('fs');
-const path = require('path');
 
-async function uploadImage(buffer) {
-    const tempFilePath = path.join(__dirname, `temp_${Date.now()}.jpg`);
-    fs.writeFileSync(tempFilePath, buffer);
+async function uploadToCatbox(buffer) {
     const form = new FormData();
-    form.append('files[]', fs.createReadStream(tempFilePath));
-    try {
-        const response = await axios.post('https://qu.ax/upload', form, {
-            headers: form.getHeaders(),
-        });
-        const link = response.data?.files?.[0]?.url;
-        if (!link) throw new Error('No URL returned in response');
-        fs.unlinkSync(tempFilePath);
-        return { url: link };
-    } catch (error) {
-        if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
-        throw new Error(`Upload error: ${error.message}`);
+    form.append('reqtype', 'fileupload');
+    form.append('fileToUpload', buffer, { filename: 'image.png' });
+
+    const response = await axios.post('https://catbox.moe/user/api.php', form, {
+        headers: form.getHeaders(),
+    });
+
+    if (!response.data || !response.data.includes('catbox')) {
+        throw new Error('Upload process failed');
     }
+
+    return response.data;
 }
 
 module.exports = {
@@ -28,34 +23,44 @@ module.exports = {
     description: 'Removes background from images using AI',
     run: async (context) => {
         const { client, m, mime } = context;
+        
+        // Send ⌛ reaction
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+
         const quoted = m.quoted ? m.quoted : m;
         const quotedMime = quoted.mimetype || mime || '';
+        
         if (!/image/.test(quotedMime)) {
             return client.sendMessage(m.chat, {
-                text: `BRO FFS QUOTE A FUCKING IMAGE 🤦🏻\nEXAMPLE: REPLY TO AN IMAGE WITH .removebg`,
+                text: `Do you have eyes? That's clearly not an image. Quote an actual image file, you incompetent fool.`,
                 mentions: [m.sender]
             }, { quoted: m });
         }
+
         const loadingMsg = await client.sendMessage(m.chat, {
-            text: 'REMOVING THAT SHITTY BACKGROUND... HOLD ON 🤡'
+            text: 'Removing background... This might take a moment.'
         }, { quoted: m });
+
         try {
             const media = await quoted.download();
             if (!media) {
                 await client.sendMessage(m.chat, { delete: loadingMsg.key });
                 return client.sendMessage(m.chat, {
-                    text: 'FAILED TO DOWNLOAD YOUR TRASH IMAGE 🤦🏻 TRY AGAIN'
+                    text: 'Failed to download the image. Your device is probably as defective as your judgment.'
                 }, { quoted: m });
             }
+
             if (media.length > 10 * 1024 * 1024) {
                 await client.sendMessage(m.chat, { delete: loadingMsg.key });
                 return client.sendMessage(m.chat, {
-                    text: 'IMAGE TOO BIG DUMMY 🤡 MAX 10MB'
+                    text: 'Image exceeds 10MB limit. Do you think I have infinite storage?'
                 }, { quoted: m });
             }
-            const { url: imageUrl } = await uploadImage(media);
+
+            const imageUrl = await uploadToCatbox(media);
             const encodedUrl = encodeURIComponent(imageUrl);
             const removeBgApiUrl = `https://api.ootaizumi.web.id/tools/removebg?imageUrl=${encodedUrl}`;
+            
             const response = await axios.get(removeBgApiUrl, {
                 headers: { 
                     'accept': 'application/json',
@@ -63,24 +68,34 @@ module.exports = {
                 },
                 timeout: 60000
             });
+
             if (!response.data.status || !response.data.result) {
-                throw new Error('AI FAILED TO REMOVE YOUR BACKGROUND 🤡');
+                throw new Error('The AI failed to process your image. Probably too complex for its intelligence.');
             }
+
             const transparentImageUrl = response.data.result;
             const transparentResponse = await axios.get(transparentImageUrl, {
                 responseType: 'arraybuffer',
                 timeout: 30000
             });
+
             const transparentImage = Buffer.from(transparentResponse.data);
+
+            // Delete loading message
             await client.sendMessage(m.chat, { delete: loadingMsg.key });
+            
+            // Send ✅ reaction
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
             await client.sendMessage(
                 m.chat,
                 { 
                     image: transparentImage, 
-                    caption: 'HERE YOUR TRANSPARENT SHIT 🤡\n> Tσxιƈ-ɱԃȥ'
+                    caption: 'Background successfully removed.\n\n—\n*Powered by Tσxιƈ-ɱԃȥ*'
                 },
                 { quoted: m }
             );
+
             if (transparentResponse.headers['content-type']?.includes('png')) {
                 await client.sendMessage(
                     m.chat,
@@ -88,32 +103,41 @@ module.exports = {
                         document: transparentImage,
                         mimetype: 'image/png',
                         fileName: `transparent_bg_${Date.now()}.png`,
-                        caption: 'PNG VERSION (FOR STICKERS) 🎨\n> Tσxιƈ-ɱԃȥ'
+                        caption: 'PNG version for higher quality.\n\n—\n*Powered by Tσxιƈ-ɱԃȥ*'
                     },
                     { quoted: m }
                 );
             }
+
         } catch (err) {
             console.error('RemoveBG error:', err);
+            
+            // Try to delete loading message
             try {
                 await client.sendMessage(m.chat, { delete: loadingMsg.key });
             } catch (e) {}
-            let errorMessage = 'SOME SHIT WENT WRONG 🤦🏻';
+            
+           
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+
+            let errorMessage = 'An unexpected error occurred';
+            
             if (err.message.includes('timeout')) {
-                errorMessage = 'TOOK TOO LONG YOUR IMAGE PROBABLY SUCKS 🤡';
+                errorMessage = 'Processing took too long. Your image might be too complex or the server is busy.';
             } else if (err.message.includes('Network Error')) {
-                errorMessage = 'NETWORK ERROR CHECK YOUR INTERNET DUMMY';
-            } else if (err.message.includes('Upload error')) {
-                errorMessage = 'FAILED TO UPLOAD YOUR TRASH IMAGE 🤦🏻';
-            } else if (err.message.includes('AI FAILED')) {
-                errorMessage = 'AI COULDNT REMOVE THAT SHITTY BACKGROUND 🤡';
+                errorMessage = 'Network connection failed. Check your internet, you digital neanderthal.';
+            } else if (err.message.includes('Upload process failed')) {
+                errorMessage = 'Failed to upload image for processing.';
+            } else if (err.message.includes('AI failed to process')) {
+                errorMessage = 'The AI could not process this image. Try something less abstract.';
             } else if (err.message.includes('ENOTFOUND')) {
-                errorMessage = 'CANT CONNECT TO THE SERVICE RIGHT NOW';
+                errorMessage = 'Cannot connect to the background removal service.';
             } else {
                 errorMessage = err.message;
             }
+
             await client.sendMessage(m.chat, {
-                text: `FAILED TO REMOVE BACKGROUND 🤦🏻\nERROR: ${errorMessage}\n\nTIPS:\n• USE CLEAR IMAGES\n• NOT TOO COMPLICATED\n• TRY DIFFERENT IMAGE`
+                text: `❌ Background removal failed.\n\n*Error:* ${errorMessage}\n\n*Suggestions:*\n• Use clear, high-contrast images\n• Ensure subject has defined edges\n• Try a simpler composition\n• Check your internet connection`
             }, { quoted: m });
         }
     }
