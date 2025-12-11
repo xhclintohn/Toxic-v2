@@ -64,6 +64,7 @@ const aliases = {
     unmute: "open",
     opengroup: "open",
     photo: "picture",
+    pint: "pinterest",
     tophoto: "picture",
     latency: "ping",
     groupstatus: "gstatus",
