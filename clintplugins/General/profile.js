@@ -2,36 +2,46 @@ module.exports = async (context) => {
     const { client, m, pict } = context;
 
     try {
-        const isQuoted = !!m.quoted;
-        const sender = isQuoted ? m.quoted.sender : m.sender;
-        const name = isQuoted ? `@${sender.split('@')[0]}` : m.pushName;
-
-        let ppUrl = pict; // Default to context-provided image
-        try {
-            ppUrl = await client.profilePictureUrl(sender, 'image');
-        } catch {
-            ppUrl = pict; // Fallback to pict if profile picture is unavailable
+        let targetUser = m.sender;
+        
+        if (m.quoted) {
+            targetUser = m.quoted.sender;
+        } else if (m.text && m.text.includes('@')) {
+            const mentionedJid = m.mentionedJid && m.mentionedJid[0];
+            if (mentionedJid) {
+                targetUser = mentionedJid;
+            }
+        } else if (m.text) {
+            const phoneNumberMatch = m.text.match(/[\s\+]*(\d{10,15})/);
+            if (phoneNumberMatch) {
+                const rawNumber = phoneNumberMatch[1];
+                const cleanNumber = rawNumber.replace(/[^\d]/g, '');
+                
+                if (cleanNumber.length >= 10 && cleanNumber.length <= 15) {
+                    const countryCode = cleanNumber.startsWith('0') ? '62' : '';
+                    const formattedNumber = countryCode + cleanNumber.replace(/^0/, '');
+                    targetUser = formattedNumber + '@s.whatsapp.net';
+                }
+            }
         }
 
-        let statusText = 'Not set';
+        const name = targetUser.split('@')[0];
+        let ppUrl = pict;
+        
         try {
-            const status = await client.fetchStatus(sender);
-            statusText = status.status || 'Not set';
+            ppUrl = await client.profilePictureUrl(targetUser, 'image');
         } catch {
-            statusText = 'About not accessible due to privacy settings';
+            ppUrl = pict;
         }
 
-        const caption = `👤 *Profile for ${name}*\n\n🖼️ *Profile Picture*: ${ppUrl ? 'Displayed below' : 'Not available'}\n📝 *About*: ${statusText}\n\n◈━━━━━━━━━━━━━━━━◈\nPowered by *𝐓𝐎𝐗𝐈𝐂-𝐌𝐃 𝐕3*`;
-
-        const message = {
+        await client.sendMessage(m.chat, {
             image: { url: ppUrl },
-            caption: caption,
-            mentions: isQuoted ? [sender] : []
-        };
+            caption: `👤 ${name}\n—\nTσxιƈ-ɱԃȥ`,
+            mentions: targetUser !== m.sender ? [targetUser] : []
+        }, { quoted: m });
 
-        await client.sendMessage(m.chat, message, { quoted: m });
     } catch (error) {
-        console.error('Error in profile command:', error);
-        await client.sendMessage(m.chat, { text: `⚠️ *Oops! Failed to fetch profile:* ${error.message}\n\nTry again later!` }, { quoted: m });
+        console.error('Profile error:', error);
+        await m.reply('Failed to fetch profile. The user probably blocked you or their privacy settings are stricter than your intelligence.');
     }
 };
