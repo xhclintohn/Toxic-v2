@@ -1,125 +1,67 @@
-const fs = require("fs");
-const path = require("path");
 const yts = require("yt-search");
 const axios = require("axios");
 
-const tempDir = path.join(__dirname, "temp");
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir);
-}
-
-const isValidYouTubeUrl = (url) => {
-  return /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|shorts\/|embed\/)?[A-Za-z0-9_-]{11}(\?.*)?$/.test(url);
-};
-
 module.exports = async (context) => {
-  const { client, m, text } = context;
+    const { client, m, text } = context;
 
-  const formatStylishReply = (message) => {
-    return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
-  };
-
-  if (!text) {
-    return client.sendMessage(
-      m.chat,
-      { text: formatStylishReply("Yo, drop a song name, fam! 🎵 Ex: .play Not Like Us") },
-      { quoted: m, ad: true }
-    );
-  }
-
-  if (text.length > 100) {
-    return client.sendMessage(
-      m.chat,
-      { text: formatStylishReply("Keep it short, homie! Song name max 100 chars. 📝") },
-      { quoted: m, ad: true }
-    );
-  }
-
-  try {
- 
-    await client.sendReaction(m.chat, m.key, '⌛');
-
-    const searchQuery = `${text} official`;
-    const searchResult = await yts(searchQuery);
-    const video = searchResult.videos[0];
-    if (!video) {
-      return client.sendMessage(
-        m.chat,
-        { text: formatStylishReply("No tunes found, bruh! 😕 Try another search!") },
-        { quoted: m, ad: true }
-      );
+    if (!text) {
+        return m.reply("Are you mute? Give me a song name. It's not rocket science.");
     }
 
-
-    if (!isValidYouTubeUrl(video.url)) {
-      throw new Error("Invalid YouTube URL");
+    if (text.length > 100) {
+        return m.reply("Your 'song title' is longer than your attention span. Keep it under 100 characters.");
     }
 
-   
-    const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytplaymp3?query=${encodeURIComponent(video.url)}`;
+    try {
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+        const statusMsg = await m.reply(`Searching for "${text}". The internet groans.`);
 
-    // Call the API
-    const response = await axios.get(apiUrl);
-    const apiData = response.data;
+        const searchQuery = `${text} official`;
+        const searchResult = await yts(searchQuery);
+        const video = searchResult.videos[0];
 
-  
-    if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) {
-      throw new Error("API failed to process the video");
+        if (!video) {
+            await client.sendMessage(m.chat, { delete: statusMsg.key });
+            return m.reply(`Nothing found for "${text}". Your taste is as nonexistent as the results.`);
+        }
+
+        const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytplaymp3?query=${encodeURIComponent(video.url)}`;
+        const response = await axios.get(apiUrl);
+        const apiData = response.data;
+
+        if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) {
+            throw new Error("The API spat out garbage. No audio for you.");
+        }
+
+        const audioUrl = apiData.result.downloadUrl;
+        const title = apiData.result.title || "Untitled";
+        const artist = video.author.name || "Unknown Artist";
+
+        await client.sendMessage(m.chat, { delete: statusMsg.key });
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
+        await client.sendMessage(m.chat, {
+            audio: { url: audioUrl },
+            mimetype: "audio/mpeg",
+            fileName: `${title.substring(0, 100)}.mp3`,
+            contextInfo: {
+                externalAdReply: {
+                    title: title,
+                    body: `${artist} | Toxic-MD`,
+                    thumbnailUrl: apiData.result.thumbnail || video.thumbnail,
+                    sourceUrl: video.url,
+                    mediaType: 1,
+                    renderLargerThumbnail: true,
+                },
+            },
+        }, { quoted: m });
+
+    } catch (error) {
+        console.error(`Play error:`, error);
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        let userMessage = 'Download failed. The universe despises your music taste.';
+        if (error.message.includes('API spat')) userMessage = 'The audio service rejected the request.';
+        if (error.message.includes('timeout')) userMessage = 'Search timed out. Try a song that exists.';
+        await m.reply(`${userMessage}\nError: ${error.message}`);
     }
-
-    const timestamp = Date.now();
-    const fileName = `audio_${timestamp}.mp3`;
-    const filePath = path.join(tempDir, fileName);
-
-   
-    const audioResponse = await axios({
-      method: "get",
-      url: apiData.result.downloadUrl,
-      responseType: "stream",
-    });
-
-    const writer = fs.createWriteStream(filePath);
-    audioResponse.data.pipe(writer);
-
-    await new Promise((resolve, reject) => {
-      writer.on("finish", resolve);
-      writer.on("error", reject);
-    });
-
-    if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
-      throw new Error("Download failed or file is empty");
-    }
-
-  
-    await client.sendMessage(
-      m.chat,
-      {
-        audio: { url: filePath },
-        mimetype: "audio/mpeg",
-        fileName: `${apiData.result.title.substring(0, 100)}.mp3`,
-        contextInfo: {
-          externalAdReply: {
-            title: apiData.result.title,
-            body: `${video.author.name || "Unknown Artist"} | Powered by Toxic-MD`,
-            thumbnailUrl: apiData.result.thumbnail || video.thumbnail || "https://via.placeholder.com/120x90",
-            sourceUrl: video.url,
-            mediaType: 1,
-            renderLargerThumbnail: true,
-          },
-        },
-      },
-      { quoted: m, ad: true }
-    );
-
-  
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-  } catch (error) {
-    await client.sendMessage(
-      m.chat,
-      { text: formatStylishReply(`Yo, we hit a snag: ${error.message}. Pick another track! 😎`) },
-      { quoted: m, ad: true }
-    );
-  }
 };
