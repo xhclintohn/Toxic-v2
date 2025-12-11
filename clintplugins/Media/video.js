@@ -14,8 +14,7 @@ module.exports = async (context) => {
         const video = searchResult.videos[0];
         if (!video) return m.reply(`Nothing found for "${text}". Your taste is as nonexistent as the results.`);
         const encodedUrl = encodeURIComponent(video.url);
-        const response = await fetch(`https://api.ootaizumi.web.id/downloader/youtube?url=${encodedUrl}&format=720`, { timeout: 15000, headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Accept": "application/json" } });
-        if (!response.ok) throw new Error(`API responded with: ${response.status} ${response.statusText}`);
+        const response = await fetch(`https://api.ootaizumi.web.id/downloader/youtube?url=${encodedUrl}&format=720`, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Accept": "application/json" } });
         const data = await response.json();
         if (!data.status || !data.result || !data.result.download) throw new Error('API returned no valid video data.');
         const title = data.result.title || "Untitled";
@@ -42,7 +41,6 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         let userMessage = 'Download failed. The universe despises your video choice.';
         if (error.message.includes('API returned')) userMessage = 'The video service rejected the request.';
-        if (error.message.includes('timeout')) userMessage = 'Search timed out. Try a video that exists.';
         await m.reply(`${userMessage}\nError: ${error.message}`);
     }
 };
