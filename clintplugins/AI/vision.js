@@ -1,60 +1,77 @@
 const axios = require('axios');
 const FormData = require('form-data');
-const fs = require('fs');
-const path = require('path');
+
+async function uploadToCatbox(buffer) {
+    const form = new FormData();
+    form.append('reqtype', 'fileupload');
+    form.append('fileToUpload', buffer, { filename: 'image.png' });
+
+    const response = await axios.post('https://catbox.moe/user/api.php', form, {
+        headers: form.getHeaders(),
+    });
+
+    if (!response.data || !response.data.includes('catbox')) {
+        throw new Error('Upload process failed');
+    }
+
+    return response.data;
+}
 
 module.exports = async (context) => {
     const { client, m, text } = context;
 
     try {
-        if (!m.quoted) 
-            return m.reply("QUOTE A FUCKING IMAGE FIRST YOU 🤡");
+      
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        if (!text) 
-            return m.reply("TELL ME WHAT TO ANALYZE DUMBASS I CANT READ MINDS");
+        if (!m.quoted) {
+            return m.reply("Do I look like a mind reader to you? Quote an image, you absolute moron.");
+        }
 
         const q = m.quoted || m;
         const mime = (q.msg || q).mimetype || "";
 
-        if (!mime.startsWith("image/"))
-            return m.reply("THATS NOT AN IMAGE ARE YOU BLIND?");
+        if (!mime.startsWith("image/")) {
+            return m.reply("Seriously? That's not an image. Are your eyes as dysfunctional as your brain?");
+        }
 
         const mediaBuffer = await q.download();
-        const tempFile = path.join(__dirname, `temp_${Date.now()}`);
-        fs.writeFileSync(tempFile, mediaBuffer);
-        const form = new FormData();
-        form.append("files[]", fs.createReadStream(tempFile));
+        const prompt = text ? text : "What is this image about?";
+        
+    
+        const loadingMsg = await m.reply(`Analyzing your image with prompt: "${prompt}"...`);
 
-        const upload = await axios.post("https://qu.ax/upload", form, {
-            headers: form.getHeaders(),
-            maxContentLength: Infinity,
-            maxBodyLength: Infinity,
-        });
-
-        fs.existsSync(tempFile) && fs.unlinkSync(tempFile);
-
-        const uploadedURL = upload.data?.files?.[0]?.url;
-        if (!uploadedURL)
-            return m.reply("UPLOAD FAILED LIKE YOUR LIFE 🤦🏻");
-
-        await m.reply("ANALYZING YOUR SHIT IMAGE HOLD ON...");
-
-        const api = `https://api.ootaizumi.web.id/ai/gptnano?prompt=${encodeURIComponent(text)}&imageUrl=${encodeURIComponent(uploadedURL)}`;
+        const uploadedURL = await uploadToCatbox(mediaBuffer);
+        
+        const api = `https://api.ootaizumi.web.id/ai/gptnano?prompt=${encodeURIComponent(prompt)}&imageUrl=${encodeURIComponent(uploadedURL)}`;
         const result = await axios.get(api);
 
+    
+        await client.sendMessage(m.chat, { delete: loadingMsg.key });
+
         if (result.data?.result) {
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
             return client.sendMessage(
                 m.chat,
                 {
-                    text: `*🤖 IMAGE ANALYSIS*\n\n${result.data.result}\n\n> Tσxιƈ-ɱԃȥ`,
+                    text: `🔍 *Image Analysis Results*\n\n*Prompt Used:* ${prompt}\n\n*Analysis:*\n${result.data.result}\n\n—\n*Powered by Tσxιƈ-ɱԃȥ*`,
                 },
                 { quoted: m }
             );
         }
 
-        m.reply("API GAVE ME GIBBERISH PROBABLY BECAUSE YOUR IMAGE SUCKS");
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        m.reply("The AI returned utter nonsense. Perhaps your image is as indecipherable as your life choices.");
 
     } catch (err) {
-        await m.reply(`SHIT BROKE 🤦🏻 ERROR: ${err.message}`);
+        console.error('Image analysis error:', err);
+        
+       
+        try {
+            if (loadingMsg) await client.sendMessage(m.chat, { delete: loadingMsg.key });
+        } catch (e) {}
+        
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        await m.reply(`Analysis failed spectacularly. Error: ${err.message}\n\nTry again when you've collected more than two brain cells.`);
     }
 };
