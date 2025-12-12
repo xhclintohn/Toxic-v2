@@ -1,10 +1,5 @@
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
-async function getLastMessageInChat(client, jid) {
-    const messages = await client.loadMessages(jid, 1);
-    return messages[0] || null;
-}
-
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, text } = context;
@@ -25,16 +20,7 @@ module.exports = async (context) => {
             }
         }
         
-        const lastMsg = await getLastMessageInChat(client, targetJid);
-        if (!lastMsg) return m.reply("No messages found to clear.");
-        
-        await client.chatModify({
-            delete: true,
-            lastMessages: [{
-                key: lastMsg.key,
-                messageTimestamp: lastMsg.messageTimestamp
-            }]
-        }, targetJid);
+        await client.chatModify({ clear: true }, targetJid);
         
         await m.reply(`✅ Chat cleared ${targetJid !== m.chat ? 'remotely' : ''}.\n—\nTσxιƈ-ɱԃȥ`);
     });
