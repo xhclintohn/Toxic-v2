@@ -62,6 +62,8 @@ const aliases = {
     kick: "remove",
     mute: "close",
     unmute: "open",
+    ssweb: "screenshot",
+    ss: "screenshot",
     opengroup: "open",
     photo: "picture",
     pint: "pinterest",
