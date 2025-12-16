@@ -64,6 +64,7 @@ const aliases = {
     unmute: "open",
     ssweb: "screenshot",
     ss: "screenshot",
+    rvo: "vvx",
     opengroup: "open",
     photo: "picture",
     pint: "pinterest",
