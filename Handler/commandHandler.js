@@ -65,6 +65,7 @@ const aliases = {
     ssweb: "screenshot",
     ss: "screenshot",
     rvo: "vvx",
+    pint: "pinterest",
     opengroup: "open",
     photo: "picture",
     pint: "pinterest",
