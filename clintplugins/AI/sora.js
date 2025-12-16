@@ -1,68 +1,46 @@
 const fetch = require('node-fetch');
 
-/**
- * Generates a video using Sora AI based on the provided prompt.
- * @module sora
- */
 module.exports = {
   name: 'sora',
   aliases: ['soraai', 'genvideo'],
   description: 'Generates a video using Sora AI with your text prompt',
   run: async (context) => {
-    const { client, m, prefix, botname } = context;
+    const { client, m, botname } = context;
 
     try {
-      /**
-       * Ensures a prompt is provided.
-       */
-      const prompt = m.body.replace(new RegExp(`^${prefix}(sora|soraai|genvideo)\\s*`, 'i'), '').trim();
-      if (!prompt) {
-        return client.sendMessage(m.chat, {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, @${m.sender.split('@')[0]}! 😤 You forgot the prompt, dumbass!\n│❒ Example: ${prefix}sora A blue cat dancing in space\n┗━━━━━━━━━━━━━━━┛`,
-          mentions: [m.sender]
-        }, { quoted: m });
-      }
+      const prompt = m.text.trim();
+      if (!prompt) return m.reply("Give me a prompt, you illiterate buffoon.");
 
-      /**
-       * Sends a "generating" loading message.
-       */
-      const loadingMsg = await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Generating your Sora video...\n│❒ *"${prompt}"*\n│❒ Hold tight, this might take a sec! ⏳\n┗━━━━━━━━━━━━━━━┛`
-      }, { quoted: m });
+      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+      const statusMsg = await m.reply(`Generating your video: "${prompt}"`);
 
-      /**
-       * Calls the new Sora AI API.
-       */
-      const apiUrl = `https://anabot.my.id/api/ai/sora?prompt=${encodeURIComponent(prompt)}&apikey=freeApikey`;
-      const response = await fetch(apiUrl);
+      const params = new URLSearchParams({
+        apikey: 'fgsiapi-2dcdfa06-6d',
+        prompt: prompt,
+        ratio: 'landscape',
+        enhancePrompt: 'true'
+      });
+
+      const response = await fetch(`https://fgsi.dpdns.org/api/ai/sora2?${params.toString()}`);
       const data = await response.json();
 
-      if (!data.success || !data.data?.result?.url) {
-        throw new Error(data.message || 'Failed to generate video');
-      }
+      if (!data.status || !data.result) throw new Error('API failed to generate video.');
 
-      const videoUrl = data.data.result.url;
+      const videoUrl = data.result;
 
-      /**
-       * Sends the generated video.
-       */
+      await client.sendMessage(m.chat, { delete: statusMsg.key });
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
       await client.sendMessage(m.chat, {
         video: { url: videoUrl },
-        caption: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Sora AI Video Generated!*\n│❒ Prompt: _${prompt}_\n│❒ Powered by *${botname}*\n┗━━━━━━━━━━━━━━━┛`,
+        caption: `🦄\n—\nTσxιƈ-ɱԃ`,
         gifPlayback: false
       }, { quoted: m });
 
-      /**
-       * Deletes the loading message.
-       */
-      await client.sendMessage(m.chat, { delete: loadingMsg.key });
-
     } catch (error) {
-      console.error('Sora command error:', error);
-      await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit broke, @${m.sender.split('@')[0]}! 😤 Couldn't generate the video.\n│❒ Error: ${error.message}\n┗━━━━━━━━━━━━━━━┛`,
-        mentions: [m.sender]
-      }, { quoted: m });
+      console.error('Sora error:', error);
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+      await m.reply(`Video generation failed. The AI probably choked on your prompt.\nError: ${error.message}`);
     }
   }
 };
