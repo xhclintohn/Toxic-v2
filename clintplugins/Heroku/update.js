@@ -33,50 +33,6 @@ module.exports = async (context) => {
                 );
             }
 
-            const args = m.body?.split(" ") || [];
-            const command = args[0]?.toLowerCase();
-            const subcommand = args[1]?.toLowerCase();
-
-            if (subcommand === "update") {
-                await client.sendMessage(
-                    m.chat,
-                    {
-                        text: formatStylishReply(
-                            "🔄 Fine… triggering update.\n" +
-                            "Don’t complain if the bot restarts in your face. 😒"
-                        ),
-                    },
-                    { quoted: m }
-                );
-
-                await axios.post(
-                    `https://api.heroku.com/apps/${HEROKU_APP_NAME}/builds`,
-                    {
-                        source_blob: {
-                            url: "https://github.com/xhclintohn/Toxic-v2/tarball/main",
-                        },
-                    },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${HEROKU_API_KEY}`,
-                            Accept: "application/vnd.heroku+json; version=3",
-                            "Content-Type": "application/json",
-                        },
-                    }
-                );
-
-                return await client.sendMessage(
-                    m.chat,
-                    {
-                        text: formatStylishReply(
-                            "🚀 Update triggered.\n" +
-                            "Sit tight while Toxic-MD resurrects with fresh upgrades. 💀"
-                        ),
-                    },
-                    { quoted: m }
-                );
-            }
-
             const githubRes = await axios.get(
                 "https://api.github.com/repos/xhclintohn/Toxic-v2/commits/main"
             );
@@ -155,7 +111,7 @@ module.exports = async (context) => {
                                             {
                                                 title: "What do you want?",
                                                 rows: [
-                                                    { title: "🚀 Trigger Update", description: "Trigger update immediately", id: `${prefix}start update` },
+                                                    { title: "🚀 Trigger Update", description: "Update now", id: `${prefix}triggerupdate` },
                                                     { title: "📱 Menu", description: "Back to command list", id: `${prefix}menu` },
                                                 ],
                                             },
