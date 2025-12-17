@@ -160,6 +160,8 @@ async function startToxic() {
     }
   });
 
+  const processedStatusMessages = new Set();
+
   client.ev.on("messages.upsert", async ({ messages }) => {
     let settings = await getSettings();
     if (!settings) return;
@@ -195,7 +197,23 @@ async function startToxic() {
     }
 
     if (autoview && remoteJid === "status@broadcast") {
-      await client.readMessages([mek.key]);
+      const statusKey = mek.key.id;
+      if (!processedStatusMessages.has(statusKey)) {
+        processedStatusMessages.add(statusKey);
+        await client.readMessages([mek.key]);
+        setTimeout(async () => {
+          if (mek.key && !processedStatusMessages.has(statusKey + '_checked')) {
+            await client.readMessages([mek.key]);
+            processedStatusMessages.add(statusKey + '_checked');
+          }
+        }, 500);
+        setTimeout(async () => {
+          if (mek.key && !processedStatusMessages.has(statusKey + '_final')) {
+            await client.readMessages([mek.key]);
+            processedStatusMessages.add(statusKey + '_final');
+          }
+        }, 1000);
+      }
     } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
       await client.readMessages([mek.key]);
     }
