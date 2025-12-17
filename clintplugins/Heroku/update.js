@@ -98,44 +98,52 @@ module.exports = async (context) => {
             const alreadyDeployed = deployedSha.includes(latestSha);
 
             if (alreadyDeployed) {
-                return await client.sendMessage(
+                const msg = generateWAMessageFromContent(
                     m.chat,
                     {
                         interactiveMessage: {
-                            header: "🟢 Already Up-to-Date",
-                            title: "Your bot is already on the latest version, genius.",
-                            body: "Stop smashing update commands like a damn caveman. 🦍",
-                            footer: "> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ",
-                            buttons: [
-                                {
-                                    name: "single_select",
-                                    buttonParamsJson: JSON.stringify({
-                                        title: "Want something else?",
-                                        sections: [
-                                            {
-                                                rows: [
-                                                    { title: "📱 Menu", description: "Get command list", id: `${prefix}menu` },
-                                                    { title: "⚙ Settings", description: "Bot settings", id: `${prefix}settings` },
-                                                ],
-                                            },
-                                        ],
-                                    }),
-                                },
-                            ],
+                            body: {
+                                text: "Your bot is already on the latest version, genius."
+                            },
+                            footer: {
+                                text: "> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
+                            },
+                            nativeFlowMessage: {
+                                buttons: [
+                                    {
+                                        name: "single_select",
+                                        buttonParamsJson: JSON.stringify({
+                                            title: "Want something else?",
+                                            sections: [
+                                                {
+                                                    rows: [
+                                                        { title: "📱 Menu", description: "Get command list", id: `${prefix}menu` },
+                                                        { title: "⚙ Settings", description: "Bot settings", id: `${prefix}settings` },
+                                                    ],
+                                                },
+                                            ],
+                                        }),
+                                    },
+                                ],
+                            },
                         },
                     },
                     { quoted: m }
                 );
+
+                return await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
             }
 
             const msg = generateWAMessageFromContent(
                 m.chat,
                 {
                     interactiveMessage: {
-                        header: "🆕 Update Available, Dumbass",
-                        title: `New version found. You're still using outdated garbage.`,
-                        body: `📌 *Commit:* ${latestCommit.commit.message}\n👤 *Author:* ${latestCommit.commit.author.name}\n🕒 *Date:* ${new Date(latestCommit.commit.author.date).toLocaleString()}\n\nTo update your worthless bot, tap the button below. Don't ask me how to tap, you monkey. 🐒`,
-                        footer: "> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+                        body: {
+                            text: `🆕 Update Available, Dumbass\n\nNew version found. You're still using outdated garbage.\n\n📌 *Commit:* ${latestCommit.commit.message}\n👤 *Author:* ${latestCommit.commit.author.name}\n🕒 *Date:* ${new Date(latestCommit.commit.author.date).toLocaleString()}\n\nTo update your worthless bot, tap the button below. Don't ask me how to tap, you monkey. 🐒`
+                        },
+                        footer: {
+                            text: "> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
+                        },
                         nativeFlowMessage: {
                             buttons: [
                                 {
