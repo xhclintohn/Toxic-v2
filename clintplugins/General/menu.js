@@ -163,7 +163,7 @@ await client.sendMessage(
   m.chat,
   {
     audio: { url: randomAudio },
-    ptt: true,
+    ptt: false,
     mimetype: 'audio/mpeg',
     fileName: 'toxic-menu.mp3',
   },
