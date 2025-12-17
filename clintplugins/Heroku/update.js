@@ -155,7 +155,7 @@ module.exports = async (context) => {
                                             {
                                                 title: "What do you want?",
                                                 rows: [
-                                                    { title: "🚀 Trigger Update", description: "Trigger update immediately", id: `${prefix}trigger update` },
+                                                    { title: "🚀 Trigger Update", description: "Trigger update immediately", id: `${prefix}start update` },
                                                     { title: "📱 Menu", description: "Back to command list", id: `${prefix}menu` },
                                                 ],
                                             },
