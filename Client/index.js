@@ -140,7 +140,7 @@ async function startToxic() {
         id: callId
       },
       message: {
-        conversation: "Toxic Verified By WhatsApp"
+        conversation: "Verified"
       },
       contextInfo: {
         mentionedJid: [callerJid],
