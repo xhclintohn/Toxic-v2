@@ -8,23 +8,20 @@ module.exports = async (context) => {
         if (!text.includes("instagram.com")) return m.reply("That's not an Instagram link. Are your eyes broken?");
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-        const statusMsg = await m.reply("Downloading your Instagram trash...");
 
         const encodedUrl = encodeURIComponent(text);
         const apiUrl = `https://api.fikmydomainsz.xyz/download/instagram?url=${encodedUrl}`;
-        
+
         const response = await fetch(apiUrl);
         const data = await response.json();
 
         if (!data?.status || !data?.result?.[0]?.url_download) {
-            await client.sendMessage(m.chat, { delete: statusMsg.key });
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply("Instagram download failed. The post is probably private or your link is garbage.");
         }
 
         const igVideoUrl = data.result[0].url_download;
 
-        await client.sendMessage(m.chat, { delete: statusMsg.key });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
         await client.sendMessage(m.chat, {
