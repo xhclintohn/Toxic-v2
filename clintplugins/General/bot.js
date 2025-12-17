@@ -1,69 +1,211 @@
 const fs = require('fs');
 const path = require('path');
+const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
+const { getSettings } = require('../../Database/config');
 
-module.exports = async (context) => {
-  const { client, m, prefix } = context;
+module.exports = {
+    name: 'menu',
+    aliases: ['help', 'commands', 'list'],
+    description: 'Displays the Toxic-MD command menu with interactive buttons',
+    run: async (context) => {
+        const { client, m, mode, pict, botname, text, prefix } = context;
 
-  const toFancyFont = (text, isUpperCase = false) => {
-    const fonts = {
-      'A': '𝘼', 'B': '𝘽', 'C': '𝘾', 'D': '𝘿', 'E': '𝙀', 'F': '𝙁', 'G': '𝙂', 'H': '𝙃', 'I': '𝙄', 'J': '𝙅', 'K': '𝙆', 'L': '𝙇', 'M': '𝙈',
-      'N': '𝙉', 'O': '𝙊', 'P': '𝙋', 'Q': '𝙌', 'R': '𝙍', 'S': '𝙎', 'T': '𝙏', 'U': '𝙐', 'V': '𝙑', 'W': '𝙒', 'X': '𝙓', 'Y': '𝙔', 'Z': '𝙕',
-      'a': '𝙖', 'b': '𝙗', 'c': '𝙘', 'd': '𝙙', 'e': '𝙚', 'f': '𝙛', 'g': '𝙜', 'h': '𝙝', 'i': '𝙞', 'j': '𝙟', 'k': '𝙠', 'l': '𝙡', 'm': '𝙢',
-      'n': '𝙣', 'o': '𝙤', 'p': '𝙥', 'q': '𝙦', 'r': '𝙧', 's': '𝙨', 't': '𝙩', 'u': '𝙪', 'v': '𝙫', 'w': '𝙬', 'x': '𝙭', 'y': '𝙮', 'z': '𝙯'
-    };
-    return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
-      .split('')
-      .map(char => fonts[char] || char)
-      .join('');
-  };
+        await client.sendMessage(m.chat, { react: { text: '🤖', key: m.key } });
 
-  try {
-    const possibleAudioPaths = [
-      path.join(__dirname, 'xh_clinton', 'bot.mp3'),
-      path.join(process.cwd(), 'xh_clinton', 'bot.mp3'),
-      path.join(__dirname, '..', 'xh_clinton', 'bot.mp3')
-    ];
+        if (text) {  
+            await client.sendMessage(  
+                m.chat,  
+                {  
+                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo ${m.pushName}, what's with the extra bullshit? Just say *${prefix}menu*, moron. 🖕\n┗━━━━━━━━━━━━━━━┛`,  
+                },  
+                { quoted: m, ad: true }  
+            );  
+            return;  
+        }  
 
-    let audioPath = null;
-    for (const possiblePath of possibleAudioPaths) {
-      if (fs.existsSync(possiblePath)) {
-        audioPath = possiblePath;
-        break;
-      }
-    }
+        const settings = await getSettings();  
+        const effectivePrefix = settings.prefix || '.';  
 
-    if (!audioPath) {
-      console.error('❌ Audio file not found at any paths:', possibleAudioPaths);
-      return client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, where the fuck is bot.mp3? File’s missing, moron. 😡`
-      }, { quoted: m });
-    }
+        const toFancyFont = (text, isUpperCase = false) => {  
+            const fonts = {  
+                A: '𝘼', B: '𝘽', C: '𝘾', D: '𝘿', E: '𝙀', F: '𝙁', G: '𝙂', H: '𝙃', I: '𝙄', J: '𝙅', K: '𝙆', L: '𝙇', M: '𝙈',  
+                N: '𝙉', O: '𝙊', P: '𝙋', Q: '𝙌', R: '𝙍', S: '𝙎', T: '𝙏', U: '𝙐', V: '𝙑', W: '𝙒', X: '𝙓', Y: '𝙔', Z: '𝙕',  
+                a: '𝙖', b: '𝙗', c: '𝙘', d: '𝙙', e: '𝙚', f: '𝙛', g: '𝙜', h: '𝙝', i: '𝙞', j: '𝙟', k: '𝙠', l: '𝙡', m: '𝙢',  
+                n: '𝙣', o: '𝙤', p: '𝙥', q: '𝙦', r: '𝙧', s: '𝙨', t: '𝙩', u: '𝙪', v: '𝙫', w: '𝙬', x: '𝙭', y: '𝙮', z: '𝙯',  
+            };  
+            return (isUpperCase ? text.toUpperCase() : text.toLowerCase())  
+                .split('')  
+                .map((char) => fonts[char] || char)  
+                .join('');  
+        };  
 
-    console.log(`✅ Found audio at ${audioPath}`);
-    // Send audio as voice note
-    await client.sendMessage(m.chat, {
-      audio: { url: audioPath },
-      ptt: true,
-      mimetype: 'audio/mpeg',
-      fileName: 'bot.mp3'
-    }, { quoted: m });
+        const menuText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *( 💬 ) - Hello, @${m.pushName}* Welcome to the bots Menu\n\n` +   
+            `- 計さ Bot INFORMATION✓\n\n` +  
+            `⌬ *Bσƚ*: \n` +  
+            `𝐓𝐨𝐱𝐢𝐜-𝐌𝐃 (bow down)\n` +  
 
-    // Send follow-up text with .repo button
-    const repoText = `◈━━━━━━━━━━━━━━━━◈\n│❒ Hit the button below to view repo, ${m.pushName}! 😈\n◈━━━━━━━━━━━━━━━━◈`;
-    await client.sendMessage(m.chat, {
-      text: repoText,
-      footer: `TPσɯҽɾҽԃ Ⴆყ Toxic-MD`,
-      buttons: [
-        { buttonId: `${prefix}repo`, buttonText: { displayText: `📖 ${toFancyFont('REPO')}` }, type: 1 }
-      ],
-      headerType: 1,
-      viewOnce: true
-    }, { quoted: m });
+            `⌬ *Pɾҽϝιx*: \n` +  
+            `${effectivePrefix} (learn it, dumbass)\n` +  
 
-  } catch (error) {
-    console.error('Error in bot command:', error);
-    await client.sendMessage(m.chat, {
-      text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit went sideways, ${m.pushName}. Can’t send bot.mp3. Try again later, loser. 😒`
-    }, { quoted: m });
-  }
+            `⌬ *Mσԃҽ*: \n` +  
+            `${mode} ( ! )\n` +  
+
+            `\n◈━━━━━━━━━━━━━━━━◈\n\n` +  
+            ` ( ! ) *Select a button below.* `;  
+
+        const msg = generateWAMessageFromContent(  
+            m.chat,  
+            {  
+                interactiveMessage: {  
+                    header: {  
+                        documentMessage: {  
+                            url: 'https://mmg.whatsapp.net/v/t62.7119-24/539012045_745537058346694_1512031191239726227_n.enc?ccb=11-4&oh=01_Q5Aa2QGGiJj--6eHxoTTTTzuWtBgCrkcXBz9hN_y2s_Z1lrABA&oe=68D7901C&_nc_sid=5e03e0&mms3=true',  
+                            mimetype: 'image/png',  
+                            fileSha256: '+gmvvCB6ckJSuuG3ZOzHsTBgRAukejv1nnfwGSSSS/4=',  
+                            fileLength: '1435',  
+                            pageCount: 0,  
+                            mediaKey: 'MWO6fI223TY8T0i9onNcwNBBPldWfwp1j1FPKCiJFzw=',  
+                            fileName: 'Toxic-MD',  
+                            fileEncSha256: 'ZS8v9tio2un1yWVOOG3lwBxiP+mNgaKPY9+wl5pEoi8=',  
+                            directPath: '/v/t62.7119-24/539012045_745537058346694_1512031191239726227_n.enc?ccb=11-4&oh=01_Q5Aa2QGGiJj--6eHxoTTTTzuWtBgCrkcXBz9hN_y2s_Z1lrABA&oe=68D7901C&_nc_sid=5e03e0',  
+                            mediaKeyTimestamp: '1756370084',  
+                            jpegThumbnail: pict,  
+                        },  
+                        hasMediaAttachment: true,  
+                    },  
+                    body: { text: menuText },  
+                    footer: { text: `Pσɯҽɾҽԃ Ⴆყ ${botname}` },  
+                    nativeFlowMessage: {  
+                        buttons: [  
+                            {  
+                                name: 'cta_url',  
+                                buttonParamsJson: JSON.stringify({  
+                                    display_text: 'GitHub Repo',  
+                                    url: 'https://github.com/xhclintohn/Toxic-MD',  
+                                    merchant_url: 'https://github.com/xhclintohn/Toxic-MD',  
+                                }),  
+                            },  
+                            {  
+                                name: 'single_select',  
+                                buttonParamsJson: JSON.stringify({  
+                                    title: '𝐕𝐈𝐄𝐖☇ 𝐎𝐏𝐓𝐈𝐎𝐍𝐒 ☑',  
+                                    sections: [  
+                                        {  
+                                            title: '⌜ 𝘾𝙤𝙧𝙚 𝘾𝙤𝙢𝙢𝙖𝙣𝙙𝙨 ⌟',  
+                                            highlight_label: '© 丨几匚',  
+                                            rows: [  
+                                                { title: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮', description: 'Display all commands', id: `${prefix}fullmenu` },  
+                                                { title: '𝐃𝐞𝐯', description: "send developer contact", id: `${prefix}dev` },  
+                                            ],  
+                                        },  
+                                        {  
+                                            title: 'ℹ 𝙄𝙣𝙛𝙤 𝘽𝙤𝙩',  
+                                            highlight_label: '© 丨几匚',  
+                                            rows: [  
+                                                { title: '𝐏𝐢𝐧𝐠', description: '', id: `${prefix}ping` },  
+                                                { title: '𝐒𝐞𝐭𝐭𝐢𝐧𝐠𝐬', description: 'show bot settings', id: `${prefix}settings` },  
+                                            ],  
+                                        },  
+                                    ],  
+                                }),  
+                            },  
+                        ],  
+                        messageParamsJson: JSON.stringify({  
+                            limited_time_offer: {  
+                                text: 'Toxic-MD',  
+                                url: 'https://github.com/xhclintohn/Toxic-MD',  
+                                copy_code: 'TOXIC',  
+                                expiration_time: Date.now() * 1000,  
+                            },  
+                            bottom_sheet: {  
+                                in_thread_buttons_limit: 2,  
+                                divider_indices: [1, 2],  
+                                list_title: 'Select Command',  
+                                button_title: 'Toxic-MD',  
+                            },  
+                        }),  
+                    },  
+                    contextInfo: {  
+                        externalAdReply: {  
+                            title: `${botname}`,  
+                            body: `Yo, ${m.pushName}! Ready to fuck shit up?`,  
+                            mediaType: 1,  
+                            thumbnail: pict,  
+                            mediaUrl: '',  
+                            sourceUrl: 'https://github.com/xhclintohn/Toxic-MD',  
+                            showAdAttribution: false,  
+                            renderLargerThumbnail: true,  
+                        },  
+                    },  
+                },  
+            },  
+            { quoted: m }  
+        );  
+
+        await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });  
+
+        const xhClintonPaths = [
+            path.join(__dirname, 'xh_clinton'),
+            path.join(process.cwd(), 'xh_clinton'),
+            path.join(__dirname, '..', 'xh_clinton')
+        ];
+
+        let audioFolder = null;
+        for (const folderPath of xhClintonPaths) {
+            if (fs.existsSync(folderPath)) {
+                audioFolder = folderPath;
+                break;
+            }
+        }
+
+        if (!audioFolder) {
+            return;
+        }
+
+        const possibleFiles = [];
+        for (let i = 1; i <= 10; i++) {
+            const fileName = `menu${i}`;
+            const audioExtensions = ['.mp3', '.m4a', '.ogg', '.opus', '.wav'];
+
+            for (const ext of audioExtensions) {
+                const fullPath = path.join(audioFolder, fileName + ext);
+                if (fs.existsSync(fullPath)) {
+                    possibleFiles.push(fullPath);
+                }
+            }
+        }
+
+        if (possibleFiles.length === 0) {
+            return;
+        }
+
+        const randomFile = possibleFiles[Math.floor(Math.random() * possibleFiles.length)];
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        try {
+            const audioBuffer = fs.readFileSync(randomFile);
+            await client.sendMessage(
+                m.chat,
+                {
+                    audio: audioBuffer,
+                    ptt: true,
+                    mimetype: 'audio/mpeg',
+                    fileName: 'toxic-menu.mp3',
+                },
+                { quoted: m }
+            );
+        } catch (error) {
+            await client.sendMessage(
+                m.chat,
+                {
+                    audio: { url: randomFile },
+                    ptt: true,
+                    mimetype: 'audio/mpeg',
+                    fileName: 'toxic-menu.mp3',
+                },
+                { quoted: m }
+            );
+        }
+    },
 };
