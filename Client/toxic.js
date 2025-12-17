@@ -18,7 +18,6 @@ const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require(
 const { botname, mycode } = require('../Env/settings');
 const { cleanupOldMessages } = require('../lib/Store');
 
-// 🆕 Import Owner Middleware for eval
 const ownerMiddleware = require('../utility/botUtil/Ownermiddleware');
 
 process.setMaxListeners(0);
@@ -158,13 +157,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         await m.reply("Error during eval execution:\n" + String(err));
                     }
                 });
-                return; // prevent command handler from continuing
+                return; 
             } catch (e) {
                 console.error('Eval middleware error:', e);
             }
         }
 
-        // Continue normal flow if not eval
+      
         if (cmd) {
             const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
             if (bannedUsers.includes(senderNumber)) {
