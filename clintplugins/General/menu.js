@@ -166,7 +166,7 @@ module.exports = {
         for (let i = 1; i <= 10; i++) {
             const fileName = `menu${i}`;
             const audioExtensions = ['.mp3', '.m4a', '.ogg', '.opus', '.wav'];
-            
+
             for (const ext of audioExtensions) {
                 const fullPath = path.join(audioFolder, fileName + ext);
                 if (fs.existsSync(fullPath)) {
@@ -181,16 +181,31 @@ module.exports = {
 
         const randomFile = possibleFiles[Math.floor(Math.random() * possibleFiles.length)];
 
-        await client.sendMessage(
-            m.chat,
-            {
-                audio: { url: randomFile },
-                ptt: true,
-                mimetype: 'audio/mpeg',
-                fileName: 'toxic-menu.mp3',
-            },
-            { quoted: m }
-        );
+        await new Promise(resolve => setTimeout(resolve, 500));
 
+        try {
+            const audioBuffer = fs.readFileSync(randomFile);
+            await client.sendMessage(
+                m.chat,
+                {
+                    audio: audioBuffer,
+                    ptt: true,
+                    mimetype: 'audio/mpeg',
+                    fileName: 'toxic-menu.mp3',
+                },
+                { quoted: m }
+            );
+        } catch (error) {
+            await client.sendMessage(
+                m.chat,
+                {
+                    audio: { url: randomFile },
+                    ptt: true,
+                    mimetype: 'audio/mpeg',
+                    fileName: 'toxic-menu.mp3',
+                },
+                { quoted: m }
+            );
+        }
     },
 };
