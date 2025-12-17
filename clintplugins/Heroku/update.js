@@ -34,9 +34,10 @@ module.exports = async (context) => {
             }
 
             const args = m.body?.split(" ") || [];
+            const command = args[0]?.toLowerCase();
             const subcommand = args[1]?.toLowerCase();
 
-            if (subcommand === "now") {
+            if (subcommand === "update") {
                 await client.sendMessage(
                     m.chat,
                     {
@@ -154,7 +155,7 @@ module.exports = async (context) => {
                                             {
                                                 title: "What do you want?",
                                                 rows: [
-                                                    { title: "🚀 Update Now", description: "Trigger update immediately", id: `${prefix}update now` },
+                                                    { title: "🚀 Trigger Update", description: "Trigger update immediately", id: `${prefix}trigger update` },
                                                     { title: "📱 Menu", description: "Back to command list", id: `${prefix}menu` },
                                                 ],
                                             },
