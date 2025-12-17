@@ -130,7 +130,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         const fakeQuoted = {
             key: { participant: '0@s.whatsapp.net', remoteJid: '0@s.whatsapp.net', id: m.id },
-            message: { conversation: "Toxic Verified By WhatsApp" },
+            message: { conversation: "Verified" },
             contextInfo: { mentionedJid: [m.sender], forwardingScore: 999, isForwarded: true }
         };
 
