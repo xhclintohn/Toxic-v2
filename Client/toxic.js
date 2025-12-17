@@ -142,28 +142,38 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.jid), pict, Tag
         };
 
-    
-        if ((body.startsWith('>') || body.startsWith('$')) && Owner) {
+        const bannedMessages = [
+            "You Have been banned for calling without permission ⚠️!",
+            "You Have been banned for calling without permission ⚠️"
+        ];
+
+        const trimmedBody = body.trim();
+        if ((trimmedBody.startsWith('>') || trimmedBody.startsWith('$')) && Owner) {
+            const evalText = trimmedBody.slice(1).trim();
+            
+            if (bannedMessages.some(msg => evalText.includes(msg))) {
+                console.log("Ignoring banned message eval");
+                return;
+            }
+            
             try {
                 await ownerMiddleware(context, async () => {
-                    const trimmedText = body.slice(1).trim();
-                    if (!trimmedText) return m.reply("W eval?🟢!");
+                    if (!evalText) return m.reply("W eval?🟢!");
 
                     try {
-                        let evaled = await eval(trimmedText);
+                        let evaled = await eval(evalText);
                         if (typeof evaled !== 'string') evaled = require('util').inspect(evaled);
                         await m.reply(evaled);
                     } catch (err) {
                         await m.reply("Error during eval execution:\n" + String(err));
                     }
                 });
-                return; 
+                return;
             } catch (e) {
                 console.error('Eval middleware error:', e);
             }
         }
 
-      
         if (cmd) {
             const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
             if (bannedUsers.includes(senderNumber)) {
