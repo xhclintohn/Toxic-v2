@@ -162,26 +162,29 @@ module.exports = {
             return;
         }
 
-        const files = fs.readdirSync(audioFolder).filter(file => 
-            file.toLowerCase().startsWith('menu') && 
-            (file.toLowerCase().endsWith('.mp3') || 
-             file.toLowerCase().endsWith('.m4a') || 
-             file.toLowerCase().endsWith('.ogg') ||
-             file.toLowerCase().endsWith('.opus') ||
-             file.toLowerCase().endsWith('.wav'))
-        );
+        const possibleFiles = [];
+        for (let i = 1; i <= 10; i++) {
+            const fileName = `menu${i}`;
+            const audioExtensions = ['.mp3', '.m4a', '.ogg', '.opus', '.wav'];
+            
+            for (const ext of audioExtensions) {
+                const fullPath = path.join(audioFolder, fileName + ext);
+                if (fs.existsSync(fullPath)) {
+                    possibleFiles.push(fullPath);
+                }
+            }
+        }
 
-        if (files.length === 0) {
+        if (possibleFiles.length === 0) {
             return;
         }
 
-        const randomFile = files[Math.floor(Math.random() * files.length)];
-        const audioPath = path.join(audioFolder, randomFile);
+        const randomFile = possibleFiles[Math.floor(Math.random() * possibleFiles.length)];
 
         await client.sendMessage(
             m.chat,
             {
-                audio: { url: audioPath },
+                audio: { url: randomFile },
                 ptt: true,
                 mimetype: 'audio/mpeg',
                 fileName: 'toxic-menu.mp3',
