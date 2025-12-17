@@ -1,94 +1,64 @@
 const fetch = require('node-fetch');
-const { Sticker, createSticker, StickerTypes } = require('wa-sticker-formatter');
+const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 
 module.exports = {
     name: 'brat',
     aliases: ['bratsticker', 'brattext'],
-    description: 'Creates brat style text stickers',
+    description: 'Makes brat stickers for your attention-seeking ass',
     run: async (context) => {
         const { client, m, prefix } = context;
 
-        const formatStylishReply = (message) => {
-            return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
-        };
-
-        /**
-         * Extract text from message
-         */
         const text = m.body.replace(new RegExp(`^${prefix}(brat|bratsticker|brattext)\\s*`, 'i'), '').trim();
-        
+
         if (!text) {
             return client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, @${m.sender.split('@')[0]}! 😤 You forgot the text!\n│❒ Example: ${prefix}brat Hello there\n◈━━━━━━━━━━━━━━━━◈`,
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ What am I, a mind reader? @${m.sender.split('@')[0]}! You forgot the text, genius. 🤦🏻\n│❒ Example: ${prefix}brat I'm a dumbass\n◈━━━━━━━━━━━━━━━━◈`,
                 mentions: [m.sender]
             }, { quoted: m });
         }
 
         try {
-            /**
-             * Send loading message
-             */
-            const loadingMsg = await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Creating brat sticker... 🎨\nText: "${text}"`)
-            }, { quoted: m });
+            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-            /**
-             * Fetch from the API your friend used - it seems more reliable
-             */
             const apiUrl = `https://api.nekolabs.web.id/canvas/brat/v1?text=${encodeURIComponent(text)}`;
             const response = await fetch(apiUrl);
-            
+
             if (!response.ok) {
-                throw new Error(`API returned status: ${response.status}`);
+                throw new Error(`API says you're not worth the response: ${response.status}`);
             }
 
-            // Get image as buffer
             const buffer = Buffer.from(await response.arrayBuffer());
 
-            // Delete loading message
-            await client.sendMessage(m.chat, { 
-                delete: loadingMsg.key 
-            });
-
-            /**
-             * Create proper sticker with metadata using wa-sticker-formatter
-             */
             const sticker = new Sticker(buffer, {
-                pack: 'Brat Sticker Pack',      // Sticker pack name
-                author: 'Toxic Bot',            // Author name
-                type: StickerTypes.FULL,        // Sticker type
-                categories: ['😎', '💬'],       // Categories
-                quality: 50,                    // Quality
-                background: 'transparent'       // Background
+                pack: 'Your Bratty Demands',
+                author: 'Toxic-MD',
+                type: StickerTypes.FULL,
+                categories: ['😤', '🤡'],
+                quality: 50,
+                background: 'transparent'
             });
 
-            // Send the sticker
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
             await client.sendMessage(m.chat, await sticker.toMessage(), { quoted: m });
 
         } catch (error) {
-            console.error('Brat command error:', error);
+            console.error('Brat command crashed because of you:', error);
             
-            // Try to delete loading message
-            try {
-                await client.sendMessage(m.chat, { 
-                    delete: loadingMsg.key 
-                });
-            } catch (e) {
-                // Ignore delete errors
-            }
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
 
-            let errorMessage = 'Failed to create sticker';
-            
+            let errorMessage = 'Your sticker failed. Shocking.';
+
             if (error.message.includes('status')) {
-                errorMessage = 'Brat API is not responding. Try again later.';
+                errorMessage = 'API died from cringe. Try again when your text is less stupid.';
             } else if (error.message.includes('Network')) {
-                errorMessage = 'Network error. Check your connection.';
+                errorMessage = 'Your internet is as weak as your personality.';
             } else {
-                errorMessage = error.message;
+                errorMessage = `Even the error is embarrassed: ${error.message}`;
             }
 
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Brat Creation Failed! 😤\nError: ${errorMessage}`)
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Brat sticker failed, you disappointment.\n│❒ ${errorMessage}\n◈━━━━━━━━━━━━━━━━◈`
             }, { quoted: m });
         }
     }
