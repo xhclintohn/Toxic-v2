@@ -126,6 +126,10 @@ async function startToxic() {
 
     const callId = json.content[0].attrs['call-id'];
     const callerJid = json.content[0].attrs['call-creator'];
+    
+    const isGroupCall = callerJid.endsWith('@g.us');
+    if (isGroupCall) return;
+
     const callerNumber = callerJid.replace(/[@.a-z]/g, "");
 
     if (processedCalls.has(callId)) {
@@ -176,15 +180,6 @@ async function startToxic() {
     const remoteJid = mek.key.remoteJid;
     const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
     const Myself = client.decodeJid(client.user.id);
-
-    if (typeof antidelete !== 'function') {
-      console.error('Toxic-MD Error: antidelete is not a function');
-      return;
-    }
-    if (typeof antilink !== 'function') {
-      console.error('Toxic-MD Error: antilink is not a function');
-      return;
-    }
 
     await antidelete(client, mek, store, fs.readFileSync(path.resolve(__dirname, '../toxic.jpg')));
     await antilink(client, mek, store);
