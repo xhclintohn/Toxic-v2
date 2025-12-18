@@ -8,9 +8,10 @@ const {
   proto,
   getContentType,
   makeCacheableSignalKeyStore,
-  Browsers,
-  makeInMemoryStore
+  Browsers
 } = require("@whiskeysockets/baileys");
+
+const { makeInMemoryStore } = require('@rodrigogs/baileys-store');
 
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
@@ -29,9 +30,7 @@ const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
 const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
 
-const store = makeInMemoryStore({
-  logger: pino().child({ level: "silent", stream: "store" })
-});
+const store = makeInMemoryStore({});
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
