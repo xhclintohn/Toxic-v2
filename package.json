@@ -64,7 +64,7 @@
     "ip-location": "^1.0.1",
     "javascript-obfuscator": "^4.1.0",
 
-    "jimp": "0.16.13",
+    "jimp": "latest",
 
     "link-preview-js": "^3.0.4",
     "lodash": "^4.17.21",
