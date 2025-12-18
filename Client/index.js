@@ -11,8 +11,6 @@ const {
   Browsers
 } = require("@whiskeysockets/baileys");
 
-const { makeInMemoryStore } = require("@naanzitos/baileys-make-in-memory-store");
-
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
 const fs = require("fs");
@@ -29,6 +27,75 @@ const _ = require("lodash");
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
 const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
+
+let makeInMemoryStore;
+
+try {
+  const baileys = require("@whiskeysockets/baileys");
+  if (baileys.makeInMemoryStore) {
+    makeInMemoryStore = baileys.makeInMemoryStore;
+    console.log('✓ makeInMemoryStore loaded from @whiskeysockets/baileys');
+  } else {
+    try {
+      makeInMemoryStore = require("@naanzitos/baileys-make-in-memory-store").makeInMemoryStore;
+      console.log('✓ makeInMemoryStore loaded from @naanzitos/baileys-make-in-memory-store');
+    } catch (packageError) {
+      throw new Error('makeInMemoryStore not found in baileys and separate package unavailable');
+    }
+  }
+} catch (error) {
+  console.log('⚠️ makeInMemoryStore not available, creating simple store...');
+  makeInMemoryStore = function(options) {
+    const store = {
+      contacts: {},
+      messages: {},
+      chats: {},
+      bind: function(ev) {
+        ev.on('contacts.upsert', (contacts) => {
+          contacts.forEach(contact => {
+            this.contacts[contact.id] = contact;
+          });
+        });
+        ev.on('messages.upsert', ({ messages }) => {
+          messages.forEach(message => {
+            const jid = message.key.remoteJid;
+            if (!this.messages[jid]) this.messages[jid] = [];
+            this.messages[jid].push(message);
+            if (this.messages[jid].length > 100) {
+              this.messages[jid] = this.messages[jid].slice(-100);
+            }
+          });
+        });
+        ev.on('chats.upsert', (chats) => {
+          chats.forEach(chat => {
+            this.chats[chat.id] = chat;
+          });
+        });
+      },
+      readFromFile: function(filename) {
+        try {
+          if (fs.existsSync(filename)) {
+            const data = JSON.parse(fs.readFileSync(filename, 'utf8'));
+            this.contacts = data.contacts || {};
+            this.messages = data.messages || {};
+            this.chats = data.chats || {};
+          }
+        } catch (error) {}
+      },
+      writeToFile: function(filename) {
+        try {
+          const data = {
+            contacts: this.contacts,
+            messages: this.messages,
+            chats: this.chats
+          };
+          fs.writeFileSync(filename, JSON.stringify(data, null, 2));
+        } catch (error) {}
+      }
+    };
+    return store;
+  };
+}
 
 const store = makeInMemoryStore({
   logger: pino().child({ level: "silent", stream: "store" })
