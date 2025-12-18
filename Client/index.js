@@ -3,7 +3,6 @@ const {
   useMultiFileAuthState,
   DisconnectReason,
   fetchLatestBaileysVersion,
-  makeInMemoryStore,
   downloadContentFromMessage,
   jidDecode,
   proto,
@@ -11,6 +10,8 @@ const {
   makeCacheableSignalKeyStore,
   Browsers
 } = require("@whiskeysockets/baileys");
+
+const makeInMemoryStore = require("@whiskeysockets/baileys/lib/store").makeInMemoryStore;
 
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
