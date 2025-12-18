@@ -3,6 +3,7 @@ const {
   useMultiFileAuthState,
   DisconnectReason,
   fetchLatestBaileysVersion,
+  makeInMemoryStore,
   downloadContentFromMessage,
   jidDecode,
   proto,
@@ -14,7 +15,6 @@ const {
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
 const fs = require("fs");
-const path = require("path");
 const FileType = require("file-type");
 const { exec, spawn, execSync } = require("child_process");
 const axios = require("axios");
@@ -27,87 +27,7 @@ const _ = require("lodash");
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
 const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
-
-const store = {
-  contacts: {},
-  messages: {},
-  chats: {},
-  
-  loadFromFile: function() {
-    try {
-      const storePath = path.join(__dirname, 'store.json');
-      if (fs.existsSync(storePath)) {
-        const data = JSON.parse(fs.readFileSync(storePath, 'utf8'));
-        this.contacts = data.contacts || {};
-        this.messages = data.messages || {};
-        this.chats = data.chats || {};
-      }
-    } catch (error) {}
-  },
-  
-  writeToFile: function() {
-    try {
-      const storePath = path.join(__dirname, 'store.json');
-      const data = {
-        contacts: this.contacts,
-        messages: this.messages,
-        chats: this.chats
-      };
-      fs.writeFileSync(storePath, JSON.stringify(data, null, 2));
-    } catch (error) {}
-  },
-  
-  bind: function(ev) {
-    ev.on('contacts.upsert', (contacts) => {
-      contacts.forEach(contact => {
-        this.contacts[contact.id] = contact;
-      });
-    });
-    
-    ev.on('messages.upsert', ({ messages }) => {
-      messages.forEach(message => {
-        const jid = message.key.remoteJid;
-        if (!this.messages[jid]) this.messages[jid] = [];
-        this.messages[jid].push(message);
-        if (this.messages[jid].length > 100) {
-          this.messages[jid] = this.messages[jid].slice(-100);
-        }
-      });
-    });
-    
-    ev.on('chats.upsert', (chats) => {
-      chats.forEach(chat => {
-        this.chats[chat.id] = chat;
-      });
-    });
-    
-    ev.on('messages.update', (updates) => {
-      updates.forEach(update => {
-        const jid = update.key.remoteJid;
-        if (this.messages[jid]) {
-          const msgIndex = this.messages[jid].findIndex(m => m.key.id === update.key.id);
-          if (msgIndex !== -1) {
-            this.messages[jid][msgIndex] = { ...this.messages[jid][msgIndex], ...update.update };
-          }
-        }
-      });
-    });
-  },
-  
-  getContact: function(jid) {
-    return this.contacts[jid];
-  },
-  
-  getChat: function(jid) {
-    return this.chats[jid];
-  },
-  
-  getMessages: function(jid) {
-    return this.messages[jid] || [];
-  }
-};
-
-store.loadFromFile();
+const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
@@ -117,6 +37,8 @@ const { botname } = require('../Env/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('../Handler/commandHandler');
 authenticationn();
+
+const path = require('path');
 
 const sessionName = path.join(__dirname, '..', 'Session');
 
@@ -184,7 +106,7 @@ async function startToxic() {
   store.bind(client.ev);
 
   setInterval(() => {
-    store.writeToFile();
+    store.writeToFile("store.json");
   }, 3000);
 
   if (autobio) {
@@ -358,13 +280,16 @@ async function startToxic() {
 
       try {
         require("./toxic")(client, m, { type: "notify" }, store);
-      } catch (error) {}
+      } catch (error) {
+        console.error('Error processing list selection:', error);
+      }
     }
   });
 
   const unhandledRejections = new Map();
   process.on("unhandledRejection", (reason, promise) => {
     unhandledRejections.set(promise, reason);
+    console.error('Unhandled Rejection:', reason);
   });
   process.on("rejectionHandled", (promise) => {
     unhandledRejections.delete(promise);
