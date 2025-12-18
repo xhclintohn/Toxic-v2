@@ -3,7 +3,6 @@ const {
   useMultiFileAuthState,
   DisconnectReason,
   fetchLatestBaileysVersion,
-  makeInMemoryStore,
   downloadContentFromMessage,
   jidDecode,
   proto,
@@ -15,6 +14,7 @@ const {
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
 const fs = require("fs");
+const path = require("path");
 const FileType = require("file-type");
 const { exec, spawn, execSync } = require("child_process");
 const axios = require("axios");
@@ -27,7 +27,6 @@ const _ = require("lodash");
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
 const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
-const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
@@ -37,8 +36,6 @@ const { botname } = require('../Env/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('../Handler/commandHandler');
 authenticationn();
-
-const path = require('path');
 
 const sessionName = path.join(__dirname, '..', 'Session');
 
@@ -102,12 +99,6 @@ async function startToxic() {
       keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: 'silent', stream: 'store' })),
     }
   });
-
-  store.bind(client.ev);
-
-  setInterval(() => {
-    store.writeToFile("store.json");
-  }, 3000);
 
   if (autobio) {
     setInterval(() => {
@@ -181,8 +172,8 @@ async function startToxic() {
     const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
     const Myself = client.decodeJid(client.user.id);
 
-    await antidelete(client, mek, store, fs.readFileSync(path.resolve(__dirname, '../toxic.jpg')));
-    await antilink(client, mek, store);
+    await antidelete(client, mek, null, fs.readFileSync(path.resolve(__dirname, '../toxic.jpg')));
+    await antilink(client, mek, null);
 
     if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
       const nickk = await client.decodeJid(client.user.id);
@@ -248,8 +239,8 @@ async function startToxic() {
 
     if (!client.public && !mek.key.fromMe && messages.type === "notify") return;
 
-    m = smsg(client, mek, store);
-    require("./toxic")(client, m, { type: "notify" }, store);
+    m = smsg(client, mek, null);
+    require("./toxic")(client, m, { type: "notify" }, null);
   });
 
   client.ev.on("messages.upsert", async ({ messages }) => {
@@ -279,17 +270,14 @@ async function startToxic() {
       };
 
       try {
-        require("./toxic")(client, m, { type: "notify" }, store);
-      } catch (error) {
-        console.error('Error processing list selection:', error);
-      }
+        require("./toxic")(client, m, { type: "notify" }, null);
+      } catch (error) {}
     }
   });
 
   const unhandledRejections = new Map();
   process.on("unhandledRejection", (reason, promise) => {
     unhandledRejections.set(promise, reason);
-    console.error('Unhandled Rejection:', reason);
   });
   process.on("rejectionHandled", (promise) => {
     unhandledRejections.delete(promise);
@@ -304,28 +292,31 @@ async function startToxic() {
     } else return jid;
   };
 
-  client.getName = (jid, withoutContact = false) => {
+  client.getName = async (jid, withoutContact = false) => {
     id = client.decodeJid(jid);
     withoutContact = client.withoutContact || withoutContact;
     let v;
-    if (id.endsWith("@g.us"))
-      return new Promise(async (resolve) => {
-        v = store.contacts[id] || {};
-        if (!(v.name || v.subject)) v = client.groupMetadata(id) || {};
-        resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
-      });
-    else
-      v = id === "0@s.whatsapp.net"
-        ? { id, name: "WhatsApp" }
-        : id === client.decodeJid(client.user.id)
-          ? client.user
-          : store.contacts[id] || {};
-    return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
+    if (id.endsWith("@g.us")) {
+      try {
+        v = await client.groupMetadata(id) || {};
+        return v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international");
+      } catch (error) {
+        return PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international");
+      }
+    } else {
+      if (id === "0@s.whatsapp.net") {
+        return { id, name: "WhatsApp" };
+      } else if (id === client.decodeJid(client.user.id)) {
+        return client.user;
+      } else {
+        return PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
+      }
+    }
   };
 
   client.public = true;
 
-  client.serializeM = (m) => smsg(client, m, store);
+  client.serializeM = (m) => smsg(client, m, null);
 
   client.ev.on("group-participants.update", async (m) => {
     groupEvents(client, m);
