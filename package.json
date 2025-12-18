@@ -4,6 +4,9 @@
   "description": "WhatsApp Multi Device Bot",
   "main": "index.js",
   "type": "commonjs",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "start": "node index.js"
   },
@@ -28,7 +31,8 @@
     "@rodrigogs/baileys-store": "^1.0.0",
     "@shineiichijo/marika": "^3.0.0",
     "@vitalets/google-translate-api": "latest",
-"@whiskeysockets/baileys": "github:kiuur/baileys",
+    "@whiskeysockets/baileys": "github:kiuur/baileys",
+
     "acrcloud": "^1.4.0",
     "adm-zip": "^0.5.16",
     "aptoide-scraper": "^1.0.1",
@@ -60,7 +64,9 @@
     "imgur": "2.3.0",
     "ip-location": "^1.0.1",
     "javascript-obfuscator": "^4.1.0",
-    "jimp": "^0.16.13",
+
+    "jimp": "0.16.13",
+
     "link-preview-js": "^3.0.4",
     "lodash": "^4.17.21",
     "luxon": "^3.4.4",
