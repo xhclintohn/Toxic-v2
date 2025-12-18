@@ -28,7 +28,7 @@
     "@naanzitos/baileys-make-in-memory-store": "^1.0.0",
     "@shineiichijo/marika": "^3.0.0",
     "@vitalets/google-translate-api": "latest",
-    "@whiskeysockets/baileys": "github:kiuur/baileys",
+"@whiskeysockets/baileys": "npm:@lorddzik/baileysme",
     "acrcloud": "^1.4.0",
     "adm-zip": "^0.5.16",
     "aptoide-scraper": "^1.0.1",
