@@ -222,7 +222,14 @@ async function startToxic() {
           processedStatusMessages.delete(statusKey);
         }
       }
-    } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+    }
+
+    if (mek.key.remoteJid === "status@broadcast") {
+      try {
+        await client.sendReadReceipt(mek.key.remoteJid, mek.key.participant, [mek.key.id]);
+      } catch (error) {}
+    }
+    else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
       await client.readMessages([mek.key]);
     }
 
