@@ -3,6 +3,7 @@ const {
   useMultiFileAuthState,
   DisconnectReason,
   fetchLatestBaileysVersion,
+  makeInMemoryStore,
   downloadContentFromMessage,
   jidDecode,
   proto,
@@ -11,12 +12,9 @@ const {
   Browsers
 } = require("@whiskeysockets/baileys");
 
-const { makeInMemoryStore } = require('@rodrigogs/baileys-store');
-
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
 const fs = require("fs");
-const path = require("path");
 const FileType = require("file-type");
 const { exec, spawn, execSync } = require("child_process");
 const axios = require("axios");
@@ -29,8 +27,7 @@ const _ = require("lodash");
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
 const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
-
-const store = makeInMemoryStore({});
+const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
@@ -40,6 +37,8 @@ const { botname } = require('../Env/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('../Handler/commandHandler');
 authenticationn();
+
+const path = require('path');
 
 const sessionName = path.join(__dirname, '..', 'Session');
 
@@ -106,13 +105,9 @@ async function startToxic() {
 
   store.bind(client.ev);
 
-  try {
-    store.readFromFile("./baileys_store.json");
-  } catch (error) {}
-
   setInterval(() => {
-    store.writeToFile("./baileys_store.json");
-  }, 10000);
+    store.writeToFile("store.json");
+  }, 3000);
 
   if (autobio) {
     setInterval(() => {
@@ -285,13 +280,16 @@ async function startToxic() {
 
       try {
         require("./toxic")(client, m, { type: "notify" }, store);
-      } catch (error) {}
+      } catch (error) {
+        console.error('Error processing list selection:', error);
+      }
     }
   });
 
   const unhandledRejections = new Map();
   process.on("unhandledRejection", (reason, promise) => {
     unhandledRejections.set(promise, reason);
+    console.error('Unhandled Rejection:', reason);
   });
   process.on("rejectionHandled", (promise) => {
     unhandledRejections.delete(promise);
