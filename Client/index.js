@@ -11,7 +11,7 @@ const {
   Browsers
 } = require("@whiskeysockets/baileys");
 
-const makeInMemoryStore = require("@whiskeysockets/baileys/lib/store").makeInMemoryStore;
+const makeInMemoryStore = require("@whiskeysockets/baileys").makeInMemoryStore;
 
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
