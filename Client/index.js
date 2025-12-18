@@ -54,7 +54,7 @@ async function startToxic() {
     console.log(
       `◈━━━━━━━━━━━━━━━━◈\n` +
       `│❒ TOXIC-MD FAILED TO CONNECT 😵\n` +
-      `│❒ Settings not found, check your database! 🖕\n` +
+      `│❒ Settings not found\n` +
       `┗━━━━━━━━━━━━━━━┛`
     );
     return;
@@ -66,14 +66,14 @@ async function startToxic() {
   const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
   const client = toxicConnect({
-    printQRInTerminal: false, 
+    printQRInTerminal: false,
     syncFullHistory: true,
     markOnlineOnConnect: false,
     connectTimeoutMs: 60000,
     defaultQueryTimeoutMs: 0,
-    keepAliveIntervalMs: 10000, 
-    generateHighQualityLinkPreview: true, 
-    patchMessageBeforeSending: (message) => { 
+    keepAliveIntervalMs: 10000,
+    generateHighQualityLinkPreview: true,
+    patchMessageBeforeSending: (message) => {
       const requiresPatch = !!(
         message.buttonsMessage ||
         message.templateMessage ||
@@ -126,7 +126,7 @@ async function startToxic() {
 
     const callId = json.content[0].attrs['call-id'];
     const callerJid = json.content[0].attrs['call-creator'];
-    
+
     const isGroupCall = callerJid.endsWith('@g.us');
     if (isGroupCall) return;
 
@@ -154,8 +154,8 @@ async function startToxic() {
     };
 
     await client.rejectCall(callId, callerJid);
-    await client.sendMessage(callerJid, { 
-      text: "> You Have been banned for calling without permission ⚠️!" 
+    await client.sendMessage(callerJid, {
+      text: "> You Have been banned for calling without permission ⚠️!"
     }, { quoted: fakeQuoted });
 
     const bannedUsers = await getBannedUsers();
@@ -191,23 +191,36 @@ async function startToxic() {
       await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key } }, { statusJidList: [mek.key.participant, nickk] });
     }
 
-    if (autoview && remoteJid === "status@broadcast") {
-      const statusKey = mek.key.id;
+    if (autoview && mek.key.remoteJid === "status@broadcast") {
+      const statusSender = mek.key.participant;
+      const statusKey = `${statusSender}:${mek.key.id}`;
+
       if (!processedStatusMessages.has(statusKey)) {
         processedStatusMessages.add(statusKey);
-        await client.readMessages([mek.key]);
-        setTimeout(async () => {
-          if (mek.key && !processedStatusMessages.has(statusKey + '_checked')) {
-            await client.readMessages([mek.key]);
-            processedStatusMessages.add(statusKey + '_checked');
+
+        try {
+          await client.readMessages([mek.key]);
+          
+          setTimeout(async () => {
+            try {
+              await client.readMessages([mek.key]);
+            } catch (error) {}
+          }, 500);
+          
+          setTimeout(async () => {
+            try {
+              await client.readMessages([mek.key]);
+            } catch (error) {}
+          }, 1000);
+
+          if (processedStatusMessages.size > 1000) {
+            const recentKeys = Array.from(processedStatusMessages).slice(-500);
+            processedStatusMessages.clear();
+            recentKeys.forEach(key => processedStatusMessages.add(key));
           }
-        }, 500);
-        setTimeout(async () => {
-          if (mek.key && !processedStatusMessages.has(statusKey + '_final')) {
-            await client.readMessages([mek.key]);
-            processedStatusMessages.add(statusKey + '_final');
-          }
-        }, 1000);
+        } catch (error) {
+          processedStatusMessages.delete(statusKey);
+        }
       }
     } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
       await client.readMessages([mek.key]);
@@ -274,7 +287,7 @@ async function startToxic() {
   process.on("rejectionHandled", (promise) => {
     unhandledRejections.delete(promise);
   });
-  process.on("Something went wrong", function (err) {});
+  process.on("Something went wrong", function (err) { });
 
   client.decodeJid = (jid) => {
     if (!jid) return jid;
@@ -298,8 +311,8 @@ async function startToxic() {
       v = id === "0@s.whatsapp.net"
         ? { id, name: "WhatsApp" }
         : id === client.decodeJid(client.user.id)
-        ? client.user
-        : store.contacts[id] || {};
+          ? client.user
+          : store.contacts[id] || {};
     return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
   };
 
