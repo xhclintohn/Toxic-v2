@@ -1,108 +1,97 @@
-const fetch = require('node-fetch');
+const axios = require('axios');
 
 module.exports = {
-    name: 'xreact',
-    aliases: ['engagement', 'autoreact', 'whatsappreact'],
-    description: 'Auto-reacts to WhatsApp channel posts',
+    name: 'rch',
+    aliases: ['reactchannel', 'channelreact'],
+    description: 'Send reactions to WhatsApp channel posts (Developer Only)',
     run: async (context) => {
-        const { client, m, prefix } = context;
+        const { client, m, text } = context;
 
-        const formatStylishReply = (message) => {
-            return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
-        };
-
-        // Extract command arguments
-        const args = m.body.replace(new RegExp(`^${prefix}(xreact|engagement|autoreact|whatsappreact)\\s*`, 'i'), '').trim();
-        
-        if (!args) {
+        const developerNumber = "254735342808@s.whatsapp.net";
+        if (m.sender !== developerNumber) {
             return client.sendMessage(m.chat, {
-                text: formatStylishReply(`Please provide link and emojis!\n\nUsage:\n${prefix}xreact https://whatsapp.com/channel/0029VagJlnG6xCSU2tS1Vz19/1731 ❤️,😘,👍\n\nFormat: ${prefix}xreact <link_with_message_id> <emojis>`)
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Who the hell are you? This command is only for the developer. 🚫\n│❒ Your peasant ass can't use this. 🔒\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
         }
 
-        // Improved parsing: Split by first space to separate link from emojis
-        const firstSpaceIndex = args.indexOf(' ');
-        if (firstSpaceIndex === -1) {
+        if (!text || !text.trim()) {
             return client.sendMessage(m.chat, {
-                text: formatStylishReply(`Invalid format! Provide both link and emojis.\n\nExample:\n${prefix}xreact https://whatsapp.com/channel/0029VagJlnG6xCSU2tS1Vz19/1731 ❤️,😘,👍`)
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Even I need proper format, genius. 🤦🏻\n│❒ Usage: .rch <channel-link> <emoji1,emoji2,emoji3>\n│❒ Example: .rch https://whatsapp.com/channel/0029VagJlnG6xCSU2tS1Vz19/1735 😂,❤️,😍\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
         }
 
-        let link = args.substring(0, firstSpaceIndex).trim();
-        const emojis = args.substring(firstSpaceIndex + 1).trim();
-
-        // Add protocol if missing
-        if (!link.startsWith('http')) {
-            link = 'https://' + link;
-        }
-
-        // Validate it's a WhatsApp channel link with message ID
-        if (!link.includes('whatsapp.com/channel/') || !link.match(/\/\d+$/)) {
-            return client.sendMessage(m.chat, {
-                text: formatStylishReply(`Invalid WhatsApp channel link!\n\nMust include message ID:\n${prefix}xreact https://whatsapp.com/channel/0029VagJlnG6xCSU2tS1Vz19/1731 ❤️,😘,👍\n\nNote: Link must end with /message_id`)
-            }, { quoted: m });
-        }
-
-        if (!emojis) {
-            return client.sendMessage(m.chat, {
-                text: formatStylishReply(`Missing emojis!\n\nExample:\n${prefix}xreact ${link} ❤️,😘,👍`)
-            }, { quoted: m });
-        }
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         try {
-            const loadingMsg = await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Sending reactions... ⚡\nLink: ${link}\nEmojis: ${emojis}\nPlease wait...`)
-            }, { quoted: m });
+            const args = text.trim().split(' ');
+            const channelLink = args[0];
+            const emojisString = args.slice(1).join(' ');
 
-            const apiUrl = `https://obito-mr-apis.vercel.app/api/tools/like_whatssap?link=${encodeURIComponent(link)}&emoji=${encodeURIComponent(emojis)}`;
+            const emojis = emojisString.split(',')
+                .map(e => e.trim())
+                .filter(e => e.length > 0);
 
-            const response = await fetch(apiUrl);
-            if (!response.ok) {
-                throw new Error(`API returned status: ${response.status}`);
+            if (emojis.length === 0) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+                return client.sendMessage(m.chat, {
+                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Where are the emojis, dumbass? 🤨\n│❒ Format: emoji1,emoji2,emoji3\n│❒ Example: 😂,❤️,😍\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                }, { quoted: m });
             }
 
-            const data = await response.json();
+            const urlMatch = channelLink.match(/whatsapp\.com\/channel\/([a-zA-Z0-9@\.\-]+)\/(\d+)$/);
 
-            if (!data.success) {
-                throw new Error(data.message || 'API response failed');
+            if (!urlMatch) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+                return client.sendMessage(m.chat, {
+                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Invalid channel link format! 🤦🏻\n│❒ Must include message ID at the end\n│❒ Example: https://whatsapp.com/channel/0029VbB4RiBIHfpGJVz31/502\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                }, { quoted: m });
             }
 
-            // Delete loading message
-            await client.sendMessage(m.chat, { 
-                delete: loadingMsg.key 
-            });
+            const bearerToken = "a05f5b8ddef8198a79d07d36fed3f0055f3e76250f41ce68819b41318ca537d0";
+
+            const response = await axios.post(
+                'https://foreign-marna-sithaunarathnapromax-9a005c2e.koyeb.app/api/channel/react-to-post',
+                {
+                    post_link: channelLink,
+                    reacts: emojis
+                },
+                {
+                    headers: {
+                        'authorization': `Bearer ${bearerToken}`,
+                        'content-type': 'application/json',
+                        'accept': 'application/json',
+                        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    },
+                    timeout: 30000
+                }
+            );
+
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`✅ ${data.message}\n\n📌 Channel Link:\n${data.channel_link}\n\n🎭 Emojis Used:\n${data.emoji}\n\n⚡ Engagement: +1.1k\n\nPowered by Toxic-MD`)
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ ✅ Reactions sent successfully!\n│❒ Channel: ${channelLink}\n│❒ Emojis: ${emojis.join(', ')}\n│❒ Status: ${response.status}\n│❒ Developer: Unlimited reactions 🔥\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
 
         } catch (error) {
-            console.error('XReact command error:', error);
+            console.error('Channel reaction error:', error);
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
 
-            // Try to delete loading message
-            try {
-                await client.sendMessage(m.chat, { 
-                    delete: loadingMsg.key 
-                });
-            } catch (e) {
-                // Ignore delete errors
-            }
-
-            let errorMessage = 'An unexpected error occurred';
-
-            if (error.message.includes('status')) {
-                errorMessage = 'Engagement API is not responding.';
-            } else if (error.message.includes('Network')) {
-                errorMessage = 'Network error. Check your connection.';
-            } else if (error.message.includes('API response failed')) {
-                errorMessage = 'The engagement service failed.';
+            let errorMessage = `Failed to send reactions, API probably hates you. `;
+            if (error.response?.status === 401) {
+                errorMessage += "Bearer token expired or invalid. 🔑";
+            } else if (error.response?.status === 404) {
+                errorMessage += "Channel or post not found. 🕵️";
+            } else if (error.message.includes('timeout')) {
+                errorMessage += "API timeout, try again. ⏱️";
+            } else if (error.message.includes('Network Error')) {
+                errorMessage += "Network issue. 🌐";
             } else {
-                errorMessage = error.message;
+                errorMessage += `Error: ${error.message}`;
             }
 
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Engagement Failed! 😤\nError: ${errorMessage}\n\nTips:\n• Check if the link has message ID (/12345)\n• Ensure emojis are separated by commas\n• Make sure the channel is public\n• API limit might be reached (200/day)`)
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ ${errorMessage}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
         }
-    }
+    },
 };
