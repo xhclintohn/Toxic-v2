@@ -3,7 +3,6 @@ const {
   useMultiFileAuthState,
   DisconnectReason,
   fetchLatestBaileysVersion,
-  makeInMemoryStore,
   downloadContentFromMessage,
   jidDecode,
   proto,
@@ -12,6 +11,7 @@ const {
   Browsers
 } = require("@whiskeysockets/baileys");
 
+const { makeInMemoryStore } = require('./store.js');
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
 const fs = require("fs");
@@ -27,7 +27,7 @@ const _ = require("lodash");
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
 const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
-const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
+const store = makeInMemoryStore(pino().child({ level: "silent", stream: "store" }));
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
