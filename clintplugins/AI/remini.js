@@ -27,13 +27,13 @@ module.exports = async (context) => {
         return m.reply(`BOT IS BROKEN BLAME THE DEV 🤡`);
     }
 
-    if (!text && !m.quoted) {
+    if (!text && !m.quoted && !(m.mtype === 'imageMessage' && m.body.includes('.remini'))) {
         return m.reply(`GIVE ME AN IMAGE YOU DUMBASS 🤦🏻\nEXAMPLE: .remini https://image.com/trash.png OR REPLY TO IMAGE`);
     }
 
     let imageUrl = text;
 
-    if (!text && m.quoted && m.quoted.mtype === 'imageMessage') {
+    if ((!text || text === '.remini') && m.quoted && m.quoted.mtype === 'imageMessage') {
         try {
             const buffer = await client.downloadMediaMessage(m.quoted);
             imageUrl = await uploadToCatbox(buffer);
@@ -43,16 +43,26 @@ module.exports = async (context) => {
         }
     }
 
-    if (!imageUrl) {
+    if (m.mtype === 'imageMessage' && m.body.includes('.remini')) {
+        try {
+            const buffer = await client.downloadMediaMessage(m);
+            imageUrl = await uploadToCatbox(buffer);
+        } catch (uploadError) {
+            console.error(`FAILED UPLOAD: ${uploadError.message}`);
+            return m.reply(`CANT UPLOAD YOUR SHITTY IMAGE 🤦🏻 TRY AGAIN`);
+        }
+    }
+
+    if (!imageUrl || imageUrl === '.remini') {
         return m.reply(`NO VALID IMAGE YOU CLUELESS TWAT 🤡`);
     }
 
     try {
-        await m.reply(`ENHANCING YOUR TRASH IMAGE...`);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         const encodedUrl = encodeURIComponent(imageUrl);
         const apiUrl = `https://api.elrayyxml.web.id/api/tools/remini?url=${encodedUrl}`;
-        
+
         const response = await fetch(apiUrl, {
             timeout: 30000,
             headers: { 
@@ -60,7 +70,7 @@ module.exports = async (context) => {
                 'Accept': 'image/*'
             }
         });
-        
+
         if (!response.ok) {
             throw new Error(`API PUKE ${response.status} ${response.statusText}`);
         }
@@ -71,6 +81,8 @@ module.exports = async (context) => {
         }
 
         const imageBuffer = await response.buffer();
+
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
         await client.sendMessage(
             m.chat,
@@ -83,6 +95,7 @@ module.exports = async (context) => {
 
     } catch (error) {
         console.error(`ERROR IN REMINI: ${error.message}`);
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         await m.reply(`SHIT BROKE 🤦🏻 ERROR: ${error.message}`);
     }
 };
