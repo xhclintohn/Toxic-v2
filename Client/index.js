@@ -11,7 +11,7 @@ const {
   Browsers
 } = require("@whiskeysockets/baileys");
 
-const { makeInMemoryStore } = require('./store.js');
+const { makeInMemoryStore } = require('wileys');
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
 const fs = require("fs");
@@ -27,7 +27,7 @@ const _ = require("lodash");
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
 const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
-const store = makeInMemoryStore(pino().child({ level: "silent", stream: "store" }));
+const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
 
 const authenticationn = require('../Auth/auth.js');
 const { smsg } = require('../Handler/smsg');
@@ -50,17 +50,19 @@ const antilink = require('../Functions/antilink');
 
 async function startToxic() {
   let settingss = await getSettings();
-  if (!settingss) {
-    console.log(
-      `◈━━━━━━━━━━━━━━━━◈\n` +
-      `│❒ TOXIC-MD FAILED TO CONNECT 😵\n` +
-      `│❒ Settings not found\n` +
-      `┗━━━━━━━━━━━━━━━┛`
-    );
-    return;
-  }
+  
+  // TEMPORARY BYPASS - REMOVE AFTER DATABASE FIX
+  // if (!settingss) {
+  //   console.log(
+  //     `◈━━━━━━━━━━━━━━━━◈\n` +
+  //     `│❒ TOXIC-MD FAILED TO CONNECT 😵\n` +
+  //     `│❒ Settings not found\n` +
+  //     `┗━━━━━━━━━━━━━━━┛`
+  //   );
+  //   return;
+  // }
 
-  const { autobio, mode, anticall } = settingss;
+  const { autobio = false, mode = 'public', anticall = false } = settingss || {};
   const { version } = await fetchLatestBaileysVersion();
 
   const { saveCreds, state } = await useMultiFileAuthState(sessionName);
