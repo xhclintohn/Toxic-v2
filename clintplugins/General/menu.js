@@ -163,15 +163,23 @@ module.exports = {
         }
 
         const possibleFiles = [];
-        for (let i = 1; i <= 10; i++) {
-            const fileName = `menu${i}`;
-            const audioExtensions = ['.mp3', '.m4a', '.ogg', '.opus', '.wav'];
+        const menuFiles = [
+            'menu1.mp3',
+            'menu2.mp3', 
+            'menu3.mp3',
+            'menu4.mp3',
+            'menu5.mp3',
+            'menu6.mp3',
+            'menu7.mp3',
+            'menu8.mp3',
+            'menu9.mp3',
+            'menu10.mp3'
+        ];
 
-            for (const ext of audioExtensions) {
-                const fullPath = path.join(audioFolder, fileName + ext);
-                if (fs.existsSync(fullPath)) {
-                    possibleFiles.push(fullPath);
-                }
+        for (const fileName of menuFiles) {
+            const fullPath = path.join(audioFolder, fileName);
+            if (fs.existsSync(fullPath)) {
+                possibleFiles.push(fullPath);
             }
         }
 
