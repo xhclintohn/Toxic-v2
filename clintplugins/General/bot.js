@@ -6,7 +6,7 @@ const { getSettings } = require('../../Database/config');
 module.exports = {
     name: 'start',
     aliases: ['alive', 'online', 'toxic'],
-    description: 'Check if bot is alive with toxic attitude',
+    description: 'Check if bot is alive',
     run: async (context) => {
         const { client, m, mode, pict, botname, text, prefix } = context;
 
