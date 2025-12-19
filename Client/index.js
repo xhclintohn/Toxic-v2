@@ -3,6 +3,7 @@ const {
   useMultiFileAuthState,
   DisconnectReason,
   fetchLatestBaileysVersion,
+  makeInMemoryStore,
   downloadContentFromMessage,
   jidDecode,
   proto,
@@ -11,7 +12,6 @@ const {
   Browsers
 } = require("@whiskeysockets/baileys");
 
-const { makeInMemoryStore } = require('wileys');
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
 const fs = require("fs");
@@ -50,19 +50,17 @@ const antilink = require('../Functions/antilink');
 
 async function startToxic() {
   let settingss = await getSettings();
-  
-  // TEMPORARY BYPASS - REMOVE AFTER DATABASE FIX
-  // if (!settingss) {
-  //   console.log(
-  //     `◈━━━━━━━━━━━━━━━━◈\n` +
-  //     `│❒ TOXIC-MD FAILED TO CONNECT 😵\n` +
-  //     `│❒ Settings not found\n` +
-  //     `┗━━━━━━━━━━━━━━━┛`
-  //   );
-  //   return;
-  // }
+  if (!settingss) {
+    console.log(
+      `◈━━━━━━━━━━━━━━━━◈\n` +
+      `│❒ TOXIC-MD FAILED TO CONNECT 😵\n` +
+      `│❒ Settings not found\n` +
+      `┗━━━━━━━━━━━━━━━┛`
+    );
+    return;
+  }
 
-  const { autobio = false, mode = 'public', anticall = false } = settingss || {};
+  const { autobio, mode, anticall } = settingss;
   const { version } = await fetchLatestBaileysVersion();
 
   const { saveCreds, state } = await useMultiFileAuthState(sessionName);
