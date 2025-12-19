@@ -15,11 +15,12 @@ const commandQueue = queue(async (task, callback) => {
 module.exports = async (context) => {
     const { client, m, mime, packname, author } = context;
 
+    await client.sendMessage(m.chat, { react: { text: '🔃', key: m.key } });
+
     commandQueue.push({
         context,
         run: async ({ client, m, mime, packname, author }) => {
             try {
-                // Determine the target media
                 const quoted = m.quoted ? m.quoted : m;
                 const quotedMime = quoted.mimetype || mime || '';
 
@@ -35,7 +36,7 @@ module.exports = async (context) => {
                 const media = await client.downloadAndSaveMediaMessage(quoted, tempFile);
 
                 const sticker = new Sticker(media, {
-                    pack: packname || 'Toxic-MD Pack',
+                    pack: packname || 'p',
                     author: author || '𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 [dev]',
                     type: StickerTypes.FULL,
                     categories: ['🤩', '🎉'],
