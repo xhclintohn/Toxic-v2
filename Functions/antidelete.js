@@ -1,10 +1,20 @@
 const { getSettings, updateSetting } = require('../Database/config');
 
 module.exports = async (context) => {
+  // Check if this is a command call or automatic call from index.js
+  if (!context || typeof context !== 'object') {
+    return; // Just return if called incorrectly
+  }
+
   const { client, m, store, pict, args, prefix } = context;
 
-  // FIX: Add early return if no message object
-  if (!context || !m || !m.key || !m.chat) {
+  // If called from index.js (automatic), just return - don't process as command
+  if (!args && !prefix) {
+    return;
+  }
+
+  // If no message object, return
+  if (!m || !m.key || !m.chat) {
     return;
   }
 
@@ -43,8 +53,8 @@ module.exports = async (context) => {
     }
 
     const buttons = [
-      { buttonId: `${prefix}antidelete on`, buttonText: { displayText: "ON 🦁" }, type: 1 },
-      { buttonId: `${prefix}antidelete off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
+      { buttonId: `${prefix || '.'}antidelete on`, buttonText: { displayText: "ON 🦁" }, type: 1 },
+      { buttonId: `${prefix || '.'}antidelete off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
     ];
 
     await client.sendMessage(
@@ -62,7 +72,7 @@ module.exports = async (context) => {
     console.error('Antidelete error:', error);
     await client.sendMessage(
       m.chat,
-      { text: formatStylishReply("Shit broke, couldn’t mess with antidelete. Database or something’s fucked. Try later.") },
+      { text: formatStylishReply("Shit broke, couldn't mess with antidelete. Database or something's fucked. Try later.") },
       { quoted: m, ad: true }
     );
   }
