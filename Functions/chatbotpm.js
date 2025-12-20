@@ -42,20 +42,25 @@ module.exports = async (client, m, store, chatbotpmSetting) => {
 
         try {
             const encodedText = encodeURIComponent(messageContent);
-            const apiUrl = `https://api.privatezia.biz.id/api/ai/GPT-4?query=${encodedText}`;
-            const response = await fetch(apiUrl, { timeout: 10000 });
+            const apiUrl = `https://ab-chatgpt4o.abrahamdw882.workers.dev/?q=${encodedText}`;
+            const response = await fetch(apiUrl, { timeout: 15000 });
+            
             if (!response.ok) {
                 throw new Error(`API request failed with status ${response.status}`);
             }
+            
             const data = await response.json();
-            if (!data.status || !data.response) { 
-                throw new Error("Invalid API response: missing status or response");
+            
+            if (data.status !== "success" || !data.data) { 
+                throw new Error("Invalid API response: missing status or data");
             }
+            
             await client.sendMessage(
                 m.key.remoteJid,
-                { text: data.response }, 
+                { text: data.data }, 
                 { quoted: m }
             );
+            
         } catch (e) {
             console.error(`Toxic-MD ChatbotPM Error:`, e);
             await client.sendMessage(
