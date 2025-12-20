@@ -125,6 +125,7 @@ const aliases = {
     facebook: "fbdl",
     instagram: "igdl",
     ig: "igdl",
+    rch: "xreact",
     img: "image",
     url: "upload",
     tourl: "upload",
