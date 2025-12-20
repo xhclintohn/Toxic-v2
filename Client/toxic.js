@@ -23,6 +23,26 @@ process.setMaxListeners(0);
 cleanupOldMessages();
 setInterval(() => cleanupOldMessages(), 24 * 60 * 60 * 1000);
 
+function normalizeJid(jid) {
+    if (!jid) return jid;
+    if (jid.includes('@lid')) {
+        return jid.split('@')[0] + '@s.whatsapp.net';
+    }
+    if (jid.includes('@newsletter')) {
+        return jid;
+    }
+    if (jid.includes('@g.us')) {
+        return jid;
+    }
+    if (jid.includes('@s.whatsapp.net')) {
+        return jid;
+    }
+    if (jid.includes('@broadcast')) {
+        return jid;
+    }
+    return jid + '@s.whatsapp.net';
+}
+
 module.exports = toxic = async (client, m, chatUpdate, store) => {
     try {
         const sudoUsers = await getSudoUsers();
@@ -187,18 +207,27 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         if (store) {
             const remoteJid = m.chat || m.key?.remoteJid;
-            if (remoteJid) {
+            const normalizedJid = normalizeJid(remoteJid);
+            
+            if (normalizedJid) {
                 if (!store.chats) store.chats = {};
-                if (!store.chats[remoteJid]) {
-                    store.chats[remoteJid] = [];
-                }
-                store.chats[remoteJid].push(m);
-                
-                if (store.chats[remoteJid].length > 100) {
-                    store.chats[remoteJid].shift();
+                if (!store.chats[normalizedJid]) {
+                    store.chats[normalizedJid] = [];
                 }
                 
-                console.log(`📥 Stored message in ${remoteJid}. Total: ${store.chats[remoteJid].length}`);
+                const messageWithTimestamp = {
+                    ...m,
+                    timestamp: Date.now(),
+                    originalJid: remoteJid
+                };
+                
+                store.chats[normalizedJid].push(messageWithTimestamp);
+                
+                if (store.chats[normalizedJid].length > 100) {
+                    store.chats[normalizedJid].shift();
+                }
+                
+                console.log(`📥 Stored message in ${normalizedJid}. Total: ${store.chats[normalizedJid].length}`);
             }
         }
 
@@ -212,12 +241,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             
             if (isAntideleteEnabled && store?.chats) {
                 const deletedKey = m.message.protocolMessage.key;
-                const remoteJid = deletedKey.remoteJid;
+                const deletedRemoteJid = deletedKey.remoteJid;
+                const normalizedDeletedJid = normalizeJid(deletedRemoteJid);
                 
-                console.log(`🗑️ Message deleted in: ${remoteJid}, ID: ${deletedKey.id}`);
+                console.log(`🗑️ Message deleted in: ${deletedRemoteJid} (normalized: ${normalizedDeletedJid}), ID: ${deletedKey.id}`);
                 
-                if (store.chats[remoteJid]) {
-                    const chatMessages = store.chats[remoteJid];
+                if (store.chats[normalizedDeletedJid]) {
+                    const chatMessages = store.chats[normalizedDeletedJid];
                     const deletedMessage = chatMessages.find(
                         (msg) => msg.key.id === deletedKey.id
                     );
@@ -228,7 +258,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         const botJid = client.decodeJid(client.user.id);
                         const sender = client.decodeJid(deletedMessage.key.participant || deletedMessage.key.remoteJid);
                         const deleter = m.key.participant ? m.key.participant.split('@')[0] : 'Unknown';
-                        const groupName = remoteJid.endsWith('@g.us') ? 'Group' : 'Private Chat';
+                        const groupName = normalizedDeletedJid.endsWith('@g.us') ? 'Group' : 'Private Chat';
                         const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
 
                         try {
@@ -301,9 +331,11 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         }
                     } else {
                         console.log("❌ Deleted message not found in storage");
+                        console.log(`Available message IDs: ${chatMessages.map(msg => msg.key.id).join(', ')}`);
                     }
                 } else {
                     console.log("❌ No messages stored for this chat");
+                    console.log(`Available chats: ${Object.keys(store.chats).join(', ')}`);
                 }
             } else {
                 console.log("❌ Antidelete disabled or no storage available");
