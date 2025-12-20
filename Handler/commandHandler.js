@@ -109,6 +109,7 @@ const aliases = {
     sc: "script",
     translate: "tr",
     trt: "tr",
+    trigger: "triggerupdate",
     linkgc: "link",
     gclink: "link",
     grouplink: "link",
