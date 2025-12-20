@@ -198,26 +198,30 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         if (store && shouldStoreMessage(m)) {
             const remoteJid = m.chat || m.key?.remoteJid;
+            const senderJid = m.sender || m.key?.participant;
             
             if (remoteJid) {
                 if (!store.chats) store.chats = Object.create(null);
                 
-                if (!store.chats[remoteJid]) {
-                    store.chats[remoteJid] = [];
+                const storageKey = remoteJid;
+                
+                if (!store.chats[storageKey]) {
+                    store.chats[storageKey] = [];
                 }
                 
                 const messageWithTimestamp = {
                     ...m,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    sender: senderJid
                 };
                 
-                store.chats[remoteJid].push(messageWithTimestamp);
+                store.chats[storageKey].push(messageWithTimestamp);
                 
-                if (store.chats[remoteJid].length > 100) {
-                    store.chats[remoteJid].shift();
+                if (store.chats[storageKey].length > 100) {
+                    store.chats[storageKey].shift();
                 }
                 
-                console.log(`📥 Stored message in ${remoteJid}. Total: ${store.chats[remoteJid].length}`);
+                console.log(`📥 Stored message from ${senderJid} in ${storageKey}. Total: ${store.chats[storageKey].length}`);
             }
         }
 
