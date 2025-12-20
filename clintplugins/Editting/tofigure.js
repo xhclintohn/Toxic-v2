@@ -11,29 +11,21 @@ async function uploadToCatbox(buffer) {
 }
 
 module.exports = async (context) => {
-    const { client, mime, m } = context;
+    const { client, m } = context;
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
         const quoted = m.quoted ? m.quoted : m;
-        const quotedMime = quoted.mimetype || mime || '';
+        const quotedMime = quoted.mimetype || '';
         if (!/image/.test(quotedMime)) return m.reply('That is not an image. Are your eyes broken? Quote a real image, you imbecile.');
-        const statusMsg = await m.reply('Making your stupid image into a "figure". Try not to ruin it further.');
         const media = await quoted.download();
-        if (!media) {
-            await client.sendMessage(m.chat, { delete: statusMsg.key });
-            return m.reply('Failed to download your worthless image. Try sending something that actually exists.');
-        }
-        if (media.length > 10 * 1024 * 1024) {
-            await client.sendMessage(m.chat, { delete: statusMsg.key });
-            return m.reply('Your image is too large. Do you think I have infinite storage? 10MB MAX, you digital hoarder.');
-        }
+        if (!media) return m.reply('Failed to download your worthless image. Try sending something that actually exists.');
+        if (media.length > 10 * 1024 * 1024) return m.reply('Your image is too large. Do you think I have infinite storage? 10MB MAX, you digital hoarder.');
         const imageUrl = await uploadToCatbox(media);
         const apiURL = `https://api.fikmydomainsz.xyz/imagecreator/tofigur?url=${encodeURIComponent(imageUrl)}`;
         const response = await axios.get(apiURL);
         if (!response.data || !response.data.status || !response.data.result) throw new Error('The API vomited nonsense back at me.');
         const resultUrl = response.data.result;
         const figureBuffer = (await axios.get(resultUrl, { responseType: 'arraybuffer' })).data;
-        await client.sendMessage(m.chat, { delete: statusMsg.key });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         await client.sendMessage(m.chat, { image: Buffer.from(figureBuffer), caption: 'Here. It is now a "figure". You are welcome.\n—\nTσxιƈ-ɱԃȥ' }, { quoted: m });
     } catch (err) {
