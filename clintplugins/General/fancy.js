@@ -3,38 +3,48 @@ const fetch = require('node-fetch');
 module.exports = {
     name: 'fancy',
     aliases: ['fancytext', 'style', 'stylish'],
-    description: 'Shows all available fancy font styles',
+    description: 'Generates and sends ALL fancy styles for your text at once',
     run: async (context) => {
         const { client, m, prefix } = context;
 
-        await client.sendMessage(m.chat, { react: { text: '✨', key: m.key } });
+        const args = m.body?.slice(prefix.length).trim().split(' ');
+        const command = args.shift()?.toLowerCase();
+        const text = args.join(' ').trim();
+
+        if (!text) {
+            return m.reply(`You forgot the text, you absolute clown.\nUsage: ${prefix}fancy Your Text Here\n\nExample: ${prefix}fancy Toxic-MD`);
+        }
+
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         try {
-            const response = await fetch('https://movanest.zone.id/v2/fancytext?word=Toxic');
+            const apiUrl = `https://movanest.zone.id/v2/fancytext?word=${encodeURIComponent(text)}`;
+            const response = await fetch(apiUrl);
             const data = await response.json();
 
             if (!data.status || !data.results || data.results.length === 0) {
-                return m.reply("API's dead or being a bitch. Try again later.");
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+                return m.reply(`API couldn't handle your text "${text}". Too ugly even for fancy fonts.`);
             }
 
-            let msg = `*FANCY FONT MENU* 🔥\n\n`;
-            msg += `Found *${data.count}* styles. Pick one by replying with:\n`;
-            msg += `*${prefix}fancy<number> your text*\n\n`;
-            msg += `Example: ${prefix}fancy1 Toxic-MD\n`;
-            msg += `Example: ${prefix}fancy42 Hello\n\n`;
-            msg += `──────────────────\n\n`;
+            let resultMsg = `🔥 *ALL FANCY STYLES FOR:* "${text}" 🔥\n\n`;
 
-            data.results.forEach((style, i) => {
-                msg += `*${i + 1}.* ${style}\n`;
+            data.results.forEach((style) => {
+                resultMsg += `${style}\n\n`;
             });
 
-            msg += `\n> Powered by Toxic-MD 💀`;
+            resultMsg += `> Total: ${data.count} styles • Powered by Toxic-MD 💀`;
 
-            await client.sendMessage(m.chat, { text: msg }, { quoted: m });
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
+            await client.sendMessage(m.chat, {
+                text: resultMsg
+            }, { quoted: m });
 
         } catch (error) {
+            console.error('Fancy error:', error);
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            m.reply("Failed to load fonts. The API is probably crying. Try later.");
+            m.reply(`Fancy generation failed. The API probably choked on your text.\nTry something shorter, dumbass.`);
         }
-    }
+    },
 };
