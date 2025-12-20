@@ -42,6 +42,7 @@
     "calculator-engine": "^0.1.0",
     "canvacord": "^5.4.9",
     "chalk": "^4.1.2",
+    "canvas": "^3.2.0",
     "cheerio": "^1.0.0-rc.10",
     "child-process": "^1.0.2",
     "compile-run": "^2.3.4",
