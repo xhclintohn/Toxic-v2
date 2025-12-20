@@ -181,7 +181,7 @@ async function startToxic() {
     const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
     const Myself = client.decodeJid(client.user.id);
 
-    await antidelete(client, mek, store, fs.readFileSync(path.resolve(__dirname, '../toxic.jpg')));
+    await antidelete({ client, m: mek, store, pict: fs.readFileSync(path.resolve(__dirname, '../toxic.jpg')) });
     await antilink(client, mek, store);
 
     if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
