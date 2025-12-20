@@ -18,7 +18,7 @@ module.exports = async (context) => {
     count = 5;
   }
 
-  if (count > 20) count = 20; // limit to prevent spam
+  if (count > 20) count = 20;
 
   try {
     await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
