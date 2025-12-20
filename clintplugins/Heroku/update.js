@@ -55,35 +55,40 @@ module.exports = async (context) => {
             const alreadyDeployed = deployedSha.includes(latestSha);
 
             if (alreadyDeployed) {
+                // FIX: Menambahkan wrapper viewOnceMessage
                 const msg = generateWAMessageFromContent(
                     m.chat,
                     {
-                        interactiveMessage: {
-                            body: {
-                                text: "Your bot is already on the latest version, genius."
-                            },
-                            footer: {
-                                text: "> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
-                            },
-                            nativeFlowMessage: {
-                                buttons: [
-                                    {
-                                        name: "single_select",
-                                        buttonParamsJson: JSON.stringify({
-                                            title: "Want something else?",
-                                            sections: [
-                                                {
-                                                    rows: [
-                                                        { title: "📱 Menu", description: "Get command list", id: `${prefix}menu` },
-                                                        { title: "⚙ Settings", description: "Bot settings", id: `${prefix}settings` },
-                                                    ],
-                                                },
-                                            ],
-                                        }),
+                        viewOnceMessage: {
+                            message: {
+                                interactiveMessage: {
+                                    body: {
+                                        text: "Your bot is already on the latest version, genius."
                                     },
-                                ],
-                            },
-                        },
+                                    footer: {
+                                        text: "> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
+                                    },
+                                    nativeFlowMessage: {
+                                        buttons: [
+                                            {
+                                                name: "single_select",
+                                                buttonParamsJson: JSON.stringify({
+                                                    title: "Want something else?",
+                                                    sections: [
+                                                        {
+                                                            rows: [
+                                                                { title: "📱 Menu", description: "Get command list", id: `${prefix}menu` },
+                                                                { title: "⚙ Settings", description: "Bot settings", id: `${prefix}settings` },
+                                                            ],
+                                                        },
+                                                    ],
+                                                }),
+                                            },
+                                        ],
+                                    },
+                                }
+                            }
+                        }
                     },
                     { quoted: m }
                 );
@@ -91,36 +96,41 @@ module.exports = async (context) => {
                 return await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
             }
 
+            // FIX: Menambahkan wrapper viewOnceMessage
             const msg = generateWAMessageFromContent(
                 m.chat,
                 {
-                    interactiveMessage: {
-                        body: {
-                            text: `🆕 Update Available, Dumbass\n\nNew version found. You're still using outdated garbage.\n\n📌 *Commit:* ${latestCommit.commit.message}\n👤 *Author:* ${latestCommit.commit.author.name}\n🕒 *Date:* ${new Date(latestCommit.commit.author.date).toLocaleString()}\n\nTo update your worthless bot, tap the button below. if you're unable to tap the buttons type ${prefix}trigger Don't ask me how to tap, you monkey. 🐒😂`
-                        },
-                        footer: {
-                            text: "> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
-                        },
-                        nativeFlowMessage: {
-                            buttons: [
-                                {
-                                    name: "single_select",
-                                    buttonParamsJson: JSON.stringify({
-                                        title: "UPDATE OPTIONS",
-                                        sections: [
-                                            {
-                                                title: "What do you want?",
-                                                rows: [
-                                                    { title: "🚀 Trigger Update", description: "Update now", id: `${prefix}triggerupdate` },
-                                                    { title: "📱 Menu", description: "Back to command list", id: `${prefix}menu` },
-                                                ],
-                                            },
-                                        ],
-                                    }),
+                    viewOnceMessage: {
+                        message: {
+                            interactiveMessage: {
+                                body: {
+                                    text: `🆕 Update Available, Dumbass\n\nNew version found. You're still using outdated garbage.\n\n📌 *Commit:* ${latestCommit.commit.message}\n👤 *Author:* ${latestCommit.commit.author.name}\n🕒 *Date:* ${new Date(latestCommit.commit.author.date).toLocaleString()}\n\nTo update your worthless bot, tap the button below. if you're unable to tap the buttons type ${prefix}trigger Don't ask me how to tap, you monkey. 🐒😂`
                                 },
-                            ],
-                        },
-                    },
+                                footer: {
+                                    text: "> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
+                                },
+                                nativeFlowMessage: {
+                                    buttons: [
+                                        {
+                                            name: "single_select",
+                                            buttonParamsJson: JSON.stringify({
+                                                title: "UPDATE OPTIONS",
+                                                sections: [
+                                                    {
+                                                        title: "What do you want?",
+                                                        rows: [
+                                                            { title: "🚀 Trigger Update", description: "Update now", id: `${prefix}triggerupdate` },
+                                                            { title: "📱 Menu", description: "Back to command list", id: `${prefix}menu` },
+                                                        ],
+                                                    },
+                                                ],
+                                            }),
+                                        },
+                                    ],
+                                },
+                            }
+                        }
+                    }
                 },
                 { quoted: m }
             );
