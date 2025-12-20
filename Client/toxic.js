@@ -11,7 +11,6 @@ const { commands, aliases, totalCommands } = require('../Handler/commandHandler'
 const status_saver = require('../Functions/status_saver');
 const gcPresence = require('../Functions/gcPresence');
 const antitaggc = require('../Functions/antitag');
-const antidelete = require('../Functions/antidelete');
 const antilink = require('../Functions/antilink');
 const chatbotpm = require('../Functions/chatbotpm');
 const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require('../Database/config');
@@ -150,12 +149,12 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const trimmedBody = body.trim();
         if ((trimmedBody.startsWith('>') || trimmedBody.startsWith('$')) && Owner) {
             const evalText = trimmedBody.slice(1).trim();
-            
+
             if (bannedMessages.some(msg => evalText.includes(msg))) {
                 console.log("Ignoring banned message eval");
                 return;
             }
-            
+
             try {
                 await ownerMiddleware(context, async () => {
                     if (!evalText) return m.reply("W eval?🟢!");
@@ -186,7 +185,102 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         if (cmd && mode === 'private' && !itsMe && !Owner && !sudoUsers.includes(m.sender)) return;
 
-        if (antideleteSetting === true) await antidelete(client, m, store, pict);
+        // Store messages for antidelete
+        if (store) {
+            const remoteJid = m.chat || m.key?.remoteJid;
+            if (remoteJid) {
+                if (!store.chats) store.chats = {};
+                if (!store.chats[remoteJid]) {
+                    store.chats[remoteJid] = [];
+                }
+                store.chats[remoteJid].push(m);
+                
+                if (store.chats[remoteJid].length > 100) {
+                    store.chats[remoteJid].shift();
+                }
+            }
+        }
+
+        // Check for deleted messages
+        if (antideleteSetting === true && m.message?.protocolMessage?.type === 0) {
+            try {
+                const deletedKey = m.message.protocolMessage.key;
+                const remoteJid = deletedKey.remoteJid;
+                
+                if (store?.chats?.[remoteJid]) {
+                    const chatMessages = store.chats[remoteJid];
+                    const deletedMessage = chatMessages.find(
+                        (msg) => msg.key.id === deletedKey.id
+                    );
+
+                    if (deletedMessage) {
+                        const botJid = client.decodeJid(client.user.id);
+                        const sender = client.decodeJid(deletedMessage.key.participant || deletedMessage.key.remoteJid);
+                        const deleter = m.key.participant ? m.key.participant.split('@')[0] : 'Unknown';
+                        const groupName = remoteJid.endsWith('@g.us') ? 'Group' : 'Private Chat';
+                        const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
+
+                        try {
+                            const notification = `*AntiDelete Detected*\n\n*Time:* ${deleteTime}\n*Group:* ${groupName}\n*Deleted by:* @${deleter}\n*Sender:* @${sender.split('@')[0]}`;
+
+                            if (deletedMessage.message.conversation) {
+                                await client.sendMessage(botJid, {
+                                    text: `${notification}\nDeleted message: ${deletedMessage.message.conversation}`,
+                                    mentions: [sender]
+                                });
+                            }
+                            else if (deletedMessage.message.imageMessage) {
+                                const caption = deletedMessage.message.imageMessage.caption || '';
+                                const imageBuffer = await client.downloadMediaMessage(deletedMessage.message.imageMessage);
+                                await client.sendMessage(botJid, {
+                                    image: imageBuffer,
+                                    caption: `${notification}\n${caption}`,
+                                    mentions: [sender]
+                                });
+                            }
+                            else if (deletedMessage.message.videoMessage) {
+                                const caption = deletedMessage.message.videoMessage.caption || '';
+                                const videoBuffer = await client.downloadMediaMessage(deletedMessage.message.videoMessage);
+                                await client.sendMessage(botJid, {
+                                    video: videoBuffer,
+                                    caption: `${notification}\n${caption}`,
+                                    mentions: [sender]
+                                });
+                            }
+                            else if (deletedMessage.message.audioMessage) {
+                                const audioBuffer = await client.downloadMediaMessage(deletedMessage.message.audioMessage);
+                                await client.sendMessage(botJid, {
+                                    audio: audioBuffer,
+                                    ptt: true,
+                                    caption: notification,
+                                    mentions: [sender]
+                                });
+                            }
+                            else if (deletedMessage.message.stickerMessage) {
+                                const stickerBuffer = await client.downloadMediaMessage(deletedMessage.message.stickerMessage);
+                                await client.sendMessage(botJid, {
+                                    sticker: stickerBuffer,
+                                    caption: notification,
+                                    mentions: [sender]
+                                });
+                            }
+                            else if (deletedMessage.message.extendedTextMessage?.text) {
+                                await client.sendMessage(botJid, {
+                                    text: `${notification}\nDeleted message: ${deletedMessage.message.extendedTextMessage.text}`,
+                                    mentions: [sender]
+                                });
+                            }
+
+                        } catch (error) {
+                            console.error('AntiDelete forwarding error:', error);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('AntiDelete processing error:', error);
+            }
+        }
+
         await antilink(client, m, store);
         await chatbotpm(client, m, store, chatbotpmSetting);
         await status_saver(client, m, Owner, prefix);
