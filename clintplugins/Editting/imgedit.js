@@ -20,11 +20,9 @@ module.exports = async (context) => {
     if (!mime.startsWith('image/')) return m.reply("That is not an image. Are your eyes decorative?");
     const prompt = text ? text : "add a text stating idk";
     const mediaBuffer = await q.download();
-    const statusMsg = await m.reply(`Trying to salvage your image with: "${prompt}". Don't get your hopes up.`);
     const uploadedUrl = await uploadToCatbox(mediaBuffer);
-    const apiUrl = `https://api-faa.my.id/faa/editfoto?url=${encodeURIComponent(uploadedUrl)}&prompt=${encodeURIComponent(prompt)}`;
+    const apiUrl = `https://api-faa.my.id/faa/editfoto?url=\( {encodeURIComponent(uploadedUrl)}&prompt= \){encodeURIComponent(prompt)}`;
     const editResponse = await axios.get(apiUrl, { responseType: 'arraybuffer' });
-    await client.sendMessage(m.chat, { delete: statusMsg.key });
     await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     await client.sendMessage(m.chat, { image: Buffer.from(editResponse.data), caption: `Here. It's done. Prompt: ${prompt}\n—\nTσxιƈ-ɱԃȥ` }, { quoted: m });
   } catch (error) {
