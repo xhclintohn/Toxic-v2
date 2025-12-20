@@ -96,7 +96,7 @@ module.exports = {
 
                 ctx.fillStyle = C.cyan;
                 ctx.font = "bold 24px sans-serif";
-                ctx.fillText("⚡ Tσxιƈ-ɱԃȥ SYSTEM DASHBOARD", 40, 50);
+                ctx.fillText("⚡ Toxic-MD SYSTEM DASHBOARD", 40, 50);
                 ctx.fillStyle = C.subtext;
                 ctx.font = "16px sans-serif";
                 ctx.fillText("Heroku Instance • Real-Time Monitor", 40, 75);
@@ -178,7 +178,7 @@ module.exports = {
                 const pillY = 360;
                 const pillH = 60;
                 const pills = [
-                    { l: "HOST", v: "Heroku Dyno", c: C.blue },
+                    { l: "HOST", v: "Heroku", c: C.blue },
                     { l: "PLATFORM", v: "Linux x64", c: C.green },
                     { l: "BOT UPTIME", v: botUptime.split(' ')[0], c: C.purple },
                     { l: "LATENCY", v: `${pingSpeed}ms`, c: C.cyan },
@@ -207,7 +207,7 @@ module.exports = {
                 ctx.textAlign = "center";
                 ctx.fillStyle = C.subtext;
                 ctx.font = "italic 12px sans-serif";
-                ctx.fillText(`Tσxιƈ-ɱԃȥ Dashboard • ${new Date().toLocaleString()}`, W / 2, H - 15);
+                ctx.fillText(`Toxic-MD Dashboard™ • ${new Date().toLocaleString()}`, W / 2, H - 15);
 
                 return canvas.toBuffer("image/png");
             };
