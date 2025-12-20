@@ -7,8 +7,9 @@ module.exports = async (context) => {
     return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
   };
 
-  if (!m.key.fromMe) {
-    return await m.reply(formatStylishReply("Only the bot owner can toggle antidelete, loser! 🖕"));
+ 
+  if (!m || !m.key || !m.key.fromMe) {
+    return;
   }
 
   const subCommand = args[0]?.toLowerCase();
