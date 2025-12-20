@@ -217,7 +217,7 @@ module.exports = {
                     audio: audioBuffer,
                     ptt: true,
                     mimetype: 'audio/mpeg',
-                    fileName: 'toxic-menu.mp3',
+                    fileName: 'toxic-menu.m4a',
                 },
                 { quoted: m }
             );
@@ -228,7 +228,7 @@ module.exports = {
                     audio: { url: randomFile },
                     ptt: true,
                     mimetype: 'audio/mpeg',
-                    fileName: 'toxic-menu.mp3',
+                    fileName: 'toxic-menu.m4a',
                 },
                 { quoted: m }
             );
