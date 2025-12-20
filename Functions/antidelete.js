@@ -1,5 +1,4 @@
 const { getSettings, updateSetting } = require('../Database/config');
-const { proto, generateWAMessageID } = require('@whiskeysockets/baileys');
 
 module.exports = async (context) => {
   const { client, m, args, settings } = context;
@@ -28,8 +27,6 @@ module.exports = async (context) => {
   await m.reply(formatStylishReply(`Antidelete ${newState ? 'ENABLED' : 'DISABLED'} globally! ${newState ? 'Deleted messages will be forwarded to my DM! 🔒' : 'No more snooping on deletes, you rebel! 😎'}`));
 };
 
-const store = require('./Store');
-
 module.exports.handleAntiDelete = async (client, m, store) => {
   if (!m || !m.message || !m.key) return;
 
@@ -40,8 +37,7 @@ module.exports.handleAntiDelete = async (client, m, store) => {
     const deletedKey = m.message.protocolMessage.key;
     const remoteJid = deletedKey.remoteJid;
     
-    if (!store.chats[remoteJid]) {
-      store.chats[remoteJid] = [];
+    if (!store || !store.chats || !store.chats[remoteJid]) {
       return;
     }
 
@@ -116,9 +112,15 @@ module.exports.handleAntiDelete = async (client, m, store) => {
 };
 
 module.exports.storeMessage = (store, m) => {
-  if (!m || !m.key || !m.message) return;
+  if (!m || !m.key || !m.message || !store) return;
 
   const remoteJid = m.key.remoteJid;
+  if (!remoteJid) return;
+
+  if (!store.chats) {
+    store.chats = {};
+  }
+  
   if (!store.chats[remoteJid]) {
     store.chats[remoteJid] = [];
   }
