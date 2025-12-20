@@ -28,19 +28,18 @@ function normalizeJid(jid) {
     if (jid.includes('@lid')) {
         return jid.split('@')[0] + '@s.whatsapp.net';
     }
-    if (jid.includes('@newsletter')) {
-        return jid;
-    }
-    if (jid.includes('@g.us')) {
-        return jid;
-    }
-    if (jid.includes('@s.whatsapp.net')) {
-        return jid;
-    }
-    if (jid.includes('@broadcast')) {
-        return jid;
-    }
-    return jid + '@s.whatsapp.net';
+    return jid;
+}
+
+function shouldStoreMessage(m) {
+    const remoteJid = m.chat || m.key?.remoteJid;
+    if (!remoteJid) return false;
+    
+    const isStatus = remoteJid === 'status@broadcast';
+    const isBroadcast = remoteJid.includes('@broadcast');
+    const isNewsletter = remoteJid.includes('@newsletter');
+    
+    return !isStatus && !isBroadcast && !isNewsletter;
 }
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
@@ -205,12 +204,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         if (cmd && mode === 'private' && !itsMe && !Owner && !sudoUsers.includes(m.sender)) return;
 
-        if (store) {
+        if (store && shouldStoreMessage(m)) {
             const remoteJid = m.chat || m.key?.remoteJid;
             const normalizedJid = normalizeJid(remoteJid);
             
             if (normalizedJid) {
-                if (!store.chats) store.chats = {};
+                if (!store.chats) store.chats = Object.create(null);
+                
                 if (!store.chats[normalizedJid]) {
                     store.chats[normalizedJid] = [];
                 }
@@ -218,7 +218,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 const messageWithTimestamp = {
                     ...m,
                     timestamp: Date.now(),
-                    originalJid: remoteJid
+                    originalJid: remoteJid,
+                    normalizedJid: normalizedJid
                 };
                 
                 store.chats[normalizedJid].push(messageWithTimestamp);
@@ -227,7 +228,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     store.chats[normalizedJid].shift();
                 }
                 
-                console.log(`📥 Stored message in ${normalizedJid}. Total: ${store.chats[normalizedJid].length}`);
+                console.log(`📥 Stored message in ${normalizedJid} (original: ${remoteJid}). Total: ${store.chats[normalizedJid].length}`);
             }
         }
 
@@ -246,15 +247,16 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 
                 console.log(`🗑️ Message deleted in: ${deletedRemoteJid} (normalized: ${normalizedDeletedJid}), ID: ${deletedKey.id}`);
                 
-                const actualChats = {};
-                for (const key in store.chats) {
-                    if (Object.prototype.hasOwnProperty.call(store.chats, key)) {
-                        actualChats[key] = store.chats[key];
-                    }
+                const isDeletedFromStatus = deletedRemoteJid === 'status@broadcast' || deletedRemoteJid.includes('@broadcast');
+                const isDeletedFromNewsletter = deletedRemoteJid.includes('@newsletter');
+                
+                if (isDeletedFromStatus || isDeletedFromNewsletter) {
+                    console.log(`⏭️ Skipping delete detection for status/broadcast/newsletter`);
+                    return;
                 }
                 
-                if (actualChats[normalizedDeletedJid]) {
-                    const chatMessages = actualChats[normalizedDeletedJid];
+                if (store.chats && store.chats[normalizedDeletedJid]) {
+                    const chatMessages = store.chats[normalizedDeletedJid];
                     const deletedMessage = chatMessages.find(
                         (msg) => msg.key.id === deletedKey.id
                     );
@@ -339,10 +341,12 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     } else {
                         console.log("❌ Deleted message not found in storage");
                         console.log(`Available message IDs in ${normalizedDeletedJid}: ${chatMessages.slice(-5).map(msg => msg.key.id).join(', ')}`);
+                        console.log(`Total messages in ${normalizedDeletedJid}: ${chatMessages.length}`);
                     }
                 } else {
                     console.log("❌ No messages stored for this chat");
-                    console.log(`Available chats: ${Object.keys(actualChats).join(', ')}`);
+                    const availableChats = Object.keys(store.chats || {}).filter(key => !['key', 'idGetter', 'dict', 'array'].includes(key));
+                    console.log(`Available chats: ${availableChats.join(', ')}`);
                 }
             } else {
                 console.log("❌ Antidelete disabled or no storage available");
