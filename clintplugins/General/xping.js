@@ -10,6 +10,19 @@ module.exports = {
         try {
             await client.sendMessage(m.chat, { react: { text: '⚡', key: m.key } });
             
+            const formatUptime = (seconds) => {
+                const days = Math.floor(seconds / (3600 * 24));
+                const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const secs = Math.floor(seconds % 60);
+                const parts = [];
+                if (days > 0) parts.push(`${days} days`);
+                if (hours > 0) parts.push(`${hours} hours`);
+                if (minutes > 0) parts.push(`${minutes} minutes`);
+                if (secs > 0) parts.push(`${secs} seconds`);
+                return parts.join(', ') || '0 seconds';
+            };
+
             const buildDashboardImage = () => {
                 const W = 1280;
                 const H = 720;
@@ -66,7 +79,6 @@ module.exports = {
                     return Math.floor(Math.random() * (max - min + 1)) + min;
                 }
 
-                // Generate random/estimated values for Heroku
                 const botUptime = fmtTime(process.uptime());
                 const pingSpeed = (toxicspeed || 0.0094).toFixed(4);
                 const cpuPercent = getRandomValue(5, 45);
@@ -79,11 +91,9 @@ module.exports = {
                 const diskUsed = 1 * 1024 * 1024 * 1024 * (diskPercent / 100);
                 const latency = parseFloat(pingSpeed);
 
-                // BG
                 ctx.fillStyle = C.bg;
                 ctx.fillRect(0, 0, W, H);
 
-                // Header
                 ctx.fillStyle = C.cyan;
                 ctx.font = "bold 24px sans-serif";
                 ctx.fillText("⚡ Tσxιƈ-ɱԃȥ SYSTEM DASHBOARD", 40, 50);
@@ -91,7 +101,6 @@ module.exports = {
                 ctx.font = "16px sans-serif";
                 ctx.fillText("Heroku Instance • Real-Time Monitor", 40, 75);
 
-                // Row 1
                 const boxY = 110;
                 const boxW = 280;
                 const boxH = 220;
@@ -166,7 +175,6 @@ module.exports = {
                 ctx.font = "bold 16px sans-serif";
                 ctx.fillText(botUptime.split(' ')[0] + ' ' + botUptime.split(' ')[1], netX + 20, boxY + 185);
 
-                // Row 2 pills
                 const pillY = 360;
                 const pillH = 60;
                 const pills = [
@@ -196,7 +204,6 @@ module.exports = {
                     ctx.fillText(p.v, px + 35, pillY + 45);
                 });
 
-                // Footer
                 ctx.textAlign = "center";
                 ctx.fillStyle = C.subtext;
                 ctx.font = "italic 12px sans-serif";
@@ -205,7 +212,6 @@ module.exports = {
                 return canvas.toBuffer("image/png");
             };
 
-            // Send dashboard image
             const imageBuffer = buildDashboardImage();
             
             await client.sendMessage(m.chat, {
