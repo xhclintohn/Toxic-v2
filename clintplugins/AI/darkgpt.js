@@ -16,40 +16,32 @@ module.exports = async (context) => {
     }
 
     try {
-        // Send loading reaction
         await client.sendMessage(m.chat, {
             react: { text: '⌛', key: m.key }
         });
 
-        // Encode the prompt
-        const encodedPrompt = encodeURIComponent(text);
-        const apiUrl = `https://apiskeith.vercel.app/ai/wormgpt?q=${encodedPrompt}`;
+        const response = await axios.post(
+            "https://zieecantikkk-api.vercel.app/api/wormgpt",
+            { text: text },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                timeout: 30000,
+            }
+        );
 
-        console.log("Calling WormGPT API:", apiUrl);
-
-        const response = await axios.get(apiUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': 'application/json',
-            },
-            timeout: 30000,
-        });
-
-        const data = response.data;
-
-        // Check response based on new API structure
-        if (!data?.status || !data?.result) {
-            throw new Error('API returned invalid response');
+        if (!response.data || !response.data.message) {
+            throw new Error('Invalid API response');
         }
 
-        const answer = data.result.trim();
+        const answer = response.data.message.trim();
 
-        // Send success reaction
         await client.sendMessage(m.chat, {
             react: { text: '✅', key: m.key }
         });
 
-        // Send the response
         await client.sendMessage(
             m.chat,
             { text: formatStylishReply(answer) },
@@ -58,8 +50,7 @@ module.exports = async (context) => {
 
     } catch (error) {
         console.error("WormGPT Error:", error);
-
-        // Send error reaction
+        
         await client.sendMessage(m.chat, {
             react: { text: '❌', key: m.key }
         });
