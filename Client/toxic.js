@@ -34,6 +34,14 @@ function shouldStoreMessage(m) {
     return !isStatus && !isBroadcast && !isNewsletter;
 }
 
+function normalizeJidForStorage(jid) {
+    if (!jid) return jid;
+    if (jid.includes('@lid')) {
+        return jid.split('@')[0] + '@s.whatsapp.net';
+    }
+    return jid;
+}
+
 module.exports = toxic = async (client, m, chatUpdate, store) => {
     try {
         const sudoUsers = await getSudoUsers();
@@ -198,30 +206,40 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         if (store && shouldStoreMessage(m)) {
             const remoteJid = m.chat || m.key?.remoteJid;
-            const senderJid = m.sender || m.key?.participant;
+            const normalizedJid = normalizeJidForStorage(remoteJid);
             
-            if (remoteJid) {
+            if (normalizedJid) {
                 if (!store.chats) store.chats = Object.create(null);
+                if (!store.messageMap) store.messageMap = Object.create(null);
                 
-                const storageKey = remoteJid;
-                
-                if (!store.chats[storageKey]) {
-                    store.chats[storageKey] = [];
+                if (!store.chats[normalizedJid]) {
+                    store.chats[normalizedJid] = [];
                 }
                 
+                const messageId = m.key.id;
                 const messageWithTimestamp = {
                     ...m,
                     timestamp: Date.now(),
-                    sender: senderJid
+                    originalRemoteJid: remoteJid,
+                    normalizedRemoteJid: normalizedJid
                 };
                 
-                store.chats[storageKey].push(messageWithTimestamp);
+                store.chats[normalizedJid].push(messageWithTimestamp);
                 
-                if (store.chats[storageKey].length > 100) {
-                    store.chats[storageKey].shift();
+                store.messageMap[messageId] = {
+                    normalizedJid: normalizedJid,
+                    originalJid: remoteJid,
+                    timestamp: Date.now()
+                };
+                
+                if (store.chats[normalizedJid].length > 100) {
+                    const removedMsg = store.chats[normalizedJid].shift();
+                    if (removedMsg?.key?.id) {
+                        delete store.messageMap[removedMsg.key.id];
+                    }
                 }
                 
-                console.log(`📥 Stored message from ${senderJid} in ${storageKey}. Total: ${store.chats[storageKey].length}`);
+                console.log(`📥 Stored message ${messageId} from ${remoteJid} (normalized: ${normalizedJid}). Total: ${store.chats[normalizedJid].length}`);
             }
         }
 
@@ -233,11 +251,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             
             console.log(`⚙️ Antidelete setting: ${isAntideleteEnabled ? 'ENABLED' : 'DISABLED'}`);
             
-            if (isAntideleteEnabled && store?.chats) {
+            if (isAntideleteEnabled && store?.chats && store?.messageMap) {
                 const deletedKey = m.message.protocolMessage.key;
+                const deletedMessageId = deletedKey.id;
                 const deletedRemoteJid = deletedKey.remoteJid;
+                const normalizedDeletedJid = normalizeJidForStorage(deletedRemoteJid);
                 
-                console.log(`🗑️ Message deleted in: ${deletedRemoteJid}, ID: ${deletedKey.id}`);
+                console.log(`🗑️ Message deleted in: ${deletedRemoteJid} (normalized: ${normalizedDeletedJid}), ID: ${deletedMessageId}`);
                 
                 const isDeletedFromStatus = deletedRemoteJid === 'status@broadcast' || deletedRemoteJid.includes('@broadcast');
                 const isDeletedFromNewsletter = deletedRemoteJid.includes('@newsletter');
@@ -247,96 +267,128 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     return;
                 }
                 
-                if (store.chats && store.chats[deletedRemoteJid]) {
-                    const chatMessages = store.chats[deletedRemoteJid];
-                    const deletedMessage = chatMessages.find(
-                        (msg) => msg.key.id === deletedKey.id
+                let deletedMessage = null;
+                let chatJidToSearch = null;
+                
+                if (store.messageMap[deletedMessageId]) {
+                    chatJidToSearch = store.messageMap[deletedMessageId].normalizedJid;
+                    console.log(`🔍 Found message in map, searching in chat: ${chatJidToSearch}`);
+                } else {
+                    chatJidToSearch = normalizedDeletedJid;
+                    console.log(`🔍 Message not in map, trying normalized JID: ${chatJidToSearch}`);
+                }
+                
+                if (store.chats[chatJidToSearch]) {
+                    const chatMessages = store.chats[chatJidToSearch];
+                    deletedMessage = chatMessages.find(
+                        (msg) => msg.key.id === deletedMessageId
                     );
-
-                    if (deletedMessage) {
-                        console.log("✅ Found deleted message in storage!");
+                }
+                
+                if (!deletedMessage && normalizedDeletedJid !== chatJidToSearch) {
+                    console.log(`🔍 Trying original deleted JID: ${deletedRemoteJid}`);
+                    if (store.chats[deletedRemoteJid]) {
+                        const chatMessages = store.chats[deletedRemoteJid];
+                        deletedMessage = chatMessages.find(
+                            (msg) => msg.key.id === deletedMessageId
+                        );
+                    }
+                }
+                
+                if (!deletedMessage) {
+                    console.log(`🔍 Searching ALL chats for message ID: ${deletedMessageId}`);
+                    for (const [jid, messages] of Object.entries(store.chats)) {
+                        if (['key', 'idGetter', 'dict', 'array'].includes(jid)) continue;
                         
-                        const botJid = client.decodeJid(client.user.id);
-                        const sender = client.decodeJid(deletedMessage.key.participant || deletedMessage.key.remoteJid);
-                        const deleter = m.key.participant ? m.key.participant.split('@')[0] : 'Unknown';
-                        const groupName = deletedRemoteJid.endsWith('@g.us') ? 'Group' : 'Private Chat';
-                        const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
-
-                        try {
-                            const notification = `*AntiDelete Detected*\n\n*Time:* ${deleteTime}\n*Chat:* ${groupName}\n*Deleted by:* @${deleter}\n*Sender:* @${sender.split('@')[0]}`;
-
-                            console.log(`📤 Forwarding deleted message to ${botJid}`);
-                            
-                            if (deletedMessage.message.conversation) {
-                                await client.sendMessage(botJid, {
-                                    text: `${notification}\nDeleted message: ${deletedMessage.message.conversation}`,
-                                    mentions: [sender]
-                                });
-                                console.log("📝 Text message forwarded");
-                            }
-                            else if (deletedMessage.message.imageMessage) {
-                                const caption = deletedMessage.message.imageMessage.caption || '';
-                                console.log("🖼️ Downloading deleted image...");
-                                const imageBuffer = await client.downloadMediaMessage(deletedMessage.message.imageMessage);
-                                await client.sendMessage(botJid, {
-                                    image: imageBuffer,
-                                    caption: `${notification}\n${caption}`,
-                                    mentions: [sender]
-                                });
-                                console.log("🖼️ Image forwarded");
-                            }
-                            else if (deletedMessage.message.videoMessage) {
-                                const caption = deletedMessage.message.videoMessage.caption || '';
-                                console.log("🎥 Downloading deleted video...");
-                                const videoBuffer = await client.downloadMediaMessage(deletedMessage.message.videoMessage);
-                                await client.sendMessage(botJid, {
-                                    video: videoBuffer,
-                                    caption: `${notification}\n${caption}`,
-                                    mentions: [sender]
-                                });
-                                console.log("🎥 Video forwarded");
-                            }
-                            else if (deletedMessage.message.audioMessage) {
-                                console.log("🔊 Downloading deleted audio...");
-                                const audioBuffer = await client.downloadMediaMessage(deletedMessage.message.audioMessage);
-                                await client.sendMessage(botJid, {
-                                    audio: audioBuffer,
-                                    ptt: true,
-                                    caption: notification,
-                                    mentions: [sender]
-                                });
-                                console.log("🔊 Audio forwarded");
-                            }
-                            else if (deletedMessage.message.stickerMessage) {
-                                console.log("😀 Downloading deleted sticker...");
-                                const stickerBuffer = await client.downloadMediaMessage(deletedMessage.message.stickerMessage);
-                                await client.sendMessage(botJid, {
-                                    sticker: stickerBuffer,
-                                    caption: notification,
-                                    mentions: [sender]
-                                });
-                                console.log("😀 Sticker forwarded");
-                            }
-                            else if (deletedMessage.message.extendedTextMessage?.text) {
-                                await client.sendMessage(botJid, {
-                                    text: `${notification}\nDeleted message: ${deletedMessage.message.extendedTextMessage.text}`,
-                                    mentions: [sender]
-                                });
-                                console.log("📝 Extended text forwarded");
-                            } else {
-                                console.log("⚠️ Unknown message type, cannot forward");
-                            }
-
-                        } catch (error) {
-                            console.error('❌ AntiDelete forwarding error:', error);
+                        const foundMsg = messages.find(msg => msg.key.id === deletedMessageId);
+                        if (foundMsg) {
+                            deletedMessage = foundMsg;
+                            chatJidToSearch = jid;
+                            console.log(`✅ Found in alternate chat: ${jid}`);
+                            break;
                         }
-                    } else {
-                        console.log("❌ Deleted message not found in storage");
-                        console.log(`Available message IDs in ${deletedRemoteJid}: ${chatMessages.slice(-5).map(msg => msg.key.id).join(', ')}`);
-                        console.log(`Total messages in ${deletedRemoteJid}: ${chatMessages.length}`);
+                    }
+                }
+
+                if (deletedMessage) {
+                    console.log("✅ Found deleted message in storage!");
+                    
+                    const botJid = client.decodeJid(client.user.id);
+                    const sender = client.decodeJid(deletedMessage.key.participant || deletedMessage.key.remoteJid);
+                    const deleter = m.key.participant ? m.key.participant.split('@')[0] : 'Unknown';
+                    const groupName = chatJidToSearch.endsWith('@g.us') ? 'Group' : 'Private Chat';
+                    const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
+
+                    try {
+                        const notification = `*AntiDelete Detected*\n\n*Time:* ${deleteTime}\n*Chat:* ${groupName}\n*Deleted by:* @${deleter}\n*Sender:* @${sender.split('@')[0]}`;
+
+                        console.log(`📤 Forwarding deleted message to ${botJid}`);
+                        
+                        if (deletedMessage.message.conversation) {
+                            await client.sendMessage(botJid, {
+                                text: `${notification}\nDeleted message: ${deletedMessage.message.conversation}`,
+                                mentions: [sender]
+                            });
+                            console.log("📝 Text message forwarded");
+                        }
+                        else if (deletedMessage.message.imageMessage) {
+                            const caption = deletedMessage.message.imageMessage.caption || '';
+                            console.log("🖼️ Downloading deleted image...");
+                            const imageBuffer = await client.downloadMediaMessage(deletedMessage.message.imageMessage);
+                            await client.sendMessage(botJid, {
+                                image: imageBuffer,
+                                caption: `${notification}\n${caption}`,
+                                mentions: [sender]
+                            });
+                            console.log("🖼️ Image forwarded");
+                        }
+                        else if (deletedMessage.message.videoMessage) {
+                            const caption = deletedMessage.message.videoMessage.caption || '';
+                            console.log("🎥 Downloading deleted video...");
+                            const videoBuffer = await client.downloadMediaMessage(deletedMessage.message.videoMessage);
+                            await client.sendMessage(botJid, {
+                                video: videoBuffer,
+                                caption: `${notification}\n${caption}`,
+                                mentions: [sender]
+                            });
+                            console.log("🎥 Video forwarded");
+                        }
+                        else if (deletedMessage.message.audioMessage) {
+                            console.log("🔊 Downloading deleted audio...");
+                            const audioBuffer = await client.downloadMediaMessage(deletedMessage.message.audioMessage);
+                            await client.sendMessage(botJid, {
+                                audio: audioBuffer,
+                                ptt: true,
+                                caption: notification,
+                                mentions: [sender]
+                            });
+                            console.log("🔊 Audio forwarded");
+                        }
+                        else if (deletedMessage.message.stickerMessage) {
+                            console.log("😀 Downloading deleted sticker...");
+                            const stickerBuffer = await client.downloadMediaMessage(deletedMessage.message.stickerMessage);
+                            await client.sendMessage(botJid, {
+                                sticker: stickerBuffer,
+                                caption: notification,
+                                mentions: [sender]
+                            });
+                            console.log("😀 Sticker forwarded");
+                        }
+                        else if (deletedMessage.message.extendedTextMessage?.text) {
+                            await client.sendMessage(botJid, {
+                                text: `${notification}\nDeleted message: ${deletedMessage.message.extendedTextMessage.text}`,
+                                mentions: [sender]
+                            });
+                            console.log("📝 Extended text forwarded");
+                        } else {
+                            console.log("⚠️ Unknown message type, cannot forward");
+                        }
+
+                    } catch (error) {
+                        console.error('❌ AntiDelete forwarding error:', error);
                     }
                 } else {
-                    console.log("❌ No messages stored for this chat");
+                    console.log("❌ Deleted message not found in storage");
                     const availableChats = Object.keys(store.chats || {}).filter(key => !['key', 'idGetter', 'dict', 'array'].includes(key));
                     console.log(`Available chats: ${availableChats.join(', ')}`);
                 }
