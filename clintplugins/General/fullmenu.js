@@ -11,21 +11,21 @@ module.exports = {
     const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃'; 
 
     const settings = await getSettings();
-    const effectivePrefix = settings.prefix || ''; // Use empty string for prefixless mode
+    const effectivePrefix = settings.prefix || ''; 
 
     const categories = [
-      { name: 'General', display: 'GEᑎEᖇᗩᒪ', emoji: '📜' },
-      { name: 'Settings', display: 'SETTINGS', emoji: '🛠️' },
-      { name: 'Owner', display: 'OWNER', emoji: '👑' },
-      { name: 'Heroku', display: 'HEROKU', emoji: '☁️' },
-      { name: 'Wa-Privacy', display: 'PRIVACY', emoji: '🔒' },
-      { name: 'Groups', display: 'GROUPS', emoji: '👥' },
-      { name: 'AI', display: 'AI', emoji: '🧠' },
-      { name: 'Media', display: 'MEDIA', emoji: '🎬' },
+      { name: 'General', display: 'GEᑎEᖇᗩᒪMENU', emoji: '📜' },
+      { name: 'Settings', display: 'SETTINGSMENU', emoji: '🛠️' },
+      { name: 'Owner', display: 'OWNERMENU', emoji: '👑' },
+      { name: 'Heroku', display: 'HEROKUMENU', emoji: '☁️' },
+      { name: 'Wa-Privacy', display: 'PRIVACYMENU', emoji: '🔒' },
+      { name: 'Groups', display: 'GROUPMENU', emoji: '👥' },
+      { name: 'AI', display: 'AIMENJ', emoji: '🧠' },
+      { name: 'Media', display: 'DOWNLOADMENU', emoji: '🎬' },
       { name: 'Editting', display: 'EDITING', emoji: '✂️' },
       { name: 'Logo', display: 'LOGO', emoji: '🎨' },
-      { name: '+18', display: '+18', emoji: '🔞' },
-      { name: 'Utils', display: 'UTILS', emoji: '🔧' }
+      { name: '+18', display: '+18MENU', emoji: '🔞' },
+      { name: 'Utils', display: 'UTILSMENU', emoji: '🔧' }
     ];
 
     const getGreeting = () => {
