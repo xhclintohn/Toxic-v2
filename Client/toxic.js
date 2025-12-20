@@ -13,7 +13,7 @@ const gcPresence = require('../Functions/gcPresence');
 const antitaggc = require('../Functions/antitag');
 const antilink = require('../Functions/antilink');
 const chatbotpm = require('../Functions/chatbotpm');
-const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings } = require('../Database/config');
+const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings, updateSetting } = require('../Database/config');
 const { botname, mycode } = require('../Env/settings');
 const { cleanupOldMessages } = require('../lib/Store');
 
@@ -185,7 +185,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         if (cmd && mode === 'private' && !itsMe && !Owner && !sudoUsers.includes(m.sender)) return;
 
-        // Store messages for antidelete
         if (store) {
             const remoteJid = m.chat || m.key?.remoteJid;
             if (remoteJid) {
@@ -198,22 +197,34 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 if (store.chats[remoteJid].length > 100) {
                     store.chats[remoteJid].shift();
                 }
+                
+                console.log(`📥 Stored message in ${remoteJid}. Total: ${store.chats[remoteJid].length}`);
             }
         }
 
-        // Check for deleted messages
-        if (antideleteSetting === true && m.message?.protocolMessage?.type === 0) {
-            try {
+        if (m.message?.protocolMessage?.type === 0) {
+            console.log("🔍 Checking for deleted message...");
+            
+            const currentSettings = await getSettings();
+            const isAntideleteEnabled = currentSettings?.antidelete === true;
+            
+            console.log(`⚙️ Antidelete setting: ${isAntideleteEnabled ? 'ENABLED' : 'DISABLED'}`);
+            
+            if (isAntideleteEnabled && store?.chats) {
                 const deletedKey = m.message.protocolMessage.key;
                 const remoteJid = deletedKey.remoteJid;
                 
-                if (store?.chats?.[remoteJid]) {
+                console.log(`🗑️ Message deleted in: ${remoteJid}, ID: ${deletedKey.id}`);
+                
+                if (store.chats[remoteJid]) {
                     const chatMessages = store.chats[remoteJid];
                     const deletedMessage = chatMessages.find(
                         (msg) => msg.key.id === deletedKey.id
                     );
 
                     if (deletedMessage) {
+                        console.log("✅ Found deleted message in storage!");
+                        
                         const botJid = client.decodeJid(client.user.id);
                         const sender = client.decodeJid(deletedMessage.key.participant || deletedMessage.key.remoteJid);
                         const deleter = m.key.participant ? m.key.participant.split('@')[0] : 'Unknown';
@@ -221,33 +232,41 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
 
                         try {
-                            const notification = `*AntiDelete Detected*\n\n*Time:* ${deleteTime}\n*Group:* ${groupName}\n*Deleted by:* @${deleter}\n*Sender:* @${sender.split('@')[0]}`;
+                            const notification = `*AntiDelete Detected*\n\n*Time:* ${deleteTime}\n*Chat:* ${groupName}\n*Deleted by:* @${deleter}\n*Sender:* @${sender.split('@')[0]}`;
 
+                            console.log(`📤 Forwarding deleted message to ${botJid}`);
+                            
                             if (deletedMessage.message.conversation) {
                                 await client.sendMessage(botJid, {
                                     text: `${notification}\nDeleted message: ${deletedMessage.message.conversation}`,
                                     mentions: [sender]
                                 });
+                                console.log("📝 Text message forwarded");
                             }
                             else if (deletedMessage.message.imageMessage) {
                                 const caption = deletedMessage.message.imageMessage.caption || '';
+                                console.log("🖼️ Downloading deleted image...");
                                 const imageBuffer = await client.downloadMediaMessage(deletedMessage.message.imageMessage);
                                 await client.sendMessage(botJid, {
                                     image: imageBuffer,
                                     caption: `${notification}\n${caption}`,
                                     mentions: [sender]
                                 });
+                                console.log("🖼️ Image forwarded");
                             }
                             else if (deletedMessage.message.videoMessage) {
                                 const caption = deletedMessage.message.videoMessage.caption || '';
+                                console.log("🎥 Downloading deleted video...");
                                 const videoBuffer = await client.downloadMediaMessage(deletedMessage.message.videoMessage);
                                 await client.sendMessage(botJid, {
                                     video: videoBuffer,
                                     caption: `${notification}\n${caption}`,
                                     mentions: [sender]
                                 });
+                                console.log("🎥 Video forwarded");
                             }
                             else if (deletedMessage.message.audioMessage) {
+                                console.log("🔊 Downloading deleted audio...");
                                 const audioBuffer = await client.downloadMediaMessage(deletedMessage.message.audioMessage);
                                 await client.sendMessage(botJid, {
                                     audio: audioBuffer,
@@ -255,29 +274,39 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                                     caption: notification,
                                     mentions: [sender]
                                 });
+                                console.log("🔊 Audio forwarded");
                             }
                             else if (deletedMessage.message.stickerMessage) {
+                                console.log("😀 Downloading deleted sticker...");
                                 const stickerBuffer = await client.downloadMediaMessage(deletedMessage.message.stickerMessage);
                                 await client.sendMessage(botJid, {
                                     sticker: stickerBuffer,
                                     caption: notification,
                                     mentions: [sender]
                                 });
+                                console.log("😀 Sticker forwarded");
                             }
                             else if (deletedMessage.message.extendedTextMessage?.text) {
                                 await client.sendMessage(botJid, {
                                     text: `${notification}\nDeleted message: ${deletedMessage.message.extendedTextMessage.text}`,
                                     mentions: [sender]
                                 });
+                                console.log("📝 Extended text forwarded");
+                            } else {
+                                console.log("⚠️ Unknown message type, cannot forward");
                             }
 
                         } catch (error) {
-                            console.error('AntiDelete forwarding error:', error);
+                            console.error('❌ AntiDelete forwarding error:', error);
                         }
+                    } else {
+                        console.log("❌ Deleted message not found in storage");
                     }
+                } else {
+                    console.log("❌ No messages stored for this chat");
                 }
-            } catch (error) {
-                console.error('AntiDelete processing error:', error);
+            } else {
+                console.log("❌ Antidelete disabled or no storage available");
             }
         }
 
@@ -287,7 +316,9 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         await gcPresence(client, m);
         await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
 
-        if (cmd) await commands[resolvedCommandName](context);
+        if (cmd && resolvedCommandName !== 'antidelete') {
+            await commands[resolvedCommandName](context);
+        }
 
     } catch (err) {
         console.error('Toxic-MD Error:', util.format(err));
