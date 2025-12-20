@@ -108,7 +108,7 @@ module.exports = {
                                         },  
                                         {  
                                             title: '📜 𝘾𝙖𝙩𝙚𝙜𝙤𝙧𝙮 𝙈𝙚𝙣𝙪𝙨',  
-                                            highlight_label: 'New',  
+                                            highlight_label: '© 丨几匚',  
                                             rows: [  
                                                 { title: '𝐆𝐞𝐧𝐞𝐫𝐚𝐥𝐌𝐞𝐧𝐮', description: 'General commands', id: `${prefix}generalmenu` },  
                                                 { title: '𝐒𝐞𝐭𝐭𝐢𝐧𝐠𝐬𝐌𝐞𝐧𝐮', description: 'Bot settings commands', id: `${prefix}settingsmenu` },  
