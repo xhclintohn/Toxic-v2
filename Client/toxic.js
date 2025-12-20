@@ -246,8 +246,15 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 
                 console.log(`🗑️ Message deleted in: ${deletedRemoteJid} (normalized: ${normalizedDeletedJid}), ID: ${deletedKey.id}`);
                 
-                if (store.chats[normalizedDeletedJid]) {
-                    const chatMessages = store.chats[normalizedDeletedJid];
+                const actualChats = {};
+                for (const key in store.chats) {
+                    if (Object.prototype.hasOwnProperty.call(store.chats, key)) {
+                        actualChats[key] = store.chats[key];
+                    }
+                }
+                
+                if (actualChats[normalizedDeletedJid]) {
+                    const chatMessages = actualChats[normalizedDeletedJid];
                     const deletedMessage = chatMessages.find(
                         (msg) => msg.key.id === deletedKey.id
                     );
@@ -331,11 +338,11 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         }
                     } else {
                         console.log("❌ Deleted message not found in storage");
-                        console.log(`Available message IDs: ${chatMessages.map(msg => msg.key.id).join(', ')}`);
+                        console.log(`Available message IDs in ${normalizedDeletedJid}: ${chatMessages.slice(-5).map(msg => msg.key.id).join(', ')}`);
                     }
                 } else {
                     console.log("❌ No messages stored for this chat");
-                    console.log(`Available chats: ${Object.keys(store.chats).join(', ')}`);
+                    console.log(`Available chats: ${Object.keys(actualChats).join(', ')}`);
                 }
             } else {
                 console.log("❌ Antidelete disabled or no storage available");
