@@ -151,7 +151,7 @@ function smsg(conn, m, store) {
             title: `Toxic-MD`,
             body: m.pushName,
             previewType: "PHOTO",
-            thumbnailUrl: "https://files.catbox.moe/7olgqc.jpeg",
+            thumbnailUrl: "https://github.com/xhclintohn/Toxic-MD",
             thumbnail: kali,
             sourceUrl: "https://github.com/xhclintohn/Toxic-MD",
           },
