@@ -1,29 +1,69 @@
 const { getSettings, updateSetting } = require('../Database/config');
 
 module.exports = async (context) => {
-  const { client, m, args, settings } = context;
+  const { client, m, store, pict, args, prefix } = context;
+
+  // FIX: Add early return if no message object
+  if (!context || !m || !m.key || !m.chat) {
+    return;
+  }
 
   const formatStylishReply = (message) => {
     return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
   };
 
- 
-  if (!m || !m.key || !m.key.fromMe) {
-    return;
+  try {
+    const settings = await getSettings();
+    if (!settings || Object.keys(settings).length === 0) {
+      return await client.sendMessage(
+        m.chat,
+        { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
+        { quoted: m, ad: true }
+      );
+    }
+
+    const value = args?.join(" ")?.toLowerCase() || '';
+
+    if (value === 'on' || value === 'off') {
+      const action = value === 'on';
+      if (settings.antidelete === action) {
+        return await client.sendMessage(
+          m.chat,
+          { text: formatStylishReply(`Antidelete’s already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time. 😈`) },
+          { quoted: m, ad: true }
+        );
+      }
+
+      await updateSetting('antidelete', action);
+      return await client.sendMessage(
+        m.chat,
+        { text: formatStylishReply(`Antidelete ${value.toUpperCase()} activated! 🔥 ${action ? 'No one’s erasing shit on my watch, king! 🦁' : 'Deletions are free to slide, you’re not worth catching. 😴'}`) },
+        { quoted: m, ad: true }
+      );
+    }
+
+    const buttons = [
+      { buttonId: `${prefix}antidelete on`, buttonText: { displayText: "ON 🦁" }, type: 1 },
+      { buttonId: `${prefix}antidelete off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
+    ];
+
+    await client.sendMessage(
+      m.chat,
+      {
+        text: formatStylishReply(`Antidelete’s ${settings.antidelete ? 'ON 🦁' : 'OFF 😴'}, dumbass. Pick a vibe, noob! 😈`),
+        footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+        buttons,
+        headerType: 1,
+        viewOnce: true,
+      },
+      { quoted: m, ad: true }
+    );
+  } catch (error) {
+    console.error('Antidelete error:', error);
+    await client.sendMessage(
+      m.chat,
+      { text: formatStylishReply("Shit broke, couldn’t mess with antidelete. Database or something’s fucked. Try later.") },
+      { quoted: m, ad: true }
+    );
   }
-
-  const subCommand = args[0]?.toLowerCase();
-
-  if (subCommand === 'status') {
-    const isEnabled = settings.antidelete;
-    return await m.reply(formatStylishReply(
-      `🔍 *Anti-Delete Status*\n\n` +
-      `• Enabled: ${isEnabled ? '✅ Yes' : '❌ No'}\n` +
-      `• Forwards to: Bot's DM`
-    ));
-  }
-
-  const newState = !settings.antidelete;
-  await updateSetting('antidelete', newState);
-  await m.reply(formatStylishReply(`Antidelete ${newState ? 'ENABLED' : 'DISABLED'} globally! ${newState ? 'Deleted messages will be forwarded to my DM! 🔒' : 'No more snooping on deletes, you rebel! 😎'}`));
 };
