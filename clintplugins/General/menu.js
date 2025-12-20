@@ -185,13 +185,7 @@ module.exports = {
             'menu1.mp3',
             'menu2.mp3', 
             'menu3.mp3',
-            'menu4.mp3',
-            'menu5.mp3',
-            'menu6.mp3',
-            'menu7.mp3',
-            'menu8.mp3',
-            'menu9.mp3',
-            'menu10.mp3'
+            'menu4.mp3'
         ];
 
         for (const fileName of menuFiles) {
