@@ -15,18 +15,14 @@ module.exports = {
     aliases: ['toimage', 'stickertoimg', 'sticker'],
     description: 'Converts stickers to images',
     run: async (context) => {
-        const { client, m, mime } = context;
+        const { client, m } = context;
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
             if (!m.quoted) return m.reply('Are you illiterate? QUOTE A STICKER. The command is not a suggestion.');
             const quotedMime = m.quoted.mimetype || '';
             if (!/webp/.test(quotedMime)) return m.reply('That is not a sticker. Do you need glasses? That is clearly not a .webp file.');
-            const statusMsg = await m.reply('Converting your garbage sticker. Try to contain your excitement.');
             const stickerBuffer = await m.quoted.download();
-            if (!stickerBuffer) {
-                await client.sendMessage(m.chat, { delete: statusMsg.key });
-                return m.reply('Failed to download the sticker. Your phone is probably as useless as you are.');
-            }
+            if (!stickerBuffer) return m.reply('Failed to download the sticker. Your phone is probably as useless as you are.');
             const stickerUrl = await uploadToCatbox(stickerBuffer);
             const encodedUrl = encodeURIComponent(stickerUrl);
             const convertApiUrl = `https://api.elrayyxml.web.id/api/maker/convert?url=${encodedUrl}&format=PNG`;
@@ -35,7 +31,6 @@ module.exports = {
             const imageUrl = response.data.result;
             const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 20000 });
             const imageBuffer = Buffer.from(imageResponse.data);
-            await client.sendMessage(m.chat, { delete: statusMsg.key });
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
             await client.sendMessage(m.chat, { image: imageBuffer, caption: 'Your sticker is now an image. A miraculous achievement.\n—\nTσxιƈ-ɱԃȥ' }, { quoted: m });
             await client.sendMessage(m.chat, { document: imageBuffer, mimetype: 'image/png', fileName: `sticker_${Date.now()}.png`, caption: 'PNG version. Slightly less terrible.\n—\nTσxιƈ-ɱԃȥ' }, { quoted: m });
