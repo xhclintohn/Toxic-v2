@@ -23,14 +23,6 @@ process.setMaxListeners(0);
 cleanupOldMessages();
 setInterval(() => cleanupOldMessages(), 24 * 60 * 60 * 1000);
 
-function normalizeJid(jid) {
-    if (!jid) return jid;
-    if (jid.includes('@lid')) {
-        return jid.split('@')[0] + '@s.whatsapp.net';
-    }
-    return jid;
-}
-
 function shouldStoreMessage(m) {
     const remoteJid = m.chat || m.key?.remoteJid;
     if (!remoteJid) return false;
@@ -206,29 +198,26 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         if (store && shouldStoreMessage(m)) {
             const remoteJid = m.chat || m.key?.remoteJid;
-            const normalizedJid = normalizeJid(remoteJid);
             
-            if (normalizedJid) {
+            if (remoteJid) {
                 if (!store.chats) store.chats = Object.create(null);
                 
-                if (!store.chats[normalizedJid]) {
-                    store.chats[normalizedJid] = [];
+                if (!store.chats[remoteJid]) {
+                    store.chats[remoteJid] = [];
                 }
                 
                 const messageWithTimestamp = {
                     ...m,
-                    timestamp: Date.now(),
-                    originalJid: remoteJid,
-                    normalizedJid: normalizedJid
+                    timestamp: Date.now()
                 };
                 
-                store.chats[normalizedJid].push(messageWithTimestamp);
+                store.chats[remoteJid].push(messageWithTimestamp);
                 
-                if (store.chats[normalizedJid].length > 100) {
-                    store.chats[normalizedJid].shift();
+                if (store.chats[remoteJid].length > 100) {
+                    store.chats[remoteJid].shift();
                 }
                 
-                console.log(`📥 Stored message in ${normalizedJid} (original: ${remoteJid}). Total: ${store.chats[normalizedJid].length}`);
+                console.log(`📥 Stored message in ${remoteJid}. Total: ${store.chats[remoteJid].length}`);
             }
         }
 
@@ -243,9 +232,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             if (isAntideleteEnabled && store?.chats) {
                 const deletedKey = m.message.protocolMessage.key;
                 const deletedRemoteJid = deletedKey.remoteJid;
-                const normalizedDeletedJid = normalizeJid(deletedRemoteJid);
                 
-                console.log(`🗑️ Message deleted in: ${deletedRemoteJid} (normalized: ${normalizedDeletedJid}), ID: ${deletedKey.id}`);
+                console.log(`🗑️ Message deleted in: ${deletedRemoteJid}, ID: ${deletedKey.id}`);
                 
                 const isDeletedFromStatus = deletedRemoteJid === 'status@broadcast' || deletedRemoteJid.includes('@broadcast');
                 const isDeletedFromNewsletter = deletedRemoteJid.includes('@newsletter');
@@ -255,8 +243,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     return;
                 }
                 
-                if (store.chats && store.chats[normalizedDeletedJid]) {
-                    const chatMessages = store.chats[normalizedDeletedJid];
+                if (store.chats && store.chats[deletedRemoteJid]) {
+                    const chatMessages = store.chats[deletedRemoteJid];
                     const deletedMessage = chatMessages.find(
                         (msg) => msg.key.id === deletedKey.id
                     );
@@ -267,7 +255,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         const botJid = client.decodeJid(client.user.id);
                         const sender = client.decodeJid(deletedMessage.key.participant || deletedMessage.key.remoteJid);
                         const deleter = m.key.participant ? m.key.participant.split('@')[0] : 'Unknown';
-                        const groupName = normalizedDeletedJid.endsWith('@g.us') ? 'Group' : 'Private Chat';
+                        const groupName = deletedRemoteJid.endsWith('@g.us') ? 'Group' : 'Private Chat';
                         const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
 
                         try {
@@ -340,8 +328,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         }
                     } else {
                         console.log("❌ Deleted message not found in storage");
-                        console.log(`Available message IDs in ${normalizedDeletedJid}: ${chatMessages.slice(-5).map(msg => msg.key.id).join(', ')}`);
-                        console.log(`Total messages in ${normalizedDeletedJid}: ${chatMessages.length}`);
+                        console.log(`Available message IDs in ${deletedRemoteJid}: ${chatMessages.slice(-5).map(msg => msg.key.id).join(', ')}`);
+                        console.log(`Total messages in ${deletedRemoteJid}: ${chatMessages.length}`);
                     }
                 } else {
                     console.log("❌ No messages stored for this chat");
