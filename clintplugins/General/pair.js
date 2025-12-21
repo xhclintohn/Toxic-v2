@@ -11,7 +11,7 @@ const path = require('path');
 const pino = require('pino');
 
 module.exports = async (context) => {
-    const { client, m, text } = context;
+    const { client, m, text, prefix } = context;
 
     try {
         if (!text) {
@@ -27,11 +27,11 @@ module.exports = async (context) => {
             }, { quoted: m });
         }
 
-        // Create a temporary folder for session
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+
         const tempPath = path.join(__dirname, 'temps', number);
         if (!fs.existsSync(tempPath)) fs.mkdirSync(tempPath, { recursive: true });
 
-        // Baileys setup
         const { version } = await fetchLatestBaileysVersion();
         const { state, saveCreds } = await useMultiFileAuthState(tempPath);
 
@@ -43,55 +43,55 @@ module.exports = async (context) => {
             },
             printQRInTerminal: false,
             logger: pino({ level: 'silent' }),
-            browser: ['Ubuntu', 'Chrome'],
+            browser: ["Ubuntu", "Chrome", "125"],
             syncFullHistory: false,
-            connectTimeoutMs: 60000,
+            generateHighQualityLinkPreview: true,
+            markOnlineOnConnect: true,
+            connectTimeoutMs: 120000,
             keepAliveIntervalMs: 30000,
+            defaultQueryTimeoutMs: 60000,
+            transactionOpts: { maxCommitRetries: 10, delayBetweenTriesMs: 3000 },
+            retryRequestDelayMs: 10000
         });
 
         Toxic_MD_Client.ev.on('creds.update', saveCreds);
 
-       
-        await delay(1500);
+        await delay(2000);
         const code = await Toxic_MD_Client.requestPairingCode(number);
 
-        if (!code) throw new Error("Failed to get pairing code.");
+        if (!code) throw new Error("Failed to generate pairing code.");
 
-        // Send pairing code message with CTA copy button
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
         await client.sendMessage(m.chat, {
-            interactiveMessage: {
-                header: "🔐 Toxic-MD Pairing Code",
-                title: `✅ Pairing code for *${number}*\n\n> ${code}\n\nFollow the link below to learn how to use it 👇`,
-                footer: "◈ Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
-                buttons: [
-                    {
-                        name: "cta_copy",
-                        buttonParamsJson: JSON.stringify({
-                            display_text: "Copy Pair Code",
-                            id: `copy_${Date.now()}`,
-                            copy_code: code,
-                        }),
-                    },
-                    {
-                        name: "cta_url",
-                        buttonParamsJson: JSON.stringify({
-                            display_text: "Open Pairing Guide",
-                            url: "https://youtube.com/shorts/0G_lBt7DhWI?feature=share"
-                        }),
-                    },
-                ],
-            },
+            text: `✅ *Pairing code for \( {number}:*\n\n> * \){code}*\n\n` +
+                  `Copy the code above and use it in your pairing site/app.\n\n` +
+                  `◈━━━━━━━━━━━◈\n` +
+                  `SESSION CONNECTED\n\n` +
+                  `The code above is your pairing code. Use it to connect your bot!\n\n` +
+                  `Need help? Contact:\n` +
+                  `> Owner: https://wa.me/254735342808\n` +
+                  `> Group: https://chat.whatsapp.com/GoXKLVJgTAAC3556FXkfFI\n` +
+                  `> Channel: https://whatsapp.com/channel/0029VagJlnG6xCSU2tS1Vz19\n` +
+                  `> Instagram: https://www.instagram.com/xh_clinton\n` +
+                  `> Repo: https://github.com/xhclintohn/Toxic-MD\n\n` +
+                  `Don't forget to ⭐ the repo!\n` +
+                  `◈━━━━━━━━━━━◈`
         }, { quoted: m });
 
         await Toxic_MD_Client.ws.close();
+
         setTimeout(() => {
             if (fs.existsSync(tempPath)) fs.rmSync(tempPath, { recursive: true, force: true });
         }, 5000);
 
     } catch (error) {
         console.error("Error in pair command:", error);
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         await client.sendMessage(m.chat, {
-            text: `⚠️ *Oops! Failed to generate pairing code.*\n\n> ${error.message}\n\nVisit https://github.com/xhclintohn/Toxic-MD for help.`
+            text: `⚠️ *Failed to generate pairing code.*\n\n> ${error.message || "Unknown error"}\n\n` +
+                  `Try again later or check your number.\n` +
+                  `Repo: https://github.com/xhclintohn/Toxic-MD`
         }, { quoted: m });
     }
 };
