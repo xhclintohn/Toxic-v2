@@ -26,7 +26,7 @@ module.exports = async (context) => {
         if (settings.autoread === action) {
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`Autoread’s already ${value.toUpperCase()}, genius. Stop wasting my time. 😈`) },
+            { text: formatStylishReply(`Autoread message already ${value.toUpperCase()}, genius. Stop wasting my time. 😈`) },
             { quoted: m, ad: true }
           );
         }
