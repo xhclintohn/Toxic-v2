@@ -55,7 +55,7 @@ async function initializeDatabase() {
             autolikeemoji: '❤️',
             antilink: 'off',
             antidelete: 'false',
-            antistatusmention: 'true',
+            antistatusmention: 'delete',
             startmessage: 'true'
         };
 
