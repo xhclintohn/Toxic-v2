@@ -6,36 +6,7 @@ module.exports = {
   aliases: ['img', 'pic', 'searchimage'],
   description: 'Searches for images based on your query',
   run: async (context) => {
-    const { client, m, prefix, botname } = context;
-
-    const formatStylishReply = (message) => {
-      return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
-    };
-
-    const downloadImageBuffer = async (url, timeout = 20000) => {
-      const res = await axios.get(url, { responseType: "arraybuffer", timeout });
-      const buffer = Buffer.from(res.data);
-      const mime = res.headers["content-type"] || "image/jpeg";
-      return { buffer, mime };
-    };
-
-    const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-      for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-          const response = await fetch(url, options);
-          if (!response.ok) {
-            throw new Error(`API failed with status ${response.status}`);
-          }
-          return response;
-        } catch (error) {
-          if (attempt === retries) {
-            throw error;
-          }
-          console.error(`Attempt ${attempt} failed: ${error.message}. Retrying in ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-    };
+    const { client, m, prefix } = context;
 
     const query = m.body.replace(new RegExp(`^${prefix}(image|img|pic|searchimage)\\s*`, 'i'), '').trim();
     if (!query) {
@@ -46,49 +17,41 @@ module.exports = {
     }
 
     try {
-      const loadingMsg = await client.sendMessage(m.chat, {
-        text: formatStylishReply(`Searching for images of: "${query}"... 🔍\nHold tight!`)
-      }, { quoted: m });
+      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-      const apiUrl = `https://anabot.my.id/api/search/gimage?query=${encodeURIComponent(query)}&apikey=freeApikey`;
-      const response = await fetchWithRetry(apiUrl, { timeout: 15000 });
+      const apiUrl = `https://api.nekolabs.web.id/dsc/bing/images?q=${encodeURIComponent(query)}`;
+      const response = await fetch(apiUrl);
       const data = await response.json();
 
-      if (!data.success || !data.data?.result || data.data.result.length === 0) {
-        await client.sendMessage(m.chat, { delete: loadingMsg.key });
+      if (!data.success || !data.result || data.result.length === 0) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return client.sendMessage(m.chat, {
-          text: formatStylishReply(`No images found for "${query}"! 😢\nTry a different search term.`)
+          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ No images found for "${query}"! 😢\n│❒ Try a different search term.\n┗━━━━━━━━━━━━━━━┛`
         }, { quoted: m });
       }
 
-      const images = data.data.result.slice(0, 10);
-
-      await client.sendMessage(m.chat, { delete: loadingMsg.key });
-
-      await client.sendMessage(m.chat, {
-        text: formatStylishReply(`Found \( {data.data.result.length} images for " \){query}"!\nSwipe the carousel below 👉`)
-      }, { quoted: m });
+  
+      const images = data.result.slice(0, 10);
 
       const cards = [];
 
-      for (const [index, image] of images.entries()) {
+      for (const [index, imageUrl] of images.entries()) {
         try {
-          const { buffer } = await downloadImageBuffer(image.url);
+          const { data: buffer } = await axios.get(imageUrl, { responseType: "arraybuffer" });
 
           const mediaMessage = await client.prepareWAMessageMedia(
-            { image: buffer },
+            { image: Buffer.from(buffer) },
             { upload: client.waUploadToServer }
           );
 
           cards.push({
             header: {
               title: `Image ${index + 1}`,
-              subtitle: `${image.width} × ${image.height}`,
               hasMediaAttachment: true,
               imageMessage: mediaMessage.imageMessage
             },
             body: {
-              text: `Result ${index + 1} of ${images.length}`
+              text: `Result ${index + 1} of 10`
             },
             nativeFlowMessage: {
               buttons: [
@@ -96,7 +59,7 @@ module.exports = {
                   name: "cta_copy",
                   buttonParamsJson: JSON.stringify({
                     display_text: "Copy Image URL",
-                    copy_code: image.url
+                    copy_code: imageUrl
                   })
                 }
               ]
@@ -108,10 +71,13 @@ module.exports = {
       }
 
       if (cards.length === 0) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return client.sendMessage(m.chat, {
-          text: formatStylishReply(`Failed to load any images for "${query}"! 😢`)
+          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Failed to load any images for "${query}"! 😢\n┗━━━━━━━━━━━━━━━┛`
         }, { quoted: m });
       }
+
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
       const carouselMsg = {
         viewOnceMessage: {
@@ -121,7 +87,7 @@ module.exports = {
                 title: "🎨 Image Search Results"
               },
               body: {
-                text: `Swipe to view \( {cards.length} images for " \){query}"`
+                text: `Swipe to view the first 10 images for "${query}"`
               },
               footer: {
                 text: "Powered by Toxic-MD"
@@ -138,8 +104,9 @@ module.exports = {
 
     } catch (error) {
       console.error('Image search error:', error);
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
       await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Oops, @${m.sender.split('@')[0]}! 😤 Image search failed!\n│❒ Error: ${error.message}\n┗━━━━━━━━━━━━━━━┛`,
+        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Oops, @${m.sender.split('@')[0]}! 😤 Image search failed!\n│❒ Try again later.\n┗━━━━━━━━━━━━━━━┛`,
         mentions: [m.sender]
       }, { quoted: m });
     }
