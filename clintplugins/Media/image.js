@@ -30,8 +30,7 @@ module.exports = {
         }, { quoted: m });
       }
 
-  
-      const images = data.result.slice(0, 10);
+      const images = data.result.slice(0, 10); // Strictly first 10 only
 
       const cards = [];
 
@@ -39,16 +38,17 @@ module.exports = {
         try {
           const { data: buffer } = await axios.get(imageUrl, { responseType: "arraybuffer" });
 
-          const mediaMessage = await client.prepareWAMessageMedia(
+          // Correct way: use client.waUploadToServer directly
+          const { imageMessage } = await client.waUploadToServer(
             { image: Buffer.from(buffer) },
-            { upload: client.waUploadToServer }
+            'image'
           );
 
           cards.push({
             header: {
               title: `Image ${index + 1}`,
               hasMediaAttachment: true,
-              imageMessage: mediaMessage.imageMessage
+              imageMessage
             },
             body: {
               text: `Result ${index + 1} of 10`
