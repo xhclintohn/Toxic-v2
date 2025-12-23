@@ -36,15 +36,17 @@ module.exports = {
       for (const [index, imageUrl] of images.entries()) {
         try {
           const res = await fetch(imageUrl);
-          const buffer = Buffer.from(await res.arrayBuffer());
+          if (!res.ok) throw new Error('Bad response');
+          const arrayBuffer = await res.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
 
-          const { imageMessage } = await client.waUploadToServer({ image: buffer }, 'image');
+          const uploaded = await client.waUploadToServer({ image: buffer });
 
           cards.push({
             header: {
               title: `Image ${index + 1}`,
               hasMediaAttachment: true,
-              imageMessage
+              imageMessage: uploaded.imageMessage
             },
             body: {
               text: `Result ${index + 1} of 10`
