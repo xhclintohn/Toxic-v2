@@ -18,7 +18,6 @@ module.exports = async (client, m) => {
         if (isAdmin) return;
         if (!isBotAdmin) return;
 
-        // Always delete the message first
         await client.sendMessage(m.chat, {
             delete: {
                 remoteJid: m.chat,
@@ -28,30 +27,30 @@ module.exports = async (client, m) => {
             },
         });
 
-        // Send notification for delete mode
-        if (mode === "delete") {
-            await client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Status mention deleted\n│❒ User: @${m.sender.split("@")[0]}\n┗━━━━━━━━━━━━━━━┛`,
-                mentions: [m.sender],
-            });
-        }
-        
-        // Remove user if mode is remove
-        if (mode === "remove") {
-            const user = m.sender;
-            const tag = user.split("@")[0];
-
-            try {
-                await client.groupParticipantsUpdate(m.chat, [user], "remove");
+        setTimeout(async () => {
+            if (mode === "delete") {
                 await client.sendMessage(m.chat, {
-                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Removed for status mention\n│❒ User: @${tag}\n┗━━━━━━━━━━━━━━━┛`,
-                    mentions: [user],
-                });
-            } catch {
-                await client.sendMessage(m.chat, {
-                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Can't remove user\n│❒ Missing admin permissions\n┗━━━━━━━━━━━━━━━┛`,
+                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Status Mention Alert!*\n│❒ User: @${m.sender.split("@")[0]}\n│❒ Action: Message deleted 🗑️\n│❒ Warning: Next time won't be nice 😈\n┗━━━━━━━━━━━━━━━┛`,
+                    mentions: [m.sender],
                 });
             }
-        }
+
+            if (mode === "remove") {
+                const user = m.sender;
+                const tag = user.split("@")[0];
+
+                try {
+                    await client.groupParticipantsUpdate(m.chat, [user], "remove");
+                    await client.sendMessage(m.chat, {
+                        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Status Mention Violation!*\n│❒ User: @${tag}\n│❒ Action: Removed from group 🚫\n│❒ Reason: No status mentions allowed\n┗━━━━━━━━━━━━━━━┛`,
+                        mentions: [user],
+                    });
+                } catch {
+                    await client.sendMessage(m.chat, {
+                        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Admin Permission Issue*\n│❒ Can't remove violator\n│❒ Fix my admin rights, boss 🔧\n┗━━━━━━━━━━━━━━━┛`,
+                    });
+                }
+            }
+        }, 500);
     } catch (err) {}
 };
