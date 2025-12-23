@@ -1,5 +1,4 @@
 const fetch = require("node-fetch");
-const axios = require("axios");
 
 module.exports = {
   name: 'image',
@@ -30,19 +29,16 @@ module.exports = {
         }, { quoted: m });
       }
 
-      const images = data.result.slice(0, 10); // Strictly first 10 only
+      const images = data.result.slice(0, 10);
 
       const cards = [];
 
       for (const [index, imageUrl] of images.entries()) {
         try {
-          const { data: buffer } = await axios.get(imageUrl, { responseType: "arraybuffer" });
+          const res = await fetch(imageUrl);
+          const buffer = Buffer.from(await res.arrayBuffer());
 
-          // Correct way: use client.waUploadToServer directly
-          const { imageMessage } = await client.waUploadToServer(
-            { image: Buffer.from(buffer) },
-            'image'
-          );
+          const { imageMessage } = await client.waUploadToServer({ image: buffer }, 'image');
 
           cards.push({
             header: {
