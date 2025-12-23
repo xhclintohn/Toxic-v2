@@ -10,7 +10,13 @@ module.exports = async (client, m) => {
         const mode = (settings.antistatusmention || "off").toLowerCase();
 
         if (mode === "off") return;
-        if (!m.message.groupStatusMentionMessage) return;
+        
+        const isStatusMention = 
+            m.message.groupStatusMentionMessage ||
+            m.message?.ephemeralMessage?.message?.groupStatusMentionMessage ||
+            m.message?.viewOnceMessage?.message?.groupStatusMentionMessage;
+        
+        if (!isStatusMention) return;
 
         const isAdmin = m.isAdmin;
         const isBotAdmin = m.isBotAdmin;
