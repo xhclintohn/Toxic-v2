@@ -20,10 +20,10 @@ module.exports = async (context) => {
       }
 
       const value = args.join(" ").toLowerCase();
-      const validModes = ["false", "true", "remove"];
+      const validModes = ["off", "delete", "remove"];
 
       if (validModes.includes(value)) {
-        const currentMode = String(settings.antistatusmention || "false").toLowerCase();
+        const currentMode = String(settings.antistatusmention || "off").toLowerCase();
         if (currentMode === value) {
           return await client.sendMessage(
             m.chat,
@@ -35,8 +35,8 @@ module.exports = async (context) => {
         await updateSetting('antistatusmention', value);
         
         let actionMessage = "";
-        if (value === "false") actionMessage = "No more policing status mentions, you anarchist! 😴";
-        if (value === "true") actionMessage = "Status mentions will be deleted, no mercy! 🗑️";
+        if (value === "off") actionMessage = "No more policing status mentions, you anarchist! 😴";
+        if (value === "delete") actionMessage = "Status mentions will be deleted with warning! 🗑️";
         if (value === "remove") actionMessage = "Status mentions = Instant removal! Say goodbye! 🚫";
         
         return await client.sendMessage(
@@ -46,23 +46,23 @@ module.exports = async (context) => {
         );
       }
 
-      const currentStatus = String(settings.antistatusmention || "false").toLowerCase();
+      const currentStatus = String(settings.antistatusmention || "off").toLowerCase();
 
       const buttons = [
-        { buttonId: `${prefix}antistatusmention true`, buttonText: { displayText: "TRUE 🗑️" }, type: 1 },
+        { buttonId: `${prefix}antistatusmention delete`, buttonText: { displayText: "DELETE 🗑️" }, type: 1 },
         { buttonId: `${prefix}antistatusmention remove`, buttonText: { displayText: "REMOVE 🚫" }, type: 1 },
-        { buttonId: `${prefix}antistatusmention false`, buttonText: { displayText: "FALSE 😴" }, type: 1 },
+        { buttonId: `${prefix}antistatusmention off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
       ];
 
       const emoji =
-        currentStatus === "true" ? "🗑️" :
+        currentStatus === "delete" ? "🗑️" :
         currentStatus === "remove" ? "🚫" :
         "😴";
 
       const statusText =
-        currentStatus === "true" ? "TRUE (Delete Only)" :
-        currentStatus === "remove" ? "REMOVE (Delete & Kick)" :
-        "FALSE (Disabled)";
+        currentStatus === "delete" ? "DELETE (Delete with warning)" :
+        currentStatus === "remove" ? "REMOVE (Delete & kick)" :
+        "OFF (Disabled)";
 
       await client.sendMessage(
         m.chat,
