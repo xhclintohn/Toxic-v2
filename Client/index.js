@@ -183,7 +183,6 @@ async function startToxic() {
     const Myself = client.decodeJid(client.user.id);
 
     await antilink(client, mek, store);
-    await antistatusmention(client, mek);
 
     if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
       const nickk = await client.decodeJid(client.user.id);
