@@ -9,51 +9,48 @@ module.exports = async (client, m) => {
         const settings = await getSettings();
         const mode = (settings.antistatusmention || "off").toLowerCase();
 
-        if (mode === "off") return;
-        
-        const isStatusMention = 
-            m.message.groupStatusMentionMessage ||
-            m.message?.ephemeralMessage?.message?.groupStatusMentionMessage ||
-            m.message?.viewOnceMessage?.message?.groupStatusMentionMessage;
-        
-        if (!isStatusMention) return;
+        if (mode === "off") return; // Do absolutely NOTHING if off
 
-        const isAdmin = m.isAdmin;
+        if (m.mtype !== 'groupStatusMentionMessage') return;
+
         const isBotAdmin = m.isBotAdmin;
-
-        if (isAdmin) return;
         if (!isBotAdmin) return;
 
-        const user = m.sender;
-        const tag = user.split("@")[0];
-
+        // Always delete the status mention message
         await client.sendMessage(m.chat, {
             delete: {
                 remoteJid: m.chat,
                 fromMe: false,
                 id: m.key.id,
-                participant: user,
+                participant: m.sender,
             },
         });
 
+        // Only send warning if mode is "delete" (not "remove")
         if (mode === "delete") {
             await client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Toxic-MD AntiStatusMention*\n│❒ Violation detected!\n│❒ User: @${tag}\n│❒ Action: Status mention deleted 🗑️\n│❒ Warning: Next violation = removal\n┗━━━━━━━━━━━━━━━┛`,
-                mentions: [user],
+                text:
+                    `◈━━❰ *Toxic-MD AntiStatusMention* ❱━━◈\n` +
+                    `│ 😒 @${m.sender.split("@")[0]}, status mentions are not allowed here.\n` +
+                    `│ 🧹 Your mention got wiped.\n` +
+                    `│ ⚠️ Next time won't be a warning.\n` +
+                    `┗━━━━━━━━━━━━━━━━┛`,
+                mentions: [m.sender],
             });
         }
 
+        // Kick only if mode = remove (unchanged)
         if (mode === "remove") {
             try {
-                await client.groupParticipantsUpdate(m.chat, [user], "remove");
+                await client.groupParticipantsUpdate(m.chat, [m.sender], "remove");
                 await client.sendMessage(m.chat, {
-                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Toxic-MD AntiStatusMention*\n│❒ Violation detected!\n│❒ User: @${tag}\n│❒ Action: Removed from group 🚫\n│❒ Reason: Status mention violation\n┗━━━━━━━━━━━━━━━┛`,
-                    mentions: [user],
+                    text: `◈━━❰ *Toxic-MD* ❱━━◈\n│ 🚫 @${m.sender.split("@")[0]} yeeted for status mention.\n┗━━━━━━━━━━━━━━┛`,
+                    mentions: [m.sender],
                 });
             } catch {
                 await client.sendMessage(m.chat, {
-                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Toxic-MD Admin Error*\n│❒ Can't remove @${tag}\n│❒ I need admin permissions\n┗━━━━━━━━━━━━━━━┛`,
-                    mentions: [user],
+                    text: `◈━━❰ *Toxic-MD* ❱━━◈\n│ 🤦 Can't kick @${m.sender.split("@")[0]}. Missing admin perms.\n┗━━━━━━━━━━━━━━┛`,
+                    mentions: [m.sender],
                 });
             }
         }
