@@ -63,7 +63,7 @@ module.exports = {
         text: `🔗 *WhatsApp ID Extractor*\n\n` +
               `📌 *Type:* ${type}\n` +
               `🆔 *ID:* \`${id}\`\n\n` +
-              `💡 *Tap and hold to copy*`,
+              `💡 *Tap the button to copy*`,
         templateButtons: [{
           index: 1,
           urlButton: {
