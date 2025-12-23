@@ -47,6 +47,7 @@ const groupEvents2 = require("../Handler/eventHandler");
 const connectionHandler = require('../Handler/connectionHandler');
 const antidelete = require('../Functions/antidelete');
 const antilink = require('../Functions/antilink');
+const antistatusmention = require('../Functions/antistatusmention');
 
 async function startToxic() {
   let settingss = await getSettings();
@@ -113,7 +114,7 @@ async function startToxic() {
     setInterval(() => {
       const date = new Date();
       client.updateProfileStatus(
-        `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi' })}.`
+        `\( {botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n \){date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi' })}.`
       );
     }, 10 * 1000);
   }
@@ -181,8 +182,8 @@ async function startToxic() {
     const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
     const Myself = client.decodeJid(client.user.id);
 
-
     await antilink(client, mek, store);
+    await antistatusmention(client, mek);
 
     if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
       const nickk = await client.decodeJid(client.user.id);
@@ -193,7 +194,7 @@ async function startToxic() {
 
     if (autoview && mek.key.remoteJid === "status@broadcast") {
       const statusSender = mek.key.participant;
-      const statusKey = `${statusSender}:${mek.key.id}`;
+      const statusKey = `\( {statusSender}: \){mek.key.id}`;
 
       if (!processedStatusMessages.has(statusKey)) {
         processedStatusMessages.add(statusKey);
