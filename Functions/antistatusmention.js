@@ -7,9 +7,9 @@ module.exports = async (client, m) => {
         if (!m.isGroup) return;
 
         const settings = await getSettings();
-        const mode = (settings.antistatusmention || "false").toLowerCase();
+        const mode = (settings.antistatusmention || "off").toLowerCase();
 
-        if (mode === "false") return;
+        if (mode === "off") return;
         if (m.mtype !== 'groupStatusMentionMessage') return;
 
         const isAdmin = m.isAdmin;
@@ -18,6 +18,7 @@ module.exports = async (client, m) => {
         if (isAdmin) return;
         if (!isBotAdmin) return;
 
+        // Always delete the message first
         await client.sendMessage(m.chat, {
             delete: {
                 remoteJid: m.chat,
@@ -27,12 +28,16 @@ module.exports = async (client, m) => {
             },
         });
 
-        if (mode === "true") {
+        // Send notification for delete mode
+        if (mode === "delete") {
             await client.sendMessage(m.chat, {
                 text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Status mention deleted\n│❒ User: @${m.sender.split("@")[0]}\n┗━━━━━━━━━━━━━━━┛`,
                 mentions: [m.sender],
             });
-        } else if (mode === "remove") {
+        }
+        
+        // Remove user if mode is remove
+        if (mode === "remove") {
             const user = m.sender;
             const tag = user.split("@")[0];
 
