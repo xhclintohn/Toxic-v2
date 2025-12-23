@@ -20,43 +20,54 @@ module.exports = async (context) => {
       }
 
       const value = args.join(" ").toLowerCase();
-      const validModes = ["off", "delete", "remove"];
+      const validModes = ["false", "true", "remove"];
 
       if (validModes.includes(value)) {
-        const currentMode = String(settings.antistatusmention || "off").toLowerCase();
+        const currentMode = String(settings.antistatusmention || "false").toLowerCase();
         if (currentMode === value) {
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`AntiStatusMention is already set to '${value.toUpperCase()}', dumbass.`) },
+            { text: formatStylishReply(`AntiStatusMention is already '${value.toUpperCase()}', dumbass. Stop wasting my time. 😈`) },
             { quoted: m }
           );
         }
 
         await updateSetting('antistatusmention', value);
+        
+        let actionMessage = "";
+        if (value === "false") actionMessage = "No more policing status mentions, you anarchist! 😴";
+        if (value === "true") actionMessage = "Status mentions will be deleted, no mercy! 🗑️";
+        if (value === "remove") actionMessage = "Status mentions = Instant removal! Say goodbye! 🚫";
+        
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply(`AntiStatusMention mode updated to '${value.toUpperCase()}'. 🔥`) },
+          { text: formatStylishReply(`AntiStatusMention set to '${value.toUpperCase()}'! 🔥 ${actionMessage}`) },
           { quoted: m }
         );
       }
 
-      const currentStatus = String(settings.antistatusmention || "off").toLowerCase();
+      const currentStatus = String(settings.antistatusmention || "false").toLowerCase();
 
       const buttons = [
-        { buttonId: `${prefix}antistatusmention delete`, buttonText: { displayText: "DELETE 🗑️" }, type: 1 },
+        { buttonId: `${prefix}antistatusmention true`, buttonText: { displayText: "TRUE 🗑️" }, type: 1 },
         { buttonId: `${prefix}antistatusmention remove`, buttonText: { displayText: "REMOVE 🚫" }, type: 1 },
-        { buttonId: `${prefix}antistatusmention off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
+        { buttonId: `${prefix}antistatusmention false`, buttonText: { displayText: "FALSE 😴" }, type: 1 },
       ];
 
       const emoji =
-        currentStatus === "delete" ? "🗑️" :
+        currentStatus === "true" ? "🗑️" :
         currentStatus === "remove" ? "🚫" :
         "😴";
+
+      const statusText =
+        currentStatus === "true" ? "TRUE (Delete Only)" :
+        currentStatus === "remove" ? "REMOVE (Delete & Kick)" :
+        "FALSE (Disabled)";
 
       await client.sendMessage(
         m.chat,
         {
-          text: formatStylishReply(`AntiStatusMention Mode: ${currentStatus.toUpperCase()} ${emoji}\nPick your poison. 💀`),
+          text: formatStylishReply(`AntiStatusMention: ${statusText} ${emoji}\n\nPick your vibe, noob! 😈`),
           footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
           buttons,
           headerType: 1,
@@ -68,7 +79,7 @@ module.exports = async (context) => {
       console.error("Error in AntiStatusMention command:", error);
       await client.sendMessage(
         m.chat,
-        { text: formatStylishReply("Shit broke, couldn’t update antistatusmention.") },
+        { text: formatStylishReply("Shit broke, couldn't mess with antistatusmention. Database or something's fucked. Try later.") },
         { quoted: m }
       );
     }
