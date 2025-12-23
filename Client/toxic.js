@@ -16,6 +16,7 @@ const chatbotpm = require('../Functions/chatbotpm');
 const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings, updateSetting } = require('../Database/config');
 const { botname, mycode } = require('../Env/settings');
 const { cleanupOldMessages } = require('../lib/Store');
+const antistatusmention = require('../Functions/antistatusmention');
 
 const ownerMiddleware = require('../utility/botUtil/Ownermiddleware');
 
