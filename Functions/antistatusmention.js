@@ -7,12 +7,15 @@ module.exports = async (client, m) => {
         if (!m.isGroup) return;
 
         const settings = await getSettings();
-        const mode = (settings.antistatusmention || "off").toLowerCase();
-        if (mode === "off") return;
+        const mode = (settings.antistatusmention || "false").toLowerCase();
 
+        if (mode === "false") return;
         if (m.mtype !== 'groupStatusMentionMessage') return;
 
+        const isAdmin = m.isAdmin;
         const isBotAdmin = m.isBotAdmin;
+
+        if (isAdmin) return;
         if (!isBotAdmin) return;
 
         await client.sendMessage(m.chat, {
@@ -24,29 +27,24 @@ module.exports = async (client, m) => {
             },
         });
 
-        await client.sendMessage(m.chat, {
-            text:
-                `◈━━❰ *Toxic-MD AntiStatusMention* ❱━━◈\n` +
-                `│ 😒 @${m.sender.split("@")[0]}, status mentions are not allowed here.\n` +
-                `│ 🧹 Your mention got wiped.\n` +
-                (mode === "remove"
-                    ? `│ 🚪 And now you're getting kicked. Don't come back.\n`
-                    : `│ ⚠️ Next time won't be a warning.\n`) +
-                `┗━━━━━━━━━━━━━━━━┛`,
-            mentions: [m.sender],
-        });
+        if (mode === "true") {
+            await client.sendMessage(m.chat, {
+                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Status mention deleted\n│❒ User: @${m.sender.split("@")[0]}\n┗━━━━━━━━━━━━━━━┛`,
+                mentions: [m.sender],
+            });
+        } else if (mode === "remove") {
+            const user = m.sender;
+            const tag = user.split("@")[0];
 
-        if (mode === "remove") {
             try {
-                await client.groupParticipantsUpdate(m.chat, [m.sender], "remove");
+                await client.groupParticipantsUpdate(m.chat, [user], "remove");
                 await client.sendMessage(m.chat, {
-                    text: `◈━━❰ *Toxic-MD* ❱━━◈\n│ 🚫 @${m.sender.split("@")[0]} yeeted for status mention.\n┗━━━━━━━━━━━━━━┛`,
-                    mentions: [m.sender],
+                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Removed for status mention\n│❒ User: @${tag}\n┗━━━━━━━━━━━━━━━┛`,
+                    mentions: [user],
                 });
             } catch {
                 await client.sendMessage(m.chat, {
-                    text: `◈━━❰ *Toxic-MD* ❱━━◈\n│ 🤦 Can't kick @${m.sender.split("@")[0]}. Missing admin perms.\n┗━━━━━━━━━━━━━━┛`,
-                    mentions: [m.sender],
+                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Can't remove user\n│❒ Missing admin permissions\n┗━━━━━━━━━━━━━━━┛`,
                 });
             }
         }
