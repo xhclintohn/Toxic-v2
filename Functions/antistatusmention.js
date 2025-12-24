@@ -10,9 +10,9 @@ module.exports = async (client, m) => {
         if (m.chat === exemptGroup) return;
 
         const settings = await getSettings();
-        const mode = (settings.antistatusmention || "off").toLowerCase();
+        const mode = settings.antistatusmention;
 
-        if (mode === "off") return;
+        if (!mode || mode === "off" || mode === "false") return;
 
         if (m.mtype !== 'groupStatusMentionMessage') return;
 
@@ -38,7 +38,7 @@ module.exports = async (client, m) => {
             },
         });
 
-        if (mode === "delete") {
+        if (mode === "delete" || mode === "true") {
             await client.sendMessage(m.chat, {
                 text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Toxic-MD AntiStatusMention*\n│❒ User: @${m.sender.split("@")[0]}\n│❒ Action: Status mention deleted 🗑️\n│❒ Warning: Next time = removal\n┗━━━━━━━━━━━━━━━┛`,
                 mentions: [m.sender],
