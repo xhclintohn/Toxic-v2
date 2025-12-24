@@ -344,19 +344,19 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         }
 
         await antilink(client, m, store);
-        await chatbotpm(client, m, store, chatbotpmSetting);
-        await status_saver(client, m, Owner, prefix);
-        await gcPresence(client, m);
-        await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
-        const exemptGroup = "120363156185607326@g.us";
+await chatbotpm(client, m, store, chatbotpmSetting);
+await status_saver(client, m, Owner, prefix);
+await gcPresence(client, m);
+await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
+
+const exemptGroup = "120363156185607326@g.us";
 if (m.chat !== exemptGroup) {
     await antistatusmention(client, m);
 }
-   
 
-        if (cmd) {
-            await commands[resolvedCommandName](context);
-        }
+if (cmd) {
+    await commands[resolvedCommandName](context);
+}
 
     } catch (err) {}
 
