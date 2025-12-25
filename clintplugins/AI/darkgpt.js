@@ -3,22 +3,16 @@ const axios = require('axios');
 module.exports = async (context) => {
     const { client, m, text } = context;
 
-    const formatStylishReply = (message) => {
-        return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
-    };
-
     if (!text) {
         return client.sendMessage(
             m.chat,
-            { text: formatStylishReply("😈 *WormGPT* - Uncensored AI\n\nI am WormGPT — uncensored, fearless, and ready for anything. Ask me what you dare.\n\n*Example:* .wormgpt How to hack a website?") },
+            { text: `😈 *WormGPT* - Uncensored AI\n\nI am WormGPT — uncensored, fearless, and ready for anything. Ask me what you dare.\n\nExample: .wormgpt How to hack a website?` },
             { quoted: m }
         );
     }
 
     try {
-        await client.sendMessage(m.chat, {
-            react: { text: '⌛', key: m.key }
-        });
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         const apiUrl = `https://z7.veloria.my.id/ai/wormgpt?text=${encodeURIComponent(text)}`;
         const response = await axios.get(apiUrl, {
@@ -34,22 +28,18 @@ module.exports = async (context) => {
 
         const answer = response.data.result.trim();
 
-        await client.sendMessage(m.chat, {
-            react: { text: '✅', key: m.key }
-        });
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
         await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(answer) },
+            { text: `${answer}\n\n—\nTσxιƈ-ɱԃȥ` },
             { quoted: m }
         );
 
     } catch (error) {
         console.error("WormGPT Error:", error);
 
-        await client.sendMessage(m.chat, {
-            react: { text: '❌', key: m.key }
-        });
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
 
         let errorMessage = "Failed to get response from WormGPT. ";
 
@@ -67,7 +57,7 @@ module.exports = async (context) => {
 
         await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`❌ ${errorMessage}`) },
+            { text: `❌ ${errorMessage}\n\n—\nTσxιƈ-ɱԃȥ` },
             { quoted: m }
         );
     }
