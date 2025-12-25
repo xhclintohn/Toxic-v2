@@ -1,3 +1,5 @@
+const { getSettings } = require('../../Database/config');
+
 module.exports = {
   name: 'checkid',
   aliases: ['cekid', 'getid', 'id'],
@@ -63,12 +65,24 @@ module.exports = {
         text: `🔗 *WhatsApp ID Extractor*\n\n` +
               `📌 *Type:* ${type}\n` +
               `🆔 *ID:* \`${id}\`\n\n` +
-              `💡 *Tap the button to copy*`,
+              `💡 Tap to copy the ID`,
         templateButtons: [{
           index: 1,
-          urlButton: {
-            displayText: "📋 Copy JID",
-            url: `https://api.whatsapp.com/send/?phone=${m.sender.split('@')[0]}&text=${encodeURIComponent(id)}&type=phone_number&app_absent=0`
+          quickReplyButton: {
+            displayText: "📋 Copy ID",
+            id: `copy_${id}`
+          }
+        }]
+      }, { quoted: m });
+
+      // Optional: Send a second message with the copy code for CTA button if needed
+      await client.sendMessage(m.chat, {
+        text: `Copy this ID: ${id}`,
+        templateButtons: [{
+          index: 1,
+          ctaCopyButton: {
+            displayText: "Copy ID",
+            copyCode: id
           }
         }]
       }, { quoted: m });
