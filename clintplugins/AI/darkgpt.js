@@ -11,7 +11,7 @@ module.exports = async (context) => {
         return client.sendMessage(
             m.chat,
             { text: formatStylishReply("😈 *WormGPT* - Uncensored AI\n\nI am WormGPT — uncensored, fearless, and ready for anything. Ask me what you dare.\n\n*Example:* .wormgpt How to hack a website?") },
-            { quoted: m, ad: true }
+            { quoted: m }
         );
     }
 
@@ -20,23 +20,19 @@ module.exports = async (context) => {
             react: { text: '⌛', key: m.key }
         });
 
-        const response = await axios.post(
-            "https://zieecantikkk-api.vercel.app/api/wormgpt",
-            { text: text },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                },
-                timeout: 30000,
+        const apiUrl = `https://z7.veloria.my.id/ai/wormgpt?text=${encodeURIComponent(text)}`;
+        const response = await axios.get(apiUrl, {
+            timeout: 30000,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
-        );
+        });
 
-        if (!response.data || !response.data.message) {
+        if (!response.data || !response.data.status || !response.data.result) {
             throw new Error('Invalid API response');
         }
 
-        const answer = response.data.message.trim();
+        const answer = response.data.result.trim();
 
         await client.sendMessage(m.chat, {
             react: { text: '✅', key: m.key }
@@ -45,12 +41,12 @@ module.exports = async (context) => {
         await client.sendMessage(
             m.chat,
             { text: formatStylishReply(answer) },
-            { quoted: m, ad: true }
+            { quoted: m }
         );
 
     } catch (error) {
         console.error("WormGPT Error:", error);
-        
+
         await client.sendMessage(m.chat, {
             react: { text: '❌', key: m.key }
         });
@@ -72,7 +68,7 @@ module.exports = async (context) => {
         await client.sendMessage(
             m.chat,
             { text: formatStylishReply(`❌ ${errorMessage}`) },
-            { quoted: m, ad: true }
+            { quoted: m }
         );
     }
 };
