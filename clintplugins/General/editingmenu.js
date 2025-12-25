@@ -3,9 +3,9 @@ const fs = require('fs');
 const { getSettings } = require('../../Database/config');
 
 module.exports = {
-  name: 'downloadmenu',
-  aliases: ['dlmenu'],
-  description: 'Displays only the Download/Media menu',
+  name: 'editingmenu',
+  aliases: ['editmenu'],
+  description: 'Displays only the Editing menu',
   run: async (context) => {
     const { client, m, pict } = context;
     const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃';
@@ -27,14 +27,14 @@ module.exports = {
     };
 
     let menuText = `╭─❒ 「 ${botname} Command Menu ⚠ 」\n`;
-    menuText += `│ Download Menu Only\n`;
+    menuText += `│ Editing Menu Only\n`;
     menuText += `│\n`;
     menuText += `│ 🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'}\n`;
     menuText += `╰─────────────\n\n`;
 
-    menuText += `╭─❒ 「 MEDIA 🎬 」\n`;
+    menuText += `╭─❒ 「 EDITING ✂️ 」\n`;
 
-    let commandFiles = fs.readdirSync('./clintplugins/Media').filter(file => file.endsWith('.js'));
+    let commandFiles = fs.readdirSync('./clintplugins/Editting').filter(file => file.endsWith('.js'));
     for (const file of commandFiles) {
       const commandName = file.replace('.js', '');
       const fancyCommandName = toFancyFont(commandName);
