@@ -1,9 +1,10 @@
+const { DateTime } = require('luxon');
 const fs = require('fs');
 const { getSettings } = require('../../Database/config');
 
 module.exports = {
   name: '+18menu',
-  aliases: ['nsfwmenu', 'adultmenu'],
+  aliases: ['nsfwmenu'],
   description: 'Displays only the +18 menu',
   run: async (context) => {
     const { client, m, pict } = context;
@@ -31,7 +32,7 @@ module.exports = {
     menuText += `│ 🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'}\n`;
     menuText += `╰─────────────\n\n`;
 
-    menuText += `╭─❒ 「 +18MENU 🔞 」\n`;
+    menuText += `╭─❒ 「 +18 🔞 」\n`;
 
     let commandFiles = fs.readdirSync('./clintplugins/+18').filter(file => file.endsWith('.js'));
     for (const file of commandFiles) {

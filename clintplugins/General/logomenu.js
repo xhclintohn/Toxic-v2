@@ -1,10 +1,11 @@
+const { DateTime } = require('luxon');
 const fs = require('fs');
 const { getSettings } = require('../../Database/config');
 
 module.exports = {
   name: 'logomenu',
-  aliases: ['textpro', 'logo'],
-  description: 'Displays only the Logo makers menu',
+  aliases: ['logomenu'],
+  description: 'Displays only the Logo menu',
   run: async (context) => {
     const { client, m, pict } = context;
     const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃';
@@ -26,7 +27,7 @@ module.exports = {
     };
 
     let menuText = `╭─❒ 「 ${botname} Command Menu ⚠ 」\n`;
-    menuText += `│ Logo Makers Only\n`;
+    menuText += `│ Logo Menu Only\n`;
     menuText += `│\n`;
     menuText += `│ 🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'}\n`;
     menuText += `╰─────────────\n\n`;
