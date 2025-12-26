@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const { generateWAMessageContent, generateWAMessageFromContent } = require("@whiskeysockets/baileys");
 
 module.exports = {
   name: 'image',
@@ -34,9 +35,6 @@ module.exports = {
 
       for (const [index, imageUrl] of images.entries()) {
         try {
-          console.log(`Processing image ${index + 1}: ${imageUrl}`);
-          
-          // Use generateWAMessageContent to properly create the imageMessage
           const messageContent = await generateWAMessageContent(
             { image: { url: imageUrl } }, 
             { upload: client.waUploadToServer }
@@ -69,7 +67,6 @@ module.exports = {
             }
           });
           
-          // Add a small delay to avoid rate limiting
           await new Promise(resolve => setTimeout(resolve, 500));
           
         } catch (err) {
@@ -86,7 +83,6 @@ module.exports = {
 
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-      // Generate the message using generateWAMessageFromContent (like your friend's code)
       const message = generateWAMessageFromContent(
         m.chat,
         {
@@ -116,7 +112,6 @@ module.exports = {
         { quoted: m }
       );
 
-      // Use relayMessage to send it
       await client.relayMessage(m.chat, message.message, { messageId: message.key.id });
 
     } catch (error) {
