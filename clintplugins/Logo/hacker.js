@@ -33,7 +33,7 @@ module.exports = {
         }
       );
 
-      // Extract image URL from response (ephoto360 returns HTML, so we need to parse)
+     
       const html = response.data;
       const imageMatch = html.match(/<img[^>]+src=["'](.*?)["']/i);
       if (!imageMatch || !imageMatch[1]) {
