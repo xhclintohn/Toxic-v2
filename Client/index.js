@@ -9,7 +9,9 @@ const {
   proto,
   getContentType,
   makeCacheableSignalKeyStore,
-  Browsers
+  Browsers,
+  generateWAMessageContent,
+  generateWAMessageFromContent
 } = require("@whiskeysockets/baileys");
 
 const pino = require("pino");
@@ -48,6 +50,24 @@ const connectionHandler = require('../Handler/connectionHandler');
 const antidelete = require('../Functions/antidelete');
 const antilink = require('../Functions/antilink');
 const antistatusmention = require('../Functions/antistatusmention');
+
+async function handleButtons(client, msg) {
+  try {
+    if (!msg.message?.interactiveMessage?.nativeFlowMessage?.buttons) return;
+    
+    const button = msg.message.interactiveMessage.nativeFlowMessage.buttons[0];
+    if (!button) return;
+    
+    const params = JSON.parse(button.buttonParamsJson);
+    
+    if (params.copy_code) {
+      await client.sendMessage(msg.key.remoteJid, {
+        text: `✅ Image URL copied to clipboard!\n\n${params.copy_code}\n\nYou can paste it anywhere now.`
+      }, { quoted: msg });
+    }
+    
+  } catch (error) {}
+}
 
 async function startToxic() {
   let settingss = await getSettings();
@@ -255,6 +275,8 @@ async function startToxic() {
   client.ev.on("messages.upsert", async ({ messages }) => {
     const msg = messages[0];
     if (!msg.message) return;
+
+    await handleButtons(client, msg);
 
     if (msg.message.listResponseMessage) {
       const selectedCmd = msg.message.listResponseMessage.singleSelectReply.selectedRowId;
