@@ -57,6 +57,13 @@ module.exports = {
             nativeFlowMessage: {
               buttons: [
                 {
+                  name: "cta_url",
+                  buttonParamsJson: JSON.stringify({
+                    display_text: "Open Image",
+                    url: imageUrl
+                  })
+                },
+                {
                   name: "cta_copy",
                   buttonParamsJson: JSON.stringify({
                     display_text: "Copy Image URL",
