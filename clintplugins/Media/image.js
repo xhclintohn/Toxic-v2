@@ -79,7 +79,7 @@ module.exports = {
             }
           });
 
-          await new Promise(resolve => setTimeout(resolve, 800)); // Prevent rate limit
+          await new Promise(resolve => setTimeout(resolve, 800));
 
         } catch (err) {
           console.warn(`Failed to process image ${index + 1}:`, err.message);
@@ -109,7 +109,7 @@ module.exports = {
                   title: `🎨 Image Search Results for "${query}"`
                 },
                 body: {
-                  text: "" // Empty body — no extra text clutter
+                  text: ""
                 },
                 footer: {
                   text: "Powered by Toxic-MD"
