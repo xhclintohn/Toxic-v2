@@ -34,36 +34,46 @@ module.exports = {
 
       for (const [index, imageUrl] of images.entries()) {
         try {
-          const res = await fetch(imageUrl);
-          if (!res.ok) continue;
-          const arrayBuffer = await res.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-
-          const uploaded = await client.waUploadToServer({ image: buffer });
+          console.log(`Processing image ${index + 1}: ${imageUrl}`);
+          
+          // Use generateWAMessageContent to properly create the imageMessage
+          const messageContent = await generateWAMessageContent(
+            { image: { url: imageUrl } }, 
+            { upload: client.waUploadToServer }
+          );
+          
+          if (!messageContent || !messageContent.imageMessage) {
+            console.warn(`Failed to generate content for image ${index + 1}`);
+            continue;
+          }
 
           cards.push({
-            title: `Image ${index + 1}`,
-            description: `Result ${index + 1} of 10`,
-            media: uploaded,
-            buttons: [
-              {
-                name: "cta_url",
-                buttonParamsJson: JSON.stringify({
-                  display_text: "🌐 Open GitHub",
-                  url: "https://github.com/xhclintohn/Toxic-MD"
-                })
-              },
-              {
-                name: "cta_copy",
-                buttonParamsJson: JSON.stringify({
-                  display_text: "📋 Copy GitHub Link",
-                  copy_code: "https://github.com/xhclintohn/Toxic-MD"
-                })
-              }
-            ]
+            header: {
+              title: `Image ${index + 1}`,
+              hasMediaAttachment: true,
+              imageMessage: messageContent.imageMessage
+            },
+            body: {
+              text: `Result ${index + 1} of 10`
+            },
+            nativeFlowMessage: {
+              buttons: [
+                {
+                  name: "cta_copy",
+                  buttonParamsJson: JSON.stringify({
+                    display_text: "Copy Image URL",
+                    copy_code: imageUrl
+                  })
+                }
+              ]
+            }
           });
+          
+          // Add a small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
         } catch (err) {
-          continue;
+          console.warn(`Failed to process image ${index + 1}:`, err.message);
         }
       }
 
@@ -76,56 +86,44 @@ module.exports = {
 
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-      const carouselMsg = {
-        viewOnceMessage: {
-          message: {
-            messageContextInfo: {
-              deviceListMetadata: {},
-              deviceListMetadataVersion: 2
-            },
-            interactiveMessage: {
-              header: {
-                title: "🎨 Image Search Results"
+      // Generate the message using generateWAMessageFromContent (like your friend's code)
+      const message = generateWAMessageFromContent(
+        m.chat,
+        {
+          viewOnceMessage: {
+            message: {
+              messageContextInfo: {
+                deviceListMetadata: {},
+                deviceListMetadataVersion: 2,
               },
-              body: {
-                text: `Found ${cards.length} images for "${query}"\nSwipe right → to browse`
-              },
-              footer: {
-                text: "Powered by Toxic-MD • Tap buttons below"
-              },
-              carouselMessage: {
-                cards: cards.map(card => ({
-                  cardContent: {
-                    title: card.title,
-                    description: card.description,
-                    media: {
-                      [card.media.mimetype.includes('image') ? 'imageMessage' : 'jpegThumbnail']: card.media
-                    }
-                  },
-                  cardFooter: {
-                    text: `Image ${cards.indexOf(card) + 1}/${cards.length}`
-                  },
-                  cardHeader: {
-                    title: card.title,
-                    subtitle: `Search: ${query}`
-                  },
-                  nativeFlowMessage: {
-                    buttons: card.buttons
-                  }
-                }))
+              interactiveMessage: {
+                header: {
+                  title: "🎨 Image Search Results"
+                },
+                body: {
+                  text: `Swipe to view the first ${cards.length} images for "${query}"`
+                },
+                footer: {
+                  text: "Powered by Toxic-MD"
+                },
+                carouselMessage: {
+                  cards: cards
+                }
               }
             }
           }
-        }
-      };
+        },
+        { quoted: m }
+      );
 
-      await client.sendMessage(m.chat, carouselMsg, { quoted: m });
+      // Use relayMessage to send it
+      await client.relayMessage(m.chat, message.message, { messageId: message.key.id });
 
     } catch (error) {
       console.error('Image search error:', error);
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
       await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Oops, @${m.sender.split('@')[0]}! 😤 Image search failed!\n│❒ Try again later.\n┗━━━━━━━━━━━━━━━┛`,
+        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Oops, @${m.sender.split('@')[0]}! 😤 Image search failed!\n│❒ Error: ${error.message}\n│❒ Try again later.\n┗━━━━━━━━━━━━━━━┛`,
         mentions: [m.sender]
       }, { quoted: m });
     }
