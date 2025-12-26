@@ -1,5 +1,5 @@
 const fetch = require("node-fetch");
-const { generateWAMessageContent, generateWAMessageFromContent } = require("@whiskeysockets/baileys");
+const { generateWAMessageContent, generateWAMessageFromContent, getContentType } = require("@whiskeysockets/baileys");
 
 module.exports = {
   name: 'image',
@@ -35,21 +35,56 @@ module.exports = {
 
       for (const [index, imageUrl] of images.entries()) {
         try {
-          const messageContent = await generateWAMessageContent(
-            { image: { url: imageUrl } }, 
-            { upload: client.waUploadToServer }
-          );
+          console.log(`Processing image ${index + 1}: ${imageUrl}`);
           
-          if (!messageContent || !messageContent.imageMessage) {
-            console.warn(`Failed to generate content for image ${index + 1}`);
+          // First, download the image
+          const imageResponse = await fetch(imageUrl);
+          if (!imageResponse.ok) {
+            console.warn(`Failed to download image ${index + 1}: HTTP ${imageResponse.status}`);
             continue;
           }
+          
+          const arrayBuffer = await imageResponse.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          
+          if (!buffer || buffer.length === 0) {
+            console.warn(`Empty buffer for image ${index + 1}`);
+            continue;
+          }
+
+          // Upload the image directly using waUploadToServer
+          const uploaded = await client.waUploadToServer({
+            image: buffer
+          }).catch(e => {
+            console.warn(`Upload failed for image ${index + 1}:`, e.message);
+            return null;
+          });
+
+          if (!uploaded) {
+            console.warn(`Upload result empty for image ${index + 1}`);
+            continue;
+          }
+
+        
+          const imageMessage = {
+            url: uploaded.url || imageUrl,
+            mimetype: "image/jpeg",
+            fileSha256: uploaded.fileSha256,
+            fileLength: uploaded.fileLength,
+            height: 720,
+            width: 1280,
+            mediaKey: uploaded.mediaKey,
+            fileEncSha256: uploaded.fileEncSha256,
+            directPath: uploaded.directPath,
+            mediaKeyTimestamp: Math.floor(Date.now() / 1000),
+            jpegThumbnail: uploaded.jpegThumbnail || buffer.toString('base64').slice(0, 100)
+          };
 
           cards.push({
             header: {
               title: `Image ${index + 1}`,
               hasMediaAttachment: true,
-              imageMessage: messageContent.imageMessage
+              imageMessage: imageMessage
             },
             body: {
               text: `Result ${index + 1} of 10`
@@ -59,14 +94,14 @@ module.exports = {
                 {
                   name: "cta_url",
                   buttonParamsJson: JSON.stringify({
-                    display_text: "Open Image",
+                    display_text: "🌐 Open Image",
                     url: imageUrl
                   })
                 },
                 {
                   name: "cta_copy",
                   buttonParamsJson: JSON.stringify({
-                    display_text: "Copy Image URL",
+                    display_text: "📋 Copy URL",
                     copy_code: imageUrl
                   })
                 }
@@ -74,6 +109,7 @@ module.exports = {
             }
           });
           
+          console.log(`Successfully added image ${index + 1} to carousel`);
           await new Promise(resolve => setTimeout(resolve, 500));
           
         } catch (err) {
@@ -90,42 +126,65 @@ module.exports = {
 
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-      const message = generateWAMessageFromContent(
-        m.chat,
-        {
-          viewOnceMessage: {
-            message: {
-              messageContextInfo: {
-                deviceListMetadata: {},
-                deviceListMetadataVersion: 2,
-              },
-              interactiveMessage: {
-                header: {
-                  title: "🎨 Image Search Results"
+      // Try alternative approach if carousel fails
+      try {
+        const message = generateWAMessageFromContent(
+          m.chat,
+          {
+            viewOnceMessage: {
+              message: {
+                messageContextInfo: {
+                  deviceListMetadata: {},
+                  deviceListMetadataVersion: 2,
                 },
-                body: {
-                  text: `Swipe to view the first ${cards.length} images for "${query}"`
-                },
-                footer: {
-                  text: "Powered by Toxic-MD"
-                },
-                carouselMessage: {
-                  cards: cards
+                interactiveMessage: {
+                  header: {
+                    title: "🎨 Image Search Results"
+                  },
+                  body: {
+                    text: `Swipe to view the first ${cards.length} images for "${query}"`
+                  },
+                  footer: {
+                    text: "Powered by Toxic-MD • Click buttons to interact"
+                  },
+                  carouselMessage: {
+                    cards: cards
+                  }
                 }
               }
             }
-          }
-        },
-        { quoted: m }
-      );
+          },
+          { quoted: m }
+        );
 
-      await client.relayMessage(m.chat, message.message, { messageId: message.key.id });
+        await client.relayMessage(m.chat, message.message, { messageId: message.key.id });
+        
+      } catch (carouselError) {
+        console.error('Carousel failed, sending images separately:', carouselError);
+        
+     
+        await client.sendMessage(m.chat, {
+          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Found ${images.length} images for "${query}"\n│❒ Here are the first 3:\n┗━━━━━━━━━━━━━━━┛`
+        }, { quoted: m });
+        
+        for (let i = 0; i < Math.min(3, images.length); i++) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          try {
+            await client.sendMessage(m.chat, {
+              image: { url: images[i] },
+              caption: `📸 Image ${i + 1} of ${images.length}`
+            });
+          } catch (e) {
+            console.warn(`Failed to send image ${i + 1}:`, e.message);
+          }
+        }
+      }
 
     } catch (error) {
       console.error('Image search error:', error);
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
       await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Oops, @${m.sender.split('@')[0]}! 😤 Image search failed!\n│❒ Error: ${error.message}\n│❒ Try again later.\n┗━━━━━━━━━━━━━━━┛`,
+        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Oops, @${m.sender.split('@')[0]}! 😤 Image search failed!\n│❒ Try again later.\n┗━━━━━━━━━━━━━━━┛`,
         mentions: [m.sender]
       }, { quoted: m });
     }
