@@ -64,7 +64,7 @@ module.exports = {
                 {
                   name: "cta_url",
                   buttonParamsJson: JSON.stringify({
-                    display_text: "Open Image Url",
+                    display_text: "Open Image",
                     url: imageUrl
                   })
                 },
@@ -109,7 +109,7 @@ module.exports = {
                   title: `🎨 Image Search Results for "${query}"`
                 },
                 body: {
-                  text: ""
+                  text: "" // Empty body — no extra text clutter
                 },
                 footer: {
                   text: "Powered by Toxic-MD"
