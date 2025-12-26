@@ -30,7 +30,7 @@ module.exports = {
         }, { quoted: m });
       }
 
-      const images = data.result.slice(0, 10); // First 10 only
+      const images = data.result.slice(0, 10);
       const cards = [];
 
       for (const [index, img] of images.entries()) {
@@ -57,14 +57,14 @@ module.exports = {
               imageMessage: messageContent.imageMessage
             },
             body: {
-              text: `Result ${index + 1} of 10`
+              text: `Result ${index + 1} of ${images.length}`
             },
             nativeFlowMessage: {
               buttons: [
                 {
                   name: "cta_url",
                   buttonParamsJson: JSON.stringify({
-                    display_text: "Open Image",
+                    display_text: "Open Image Url",
                     url: imageUrl
                   })
                 },
@@ -79,8 +79,7 @@ module.exports = {
             }
           });
 
-          // Small delay to prevent rate limiting
-          await new Promise(resolve => setTimeout(resolve, 800));
+          await new Promise(resolve => setTimeout(resolve, 800)); // Prevent rate limit
 
         } catch (err) {
           console.warn(`Failed to process image ${index + 1}:`, err.message);
@@ -107,10 +106,10 @@ module.exports = {
               },
               interactiveMessage: {
                 header: {
-                  title: "🎨 Image Search Results"
+                  title: `🎨 Image Search Results for "${query}"`
                 },
                 body: {
-                  text: `Swipe to view the first \( {cards.length} images for " \){query}"`
+                  text: ""
                 },
                 footer: {
                   text: "Powered by Toxic-MD"
