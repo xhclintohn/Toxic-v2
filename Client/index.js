@@ -54,18 +54,18 @@ const antistatusmention = require('../Functions/antistatusmention');
 async function handleButtons(client, msg) {
   try {
     if (!msg.message?.interactiveMessage?.nativeFlowMessage?.buttons) return;
-    
+
     const button = msg.message.interactiveMessage.nativeFlowMessage.buttons[0];
     if (!button) return;
-    
+
     const params = JSON.parse(button.buttonParamsJson);
-    
+
     if (params.copy_code) {
       await client.sendMessage(msg.key.remoteJid, {
         text: `✅ Image URL copied to clipboard!\n\n${params.copy_code}\n\nYou can paste it anywhere now.`
       }, { quoted: msg });
     }
-    
+
   } catch (error) {}
 }
 
@@ -187,7 +187,7 @@ async function startToxic() {
 
   const processedStatusMessages = new Set();
 
-  client.ev.on("messages.upsert", async ({ messages }) => {
+  client.ev.on("messages.upsert", async ({ messages, type }) => {
     let settings = await getSettings();
     if (!settings) return;
 
@@ -204,32 +204,32 @@ async function startToxic() {
 
     await antilink(client, mek, store);
 
-    if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
+    if (autolike && remoteJid === "status@broadcast") {
       const nickk = await client.decodeJid(client.user.id);
       const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
       const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-      await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key } }, { statusJidList: [mek.key.participant, nickk] });
+      await client.sendMessage(remoteJid, { react: { text: randomEmoji, key: mek.key } });
     }
 
-    if (autoview && mek.key.remoteJid === "status@broadcast") {
-      const statusSender = mek.key.participant;
-      const statusKey = `\( {statusSender}: \){mek.key.id}`;
+    if (autoview && remoteJid === "status@broadcast") {
+      const statusSender = mek.key.participant || sender;
+      const statusKey = `${statusSender}:${mek.key.id}`;
 
       if (!processedStatusMessages.has(statusKey)) {
         processedStatusMessages.add(statusKey);
 
         try {
-          await client.readMessages([mek.key]);
-
+          await client.sendReadReceipt(remoteJid, statusSender, [mek.key.id]);
+          
           setTimeout(async () => {
             try {
-              await client.readMessages([mek.key]);
+              await client.sendReadReceipt(remoteJid, statusSender, [mek.key.id]);
             } catch (error) {}
           }, 500);
 
           setTimeout(async () => {
             try {
-              await client.readMessages([mek.key]);
+              await client.sendReadReceipt(remoteJid, statusSender, [mek.key.id]);
             } catch (error) {}
           }, 1000);
 
@@ -244,12 +244,7 @@ async function startToxic() {
       }
     }
 
-    if (mek.key.remoteJid === "status@broadcast") {
-      try {
-        await client.sendReadReceipt(mek.key.remoteJid, mek.key.participant, [mek.key.id]);
-      } catch (error) {}
-    }
-    else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+    if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
       await client.readMessages([mek.key]);
     }
 
@@ -266,10 +261,10 @@ async function startToxic() {
       }
     }
 
-    if (!client.public && !mek.key.fromMe && messages.type === "notify") return;
+    if (!client.public && !mek.key.fromMe && type === "notify") return;
 
     m = smsg(client, mek, store);
-    require("./toxic")(client, m, { type: "notify" }, store);
+    require("./toxic")(client, m, { type }, store);
   });
 
   client.ev.on("messages.upsert", async ({ messages }) => {
