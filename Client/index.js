@@ -134,7 +134,7 @@ async function startToxic() {
     setInterval(() => {
       const date = new Date();
       client.updateProfileStatus(
-        `\( {botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n \){date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi' })}.`
+        `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi' })}.`
       );
     }, 10 * 1000);
   }
@@ -212,36 +212,29 @@ async function startToxic() {
     }
 
     if (autoview && remoteJid === "status@broadcast") {
-      const statusSender = mek.key.participant || sender;
-      const statusKey = `${statusSender}:${mek.key.id}`;
-
-      if (!processedStatusMessages.has(statusKey)) {
-        processedStatusMessages.add(statusKey);
-
-        try {
-          await client.sendReadReceipt(remoteJid, statusSender, [mek.key.id]);
+      try {
+        const statusKey = mek.key.id;
+        if (!processedStatusMessages.has(statusKey)) {
+          processedStatusMessages.add(statusKey);
           
-          setTimeout(async () => {
-            try {
-              await client.sendReadReceipt(remoteJid, statusSender, [mek.key.id]);
-            } catch (error) {}
-          }, 500);
-
-          setTimeout(async () => {
-            try {
-              await client.sendReadReceipt(remoteJid, statusSender, [mek.key.id]);
-            } catch (error) {}
-          }, 1000);
+          const participant = mek.key.participant || sender;
+          if (participant && participant !== client.decodeJid(client.user.id)) {
+            await client.readMessages([mek.key]);
+            
+            setTimeout(async () => {
+              try {
+                await client.readMessages([mek.key]);
+              } catch (error) {}
+            }, 500);
+          }
 
           if (processedStatusMessages.size > 1000) {
             const recentKeys = Array.from(processedStatusMessages).slice(-500);
             processedStatusMessages.clear();
             recentKeys.forEach(key => processedStatusMessages.add(key));
           }
-        } catch (error) {
-          processedStatusMessages.delete(statusKey);
         }
-      }
+      } catch (error) {}
     }
 
     if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
@@ -299,6 +292,23 @@ async function startToxic() {
         require("./toxic")(client, m, { type: "notify" }, store);
       } catch (error) {
         console.error('Error processing list selection:', error);
+      }
+    }
+  });
+
+  client.ev.on("messages.update", async (updates) => {
+    for (const update of updates) {
+      if (update.key && update.key.remoteJid === "status@broadcast" && update.update.messageStubType === 1) {
+        const settings = await getSettings();
+        if (settings.autoview) {
+          try {
+            const mek = {
+              key: update.key,
+              message: {}
+            };
+            await client.readMessages([mek.key]);
+          } catch (error) {}
+        }
       }
     }
   });
