@@ -17,6 +17,9 @@ module.exports = {
 
     try {
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+      const statusMsg = await client.sendMessage(m.chat, {
+        text: `🎬 *Generating Sora Video...*\n\n📝 *Prompt:* ${prompt}\n⏳ Status: Initializing...\n\nPlease wait 30-60 seconds...`
+      }, { quoted: m });
 
       const params = new URLSearchParams({
         apikey: 'fgsiapi-2dcdfa06-6d',
@@ -26,29 +29,56 @@ module.exports = {
       });
 
       const response = await fetch(`https://fgsi.dpdns.org/api/ai/sora2?${params.toString()}`, {
-        headers: {
-          'accept': 'application/json'
-        }
+        headers: { 'accept': 'application/json' }
       });
 
       const data = await response.json();
-      console.log('API Response:', JSON.stringify(data, null, 2));
-
-      if (!data || !data.status || !data.result) {
-        throw new Error(data?.message || 'API returned no video');
-      }
-
-      const videoUrl = data.result;
       
-      if (!videoUrl || !videoUrl.startsWith('http')) {
-        throw new Error('Invalid video URL received');
+      if (!data.status || !data.data?.pollUrl) {
+        throw new Error('Failed to start video generation');
       }
 
+      const pollUrl = data.data.pollUrl;
+      let videoUrl = null;
+      let attempts = 0;
+      const maxAttempts = 60;
+
+      while (attempts < maxAttempts && !videoUrl) {
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        try {
+          const pollResponse = await fetch(pollUrl, {
+            headers: { 'accept': 'application/json' }
+          });
+          const pollData = await pollResponse.json();
+
+          await client.sendMessage(m.chat, {
+            edit: statusMsg.key,
+            text: `🎬 *Generating Sora Video...*\n\n📝 *Prompt:* ${prompt}\n⏳ Status: ${pollData.data?.status || 'Processing'}\n🔁 Attempt: ${attempts}/${maxAttempts}\n\nPlease wait...`
+          });
+
+          if (pollData.data?.status === 'Completed' && pollData.data?.result) {
+            videoUrl = pollData.data.result;
+            break;
+          } else if (pollData.data?.status === 'Failed') {
+            throw new Error('Video generation failed on server');
+          }
+        } catch (pollError) {
+          console.log(`Poll attempt ${attempts} failed:`, pollError.message);
+        }
+      }
+
+      if (!videoUrl) {
+        throw new Error('Video generation timed out after 3 minutes');
+      }
+
+      await client.sendMessage(m.chat, { delete: statusMsg.key });
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
       await client.sendMessage(m.chat, {
         video: { url: videoUrl },
-        caption: `🎬 *Sora AI Video Generated*\n\n📝 *Prompt:* ${prompt}\n\n⚡ _Powered by Toxic-MD_`,
+        caption: `🎬 *Sora AI Video Generated*\n\n📝 *Prompt:* ${prompt}\n⏱️ *Generation time:* ${attempts * 3} seconds\n\n⚡ _Powered by Toxic-MD_`,
         gifPlayback: false
       }, { quoted: m });
 
