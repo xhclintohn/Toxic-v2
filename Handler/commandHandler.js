@@ -57,6 +57,7 @@ const aliases = {
     setprefix: "prefix",
     reactemoji: "reaction",
     autoviewstatus: "autoview",
+    antimention: "antistatusmention",
     addowner: "addsudo",
     delowner: "delsudo",
     die: "block",
