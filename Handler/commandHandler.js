@@ -154,7 +154,7 @@ commandFiles.forEach((file) => {
     const commandName = path.basename(file, '.js');
     const commandModule = require(file);
 
-    // Store the command's run function (or the module itself if it's a function)
+   
     commands[commandName] = commandModule.run || commandModule;
 });
 
