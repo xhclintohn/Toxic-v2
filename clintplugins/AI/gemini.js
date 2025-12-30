@@ -1,58 +1,35 @@
+const fetch = require("node-fetch");
+
 module.exports = async (context) => {
-  const { client, m, text } = context;
-  const axios = require("axios");
+  const { client, m, text, prefix } = context;
 
-  const formatStylishReply = (message) => {
-    return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
-  };
-
-  // Check if text is provided
   if (!text) {
-    return client.sendMessage(
-      m.chat,
-      { text: formatStylishReply("Yo, fam, give me something to chat about! 🗣️ Ex: .gemini What's good?") },
-      { quoted: m, ad: true }
-    );
+    return m.reply(`You braindead waste of space, give me something to work with!\nExample: ${prefix}gemini What's 2+2?`);
   }
 
-  // Limit input length
   if (text.length > 500) {
-    return client.sendMessage(
-      m.chat,
-      { text: formatStylishReply("Chill, homie! Keep it under 500 chars. 📝") },
-      { quoted: m, ad: true }
-    );
+    return m.reply("Do you think I have infinite patience? Keep your rambling under 500 characters!");
   }
 
   try {
-    // Hit thev api
-    const { data } = await axios.get("https://api.zenzxz.my.id/api/ai/gemini", {
-      params: { text: text, id: "string" },
-      headers: { Accept: "application/json" },
-      timeout: 10000,
-    });
+    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-    // Check if response is valid
-    if (!data.success || !data.data?.response) {
-      return client.sendMessage(
-        m.chat,
-        { text: formatStylishReply("API’s acting shady, no response! 😢 Try again.") },
-        { quoted: m, ad: true }
-      );
+    const encodedText = encodeURIComponent(text);
+    const response = await fetch(`https://api-faa.my.id/faa/gemini-ai?text=${encodedText}`);
+    const data = await response.json();
+
+    if (!data.status || !data.result) {
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+      return m.reply("Gemini AI decided your question was too stupid to answer. Try something less brain-damaging.");
     }
 
-    // Send the response with creator attribution
-    await client.sendMessage(
-      m.chat,
-      { text: formatStylishReply(`${data.data.response}\n\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`) },
-      { quoted: m, ad: true }
-    );
+    await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
+    await m.reply(`${data.result}\n\nI did all the thinking for you, you're welcome.`);
+
   } catch (error) {
     console.error("Gemini command error:", error);
-    return client.sendMessage(
-      m.chat,
-      { text: formatStylishReply(`Yo, something broke: ${error.message}. Try another query! 😎`) },
-      { quoted: m, ad: true }
-    );
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+    return m.reply(`Gemini crashed harder than your IQ.\nError: ${error.message}\nTry again when you're less useless.`);
   }
 };
