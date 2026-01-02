@@ -16,16 +16,37 @@ module.exports = {
 
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-      let url;
-      try {
-        url = new URL(link);
-      } catch {
-        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        return m.reply("That's not even a valid URL. Are you trying to break my code on purpose?");
-      }
+      if (link.includes("https://whatsapp.com/channel/")) {
+        const channelCode = link.split("https://whatsapp.com/channel/")[1];
+        
+        if (!channelCode) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+          return m.reply("Invalid channel link. Did you copy it right, or are you just making shit up?");
+        }
 
-      if (url.hostname === 'chat.whatsapp.com') {
-        const code = url.pathname.replace(/^\/+/, '');
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+        
+        const channelId = `${channelCode.trim()}@newsletter`;
+        
+        await client.sendMessage(m.chat, {
+          interactiveMessage: {
+            header: `📢 *Channel Link Analysis*\n\n🔗 *Link:* ${link}\n📌 *Channel Code:* \`${channelCode}\`\n\n*Channel ID:* \`${channelId}\``,
+            footer: "Powered by Toxic-MD",
+            buttons: [
+              {
+                name: "cta_copy",
+                buttonParamsJson: JSON.stringify({
+                  display_text: "📋 Copy Channel ID",
+                  copy_code: channelId
+                })
+              }
+            ]
+          }
+        }, { quoted: m });
+
+      }
+      else if (link.includes("chat.whatsapp.com")) {
+        const code = link.split("chat.whatsapp.com/")[1]?.split(/[?\/]/)[0];
         
         if (!code || code.length < 5) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
@@ -38,10 +59,7 @@ module.exports = {
         
         await client.sendMessage(m.chat, {
           interactiveMessage: {
-            header: "📊 Group Link Analysis",
-            body: {
-              text: `🔗 *Link:* ${link}\n📌 *Invite Code:* \`${code}\`\n\n*Group ID:* \`${groupId}\`\n\n*Note:* This is the ID format. Actual ID may differ until you join.`
-            },
+            header: `📊 *Group Link Analysis*\n\n🔗 *Link:* ${link}\n📌 *Invite Code:* \`${code}\`\n\n*Group ID:* \`${groupId}\`\n\n*Note:* This is the ID format. Actual ID may differ until you join.`,
             footer: "Powered by Toxic-MD",
             buttons: [
               {
@@ -49,38 +67,6 @@ module.exports = {
                 buttonParamsJson: JSON.stringify({
                   display_text: "📋 Copy Group ID",
                   copy_code: groupId
-                })
-              }
-            ]
-          }
-        }, { quoted: m });
-
-      } 
-      else if (url.hostname === 'whatsapp.com' && url.pathname.startsWith('/channel/')) {
-        const channelCode = url.pathname.split('/channel/')[1]?.split('/')[0];
-        
-        if (!channelCode) {
-          await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-          return m.reply("Invalid channel link. Did you copy it right, or are you just making shit up?");
-        }
-
-        const channelId = `${channelCode}@newsletter`;
-        
-        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-        
-        await client.sendMessage(m.chat, {
-          interactiveMessage: {
-            header: "📢 Channel Link Analysis",
-            body: {
-              text: `🔗 *Link:* ${link}\n📌 *Channel Code:* \`${channelCode}\`\n\n*Channel ID:* \`${channelId}\``
-            },
-            footer: "Powered by Toxic-MD",
-            buttons: [
-              {
-                name: "cta_copy",
-                buttonParamsJson: JSON.stringify({
-                  display_text: "📋 Copy Channel ID",
-                  copy_code: channelId
                 })
               }
             ]
