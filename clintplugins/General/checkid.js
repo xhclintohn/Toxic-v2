@@ -32,21 +32,23 @@ module.exports = {
           return m.reply("Invalid group invite code. The link looks fake as fuck.");
         }
 
+        const groupId = `${code}@g.us`;
+        
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         
         await client.sendMessage(m.chat, {
           interactiveMessage: {
             header: "📊 Group Link Analysis",
             body: {
-              text: `🔗 *Link:* ${link}\n📌 *Invite Code:* \`${code}\`\n\n*How to get actual Group ID:*\n1. Join the group first\n2. Use ${prefix}groupinfo inside the group`
+              text: `🔗 *Link:* ${link}\n📌 *Invite Code:* \`${code}\`\n\n*Group ID:* \`${groupId}\`\n\n*Note:* This is the ID format. Actual ID may differ until you join.`
             },
             footer: "Powered by Toxic-MD",
             buttons: [
               {
                 name: "cta_copy",
                 buttonParamsJson: JSON.stringify({
-                  display_text: "📋 Copy Invite Code",
-                  copy_code: code
+                  display_text: "📋 Copy Group ID",
+                  copy_code: groupId
                 })
               }
             ]
@@ -62,7 +64,7 @@ module.exports = {
           return m.reply("Invalid channel link. Did you copy it right, or are you just making shit up?");
         }
 
-        const channelId = `newsletter@${channelCode}`;
+        const channelId = `${channelCode}@newsletter`;
         
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         
@@ -79,13 +81,6 @@ module.exports = {
                 buttonParamsJson: JSON.stringify({
                   display_text: "📋 Copy Channel ID",
                   copy_code: channelId
-                })
-              },
-              {
-                name: "cta_copy",
-                buttonParamsJson: JSON.stringify({
-                  display_text: "📋 Copy Channel Code",
-                  copy_code: channelCode
                 })
               }
             ]
