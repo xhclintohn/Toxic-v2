@@ -16,28 +16,31 @@ module.exports = {
 
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-      if (link.includes("https://whatsapp.com/channel/")) {
-        const channelCode = link.split("https://whatsapp.com/channel/")[1];
-        
-        if (!channelCode) {
-          await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-          return m.reply("Invalid channel link. Did you copy it right, or are you just making shit up?");
-        }
+      let url;
+      try {
+        url = new URL(link);
+      } catch {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        return m.reply("That's not even a valid URL. Are you trying to break my code on purpose?");
+      }
 
-        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+      if (url.hostname === 'chat.whatsapp.com' && /^\/[A-Za-z0-9]{20,}$/.test(url.pathname)) {
+        const code = url.pathname.replace(/^\/+/, '');
+        const res = await client.groupGetInviteInfo(code);
+        const id = res.id;
         
-        const channelId = `${channelCode.trim()}@newsletter`;
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         
         await client.sendMessage(m.chat, {
           interactiveMessage: {
-            header: `📢 *Channel Link Analysis*\n\n🔗 *Link:* ${link}\n📌 *Channel Code:* \`${channelCode}\`\n\n*Channel ID:* \`${channelId}\``,
+            header: `📊 *Group Link Analysis*\n\n🔗 *Link:* ${link}\n📌 *Invite Code:* \`${code}\`\n\n*Group ID:* \`${id}\``,
             footer: "Powered by Toxic-MD",
             buttons: [
               {
                 name: "cta_copy",
                 buttonParamsJson: JSON.stringify({
-                  display_text: "📋 Copy Channel ID",
-                  copy_code: channelId
+                  display_text: "📋 Copy Group ID",
+                  copy_code: id
                 })
               }
             ]
@@ -45,28 +48,28 @@ module.exports = {
         }, { quoted: m });
 
       }
-      else if (link.includes("chat.whatsapp.com")) {
-        const code = link.split("chat.whatsapp.com/")[1]?.split(/[?\/]/)[0];
-        
-        if (!code || code.length < 5) {
+      else if (url.hostname === 'whatsapp.com' && url.pathname.startsWith('/channel/')) {
+        const code = url.pathname.split('/channel/')[1]?.split('/')[0];
+        if (!code) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-          return m.reply("Invalid group invite code. The link looks fake as fuck.");
+          return m.reply("Invalid channel link format");
         }
-
-        const groupId = `${code}@g.us`;
+        
+        const res = await client.newsletterMetadata('invite', code, 'GUEST');
+        const id = res.id;
         
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         
         await client.sendMessage(m.chat, {
           interactiveMessage: {
-            header: `📊 *Group Link Analysis*\n\n🔗 *Link:* ${link}\n📌 *Invite Code:* \`${code}\`\n\n*Group ID:* \`${groupId}\`\n\n*Note:* This is the ID format. Actual ID may differ until you join.`,
+            header: `📢 *Channel Link Analysis*\n\n🔗 *Link:* ${link}\n📌 *Channel Code:* \`${code}\`\n\n*Channel ID:* \`${id}\``,
             footer: "Powered by Toxic-MD",
             buttons: [
               {
                 name: "cta_copy",
                 buttonParamsJson: JSON.stringify({
-                  display_text: "📋 Copy Group ID",
-                  copy_code: groupId
+                  display_text: "📋 Copy Channel ID",
+                  copy_code: id
                 })
               }
             ]
