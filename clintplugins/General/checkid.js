@@ -34,20 +34,24 @@ module.exports = {
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         
-        const message = {
-          text: `*Group Link Analysis*\n\n🔗 *Link:* ${link}\n📌 *Invite Code:* \`${code}\`\n\n*How to get the actual Group ID:*\n1. Join the group first (I can't magically get IDs from outside)\n2. Once you're in, use ${prefix}groupinfo to get all details`,
-          templateButtons: [
-            {
-              index: 1,
-              ctaCopyButton: {
-                displayText: "📋 Copy Invite Code",
-                copyCode: code
+        await client.sendMessage(m.chat, {
+          interactiveMessage: {
+            header: "📊 Group Link Analysis",
+            body: {
+              text: `🔗 *Link:* ${link}\n📌 *Invite Code:* \`${code}\`\n\n*How to get actual Group ID:*\n1. Join the group first\n2. Use ${prefix}groupinfo inside the group`
+            },
+            footer: "Powered by Toxic-MD",
+            buttons: [
+              {
+                name: "cta_copy",
+                buttonParamsJson: JSON.stringify({
+                  display_text: "📋 Copy Invite Code",
+                  copy_code: code
+                })
               }
-            }
-          ]
-        };
-        
-        await client.sendMessage(m.chat, message, { quoted: m });
+            ]
+          }
+        }, { quoted: m });
 
       } 
       else if (url.hostname === 'whatsapp.com' && url.pathname.startsWith('/channel/')) {
@@ -62,27 +66,31 @@ module.exports = {
         
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         
-        const message = {
-          text: `*Channel Link Analysis*\n\n🔗 *Link:* ${link}\n📌 *Channel Code:* \`${channelCode}\`\n\n*Channel ID:* \`${channelId}\``,
-          templateButtons: [
-            {
-              index: 1,
-              ctaCopyButton: {
-                displayText: "📋 Copy Channel ID",
-                copyCode: channelId
-              }
+        await client.sendMessage(m.chat, {
+          interactiveMessage: {
+            header: "📢 Channel Link Analysis",
+            body: {
+              text: `🔗 *Link:* ${link}\n📌 *Channel Code:* \`${channelCode}\`\n\n*Channel ID:* \`${channelId}\``
             },
-            {
-              index: 2,
-              ctaCopyButton: {
-                displayText: "📋 Copy Channel Code",
-                copyCode: channelCode
+            footer: "Powered by Toxic-MD",
+            buttons: [
+              {
+                name: "cta_copy",
+                buttonParamsJson: JSON.stringify({
+                  display_text: "📋 Copy Channel ID",
+                  copy_code: channelId
+                })
+              },
+              {
+                name: "cta_copy",
+                buttonParamsJson: JSON.stringify({
+                  display_text: "📋 Copy Channel Code",
+                  copy_code: channelCode
+                })
               }
-            }
-          ]
-        };
-        
-        await client.sendMessage(m.chat, message, { quoted: m });
+            ]
+          }
+        }, { quoted: m });
 
       }
       else {
