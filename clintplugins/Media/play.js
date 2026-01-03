@@ -1,28 +1,27 @@
-const yts = require("yt-search");
 const axios = require("axios");
 
 module.exports = async (context) => {
     const { client, m, text } = context;
 
-    if (!text) return m.reply("Are you mute? Give me a song name. It's not rocket science.");
-    if (text.length > 100) return m.reply("Your 'song title' is longer than your attention span. Keep it under 100 characters.");
+    if (!text) return m.reply("Are you mute? Give me a song name or YouTube link. It's not rocket science.");
+    if (text.length > 200) return m.reply("Your search is longer than your attention span. Keep it under 200 characters.");
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-        
-        const searchQuery = `${text} official`;
-        const searchResult = await yts(searchQuery);
-        const video = searchResult.videos[0];
-        if (!video) return m.reply(`Nothing found for "${text}". Your taste is as nonexistent as the results.`);
 
-        const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytplaymp3?query=${encodeURIComponent(video.url)}`;
+        const searchQuery = text;
+        const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytplaymp3?query=${encodeURIComponent(searchQuery)}`;
         const response = await axios.get(apiUrl);
         const apiData = response.data;
-        if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) throw new Error("The API spat out garbage. No audio for you.");
+        
+        if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) {
+            throw new Error("The API spat out garbage. No audio for you.");
+        }
 
         const audioUrl = apiData.result.downloadUrl;
         const title = apiData.result.title || "Untitled";
-        const artist = video.author.name || "Unknown Artist";
+        const videoUrl = apiData.result.videoUrl;
+        const thumbnail = apiData.result.thumbnail;
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
@@ -33,9 +32,9 @@ module.exports = async (context) => {
             contextInfo: {
                 externalAdReply: {
                     title: title,
-                    body: `${artist} | Toxic-MD`,
-                    thumbnailUrl: apiData.result.thumbnail || video.thumbnail,
-                    sourceUrl: video.url,
+                    body: `Toxic-MD Music`,
+                    thumbnailUrl: thumbnail,
+                    sourceUrl: videoUrl,
                     mediaType: 1,
                     renderLargerThumbnail: true,
                 },
