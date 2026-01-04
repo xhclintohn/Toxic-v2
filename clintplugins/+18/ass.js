@@ -1,30 +1,31 @@
-const fetch = require("node-fetch");
+const fetch = require('node-fetch');
 
 module.exports = async (context) => {
-    const { client, m } = context;
+    const { client, m, text } = context;
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        const response = await fetch("https://api.nekolabs.web.id/random/nsfwhub/ass");
-        
-        if (!response.ok) {
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply("API's being a little bitch right now. Try again later, dipshit.");
-        }
+        const type = 'ass';
 
-        const buffer = await response.buffer();
+        const apiUrl = `https://api.nekolabs.web.id/random/nsfwhub?type=${type}`;
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) throw new Error(`API failed with status: ${response.status}`);
+        
+        const imageBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(imageBuffer);
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
         await client.sendMessage(m.chat, {
             image: buffer,
-            mimetype: "image/jpeg",
-            caption: "There. Happy now, you filthy degenerate? 🍑",
+            caption: `Type: ${type}\n—\nTσxιƈ-ɱԃȥ`
         }, { quoted: m });
 
     } catch (error) {
+        console.error('NSFW error:', error);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        m.reply("Everything fucking broke. Blame your bad luck.");
+        await m.reply(`Failed to fetch NSFW content.\nError: ${error.message}\nTry again or stop being horny.`);
     }
 };
