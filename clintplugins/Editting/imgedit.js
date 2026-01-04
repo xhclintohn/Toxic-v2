@@ -25,8 +25,7 @@ module.exports = async (context) => {
 
         const uploadedUrl = await uploadToCatbox(mediaBuffer);
 
-        // FIXED LINE HERE
-        const apiUrl = `https://api-faa.my.id/faa/editfoto?url=\( {encodeURIComponent(uploadedUrl)}&prompt= \){encodeURIComponent(prompt)}`;
+        const apiUrl = `https://api-faa.my.id/faa/editfoto?url=${encodeURIComponent(uploadedUrl)}&prompt=${encodeURIComponent(prompt)}`;
 
         const editResponse = await axios.get(apiUrl, { responseType: 'arraybuffer' });
 
