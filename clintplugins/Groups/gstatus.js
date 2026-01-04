@@ -1,9 +1,6 @@
 const { getSettings } = require('../../Database/config');
 
-/**
- * Posts a group status message with text, image, video, or audio.
- * @module gstatus
- */
+
 module.exports = {
   name: 'gstatus',
   aliases: ['groupstatus', 'gs'],
@@ -11,7 +8,7 @@ module.exports = {
   run: async (context) => {
     const { client, m, prefix, isBotAdmin, IsGroup, botname } = context;
 
-    // Helper to wrap all replies with line styling
+   
     const formatMsg = (text) => `◈━━━━━━━━━━━━━━━◈\n${text}\n◈━━━━━━━━━━━━━━━◈`;
 
     try {
@@ -50,10 +47,10 @@ module.exports = {
         );
       }
 
-      // Default caption for group status
+   
       const defaultCaption = `Group status Posted By Toxic-MD✅\n\nJOIN\nhttps://chat.whatsapp.com/GoXKLVJgTAAC3556FXkfFI?mode=wwt`;
 
-      // Handle media types
+ 
       if (/image/.test(mime)) {
         const buffer = await client.downloadMediaMessage(quoted);
         await client.sendMessage(m.chat, {
