@@ -13,11 +13,11 @@ module.exports = {
 
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-      const apiUrl = `https://api-faa.my.id/faa/pinterest?q=${encodeURIComponent(query)}`;
+      const apiUrl = `https://api.nekolabs.web.id/discovery/pinterest/search?q=${encodeURIComponent(query)}`;
       const res = await fetch(apiUrl);
       const data = await res.json();
 
-      if (!data.status || !data.result || data.result.length === 0) {
+      if (!data.success || !data.result || data.result.length === 0) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return m.reply(`No Pinterest images found for "${query}". Your search is as pointless as you are.`);
       }
@@ -25,17 +25,21 @@ module.exports = {
       const images = data.result.slice(0, 5);
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-      for (const [i, imgUrl] of images.entries()) {
+      for (const [i, image] of images.entries()) {
         try {
-          const response = await fetch(imgUrl);
+          const response = await fetch(image.imageUrl);
           const arrayBuffer = await response.arrayBuffer();
           const buffer = Buffer.from(arrayBuffer);
 
+          const caption = i === 0 
+            ? `🥀\n—\nTσxιƈ-ɱԃȥ\nQuery: ${query}\nAuthor: ${image.author?.fullname || image.author?.name || 'Unknown'}`
+            : `Author: ${image.author?.fullname || image.author?.name || 'Unknown'}`;
+
           await client.sendMessage(m.chat, {
             image: buffer,
-            caption: i === 0 ? `🥀\n—\nTσxιƈ-ɱԃȥ\nQuery: ${query}` : ''
+            caption: caption
           }, { quoted: i === 0 ? m : null });
-          
+
           await new Promise(resolve => setTimeout(resolve, 500));
         } catch {}
       }
