@@ -51,24 +51,6 @@ const antidelete = require('../Functions/antidelete');
 const antilink = require('../Functions/antilink');
 const antistatusmention = require('../Functions/antistatusmention');
 
-async function handleButtons(client, msg) {
-  try {
-    if (!msg.message?.interactiveMessage?.nativeFlowMessage?.buttons) return;
-
-    const button = msg.message.interactiveMessage.nativeFlowMessage.buttons[0];
-    if (!button) return;
-
-    const params = JSON.parse(button.buttonParamsJson);
-
-    if (params.copy_code) {
-      await client.sendMessage(msg.key.remoteJid, {
-        text: `✅ Image URL copied to clipboard!\n\n${params.copy_code}\n\nYou can paste it anywhere now.`
-      }, { quoted: msg });
-    }
-
-  } catch (error) {}
-}
-
 async function startToxic() {
   let settingss = await getSettings();
   if (!settingss) {
@@ -216,11 +198,11 @@ async function startToxic() {
         const statusKey = mek.key.id;
         if (!processedStatusMessages.has(statusKey)) {
           processedStatusMessages.add(statusKey);
-          
+
           const participant = mek.key.participant || sender;
           if (participant && participant !== client.decodeJid(client.user.id)) {
             await client.readMessages([mek.key]);
-            
+
             setTimeout(async () => {
               try {
                 await client.readMessages([mek.key]);
@@ -264,7 +246,7 @@ async function startToxic() {
     const msg = messages[0];
     if (!msg.message) return;
 
-    await handleButtons(client, msg);
+    // REMOVED: await handleButtons(client, msg);
 
     if (msg.message.listResponseMessage) {
       const selectedCmd = msg.message.listResponseMessage.singleSelectReply.selectedRowId;
