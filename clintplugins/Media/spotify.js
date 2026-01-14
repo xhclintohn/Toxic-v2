@@ -12,13 +12,11 @@ module.exports = {
       if (query.length > 100) return m.reply("Your 'song title' is longer than my patience. 100 characters MAX.");
 
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-      const statusMsg = await m.reply(`Searching Spotify for "${query}"... This better be worth my time.`);
 
       const response = await fetch(`https://api.ootaizumi.web.id/downloader/spotifyplay?query=${encodeURIComponent(query)}`);
       const data = await response.json();
 
       if (!data.status || !data.result?.download) {
-        await client.sendMessage(m.chat, { delete: statusMsg.key });
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return m.reply(`No song found for "${query}". Your music taste is as bad as your search skills.`);
       }
@@ -28,7 +26,6 @@ module.exports = {
       const filename = song.title || "Unknown Song";
       const artist = song.artists || "Unknown Artist";
 
-      await client.sendMessage(m.chat, { delete: statusMsg.key });
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
       await client.sendMessage(m.chat, {
