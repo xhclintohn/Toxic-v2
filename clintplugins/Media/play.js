@@ -1,52 +1,60 @@
-const axios = require("axios");
-
-module.exports = async (context) => {
-    const { client, m, text } = context;
-
-    if (!text) return m.reply("Are you mute? Give me a song name or YouTube link. It's not rocket science.");
-    if (text.length > 200) return m.reply("Your search is longer than your attention span. Keep it under 200 characters.");
+module.exports = {
+  name: 'play',
+  aliases: ['ply', 'playy', 'pl'],
+  description: 'Downloads songs from Spotify and sends audio',
+  run: async (context) => {
+    const { client, m } = context;
 
     try {
-        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+      const query = m.text.trim();
+      if (!query) return m.reply("Give me a song name, you tone-deaf cretin.");
 
-        const searchQuery = text;
-        const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytplaymp3?query=${encodeURIComponent(searchQuery)}`;
-        const response = await axios.get(apiUrl);
-        const apiData = response.data;
-        
-        if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) {
-            throw new Error("The API spat out garbage. No audio for you.");
-        }
+      if (query.length > 100) return m.reply("Your 'song title' is longer than my patience. 100 characters MAX.");
 
-        const audioUrl = apiData.result.downloadUrl;
-        const title = apiData.result.title || "Untitled";
-        const videoUrl = apiData.result.videoUrl;
-        const thumbnail = apiData.result.thumbnail;
+      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+      const response = await fetch(`https://api.ootaizumi.web.id/downloader/spotifyplay?query=${encodeURIComponent(query)}`);
+      const data = await response.json();
 
-        await client.sendMessage(m.chat, {
-            audio: { url: audioUrl },
-            mimetype: "audio/mpeg",
-            fileName: `${title.substring(0, 100)}.mp3`,
-            contextInfo: {
-                externalAdReply: {
-                    title: title,
-                    body: `Toxic-MD Music`,
-                    thumbnailUrl: thumbnail,
-                    sourceUrl: videoUrl,
-                    mediaType: 1,
-                    renderLargerThumbnail: true,
-                },
-            },
-        }, { quoted: m });
+      if (!data.status || !data.result?.download) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        return m.reply(`No song found for "${query}". Your music taste is as bad as your search skills.`);
+      }
+
+      const song = data.result;
+      const audioUrl = song.download;
+      const filename = song.title || "Unknown Song";
+      const artist = song.artists || "Unknown Artist";
+
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
+      await client.sendMessage(m.chat, {
+        audio: { url: audioUrl },
+        mimetype: "audio/mpeg",
+        fileName: `${filename}.mp3`,
+        contextInfo: {
+          externalAdReply: {
+            title: filename.substring(0, 30),
+            body: artist.substring(0, 30),
+            thumbnailUrl: song.image || "",
+            sourceUrl: song.external_url || "",
+            mediaType: 1,
+            renderLargerThumbnail: true,
+          },
+        },
+      }, { quoted: m });
+
+      await client.sendMessage(m.chat, {
+        document: { url: audioUrl },
+        mimetype: "audio/mpeg",
+        fileName: `${filename.replace(/[<>:"/\\|?*]/g, '_')}.mp3`,
+        caption: `🎵 ${filename} - ${artist}\n—\nTσxιƈ-ɱԃȥ`
+      }, { quoted: m });
 
     } catch (error) {
-        console.error(`Play error:`, error);
-        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        let userMessage = 'Download failed. The universe despises your music taste.';
-        if (error.message.includes('API spat')) userMessage = 'The audio service rejected the request.';
-        if (error.message.includes('timeout')) userMessage = 'Search timed out. Try a song that exists.';
-        await m.reply(`${userMessage}\nError: ${error.message}`);
+      console.error('Spotify error:', error);
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+      await m.reply(`Spotify download failed. The universe rejects your music taste.\nError: ${error.message}`);
     }
+  }
 };
