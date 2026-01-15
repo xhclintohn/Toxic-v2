@@ -165,13 +165,23 @@ async function startToxic() {
   const processedStatusMessages = new Set();
 
   client.ev.on("messages.upsert", async ({ messages, type }) => {
+    console.log(`📱 [DEBUG] Message received, type: ${type}`);
+    
     let settings = await getSettings();
-    if (!settings) return;
+    if (!settings) {
+      console.log(`❌ [DEBUG] Failed to get settings`);
+      return;
+    }
+
+    console.log(`⚙️ [DEBUG] Settings loaded: autolike=${settings.autolike}, autolikeemoji=${settings.autolikeemoji}, autoview=${settings.autoview}`);
 
     const { autoread, autolike, autoview, presence, autolikeemoji } = settings;
 
     let mek = messages[0];
-    if (!mek || !mek.key || !mek.message) return;
+    if (!mek || !mek.key || !mek.message) {
+      console.log(`❌ [DEBUG] Invalid message structure`);
+      return;
+    }
 
     mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
@@ -179,41 +189,61 @@ async function startToxic() {
     const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
     const Myself = client.decodeJid(client.user.id);
 
+    console.log(`📍 [DEBUG] Message from: ${sender}, RemoteJid: ${remoteJid}, isStatus: ${remoteJid === "status@broadcast"}`);
+
     await antilink(client, mek, store);
 
-    if (autolike === 'true' && mek.key && mek.key.remoteJid === "status@broadcast") {
-      console.log(`📱 [AUTOLIKE] Status detected from ${sender}`);
-      console.log(`⚙️ [AUTOLIKE] Settings: autolike=${autolike}, emoji=${autolikeemoji}`);
+    if (autolike === 'true' && remoteJid === "status@broadcast") {
+      console.log(`🎯 [AUTOLIKE] Status detected! Sender: ${sender}`);
+      console.log(`⚙️ [AUTOLIKE] Settings check: autolike=${autolike} (should be 'true'), emoji=${autolikeemoji}`);
       
       try {
         let reactEmoji = autolikeemoji || 'random';
-        console.log(`🎯 [AUTOLIKE] Selected emoji: ${reactEmoji}`);
+        console.log(`🎨 [AUTOLIKE] React emoji setting: ${reactEmoji}`);
         
         if (reactEmoji === 'random') {
           const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
           reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-          console.log(`🎲 [AUTOLIKE] Randomly selected: ${reactEmoji}`);
+          console.log(`🎲 [AUTOLIKE] Random emoji selected: ${reactEmoji}`);
         }
         
-        if (mek.key && mek.key.id) {
-          console.log(`📤 [AUTOLIKE] Attempting to react with ${reactEmoji}`);
-          const nickk = await client.decodeJid(client.user.id);
-          await client.sendMessage(mek.key.remoteJid, { 
+        console.log(`📤 [AUTOLIKE] Attempting to send reaction: ${reactEmoji}`);
+        
+        const nickk = await client.decodeJid(client.user.id);
+        console.log(`👤 [AUTOLIKE] Bot JID: ${nickk}, Status sender: ${mek.key.participant}`);
+        
+        try {
+          await client.sendMessage(remoteJid, { 
             react: { 
               text: reactEmoji, 
               key: mek.key 
             } 
-          }, { statusJidList: [mek.key.participant, nickk] });
-          console.log(`✅ [AUTOLIKE] Successfully reacted to status from ${sender} with ${reactEmoji}`);
-        } else {
-          console.log(`❌ [AUTOLIKE] Invalid message key, cannot react`);
+          });
+          console.log(`✅ [AUTOLIKE] SUCCESS! Reacted to status from ${sender} with ${reactEmoji}`);
+        } catch (sendError) {
+          console.error(`❌ [AUTOLIKE] Failed to sendMessage:`, sendError.message);
+          // Try without statusJidList
+          try {
+            await client.sendMessage(remoteJid, { 
+              react: { 
+                text: reactEmoji, 
+                key: mek.key 
+              } 
+            });
+            console.log(`✅ [AUTOLIKE] SUCCESS (second attempt)!`);
+          } catch (error2) {
+            console.error(`❌ [AUTOLIKE] Completely failed:`, error2.message);
+          }
         }
       } catch (error) {
-        console.error(`❌ [AUTOLIKE] Failed to react:`, error.message);
+        console.error(`❌ [AUTOLIKE] Error in reaction process:`, error.message);
       }
+    } else {
+      console.log(`⏭️ [AUTOLIKE] Skipped - autolike=${autolike}, remoteJid=${remoteJid}, isStatus=${remoteJid === "status@broadcast"}`);
     }
 
-    if (autoview && autoview !== 'false' && mek.key.remoteJid === "status@broadcast") {
+    if (autoview === 'true' && remoteJid === "status@broadcast") {
+      console.log(`👁️ [AUTOVIEW] Marking status as viewed from ${sender}`);
       const statusSender = mek.key.participant;
       const statusKey = `${statusSender}:${mek.key.id}`;
 
@@ -222,6 +252,7 @@ async function startToxic() {
 
         try {
           await client.readMessages([mek.key]);
+          console.log(`📖 [AUTOVIEW] Status viewed from ${statusSender}`);
 
           setTimeout(async () => {
             try {
@@ -242,7 +273,10 @@ async function startToxic() {
           }
         } catch (error) {
           processedStatusMessages.delete(statusKey);
+          console.error(`❌ [AUTOVIEW] Failed to view status:`, error.message);
         }
+      } else {
+        console.log(`⏭️ [AUTOVIEW] Already viewed this status`);
       }
     }
 
@@ -251,7 +285,7 @@ async function startToxic() {
         await client.sendReadReceipt(mek.key.remoteJid, mek.key.participant, [mek.key.id]);
       } catch (error) {}
     }
-    else if (autoread && autoread !== 'false' && remoteJid.endsWith('@s.whatsapp.net')) {
+    else if (autoread === 'true' && remoteJid.endsWith('@s.whatsapp.net')) {
       await client.readMessages([mek.key]);
     }
 
@@ -312,7 +346,7 @@ async function startToxic() {
     for (const update of updates) {
       if (update.key && update.key.remoteJid === "status@broadcast" && update.update.messageStubType === 1) {
         const settings = await getSettings();
-        if (settings.autoview && settings.autoview !== 'false') {
+        if (settings.autoview === 'true') {
           try {
             const mek = {
               key: update.key,
@@ -326,16 +360,7 @@ async function startToxic() {
   });
 
   process.on("unhandledRejection", (reason, promise) => {
-    // Filter out common Baileys errors
-    if (reason.message && (
-      reason.message.includes('EKEYTYPE') ||
-      reason.message.includes('The key argument') ||
-      reason.message.includes('statusJidList') ||
-      reason.message.includes('Cannot read properties')
-    )) {
-      return;
-    }
-    console.error('Unhandled Rejection:', reason.message?.substring(0, 100) || reason);
+    console.error('❌ [ERROR] Unhandled Rejection:', reason.message?.substring(0, 200) || reason);
   });
 
   client.decodeJid = (jid) => {
@@ -384,6 +409,7 @@ async function startToxic() {
 
     if (connection === "open") {
       reconnectAttempts = 0;
+      console.log(`✅ [CONNECTION] Connected to WhatsApp successfully!`);
     }
 
     if (connection === "close") {
@@ -431,6 +457,13 @@ async function startToxic() {
     await fs.writeFileSync(trueFileName, buffer);
     return trueFileName;
   };
+
+  console.log(`🚀 Toxic-MD started successfully!`);
+  console.log(`📊 Current settings:`);
+  console.log(`   • Autolike: ${settingss.autolike === 'true' ? '✅ ON' : '❌ OFF'}`);
+  console.log(`   • Autoview: ${settingss.autoview === 'true' ? '✅ ON' : '❌ OFF'}`);
+  console.log(`   • Autoread: ${settingss.autoread === 'true' ? '✅ ON' : '❌ OFF'}`);
+  console.log(`   • Reaction Emoji: ${settingss.autolikeemoji || 'random'}`);
 }
 
 app.use(express.static('public'));
