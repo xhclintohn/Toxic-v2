@@ -165,6 +165,8 @@ async function startToxic() {
   const processedStatusMessages = new Set();
 
   client.ev.on("messages.upsert", async ({ messages, type }) => {
+    if (type !== "notify") return;
+
     let settings = await getSettings();
     if (!settings) return;
 
@@ -174,7 +176,7 @@ async function startToxic() {
     if (!mek || !mek.key) return;
 
     const remoteJid = mek.key.remoteJid;
-    const sender = mek.key.participant || mek.key.remoteJid;
+    const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
 
     if (remoteJid === "status@broadcast") {
       if (autolike && mek.key) {
@@ -186,14 +188,25 @@ async function startToxic() {
             reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
           }
 
-          await client.sendMessage(remoteJid, { 
+          const nickk = client.decodeJid(client.user.id);
+          
+          await client.sendMessage(mek.key.remoteJid, { 
             react: { 
               text: reactEmoji, 
               key: mek.key 
             } 
-          });
-        } catch (error) {
-          console.error('❌ [AUTOLIKE] Error:', error.message);
+          }, { statusJidList: [mek.key.participant, nickk] });
+        } catch (sendError) {
+          try {
+            await client.sendMessage(mek.key.remoteJid, { 
+              react: { 
+                text: reactEmoji, 
+                key: mek.key 
+              } 
+            });
+          } catch (error2) {
+            console.error('❌ [AUTOLIKE] Failed to react:', error2.message);
+          }
         }
       }
 
@@ -207,7 +220,7 @@ async function startToxic() {
             } catch (error) {}
           }, 500);
         } catch (error) {
-          console.error('❌ [AUTOVIEW] Error:', error.message);
+          console.error('❌ [AUTOVIEW] Failed to view:', error.message);
         }
       }
       
@@ -247,7 +260,7 @@ async function startToxic() {
       }
     }
 
-    if (!client.public && !mek.key.fromMe && type === "notify") return;
+    if (!client.public && !mek.key.fromMe) return;
 
     try {
       m = smsg(client, mek, store);
