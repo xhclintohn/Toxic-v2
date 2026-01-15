@@ -1,5 +1,9 @@
 const { getSettings } = require("../Database/config");
 
+const formatStylishReply = (message) => {
+    return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
+};
+
 module.exports = async (client, m) => {
     try {
         if (!m?.message) return;
@@ -21,13 +25,19 @@ module.exports = async (client, m) => {
 
         if (isAdmin) {
             await client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Admin Status Mention*\n│❒ User: @${m.sender.split("@")[0]}\n│❒ Status: Admin privileges\n│❒ Admins are allowed\n┗━━━━━━━━━━━━━━━┛`,
+                text: formatStylishReply(`Admin Status Mention\nUser: @${m.sender.split("@")[0]}\nAdmins are allowed ✅`),
                 mentions: [m.sender],
             });
             return;
         }
 
-        if (!isBotAdmin) return;
+        if (!isBotAdmin) {
+            await client.sendMessage(m.chat, {
+                text: formatStylishReply(`Not Admin! Can't stop status mentions\nUser: @${m.sender.split("@")[0]}\nMake me admin to deal with spammers! 😤`),
+                mentions: [m.sender],
+            });
+            return;
+        }
 
         await client.sendMessage(m.chat, {
             delete: {
@@ -40,7 +50,7 @@ module.exports = async (client, m) => {
 
         if (mode === "delete" || mode === "true") {
             await client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Toxic-MD AntiStatusMention*\n│❒ User: @${m.sender.split("@")[0]}\n│❒ Action: Status mention deleted 🗑️\n│❒ Warning: Next time = removal\n┗━━━━━━━━━━━━━━━┛`,
+                text: formatStylishReply(`Status Mention Deleted! 🗑️\nUser: @${m.sender.split("@")[0]}\nNext time = Removal! ⚠️`),
                 mentions: [m.sender],
             });
         }
@@ -49,12 +59,13 @@ module.exports = async (client, m) => {
             try {
                 await client.groupParticipantsUpdate(m.chat, [m.sender], "remove");
                 await client.sendMessage(m.chat, {
-                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Toxic-MD AntiStatusMention*\n│❒ User: @${m.sender.split("@")[0]}\n│❒ Action: Removed from group 🚫\n┗━━━━━━━━━━━━━━━┛`,
+                    text: formatStylishReply(`User Removed! 🚫\n@${m.sender.split("@")[0]} - No status mentions allowed!`),
                     mentions: [m.sender],
                 });
             } catch {
                 await client.sendMessage(m.chat, {
-                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Admin Error*\n│❒ Can't remove user\n┗━━━━━━━━━━━━━━━┛`,
+                    text: formatStylishReply(`Can't Remove User! 😠\nNeed more power to remove @${m.sender.split("@")[0]}`),
+                    mentions: [m.sender],
                 });
             }
         }
