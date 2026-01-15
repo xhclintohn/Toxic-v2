@@ -168,7 +168,7 @@ async function startToxic() {
     let settings = await getSettings();
     if (!settings) return;
 
-    const { autoread, autolike, autoview, presence } = settings;
+    const { autoread, autolike, autoview, presence, autolikeemoji } = settings;
 
     let mek = messages[0];
     if (!mek || !mek.key || !mek.message) return;
@@ -181,29 +181,30 @@ async function startToxic() {
 
     await antilink(client, mek, store);
 
-    if (autolike && autolike !== 'false' && mek.key && mek.key.remoteJid === "status@broadcast") {
+    if (autolike === 'true' && mek.key && mek.key.remoteJid === "status@broadcast") {
       try {
-        let reactEmoji = autolike;
+        let reactEmoji = autolikeemoji || 'random';
         
-        if (autolike === 'random') {
+        if (reactEmoji === 'random') {
           const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
           reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
         }
         
         if (mek.key && mek.key.id) {
+          const nickk = await client.decodeJid(client.user.id);
           await client.sendMessage(mek.key.remoteJid, { 
             react: { 
               text: reactEmoji, 
               key: mek.key 
             } 
-          });
+          }, { statusJidList: [mek.key.participant, nickk] });
         }
       } catch (error) {
         // Silent catch
       }
     }
 
-    if (autoview && mek.key.remoteJid === "status@broadcast") {
+    if (autoview && autoview !== 'false' && mek.key.remoteJid === "status@broadcast") {
       const statusSender = mek.key.participant;
       const statusKey = `${statusSender}:${mek.key.id}`;
 
@@ -241,7 +242,7 @@ async function startToxic() {
         await client.sendReadReceipt(mek.key.remoteJid, mek.key.participant, [mek.key.id]);
       } catch (error) {}
     }
-    else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+    else if (autoread && autoread !== 'false' && remoteJid.endsWith('@s.whatsapp.net')) {
       await client.readMessages([mek.key]);
     }
 
@@ -302,7 +303,7 @@ async function startToxic() {
     for (const update of updates) {
       if (update.key && update.key.remoteJid === "status@broadcast" && update.update.messageStubType === 1) {
         const settings = await getSettings();
-        if (settings.autoview) {
+        if (settings.autoview && settings.autoview !== 'false') {
           try {
             const mek = {
               key: update.key,
