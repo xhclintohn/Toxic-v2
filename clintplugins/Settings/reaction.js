@@ -11,52 +11,52 @@ module.exports = async (context) => {
       const newEmoji = args[0];
 
       if (newEmoji) {
-        if (newEmoji === 'random') {
-          await updateSetting('autolikeemoji', 'random');
-          await m.reply(`Random emoji mode ON! Statuses will get wild reactions!`);
-          return;
-        } else {
-          await updateSetting('autolikeemoji', newEmoji);
-          await m.reply(`Status react emoji set to ${newEmoji}! Flexing it like a king!`);
-          return;
+        // First turn autolike on if it's off
+        if (settings.autolike === 'false') {
+          await updateSetting('autolike', 'random');
         }
+        
+        await updateSetting('autolike', newEmoji);
+        
+        await m.reply(`Status reaction set to ${newEmoji}! Autolike is now ON with this emoji.`);
+        return;
       }
 
-      const currentEmoji = settings.autolikeemoji || 'random';
-      
+      const currentValue = settings.autolike;
+      const currentText = currentValue === 'false' ? '❌ OFF (Turn ON first)' : 
+                         currentValue === 'random' ? '🎲 Random emojis' : 
+                         `${currentValue} emoji`;
+
       await client.sendMessage(m.chat, {
         interactiveMessage: {
-          header: "🎭 Status Reaction Settings",
-          body: {
-            text: `Current: ${currentEmoji === 'random' ? '🎲 Random emojis' : currentEmoji}\n\nChoose how the bot reacts to statuses.`
-          },
+          header: `🎭 Status Reaction Settings\n\nCurrent: ${currentText}\n\n• Use "${prefix}reaction random" for random emojis\n• Use "${prefix}reaction <emoji>" for specific emoji\n• Autolike must be ON for reactions to work`,
           footer: "Powered by Toxic-MD",
           buttons: [
             {
               name: "quick_reply",
               buttonParamsJson: JSON.stringify({
-                display_text: "🎲 RANDOM EMOJIS",
+                display_text: "🎲 RANDOM",
                 id: `${prefix}reaction random`
               })
             },
             {
               name: "quick_reply",
               buttonParamsJson: JSON.stringify({
-                display_text: "❤️ LOVE REACT",
+                display_text: "❤️ LOVE",
                 id: `${prefix}reaction ❤️`
               })
             },
             {
               name: "quick_reply",
               buttonParamsJson: JSON.stringify({
-                display_text: "🔥 FIRE REACT",
+                display_text: "🔥 FIRE",
                 id: `${prefix}reaction 🔥`
               })
             },
             {
               name: "quick_reply",
               buttonParamsJson: JSON.stringify({
-                display_text: "😂 LAUGH REACT",
+                display_text: "😂 LAUGH",
                 id: `${prefix}reaction 😂`
               })
             }
