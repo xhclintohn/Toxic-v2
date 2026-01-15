@@ -182,15 +182,21 @@ async function startToxic() {
     await antilink(client, mek, store);
 
     if (autolike === 'true' && mek.key && mek.key.remoteJid === "status@broadcast") {
+      console.log(`📱 [AUTOLIKE] Status detected from ${sender}`);
+      console.log(`⚙️ [AUTOLIKE] Settings: autolike=${autolike}, emoji=${autolikeemoji}`);
+      
       try {
         let reactEmoji = autolikeemoji || 'random';
+        console.log(`🎯 [AUTOLIKE] Selected emoji: ${reactEmoji}`);
         
         if (reactEmoji === 'random') {
           const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
           reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+          console.log(`🎲 [AUTOLIKE] Randomly selected: ${reactEmoji}`);
         }
         
         if (mek.key && mek.key.id) {
+          console.log(`📤 [AUTOLIKE] Attempting to react with ${reactEmoji}`);
           const nickk = await client.decodeJid(client.user.id);
           await client.sendMessage(mek.key.remoteJid, { 
             react: { 
@@ -198,9 +204,12 @@ async function startToxic() {
               key: mek.key 
             } 
           }, { statusJidList: [mek.key.participant, nickk] });
+          console.log(`✅ [AUTOLIKE] Successfully reacted to status from ${sender} with ${reactEmoji}`);
+        } else {
+          console.log(`❌ [AUTOLIKE] Invalid message key, cannot react`);
         }
       } catch (error) {
-        // Silent catch
+        console.error(`❌ [AUTOLIKE] Failed to react:`, error.message);
       }
     }
 
