@@ -193,9 +193,9 @@ async function startToxic() {
 
     await antilink(client, mek, store);
 
-    if (autolike === 'true' && remoteJid === "status@broadcast") {
+    if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
       console.log(`🎯 [AUTOLIKE] Status detected! Sender: ${sender}`);
-      console.log(`⚙️ [AUTOLIKE] Settings check: autolike=${autolike} (should be 'true'), emoji=${autolikeemoji}`);
+      console.log(`⚙️ [AUTOLIKE] Settings check: autolike=${autolike}, emoji=${autolikeemoji}`);
 
       try {
         let reactEmoji = autolikeemoji || 'random';
@@ -213,17 +213,17 @@ async function startToxic() {
         console.log(`👤 [AUTOLIKE] Bot JID: ${nickk}, Status sender: ${mek.key.participant}`);
 
         try {
-          await client.sendMessage(remoteJid, { 
+          await client.sendMessage(mek.key.remoteJid, { 
             react: { 
               text: reactEmoji, 
               key: mek.key 
             } 
-          });
+          }, { statusJidList: [mek.key.participant, nickk] });
           console.log(`✅ [AUTOLIKE] SUCCESS! Reacted to status from ${sender} with ${reactEmoji}`);
         } catch (sendError) {
           console.error(`❌ [AUTOLIKE] Failed to sendMessage:`, sendError.message);
           try {
-            await client.sendMessage(remoteJid, { 
+            await client.sendMessage(mek.key.remoteJid, { 
               react: { 
                 text: reactEmoji, 
                 key: mek.key 
@@ -241,7 +241,7 @@ async function startToxic() {
       console.log(`⏭️ [AUTOLIKE] Skipped - autolike=${autolike}, remoteJid=${remoteJid}, isStatus=${remoteJid === "status@broadcast"}`);
     }
 
-    if (autoview === 'true' && remoteJid === "status@broadcast") {
+    if (autoview && remoteJid === "status@broadcast") {
       console.log(`👁️ [AUTOVIEW] Status detected for viewing from ${sender}`);
       
       try {
@@ -256,14 +256,7 @@ async function startToxic() {
       } catch (error) {
         console.error(`❌ [AUTOVIEW] Failed to view status:`, error.message);
       }
-    }
-
-    if (mek.key.remoteJid === "status@broadcast") {
-      try {
-        await client.sendReadReceipt(mek.key.remoteJid, mek.key.participant, [mek.key.id]);
-      } catch (error) {}
-    }
-    else if (autoread === 'true' && remoteJid.endsWith('@s.whatsapp.net')) {
+    } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
       await client.readMessages([mek.key]);
     }
 
@@ -324,7 +317,7 @@ async function startToxic() {
     for (const update of updates) {
       if (update.key && update.key.remoteJid === "status@broadcast" && update.update.messageStubType === 1) {
         const settings = await getSettings();
-        if (settings.autoview === 'true') {
+        if (settings.autoview) {
           try {
             const mek = {
               key: update.key,
@@ -438,9 +431,9 @@ async function startToxic() {
 
   console.log(`🚀 Toxic-MD started successfully!`);
   console.log(`📊 Current settings:`);
-  console.log(`   • Autolike: ${settingss.autolike === 'true' ? '✅ ON' : '❌ OFF'}`);
-  console.log(`   • Autoview: ${settingss.autoview === 'true' ? '✅ ON' : '❌ OFF'}`);
-  console.log(`   • Autoread: ${settingss.autoread === 'true' ? '✅ ON' : '❌ OFF'}`);
+  console.log(`   • Autolike: ${settingss.autolike ? '✅ ON' : '❌ OFF'}`);
+  console.log(`   • Autoview: ${settingss.autoview ? '✅ ON' : '❌ OFF'}`);
+  console.log(`   • Autoread: ${settingss.autoread ? '✅ ON' : '❌ OFF'}`);
   console.log(`   • Reaction Emoji: ${settingss.autolikeemoji || 'random'}`);
 }
 
