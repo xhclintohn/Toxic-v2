@@ -9,13 +9,13 @@ module.exports = async (context) => {
       const settings = await getSettings();
       const prefix = settings.prefix || '.';
       const value = args[0]?.toLowerCase();
+      const currentValue = settings.autolike;
 
       if (value === 'on' || value === 'off') {
-        const newValue = value === 'on' ? 'true' : 'false';
-        const currentValue = settings.autolike;
+        const newValue = value === 'on' ? 'random' : 'false';
         
         if (currentValue === newValue) {
-          await m.reply(`Autolike is already ${value.toUpperCase()}, you brain-dead fool!`);
+          await m.reply(`Autolike is already ${currentValue === 'false' ? 'OFF' : 'ON'}, you brain-dead fool!`);
           return;
         }
 
@@ -25,12 +25,13 @@ module.exports = async (context) => {
         return;
       }
 
+      const statusText = currentValue === 'false' ? '❌ OFF - Ignoring statuses' : 
+                        currentValue === 'random' ? '🎲 ON (Random emojis)' : 
+                        `✅ ON (${currentValue} emoji)`;
+
       await client.sendMessage(m.chat, {
         interactiveMessage: {
-          header: "🔧 Autolike Settings",
-          body: {
-            text: `Current: ${settings.autolike === 'true' ? '✅ ON - Liking statuses' : '❌ OFF - Ignoring statuses'}\n\nWhen ON, bot automatically reacts to statuses with random emojis.`
-          },
+          header: `🔧 Autolike Settings\n\nCurrent: ${statusText}\n\n• Use "${prefix}autolike on" to turn ON with random emojis\n• Use "${prefix}autolike off" to turn OFF\n• Use "${prefix}reaction <emoji>" to set specific emoji`,
           footer: "Powered by Toxic-MD",
           buttons: [
             {
