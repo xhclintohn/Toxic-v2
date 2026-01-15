@@ -3,64 +3,57 @@ const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
-    const { client, m, args, prefix } = context;
-
-    const formatStylishReply = (message) => {
-      return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
-    };
+    const { client, m, args } = context;
 
     try {
       const settings = await getSettings();
-      if (!settings || Object.keys(settings).length === 0) {
-        return await client.sendMessage(
-          m.chat,
-          { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
-          { quoted: m, ad: true }
-        );
-      }
-
-      const value = args.join(" ").toLowerCase();
+      const prefix = settings.prefix || '.';
+      const value = args[0]?.toLowerCase();
 
       if (value === 'on' || value === 'off') {
-        const action = value === 'on';
-        if (settings.autolike === action) {
-          return await client.sendMessage(
-            m.chat,
-            { text: formatStylishReply(`Autolike’s already ${value.toUpperCase()}, genius. Stop wasting my time.`) },
-            { quoted: m, ad: true }
-          );
+        const newValue = value === 'on' ? 'true' : 'false';
+        const currentValue = settings.autolike;
+        
+        if (currentValue === newValue) {
+          await m.reply(`Autolike is already ${value.toUpperCase()}, you brain-dead fool!`);
+          return;
         }
 
-        await updateSetting('autolike', action);
-        return await client.sendMessage(
-          m.chat,
-          { text: formatStylishReply(`Autolike ${value.toUpperCase()} activated! 🔥 ${action ? 'Bot’s gonna like statuses like a simp.' : 'No more fake love for statuses.'}`) },
-          { quoted: m, ad: true }
-        );
+        await updateSetting('autolike', newValue);
+        
+        await m.reply(`Autolike ${value.toUpperCase()}! ${value === 'on' ? 'Bot will now like statuses with random emojis!' : 'Bot will ignore statuses like they ignore you.'}`);
+        return;
       }
 
-      const buttons = [
-        { buttonId: `${prefix}autolike on`, buttonText: { displayText: "ON 🥶" }, type: 1 },
-        { buttonId: `${prefix}autolike off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
-      ];
+      await client.sendMessage(m.chat, {
+        interactiveMessage: {
+          header: "🔧 Autolike Settings",
+          body: {
+            text: `Current: ${settings.autolike === 'true' ? '✅ ON - Liking statuses' : '❌ OFF - Ignoring statuses'}\n\nWhen ON, bot automatically reacts to statuses with random emojis.`
+          },
+          footer: "Powered by Toxic-MD",
+          buttons: [
+            {
+              name: "quick_reply",
+              buttonParamsJson: JSON.stringify({
+                display_text: "🟢 TURN ON",
+                id: `${prefix}autolike on`
+              })
+            },
+            {
+              name: "quick_reply",
+              buttonParamsJson: JSON.stringify({
+                display_text: "🔴 TURN OFF",
+                id: `${prefix}autolike off`
+              })
+            }
+          ]
+        }
+      }, { quoted: m });
 
-      await client.sendMessage(
-        m.chat,
-        {
-          text: formatStylishReply(`Autolike’s ${settings.autolike ? 'ON 🥶' : 'OFF 😴'}, dumbass. Pick a vibe, noob! 😈`),
-          footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
-          buttons,
-          headerType: 1,
-          viewOnce: true,
-        },
-        { quoted: m, ad: true }
-      );
     } catch (error) {
-      await client.sendMessage(
-        m.chat,
-        { text: formatStylishReply("Shit broke, couldn’t mess with autolike. Database or something’s fucked. Try later.") },
-        { quoted: m, ad: true }
-      );
+      console.error('Autolike command error:', error);
+      await m.reply(`Failed to update autolike. Database might be drunk.`);
     }
   });
 };
