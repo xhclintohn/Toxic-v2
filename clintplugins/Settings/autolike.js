@@ -9,29 +9,29 @@ module.exports = async (context) => {
       const settings = await getSettings();
       const prefix = settings.prefix || '.';
       const value = args[0]?.toLowerCase();
-      const currentValue = settings.autolike;
 
       if (value === 'on' || value === 'off') {
-        const newValue = value === 'on' ? 'random' : 'false';
+        const newValue = value === 'on' ? 'true' : 'false';
         
-        if (currentValue === newValue) {
-          await m.reply(`Autolike is already ${currentValue === 'false' ? 'OFF' : 'ON'}, you brain-dead fool!`);
+        if (settings.autolike === newValue) {
+          await m.reply(`Autolike is already ${value.toUpperCase()}, you brain-dead fool!`);
           return;
         }
 
         await updateSetting('autolike', newValue);
         
-        await m.reply(`Autolike ${value.toUpperCase()}! ${value === 'on' ? 'Bot will now like statuses with random emojis!' : 'Bot will ignore statuses like they ignore you.'}`);
+        await m.reply(`Autolike ${value.toUpperCase()}! ${value === 'on' ? 'Bot will now like statuses!' : 'Bot will ignore statuses like they ignore you.'}`);
         return;
       }
 
-      const statusText = currentValue === 'false' ? '❌ OFF - Ignoring statuses' : 
-                        currentValue === 'random' ? '🎲 ON (Random emojis)' : 
-                        `✅ ON (${currentValue} emoji)`;
+      const currentEmoji = settings.autolikeemoji || 'random';
+      const statusText = settings.autolike === 'true' ? 
+                        `✅ ON (${currentEmoji === 'random' ? 'Random emojis' : currentEmoji + ' emoji'})` : 
+                        '❌ OFF';
 
       await client.sendMessage(m.chat, {
         interactiveMessage: {
-          header: `🔧 Autolike Settings\n\nCurrent: ${statusText}\n\n• Use "${prefix}autolike on" to turn ON with random emojis\n• Use "${prefix}autolike off" to turn OFF\n• Use "${prefix}reaction <emoji>" to set specific emoji`,
+          header: `🔧 Autolike Settings\n\nCurrent: ${statusText}\n\n• Use "${prefix}autolike on" to turn ON\n• Use "${prefix}autolike off" to turn OFF\n• Use "${prefix}reaction <emoji>" to change emoji`,
           footer: "Powered by Toxic-MD",
           buttons: [
             {
