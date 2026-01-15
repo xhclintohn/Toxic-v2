@@ -3,54 +3,70 @@ const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
-    const { m, args } = context;
-    const newEmoji = args[0];
+    const { client, m, args } = context;
 
-    const settings = await getSettings();
-    const prefix = settings.prefix;
-    const currentEmoji = settings.reactEmoji || 'No react emoji set, loser! 😴';
+    try {
+      const settings = await getSettings();
+      const prefix = settings.prefix || '.';
+      const newEmoji = args[0];
 
-    if (newEmoji) {
-      if (newEmoji === 'random') {
-        if (currentEmoji === 'random') {
-          return await m.reply(
-            `◈━━━━━━━━━━━━━━━━◈\n` +
-            `│❒ Already set to random, you brain-dead fool! 😈\n` +
-            `│❒ I’m already throwing random emojis! 🥶\n` +
-            `┗━━━━━━━━━━━━━━━┛`
-          );
+      if (newEmoji) {
+        if (newEmoji === 'random') {
+          await updateSetting('autolikeemoji', 'random');
+          await m.reply(`Random emoji mode ON! Statuses will get wild reactions!`);
+          return;
+        } else {
+          await updateSetting('autolikeemoji', newEmoji);
+          await m.reply(`Status react emoji set to ${newEmoji}! Flexing it like a king!`);
+          return;
         }
-        await updateSetting('reactEmoji', 'random');
-        await m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n` +
-          `│❒ Random emoji mode ON! 🔥\n` +
-          `│❒ Statuses will get wild reactions! 😈\n` +
-          `┗━━━━━━━━━━━━━━━┛`
-        );
-      } else {
-        if (currentEmoji === newEmoji) {
-          return await m.reply(
-            `◈━━━━━━━━━━━━━━━━◈\n` +
-            `│❒ Emoji already ${newEmoji}, moron! 😈\n` +
-            `│❒ Pick something else, noob! 🖕\n` +
-            `┗━━━━━━━━━━━━━━━┛`
-          );
-        }
-        await updateSetting('reactEmoji', newEmoji);
-        await m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n` +
-          `│❒ Status react emoji set to ${newEmoji}! 🔥\n` +
-          `│❒ Flexing it like a king! 😈\n` +
-          `┗━━━━━━━━━━━━━━━┛`
-        );
       }
-    } else {
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Current Reaction: ${currentEmoji}\n` +
-        `│❒ Use "${prefix}reaction random" for chaos or "${prefix}reaction <emoji>" for one emoji, fool!\n` +
-        `┗━━━━━━━━━━━━━━━┛`
-      );
+
+      const currentEmoji = settings.autolikeemoji || 'random';
+      
+      await client.sendMessage(m.chat, {
+        interactiveMessage: {
+          header: "🎭 Status Reaction Settings",
+          body: {
+            text: `Current: ${currentEmoji === 'random' ? '🎲 Random emojis' : currentEmoji}\n\nChoose how the bot reacts to statuses.`
+          },
+          footer: "Powered by Toxic-MD",
+          buttons: [
+            {
+              name: "quick_reply",
+              buttonParamsJson: JSON.stringify({
+                display_text: "🎲 RANDOM EMOJIS",
+                id: `${prefix}reaction random`
+              })
+            },
+            {
+              name: "quick_reply",
+              buttonParamsJson: JSON.stringify({
+                display_text: "❤️ LOVE REACT",
+                id: `${prefix}reaction ❤️`
+              })
+            },
+            {
+              name: "quick_reply",
+              buttonParamsJson: JSON.stringify({
+                display_text: "🔥 FIRE REACT",
+                id: `${prefix}reaction 🔥`
+              })
+            },
+            {
+              name: "quick_reply",
+              buttonParamsJson: JSON.stringify({
+                display_text: "😂 LAUGH REACT",
+                id: `${prefix}reaction 😂`
+              })
+            }
+          ]
+        }
+      }, { quoted: m });
+
+    } catch (error) {
+      console.error('Reaction command error:', error);
+      await m.reply(`Failed to update reaction settings. Something's broken.`);
     }
   });
 };
