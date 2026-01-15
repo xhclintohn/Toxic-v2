@@ -25,7 +25,7 @@ module.exports = async (client, m) => {
 
         if (isAdmin) {
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Admin Status Mention\nUser: @${m.sender.split("@")[0]}\nAdmins are allowed ✅`),
+                text: formatStylishReply(`Admin Status Mention Detected\nUser: @${m.sender.split("@")[0]}\nAdmins get a free pass for status mentions\nBut seriously, keep it minimal! 😒`),
                 mentions: [m.sender],
             });
             return;
@@ -33,7 +33,7 @@ module.exports = async (client, m) => {
 
         if (!isBotAdmin) {
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Not Admin! Can't stop status mentions\nUser: @${m.sender.split("@")[0]}\nMake me admin to deal with spammers! 😤`),
+                text: formatStylishReply(`Can't Delete Status Mention! 😤\nUser: @${m.sender.split("@")[0]} just dropped a status mention\nBut I'm not admin here! How embarrassing...\nAdmins: Make me admin so I can delete this nonsense!`),
                 mentions: [m.sender],
             });
             return;
@@ -50,7 +50,7 @@ module.exports = async (client, m) => {
 
         if (mode === "delete" || mode === "true") {
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Status Mention Deleted! 🗑️\nUser: @${m.sender.split("@")[0]}\nNext time = Removal! ⚠️`),
+                text: formatStylishReply(`Status Mention Deleted! 🗑️\nUser: @${m.sender.split("@")[0]} thought they could spam\nStatus mentions are NOT allowed here!\nNext violation = Immediate removal! ⚠️`),
                 mentions: [m.sender],
             });
         }
@@ -59,12 +59,12 @@ module.exports = async (client, m) => {
             try {
                 await client.groupParticipantsUpdate(m.chat, [m.sender], "remove");
                 await client.sendMessage(m.chat, {
-                    text: formatStylishReply(`User Removed! 🚫\n@${m.sender.split("@")[0]} - No status mentions allowed!`),
+                    text: formatStylishReply(`User Removed for Status Mention! 🚫\n@${m.sender.split("@")[0]} ignored the warnings\nNo status mentions allowed in this group!\nLearn the rules or stay out! 😤`),
                     mentions: [m.sender],
                 });
             } catch {
                 await client.sendMessage(m.chat, {
-                    text: formatStylishReply(`Can't Remove User! 😠\nNeed more power to remove @${m.sender.split("@")[0]}`),
+                    text: formatStylishReply(`Failed to Remove User! 😠\nTried to kick @${m.sender.split("@")[0]} for status mention\nBut I don't have enough permissions!\nAdmins: Fix my permissions and promote me or deal with spammers yourself!`),
                     mentions: [m.sender],
                 });
             }
