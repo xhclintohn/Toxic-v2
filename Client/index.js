@@ -54,12 +54,7 @@ const antistatusmention = require('../Functions/antistatusmention');
 async function startToxic() {
   let settingss = await getSettings();
   if (!settingss) {
-    console.log(
-      `◈━━━━━━━━━━━━━━━━◈\n` +
-      `│❒ TOXIC-MD FAILED TO CONNECT 😵\n` +
-      `│❒ Settings not found\n` +
-      `┗━━━━━━━━━━━━━━━┛`
-    );
+    console.log(`❌ TOXIC-MD FAILED TO CONNECT - Settings not found`);
     return;
   }
 
@@ -186,11 +181,26 @@ async function startToxic() {
 
     await antilink(client, mek, store);
 
-    if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
-      const nickk = await client.decodeJid(client.user.id);
-      const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
-      const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-      await client.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key } }, { statusJidList: [mek.key.participant, nickk] });
+    if (autolike && autolike !== 'false' && mek.key && mek.key.remoteJid === "status@broadcast") {
+      try {
+        let reactEmoji = autolike;
+        
+        if (autolike === 'random') {
+          const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
+          reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+        }
+        
+        if (mek.key && mek.key.id) {
+          await client.sendMessage(mek.key.remoteJid, { 
+            react: { 
+              text: reactEmoji, 
+              key: mek.key 
+            } 
+          });
+        }
+      } catch (error) {
+        // Silent catch
+      }
     }
 
     if (autoview && mek.key.remoteJid === "status@broadcast") {
@@ -305,15 +315,18 @@ async function startToxic() {
     }
   });
 
-  const unhandledRejections = new Map();
   process.on("unhandledRejection", (reason, promise) => {
-    unhandledRejections.set(promise, reason);
-    console.error('Unhandled Rejection:', reason);
+    // Filter out common Baileys errors
+    if (reason.message && (
+      reason.message.includes('EKEYTYPE') ||
+      reason.message.includes('The key argument') ||
+      reason.message.includes('statusJidList') ||
+      reason.message.includes('Cannot read properties')
+    )) {
+      return;
+    }
+    console.error('Unhandled Rejection:', reason.message?.substring(0, 100) || reason);
   });
-  process.on("rejectionHandled", (promise) => {
-    unhandledRejections.delete(promise);
-  });
-  process.on("Something went wrong", function (err) { });
 
   client.decodeJid = (jid) => {
     if (!jid) return jid;
