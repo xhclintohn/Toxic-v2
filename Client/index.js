@@ -186,12 +186,23 @@ async function startToxic() {
 
     await antilink(client, mek, store);
 
-    if (autolike && remoteJid === "status@broadcast") {
-      const nickk = await client.decodeJid(client.user.id);
-      const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
-      const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-      await client.sendMessage(remoteJid, { react: { text: randomEmoji, key: mek.key } });
-    }
+    if (autolike === 'true' && remoteJid === "status@broadcast") {
+  try {
+    const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
+    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    
+    await client.sendMessage(remoteJid, { 
+      react: { 
+        text: randomEmoji, 
+        key: mek.key 
+      } 
+    });
+    
+    console.log(`✅ Liked status from ${sender} with ${randomEmoji}`);
+  } catch (reactError) {
+    console.error('Failed to react to status:', reactError);
+  }
+}
 
     if (autoview && remoteJid === "status@broadcast") {
       try {
