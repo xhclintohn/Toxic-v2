@@ -178,12 +178,10 @@ async function startToxic() {
     const { autoread, autolike, autoview, presence, autolikeemoji } = settings;
 
     let mek = messages[0];
-    if (!mek || !mek.key || !mek.message) {
-      console.log(`❌ [DEBUG] Invalid message structure`);
+    if (!mek || !mek.key) {
+      console.log(`❌ [DEBUG] Invalid message structure - missing key`);
       return;
     }
-
-    mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
     const remoteJid = mek.key.remoteJid;
     const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
@@ -191,72 +189,82 @@ async function startToxic() {
 
     console.log(`📍 [DEBUG] Message from: ${sender}, RemoteJid: ${remoteJid}, isStatus: ${remoteJid === "status@broadcast"}`);
 
-    await antilink(client, mek, store);
-
-    if (autolike && mek.key && mek.key.remoteJid === "status@broadcast") {
-      console.log(`🎯 [AUTOLIKE] Status detected! Sender: ${sender}`);
-      console.log(`⚙️ [AUTOLIKE] Settings check: autolike=${autolike}, emoji=${autolikeemoji}`);
-
-      try {
-        let reactEmoji = autolikeemoji || 'random';
-        console.log(`🎨 [AUTOLIKE] React emoji setting: ${reactEmoji}`);
-
-        if (reactEmoji === 'random') {
-          const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
-          reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-          console.log(`🎲 [AUTOLIKE] Random emoji selected: ${reactEmoji}`);
-        }
-
-        console.log(`📤 [AUTOLIKE] Attempting to send reaction: ${reactEmoji}`);
-
-        const nickk = await client.decodeJid(client.user.id);
-        console.log(`👤 [AUTOLIKE] Bot JID: ${nickk}, Status sender: ${mek.key.participant}`);
+    if (remoteJid === "status@broadcast") {
+      if (autolike && mek.key) {
+        console.log(`🎯 [AUTOLIKE] Status detected! Sender: ${sender}`);
 
         try {
-          await client.sendMessage(mek.key.remoteJid, { 
-            react: { 
-              text: reactEmoji, 
-              key: mek.key 
-            } 
-          }, { statusJidList: [mek.key.participant, nickk] });
-          console.log(`✅ [AUTOLIKE] SUCCESS! Reacted to status from ${sender} with ${reactEmoji}`);
-        } catch (sendError) {
-          console.error(`❌ [AUTOLIKE] Failed to sendMessage:`, sendError.message);
+          let reactEmoji = autolikeemoji || 'random';
+          console.log(`🎨 [AUTOLIKE] React emoji setting: ${reactEmoji}`);
+
+          if (reactEmoji === 'random') {
+            const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
+            reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            console.log(`🎲 [AUTOLIKE] Random emoji selected: ${reactEmoji}`);
+          }
+
+          console.log(`📤 [AUTOLIKE] Attempting to send reaction: ${reactEmoji}`);
+
+          const nickk = await client.decodeJid(client.user.id);
+          console.log(`👤 [AUTOLIKE] Bot JID: ${nickk}, Status sender: ${mek.key.participant}`);
+
           try {
             await client.sendMessage(mek.key.remoteJid, { 
               react: { 
                 text: reactEmoji, 
                 key: mek.key 
               } 
-            });
-            console.log(`✅ [AUTOLIKE] SUCCESS (second attempt)!`);
-          } catch (error2) {
-            console.error(`❌ [AUTOLIKE] Completely failed:`, error2.message);
+            }, { statusJidList: [mek.key.participant, nickk] });
+            console.log(`✅ [AUTOLIKE] SUCCESS! Reacted to status from ${sender} with ${reactEmoji}`);
+          } catch (sendError) {
+            console.error(`❌ [AUTOLIKE] Failed to sendMessage:`, sendError.message);
+            try {
+              await client.sendMessage(mek.key.remoteJid, { 
+                react: { 
+                  text: reactEmoji, 
+                  key: mek.key 
+                } 
+              });
+              console.log(`✅ [AUTOLIKE] SUCCESS (second attempt)!`);
+            } catch (error2) {
+              console.error(`❌ [AUTOLIKE] Completely failed:`, error2.message);
+            }
           }
+        } catch (error) {
+          console.error(`❌ [AUTOLIKE] Error in reaction process:`, error.message);
         }
-      } catch (error) {
-        console.error(`❌ [AUTOLIKE] Error in reaction process:`, error.message);
       }
-    } else {
-      console.log(`⏭️ [AUTOLIKE] Skipped - autolike=${autolike}, remoteJid=${remoteJid}, isStatus=${remoteJid === "status@broadcast"}`);
+
+      if (autoview) {
+        console.log(`👁️ [AUTOVIEW] Status detected for viewing from ${sender}`);
+        
+        try {
+          await client.readMessages([mek.key]);
+          console.log(`✅ [AUTOVIEW] Status marked as viewed from ${sender}`);
+          
+          setTimeout(async () => {
+            try {
+              await client.readMessages([mek.key]);
+            } catch (error) {}
+          }, 500);
+        } catch (error) {
+          console.error(`❌ [AUTOVIEW] Failed to view status:`, error.message);
+        }
+      }
+      
+      return;
     }
 
-    if (autoview && remoteJid === "status@broadcast") {
-      console.log(`👁️ [AUTOVIEW] Status detected for viewing from ${sender}`);
-      
-      try {
-        await client.readMessages([mek.key]);
-        console.log(`✅ [AUTOVIEW] Status marked as viewed from ${sender}`);
-        
-        setTimeout(async () => {
-          try {
-            await client.readMessages([mek.key]);
-          } catch (error) {}
-        }, 500);
-      } catch (error) {
-        console.error(`❌ [AUTOVIEW] Failed to view status:`, error.message);
-      }
-    } else if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+    if (!mek.message) {
+      console.log(`❌ [DEBUG] Invalid message structure - missing message`);
+      return;
+    }
+
+    mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
+
+    await antilink(client, mek, store);
+
+    if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
       await client.readMessages([mek.key]);
     }
 
