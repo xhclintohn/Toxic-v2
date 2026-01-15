@@ -173,7 +173,7 @@ async function startToxic() {
     let settings = await getSettings();
     if (!settings) return;
 
-    const { autoread, autolike, autoview, presence } = settings;
+    const { autoread, autolike, autoview, presence, autolikeemoji } = settings;
 
     let mek = messages[0];
     if (!mek || !mek.key || !mek.message) return;
@@ -187,32 +187,40 @@ async function startToxic() {
     await antilink(client, mek, store);
 
     if (autolike === 'true' && remoteJid === "status@broadcast") {
-  try {
-    const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
-    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-    
-    await client.sendMessage(remoteJid, { 
-      react: { 
-        text: randomEmoji, 
-        key: mek.key 
-      } 
-    });
-    
-    console.log(`✅ Liked status from ${sender} with ${randomEmoji}`);
-  } catch (reactError) {
-    console.error('Failed to react to status:', reactError);
-  }
-}
+      try {
+        console.log(`📱 Status detected from ${sender}`);
+        let reactEmoji = autolikeemoji || 'random';
+        
+        if (reactEmoji === 'random') {
+          const emojis = ['🗿', '⌚️', '💠', '👣', '🥲', '💔', '🤍', '❤️‍🔥', '💣', '🧠', '🦅', '🌻', '🧊', '🛑', '🧸', '👑', '📍', '😅', '🎭', '🎉', '😳', '💯', '🔥', '💫', '👽', '💗', '❤️‍🔥', '🥀', '👀', '🙌', '🙆', '🌟', '💧', '🦄', '🟢', '🎎', '✅', '🥱', '🌚', '💚', '💕', '😉', '😔'];
+          reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+        }
+        
+        console.log(`🎯 Reacting with: ${reactEmoji}`);
+        await client.sendMessage(remoteJid, { 
+          react: { 
+            text: reactEmoji, 
+            key: mek.key 
+          } 
+        });
+        
+        console.log(`✅ Successfully reacted to status from ${sender} with ${reactEmoji}`);
+      } catch (reactError) {
+        console.error('❌ Failed to react to status:', reactError);
+      }
+    }
 
-    if (autoview && remoteJid === "status@broadcast") {
+    if (autoview === 'true' && remoteJid === "status@broadcast") {
       try {
         const statusKey = mek.key.id;
         if (!processedStatusMessages.has(statusKey)) {
           processedStatusMessages.add(statusKey);
+          console.log(`👁️ Marking status as viewed from ${sender}`);
 
           const participant = mek.key.participant || sender;
           if (participant && participant !== client.decodeJid(client.user.id)) {
             await client.readMessages([mek.key]);
+            console.log(`📖 Status viewed from ${participant}`);
 
             setTimeout(async () => {
               try {
@@ -227,11 +235,18 @@ async function startToxic() {
             recentKeys.forEach(key => processedStatusMessages.add(key));
           }
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error('❌ Failed to view status:', error);
+      }
     }
 
-    if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-      await client.readMessages([mek.key]);
+    if (autoread === 'true' && remoteJid.endsWith('@s.whatsapp.net')) {
+      try {
+        await client.readMessages([mek.key]);
+        console.log(`📱 Marked message as read from ${sender}`);
+      } catch (error) {
+        console.error('❌ Failed to mark as read:', error);
+      }
     }
 
     if (remoteJid.endsWith('@s.whatsapp.net')) {
@@ -256,8 +271,6 @@ async function startToxic() {
   client.ev.on("messages.upsert", async ({ messages }) => {
     const msg = messages[0];
     if (!msg.message) return;
-
-    // REMOVED: await handleButtons(client, msg);
 
     if (msg.message.listResponseMessage) {
       const selectedCmd = msg.message.listResponseMessage.singleSelectReply.selectedRowId;
@@ -293,13 +306,14 @@ async function startToxic() {
     for (const update of updates) {
       if (update.key && update.key.remoteJid === "status@broadcast" && update.update.messageStubType === 1) {
         const settings = await getSettings();
-        if (settings.autoview) {
+        if (settings.autoview === 'true') {
           try {
             const mek = {
               key: update.key,
               message: {}
             };
             await client.readMessages([mek.key]);
+            console.log(`📱 Auto-viewed deleted status`);
           } catch (error) {}
         }
       }
@@ -309,7 +323,7 @@ async function startToxic() {
   const unhandledRejections = new Map();
   process.on("unhandledRejection", (reason, promise) => {
     unhandledRejections.set(promise, reason);
-    console.error('Unhandled Rejection:', reason);
+    console.error('❌ Unhandled Rejection:', reason);
   });
   process.on("rejectionHandled", (promise) => {
     unhandledRejections.delete(promise);
@@ -362,6 +376,7 @@ async function startToxic() {
 
     if (connection === "open") {
       reconnectAttempts = 0;
+      console.log(`✅ Connected to WhatsApp as ${client.user?.id || 'Unknown'}`);
     }
 
     if (connection === "close") {
@@ -409,6 +424,13 @@ async function startToxic() {
     await fs.writeFileSync(trueFileName, buffer);
     return trueFileName;
   };
+
+  console.log(`🚀 Toxic-MD started successfully!`);
+  console.log(`📊 Current settings:`);
+  console.log(`   • Autolike: ${settingss.autolike === 'true' ? '✅ ON' : '❌ OFF'}`);
+  console.log(`   • Autoview: ${settingss.autoview === 'true' ? '✅ ON' : '❌ OFF'}`);
+  console.log(`   • Autoread: ${settingss.autoread === 'true' ? '✅ ON' : '❌ OFF'}`);
+  console.log(`   • Reaction Emoji: ${settingss.autolikeemoji || 'random'}`);
 }
 
 app.use(express.static('public'));
@@ -417,7 +439,7 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
+app.listen(port, () => console.log(`🌐 Server listening on port http://localhost:${port}`));
 
 startToxic();
 
@@ -426,7 +448,7 @@ module.exports = startToxic;
 let file = require.resolve(__filename);
 fs.watchFile(file, () => {
   fs.unwatchFile(file);
-  console.log(chalk.redBright(`Update ${__filename}`));
+  console.log(chalk.redBright(`🔄 Update ${__filename}`));
   delete require.cache[file];
   require(file);
 });
