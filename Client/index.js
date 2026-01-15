@@ -165,8 +165,6 @@ async function startToxic() {
   const processedStatusMessages = new Set();
 
   client.ev.on("messages.upsert", async ({ messages, type }) => {
-    if (type !== "notify") return;
-
     let settings = await getSettings();
     if (!settings) return;
 
@@ -181,16 +179,11 @@ async function startToxic() {
     if (remoteJid === "status@broadcast") {
       if (autolike && mek.key) {
         try {
-          let reactEmoji = autolikeemoji || '❤️';
+          let reactEmoji = autolikeemoji || 'random';
           
           if (reactEmoji === 'random') {
             const emojis = ['❤️', '👍', '🔥', '😍', '👏', '🎉', '🤩', '💯', '✨', '🌟'];
             reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-          }
-
-          const statusSender = mek.key.participant;
-          if (!statusSender) {
-            return;
           }
 
           await client.sendMessage(remoteJid, { 
@@ -199,7 +192,9 @@ async function startToxic() {
               key: mek.key 
             } 
           });
-        } catch (error) {}
+        } catch (error) {
+          console.error('❌ [AUTOLIKE] Error:', error.message);
+        }
       }
 
       if (autoview) {
@@ -211,7 +206,9 @@ async function startToxic() {
               await client.readMessages([mek.key]);
             } catch (error) {}
           }, 500);
-        } catch (error) {}
+        } catch (error) {
+          console.error('❌ [AUTOVIEW] Error:', error.message);
+        }
       }
       
       return;
@@ -224,26 +221,40 @@ async function startToxic() {
     await antilink(client, mek, store);
 
     if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-      await client.readMessages([mek.key]);
+      try {
+        await client.readMessages([mek.key]);
+      } catch (error) {}
     }
 
     if (remoteJid.endsWith('@s.whatsapp.net')) {
       const Chat = remoteJid;
       if (presence === 'online') {
-        await client.sendPresenceUpdate("available", Chat);
+        try {
+          await client.sendPresenceUpdate("available", Chat);
+        } catch (error) {}
       } else if (presence === 'typing') {
-        await client.sendPresenceUpdate("composing", Chat);
+        try {
+          await client.sendPresenceUpdate("composing", Chat);
+        } catch (error) {}
       } else if (presence === 'recording') {
-        await client.sendPresenceUpdate("recording", Chat);
+        try {
+          await client.sendPresenceUpdate("recording", Chat);
+        } catch (error) {}
       } else {
-        await client.sendPresenceUpdate("unavailable", Chat);
+        try {
+          await client.sendPresenceUpdate("unavailable", Chat);
+        } catch (error) {}
       }
     }
 
-    if (!client.public && !mek.key.fromMe) return;
+    if (!client.public && !mek.key.fromMe && type === "notify") return;
 
-    m = smsg(client, mek, store);
-    require("./toxic")(client, m, { type: "notify" }, store);
+    try {
+      m = smsg(client, mek, store);
+      require("./toxic")(client, m, { type: "notify" }, store);
+    } catch (error) {
+      console.error('❌ [MESSAGE HANDLER] Error:', error.message);
+    }
   });
 
   client.ev.on("messages.upsert", async ({ messages }) => {
@@ -274,7 +285,9 @@ async function startToxic() {
 
       try {
         require("./toxic")(client, m, { type: "notify" }, store);
-      } catch (error) {}
+      } catch (error) {
+        console.error('❌ [LIST SELECTION] Error:', error.message);
+      }
     }
   });
 
@@ -296,7 +309,7 @@ async function startToxic() {
   });
 
   process.on("unhandledRejection", (reason, promise) => {
-    console.error('❌ [ERROR] Unhandled Rejection:', reason.message?.substring(0, 200) || reason);
+    console.error('❌ [UNHANDLED ERROR] Unhandled Rejection:', reason.message?.substring(0, 200) || reason);
   });
 
   client.decodeJid = (jid) => {
@@ -331,8 +344,12 @@ async function startToxic() {
   client.serializeM = (m) => smsg(client, m, store);
 
   client.ev.on("group-participants.update", async (m) => {
-    groupEvents(client, m);
-    groupEvents2(client, m);
+    try {
+      groupEvents(client, m);
+      groupEvents2(client, m);
+    } catch (error) {
+      console.error('❌ [GROUP EVENT] Error:', error.message);
+    }
   });
 
   let reconnectAttempts = 0;
@@ -399,7 +416,7 @@ async function startToxic() {
   console.log(`   • Autolike: ${settingss.autolike ? '✅ ON' : '❌ OFF'}`);
   console.log(`   • Autoview: ${settingss.autoview ? '✅ ON' : '❌ OFF'}`);
   console.log(`   • Autoread: ${settingss.autoread ? '✅ ON' : '❌ OFF'}`);
-  console.log(`   • Reaction Emoji: ${settingss.autolikeemoji || '❤️'}`);
+  console.log(`   • Reaction Emoji: ${settingss.autolikeemoji || 'random'}`);
 }
 
 app.use(express.static('public'));
