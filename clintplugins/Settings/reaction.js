@@ -9,27 +9,32 @@ module.exports = async (context) => {
       const settings = await getSettings();
       const prefix = settings.prefix || '.';
       const newEmoji = args[0];
+      const currentEmoji = settings.autolikeemoji || 'random';
 
       if (newEmoji) {
-        // First turn autolike on if it's off
-        if (settings.autolike === 'false') {
-          await updateSetting('autolike', 'random');
+        if (newEmoji === 'random') {
+          if (currentEmoji === 'random') {
+            await m.reply(`Already using random emojis, you brain-dead fool!`);
+            return;
+          }
+          await updateSetting('autolikeemoji', 'random');
+          await m.reply(`Reaction emoji set to random!`);
+        } else {
+          if (currentEmoji === newEmoji) {
+            await m.reply(`Already using ${newEmoji} emoji, moron!`);
+            return;
+          }
+          await updateSetting('autolikeemoji', newEmoji);
+          await m.reply(`Reaction emoji set to ${newEmoji}!`);
         }
-        
-        await updateSetting('autolike', newEmoji);
-        
-        await m.reply(`Status reaction set to ${newEmoji}! Autolike is now ON with this emoji.`);
         return;
       }
 
-      const currentValue = settings.autolike;
-      const currentText = currentValue === 'false' ? '❌ OFF (Turn ON first)' : 
-                         currentValue === 'random' ? '🎲 Random emojis' : 
-                         `${currentValue} emoji`;
+      const currentText = currentEmoji === 'random' ? '🎲 Random emojis' : `${currentEmoji} emoji`;
 
       await client.sendMessage(m.chat, {
         interactiveMessage: {
-          header: `🎭 Status Reaction Settings\n\nCurrent: ${currentText}\n\n• Use "${prefix}reaction random" for random emojis\n• Use "${prefix}reaction <emoji>" for specific emoji\n• Autolike must be ON for reactions to work`,
+          header: `🎭 Reaction Emoji Settings\n\nCurrent: ${currentText}\n\n• Use "${prefix}reaction random" for random emojis\n• Use "${prefix}reaction <emoji>" for specific emoji`,
           footer: "Powered by Toxic-MD",
           buttons: [
             {
