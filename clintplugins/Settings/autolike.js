@@ -11,21 +11,24 @@ module.exports = async (context) => {
       const value = args[0]?.toLowerCase();
 
       if (value === 'on' || value === 'off') {
-        const newValue = value === 'on' ? 'true' : 'false';
-        
+        const newValue = value === 'on';
+
         if (settings.autolike === newValue) {
           await m.reply(`Autolike is already ${value.toUpperCase()}, you brain-dead fool!`);
           return;
         }
 
         await updateSetting('autolike', newValue);
-        
+
         await m.reply(`Autolike ${value.toUpperCase()}! ${value === 'on' ? 'Bot will now like statuses!' : 'Bot will ignore statuses like they ignore you.'}`);
         return;
       }
 
+    
+      const isAutolikeOn = settings.autolike === true;
       const currentEmoji = settings.autolikeemoji || 'random';
-      const statusText = settings.autolike === 'true' ? 
+      
+      const statusText = isAutolikeOn ? 
                         `✅ ON (${currentEmoji === 'random' ? 'Random emojis' : currentEmoji + ' emoji'})` : 
                         '❌ OFF';
 
