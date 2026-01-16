@@ -27,7 +27,12 @@ module.exports = async (context) => {
 
         const apiUrl = `https://api-faa.my.id/faa/editfoto?url=${encodeURIComponent(uploadedUrl)}&prompt=${encodeURIComponent(prompt)}`;
 
-        const editResponse = await axios.get(apiUrl, { responseType: 'arraybuffer' });
+        const editResponse = await axios.get(apiUrl, { 
+            responseType: 'arraybuffer',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        });
         
         if (!editResponse.data || editResponse.data.length === 0) {
             throw new Error('API returned empty image');
@@ -45,4 +50,3 @@ module.exports = async (context) => {
         m.reply(`Edit failed. API or your image is trash.\nError: ${error.message}`);
     }
 };
-
