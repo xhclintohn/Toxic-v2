@@ -1,79 +1,102 @@
 const axios = require('axios');
 const FormData = require('form-data');
 
+/**
+ * Upload buffer to Catbox
+ */
 async function uploadToCatbox(buffer) {
     const form = new FormData();
     form.append('reqtype', 'fileupload');
-    form.append('fileToUpload', buffer, { filename: 'file' });
-    const response = await axios.post('https://catbox.moe/user/api.php', form, { 
-        headers: form.getHeaders(),
-        timeout: 30000
-    });
-    if (!response.data || typeof response.data !== 'string') throw new Error('Upload Refused');
-    return response.data.trim();
+    form.append('fileToUpload', buffer, { filename: 'image.jpg' });
+
+    const res = await axios.post(
+        'https://catbox.moe/user/api.php',
+        form,
+        {
+            headers: form.getHeaders(),
+            timeout: 30000
+        }
+    );
+
+    if (typeof res.data !== 'string') {
+        throw new Error('Catbox upload failed');
+    }
+
+    return res.data.trim();
 }
 
 module.exports = async (context) => {
     const { client, m, text } = context;
+
     try {
+        // reaction: processing
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        if (!m.quoted) return m.reply("Quote an image, you blind fuck.");
+        if (!m.quoted) return m.reply('Reply to an image.');
         const q = m.quoted;
+
         const mime = q.mimetype || '';
-        if (!mime.startsWith('image/')) return m.reply("That's not an image, idiot.");
+        if (!mime.startsWith('image/')) {
+            return m.reply('That is not an image.');
+        }
 
-        const prompt = text || "make it look epic";
-        const mediaBuffer = await q.download();
+        const prompt = text || 'make it look epic';
 
+        const mediaBuffer = await q.download?.();
+        if (!mediaBuffer || !Buffer.isBuffer(mediaBuffer)) {
+            throw new Error('Failed to download image');
+        }
+
+        // upload image
         const uploadedUrl = await uploadToCatbox(mediaBuffer);
 
-        // Use a different endpoint or try without .id
-        const apiUrl = `https://api-faa.my.id/faa/editfoto?url=${encodeURIComponent(uploadedUrl)}&prompt=${encodeURIComponent(prompt)}`;
+        // request edited image (RAW IMAGE RESPONSE)
+        const res = await axios.get(
+            'https://api-faa.my.id/faa/editfoto',
+            {
+                params: {
+                    url: uploadedUrl,
+                    prompt
+                },
+                responseType: 'arraybuffer',
+                timeout: 60000,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0',
+                    'Accept': 'image/*'
+                }
+            }
+        );
 
-        // Try with more realistic browser headers
-        const editResponse = await axios.get(apiUrl, { 
-            responseType: 'arraybuffer',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'Referer': 'https://api-faa.my.id/',
-                'DNT': '1',
-                'Connection': 'keep-alive',
-                'Sec-Fetch-Dest': 'image',
-                'Sec-Fetch-Mode': 'no-cors',
-                'Sec-Fetch-Site': 'same-origin',
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache'
-            },
-            timeout: 60000
-        });
-        
-        // Check if response is actually an image
-        const contentType = editResponse.headers['content-type'] || '';
-        if (!contentType.includes('image/')) {
-            throw new Error('API returned non-image content');
+        const contentType = res.headers['content-type'] || '';
+        if (!contentType.startsWith('image/')) {
+            throw new Error(`Non-image response: ${contentType}`);
         }
 
-        if (!editResponse.data || editResponse.data.length === 0) {
-            throw new Error('API returned empty image');
+        if (!res.data || res.data.length < 1000) {
+            throw new Error('Image buffer is empty or too small');
         }
 
+        // reaction: success
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        await client.sendMessage(m.chat, {
-            image: editResponse.data,
-            caption: `Done. Prompt: "${prompt}"\n—\nTσxιƈ-ɱԃȥ`
-        }, { quoted: m });
+        // send image
+        await client.sendMessage(
+            m.chat,
+            {
+                image: Buffer.from(res.data),
+                caption: `Done.\nPrompt: "${prompt}"\n—\nTσxιƈ-ɱԃȥ`
+            },
+            { quoted: m }
+        );
 
-    } catch (error) {
-        console.error('Edit Error Details:', {
-            message: error.message,
-            response: error.response?.data?.toString().substring(0, 200)
+    } catch (err) {
+        console.error('Edit Error:', {
+            message: err.message,
+            status: err.response?.status,
+            contentType: err.response?.headers?.['content-type']
         });
+
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        m.reply(`Edit failed. The API is being a bitch.\nError: ${error.message}`);
+        m.reply(`Edit failed.\nError: ${err.message}`);
     }
 };
