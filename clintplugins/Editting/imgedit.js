@@ -1,12 +1,10 @@
 const axios = require('axios');
 const FormData = require('form-data');
-const fs = require('fs');
-const path = require('path');
 
 async function uploadToCatbox(buffer) {
     const form = new FormData();
     form.append('reqtype', 'fileupload');
-    form.append('fileToUpload', buffer, { filename: 'file' }); // Let catbox detect format
+    form.append('fileToUpload', buffer, { filename: 'file' });
     const response = await axios.post('https://catbox.moe/user/api.php', form, { 
         headers: form.getHeaders(),
         timeout: 30000
@@ -29,20 +27,36 @@ module.exports = async (context) => {
         const mediaBuffer = await q.download();
 
         const uploadedUrl = await uploadToCatbox(mediaBuffer);
-        console.log('Uploaded to:', uploadedUrl); // Debug log
 
+        // Use a different endpoint or try without .id
         const apiUrl = `https://api-faa.my.id/faa/editfoto?url=${encodeURIComponent(uploadedUrl)}&prompt=${encodeURIComponent(prompt)}`;
-        console.log('API URL:', apiUrl); // Debug log
 
+        // Try with more realistic browser headers
         const editResponse = await axios.get(apiUrl, { 
             responseType: 'arraybuffer',
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': 'image/*,*/*'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Referer': 'https://api-faa.my.id/',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Sec-Fetch-Dest': 'image',
+                'Sec-Fetch-Mode': 'no-cors',
+                'Sec-Fetch-Site': 'same-origin',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
             },
-            timeout: 45000
+            timeout: 60000
         });
         
+        // Check if response is actually an image
+        const contentType = editResponse.headers['content-type'] || '';
+        if (!contentType.includes('image/')) {
+            throw new Error('API returned non-image content');
+        }
+
         if (!editResponse.data || editResponse.data.length === 0) {
             throw new Error('API returned empty image');
         }
@@ -55,8 +69,11 @@ module.exports = async (context) => {
         }, { quoted: m });
 
     } catch (error) {
-        console.error('Edit Error:', error); // Debug log
+        console.error('Edit Error Details:', {
+            message: error.message,
+            response: error.response?.data?.toString().substring(0, 200)
+        });
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        m.reply(`Edit failed. API or your image is trash.\nError: ${error.message}`);
+        m.reply(`Edit failed. The API is being a bitch.\nError: ${error.message}`);
     }
 };
