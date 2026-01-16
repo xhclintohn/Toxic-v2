@@ -28,11 +28,15 @@ module.exports = async (context) => {
         const apiUrl = `https://api-faa.my.id/faa/editfoto?url=${encodeURIComponent(uploadedUrl)}&prompt=${encodeURIComponent(prompt)}`;
 
         const editResponse = await axios.get(apiUrl, { responseType: 'arraybuffer' });
+        
+        if (!editResponse.data || editResponse.data.length === 0) {
+            throw new Error('API returned empty image');
+        }
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
         await client.sendMessage(m.chat, {
-            image: Buffer.from(editResponse.data),
+            image: editResponse.data,
             caption: `Done. Prompt: "${prompt}"\n—\nTσxιƈ-ɱԃȥ`
         }, { quoted: m });
 
@@ -41,3 +45,4 @@ module.exports = async (context) => {
         m.reply(`Edit failed. API or your image is trash.\nError: ${error.message}`);
     }
 };
+
