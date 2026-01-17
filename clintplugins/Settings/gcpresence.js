@@ -1,33 +1,66 @@
-const { getSettings, getGroupSetting, updateGroupSetting } = require('../../Database/config');
+const { getSettings, getGroupSettings, updateGroupSetting } = require('../../Database/config');
 const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
+
+const formatStylishReply = (message) => {
+    return `◈━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━◈`;
+};
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
-        const { m, args } = context;
+        const { client, m, args } = context;
         const value = args[0]?.toLowerCase();
         const jid = m.chat;
-
-        if (!jid.endsWith('@g.us')) {
-            return await m.reply('❌ This command can only be used in groups.');
-        }
-
+        
         const settings = await getSettings();
-        const prefix = settings.prefix;
-
-        let groupSettings = await getGroupSetting(jid);
-        let isEnabled = groupSettings?.gcpresence === true;
-
+        const prefix = settings.prefix || '.';
+        
+        let groupSettings = {};
+        let isEnabled = false;
+        
+        if (jid.endsWith('@g.us')) {
+            groupSettings = await getGroupSettings(jid);
+            isEnabled = groupSettings.gcpresence === true;
+        }
+        
         if (value === 'on' || value === 'off') {
             const action = value === 'on';
-
+            
             if (isEnabled === action) {
-                return await m.reply(`✅ GCPresence is already ${value.toUpperCase()}.`);
+                return await m.reply(formatStylishReply(`Already ${value.toUpperCase()}`));
             }
-
-            await updateGroupSetting(jid, 'gcpresence', action ? 'true' : 'false');
-            await m.reply(`✅ GCPresence has been turned ${value.toUpperCase()} for this group. Bot will now simulate fake typing and recording.`);
+            
+            if (jid.endsWith('@g.us')) {
+                await updateGroupSetting(jid, 'gcpresence', action);
+                await m.reply(formatStylishReply(`Group: ${value.toUpperCase()}`));
+            } else {
+                await m.reply(formatStylishReply(`DMs: Always ON`));
+            }
+            
         } else {
-            await m.reply(`📄 Current GCPresence setting for this group: ${isEnabled ? 'ON' : 'OFF'}\n\n _Use ${prefix}gcpresence on or ${prefix}gcpresence off to change it._`);
+            const status = jid.endsWith('@g.us') ? (isEnabled ? '✅ ON' : '❌ OFF') : '✅ ON (DMs)';
+            
+            await client.sendMessage(jid, {
+                interactiveMessage: {
+                    header: formatStylishReply(`GCPresence Settings\n\nStatus: ${status}\n\n• Group: Fake typing/recording\n• DMs: Always enabled`),
+                    footer: "Tσxιƈ-ɱԃȥ",
+                    buttons: [
+                        {
+                            name: "quick_reply",
+                            buttonParamsJson: JSON.stringify({
+                                display_text: "🟢 TURN ON",
+                                id: `${prefix}gcpresence on`
+                            })
+                        },
+                        {
+                            name: "quick_reply",
+                            buttonParamsJson: JSON.stringify({
+                                display_text: "🔴 TURN OFF",
+                                id: `${prefix}gcpresence off`
+                            })
+                        }
+                    ]
+                }
+            }, { quoted: m });
         }
     });
 };
