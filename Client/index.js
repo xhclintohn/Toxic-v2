@@ -51,7 +51,41 @@ const antidelete = require('../Functions/antidelete');
 const antilink = require('../Functions/antilink');
 const antistatusmention = require('../Functions/antistatusmention');
 
+function cleanupSessionFiles() {
+    try {
+        if (!fs.existsSync(sessionName)) return;
+
+        const files = fs.readdirSync(sessionName);
+        const keepFiles = ['creds.json', 'app-state-sync-version.json', 'pre-key-', 'session-', 'sender-key-', 'app-state-sync-key-'];
+
+        files.forEach(file => {
+            const filePath = path.join(sessionName, file);
+            const stats = fs.statSync(filePath);
+            
+            const shouldKeep = keepFiles.some(pattern => {
+                if (pattern.endsWith('-')) return file.startsWith(pattern);
+                return file === pattern;
+            });
+
+            if (!shouldKeep) {
+                const fileAge = Date.now() - stats.mtimeMs;
+                const hoursOld = fileAge / (1000 * 60 * 60);
+                
+                if (hoursOld > 24) {
+                    fs.unlinkSync(filePath);
+                    console.log(`🗑️ Cleaned up old file: ${file}`);
+                }
+            }
+        });
+    } catch (error) {
+        console.error('❌ Session cleanup error:', error.message);
+    }
+}
+
 async function startToxic() {
+  setInterval(cleanupSessionFiles, 24 * 60 * 60 * 1000);
+  cleanupSessionFiles();
+
   let settingss = await getSettings();
   if (!settingss) {
     console.log(`❌ TOXIC-MD FAILED TO CONNECT - Settings not found`);
@@ -182,14 +216,14 @@ async function startToxic() {
       if (autolike && mek.key) {
         try {
           let reactEmoji = autolikeemoji || 'random';
-          
+
           if (reactEmoji === 'random') {
             const emojis = ['❤️', '👍', '🔥', '😍', '👏', '🎉', '🤩', '💯', '✨', '🌟'];
             reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
           }
 
           const nickk = client.decodeJid(client.user.id);
-          
+
           await client.sendMessage(mek.key.remoteJid, { 
             react: { 
               text: reactEmoji, 
@@ -213,7 +247,7 @@ async function startToxic() {
       if (autoview) {
         try {
           await client.readMessages([mek.key]);
-          
+
           setTimeout(async () => {
             try {
               await client.readMessages([mek.key]);
@@ -223,7 +257,7 @@ async function startToxic() {
           console.error('❌ [AUTOVIEW] Failed to view:', error.message);
         }
       }
-      
+
       return;
     }
 
