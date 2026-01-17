@@ -1,9 +1,6 @@
 const axios = require('axios');
 const FormData = require('form-data');
 
-/**
- * Upload buffer to Catbox
- */
 async function uploadToCatbox(buffer) {
     const form = new FormData();
     form.append('reqtype', 'fileupload');
@@ -13,8 +10,7 @@ async function uploadToCatbox(buffer) {
         'https://catbox.moe/user/api.php',
         form,
         {
-            headers: form.getHeaders(),
-            timeout: 30000
+            headers: form.getHeaders()
         }
     );
 
@@ -29,7 +25,6 @@ module.exports = async (context) => {
     const { client, m, text } = context;
 
     try {
-        // reaction: processing
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         if (!m.quoted) return m.reply('Reply to an image.');
@@ -47,16 +42,13 @@ module.exports = async (context) => {
             throw new Error('Failed to download image');
         }
 
-        // upload image
         const uploadedUrl = await uploadToCatbox(mediaBuffer);
 
-        // request edited image using new API
         const apiUrl = `https://www.movanest.xyz/v2/nanobanana?image_url=${encodeURIComponent(uploadedUrl)}&prompt=${encodeURIComponent(prompt)}&your_api_key=movanest-key17WR5ISK4U`;
         
         const res = await axios.get(
             apiUrl,
             {
-                timeout: 60000,
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                     'Accept': 'application/json'
@@ -64,19 +56,16 @@ module.exports = async (context) => {
             }
         );
 
-        // Check if response has the expected structure
         if (!res.data || !res.data.results || !res.data.results.resultUrl) {
             throw new Error('Invalid API response format');
         }
 
         const resultUrl = res.data.results.resultUrl;
 
-        // Download the edited image
         const imageResponse = await axios.get(
             resultUrl,
             {
                 responseType: 'arraybuffer',
-                timeout: 60000,
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                     'Accept': 'image/*'
@@ -88,10 +77,8 @@ module.exports = async (context) => {
             throw new Error('Edited image is empty or too small');
         }
 
-        // reaction: success
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        // send image
         await client.sendMessage(
             m.chat,
             {
