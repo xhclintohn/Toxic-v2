@@ -44,7 +44,7 @@ module.exports = async (context) => {
 
         const uploadedUrl = await uploadToCatbox(mediaBuffer);
 
-        const apiUrl = `https://www.movanest.xyz/v2/nanobanana?image_url=${encodeURIComponent(uploadedUrl)}&prompt=${encodeURIComponent(prompt)}&your_api_key=movanest-key17WR5ISK4U`;
+        const apiUrl = `https://www.movanest.xyz/v2/img2img?image_url=${encodeURIComponent(uploadedUrl)}&prompt=${encodeURIComponent(prompt)}&your_api_key=movanest-key17WR5ISK4U`;
         
         const res = await axios.get(
             apiUrl,
