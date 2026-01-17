@@ -129,7 +129,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               ``,
               `│❒ Ready to proceed? Select an option below.`,
               ``,
-              `│❒ *Start Message*: Enabled by default. Use *${settings.prefix}startmessage off* to disable.`,
+              `│❒ *Start Message*: Enabled by default. it is recommended to disable it...Use *${settings.prefix}startmessage off* to disable or click the button bellow. and prevent spam`,
               `│❒ *Credits*: xh_clinton`,
               `◈━━━━━━━━━━━━━━━━◈`
             ].join("\n");
@@ -170,7 +170,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               },
               {
                 buttonId: `${settings.prefix || ''}startmessage off`,
-                buttonText: { displayText: `🚫 ${toFancyFont('DISABLE START')}` },
+                buttonText: { displayText: ` ${toFancyFont('DISABLE START MESSAGE')}` },
                 type: 1
               }
             ],
