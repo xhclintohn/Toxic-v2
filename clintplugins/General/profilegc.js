@@ -1,35 +1,57 @@
-//profilegc.js
-
 module.exports = async (context) => {
-        const { client, m } = context;
+    const { client, m } = context;
 
+    function convertTimestamp(timestamp) {
+        const d = new Date(timestamp * 1000);
+        const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        return {
+            date: d.getDate(),
+            month: new Intl.DateTimeFormat('en-US', { month: 'long' }).format(d),
+            year: d.getFullYear(),
+            day: daysOfWeek[d.getUTCDay()],
+            time: `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}:${d.getUTCSeconds().toString().padStart(2, '0')}`
+        }
+    }
 
-function convertTimestamp(timestamp) {
-  const d = new Date(timestamp * 1000);
-  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  return {
-    date: d.getDate(),
-    month: new Intl.DateTimeFormat('en-US', { month: 'long' }).format(d),
-    year: d.getFullYear(),
-    day: daysOfWeek[d.getUTCDay()],
-    time: `${d.getUTCHours()}:${d.getUTCMinutes()}:${d.getUTCSeconds()}`
-  }
-}
+    if (!m.isGroup) return m.reply("This command is meant for groups");
 
-if (!m.isGroup) return m.reply("This command is meant for groups");
+    let info = await client.groupMetadata(m.chat);
+    let ts = await convertTimestamp(info.creation);
 
-let info = await client.groupMetadata(m.chat);
+    try {
+        var pp = await client.profilePictureUrl(m.chat, 'image');
+    } catch {
+        var pp = 'https://telegra.ph/file/9521e9ee2fdbd0d6f4f1c.jpg';
+    }
 
-let ts = await convertTimestamp(info.creation);
+    const membersCount = info.participants.filter(p => !p.admin).length;
+    const adminsCount = info.participants.filter(p => p.admin).length;
+    const owner = info.owner || info.participants.find(p => p.admin === 'superadmin')?.id;
 
-try {
-        pp = await client.profilePictureUrl(chat, 'image');
-      } catch {
-        pp = 'https://telegra.ph/file/9521e9ee2fdbd0d6f4f1c.jpg';
-      }
+    const caption = `╭───〔 🏷️ GROUP INFO 〕───╮\n` +
+                   `│\n` +
+                   `│  📛 Name : *${info.subject}*\n` +
+                   `│  🆔 ID : *${info.id}*\n` +
+                   `│  👑 Owner : ${owner ? '@' + owner.split('@')[0] : 'Unknown'}\n` +
+                   `│\n` +
+                   `│  📅 Created :\n` +
+                   `│   └ ${ts.day}, ${ts.date} ${ts.month} ${ts.year}\n` +
+                   `│   └ ${ts.time} UTC\n` +
+                   `│\n` +
+                   `│  👥 Participants :\n` +
+                   `│   ├ Total : *${info.size}*\n` +
+                   `│   ├ Members : *${membersCount}*\n` +
+                   `│   └ Admins : *${adminsCount}*\n` +
+                   `│\n` +
+                   `│  ⚙️ Settings :\n` +
+                   `│   ├ Messages : ${info.announce ? 'Admins Only' : 'Everyone'}\n` +
+                   `│   ├ Edit Info : ${info.restrict ? 'Admins Only' : 'Everyone'}\n` +
+                   `│   └ Add Members : ${info.memberAddMode ? 'Everyone' : 'Admins Only'}\n` +
+                   `│\n` +
+                   `╰────〔 Tσxιƈ-ɱԃȥ 〕────╯`;
 
-await client.sendMessage(m.chat, { image: { url: pp }, 
-          caption: `_Name_ : *${info.subject}*\n\n_ID_ : *${info.id}*\n\n_Group owner_ : ${'@'+info.owner.split('@')[0]} || 'No Creator'\n\n_Group created_ : *${ts.day}, ${ts.date} ${ts.month} ${ts.year}, ${ts.time}*\n\n_Participants_ : *${info.size}*\n_Members_ : *${info.participants.filter((p) => p.admin == null).length}*\n\n_Admins_ : *${Number(info.participants.length - info.participants.filter((p) => p.admin == null).length)}*\n\n_Who can send message_ : *${info.announce == true ? 'Admins' : 'Everyone'}*\n\n_Who can edit group info_ : *${info.restrict == true ? 'Admins' : 'Everyone'}*\n\n_Who can add participants_ : *${info.memberAddMode == true ? 'Everyone' : 'Admins'}*`
-        }, {quoted: m })
-
-}
+    await client.sendMessage(m.chat, { 
+        image: { url: pp }, 
+        caption: caption
+    }, { quoted: m });
+};
