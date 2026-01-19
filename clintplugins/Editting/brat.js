@@ -12,7 +12,7 @@ module.exports = {
 
         if (!text) {
             return client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ What am I, a mind reader? @${m.sender.split('@')[0]}! You forgot the text, genius. 🤦🏻\n│❒ Example: ${prefix}brat I'm a dumbass\n◈━━━━━━━━━━━━━━━━◈`,
+                text: `◈━━━━━━━━━━━━━━━◈\n│❒ what am i, a mind reader? @${m.sender.split('@')[0]}! you forgot the text, genius. 🤦🏻\n│❒ example: ${prefix}brat i'm a dumbass\n◈━━━━━━━━━━━━━━━◈`,
                 mentions: [m.sender]
             }, { quoted: m });
         }
@@ -20,18 +20,22 @@ module.exports = {
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-            const apiUrl = `https://api.nekolabs.web.id/canvas/brat/v1?text=${encodeURIComponent(text)}`;
+            const apiUrl = `https://api.nekolabs.web.id/canvas/brat?text=${encodeURIComponent(text)}`;
             const response = await fetch(apiUrl);
 
             if (!response.ok) {
-                throw new Error(`API says you're not worth the response: ${response.status}`);
+                throw new Error(`api says you're not worth the response: ${response.status}`);
             }
 
-            const buffer = Buffer.from(await response.arrayBuffer());
+            const imageBuffer = await response.buffer();
 
-            const sticker = new Sticker(buffer, {
-                pack: 'Your Bratty Demands',
-                author: 'Toxic-MD',
+            if (!imageBuffer || imageBuffer.length < 1000) {
+                throw new Error('api returned empty image');
+            }
+
+            const sticker = new Sticker(imageBuffer, {
+                pack: 'your bratty demands',
+                author: 'toxic-md',
                 type: StickerTypes.FULL,
                 categories: ['😤', '🤡'],
                 quality: 50,
@@ -40,25 +44,29 @@ module.exports = {
 
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-            await client.sendMessage(m.chat, await sticker.toMessage(), { quoted: m });
+            const stickerBuffer = await sticker.toBuffer();
+
+            await client.sendMessage(m.chat, {
+                sticker: stickerBuffer
+            }, { quoted: m });
 
         } catch (error) {
-            console.error('Brat command crashed because of you:', error);
-            
+            console.error('brat command crashed because of you:', error);
+
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
 
-            let errorMessage = 'Your sticker failed. Shocking.';
+            let errorMessage = 'your sticker failed. shocking.';
 
             if (error.message.includes('status')) {
-                errorMessage = 'API died from cringe. Try again when your text is less stupid.';
+                errorMessage = 'api died from cringe. try again when your text is less stupid.';
             } else if (error.message.includes('Network')) {
-                errorMessage = 'Your internet is as weak as your personality.';
+                errorMessage = 'your internet is as weak as your personality.';
             } else {
-                errorMessage = `Even the error is embarrassed: ${error.message}`;
+                errorMessage = `even the error is embarrassed: ${error.message}`;
             }
 
             await client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Brat sticker failed, you disappointment.\n│❒ ${errorMessage}\n◈━━━━━━━━━━━━━━━━◈`
+                text: `◈━━━━━━━━━━━━━━━◈\n│❒ brat sticker failed, you disappointment.\n│❒ ${errorMessage}\n◈━━━━━━━━━━━━━━━◈`
             }, { quoted: m });
         }
     }
