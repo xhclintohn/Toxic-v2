@@ -18,21 +18,17 @@ async function uploadToCatbox(buffer) {
 
     const text = await response.text();
     if (!text.includes('catbox')) {
-        throw new Error('UPLOAD FAILED');
+        throw new Error('upload failed');
     }
 
-    return text;
+    return text.trim();
 }
 
 module.exports = async (context) => {
-    const { client, m, text, botname } = context;
-
-    if (!botname) {
-        return m.reply(formatStylishReply("BOT IS BROKEN BLAME THE DEV 🤡"));
-    }
+    const { client, m, text } = context;
 
     if (!text && !m.quoted && !(m.mtype === 'imageMessage' && m.body.includes('.remini'))) {
-        return m.reply(formatStylishReply("GIVE ME AN IMAGE YOU DUMBASS 🤦🏻\nEXAMPLE: .remini https://image.com/trash.png OR REPLY TO IMAGE"));
+        return m.reply(formatStylishReply("give me an image you dumbass 🤦🏻\nexample: .remini https://image.com/trash.png or reply to image"));
     }
 
     let imageUrl = text;
@@ -42,8 +38,8 @@ module.exports = async (context) => {
             const buffer = await client.downloadMediaMessage(m.quoted);
             imageUrl = await uploadToCatbox(buffer);
         } catch (uploadError) {
-            console.error(`FAILED UPLOAD: ${uploadError.message}`);
-            return m.reply(formatStylishReply("CANT UPLOAD YOUR SHITTY IMAGE 🤦🏻 TRY AGAIN"));
+            console.error(`upload failed: ${uploadError.message}`);
+            return m.reply(formatStylishReply("can't upload your shitty image 🤦🏻 try again"));
         }
     }
 
@@ -52,31 +48,33 @@ module.exports = async (context) => {
             const buffer = await client.downloadMediaMessage(m);
             imageUrl = await uploadToCatbox(buffer);
         } catch (uploadError) {
-            console.error(`FAILED UPLOAD: ${uploadError.message}`);
-            return m.reply(formatStylishReply("CANT UPLOAD YOUR SHITTY IMAGE 🤦🏻 TRY AGAIN"));
+            console.error(`upload failed: ${uploadError.message}`);
+            return m.reply(formatStylishReply("can't upload your shitty image 🤦🏻 try again"));
         }
     }
 
     if (!imageUrl || imageUrl === '.remini') {
-        return m.reply(formatStylishReply("NO VALID IMAGE YOU CLUELESS TWAT 🤡"));
+        return m.reply(formatStylishReply("no valid image you clueless twat 🤡"));
     }
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         const encodedUrl = encodeURIComponent(imageUrl);
-        const apiUrl = `https://api-faa.my.id/faa/superhd?url=${encodedUrl}`;
+        const apiUrl = `https://api.nekolabs.web.id/tools/upscale/ihancer?imageUrl=${encodedUrl}&size=medium`;
 
         const response = await fetch(apiUrl);
+        const result = await response.json();
 
-        if (!response.ok) {
-            throw new Error(`API PUKE ${response.status} ${response.statusText}`);
+        if (!result.success || !result.result) {
+            throw new Error('api returned error');
         }
 
-        const imageBuffer = await response.buffer();
+        const imageResponse = await fetch(result.result);
+        const imageBuffer = await imageResponse.buffer();
 
         if (!imageBuffer || imageBuffer.length < 1000) {
-            throw new Error(`API DIDNT RETURN AN IMAGE 🤦🏻`);
+            throw new Error('api didnt return an image 🤦🏻');
         }
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
@@ -85,14 +83,14 @@ module.exports = async (context) => {
             m.chat,
             {
                 image: imageBuffer,
-                caption: `◈━━━━━━━━━━━━━━━◈\n│❒ ENHANCED IMAGE ✅\n│❒ Tσxιƈ-ɱԃȥ\n◈━━━━━━━━━━━━━━━◈`
+                caption: `◈━━━━━━━━━━━━━━━◈\n│❒ enhanced image ✅\n│❒ tσxιƈ-ɱԃȥ\n◈━━━━━━━━━━━━━━━◈`
             },
             { quoted: m }
         );
 
     } catch (error) {
-        console.error(`ERROR IN REMINI: ${error.message}`);
+        console.error(`error in remini: ${error.message}`);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        await m.reply(formatStylishReply(`SHIT BROKE 🤦🏻 ERROR: ${error.message}`));
+        await m.reply(formatStylishReply(`shit broke 🤦🏻 error: ${error.message}`));
     }
 };
