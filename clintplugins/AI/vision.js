@@ -11,67 +11,62 @@ async function uploadToCatbox(buffer) {
     });
 
     if (!response.data || !response.data.includes('catbox')) {
-        throw new Error('Upload process failed');
+        throw new Error('upload failed');
     }
 
-    return response.data;
+    return response.data.trim();
 }
 
 module.exports = async (context) => {
     const { client, m, text } = context;
 
     try {
-      
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         if (!m.quoted) {
-            return m.reply("Do I look like a mind reader to you? Quote an image, you absolute moron.");
+            return m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ quote an image first\n◈━━━━━━━━━━━━━━━◈`);
         }
 
         const q = m.quoted || m;
         const mime = (q.msg || q).mimetype || "";
 
         if (!mime.startsWith("image/")) {
-            return m.reply("Seriously? That's not an image. Are your eyes as dysfunctional as your brain?");
+            return m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ that's not an image\n◈━━━━━━━━━━━━━━━◈`);
         }
 
         const mediaBuffer = await q.download();
-        const prompt = text ? text : "What is this image about?";
-        
-    
-        const loadingMsg = await m.reply(`Analyzing your image with prompt: "${prompt}"...`);
+        const prompt = text || "describe this image";
 
         const uploadedURL = await uploadToCatbox(mediaBuffer);
-        
-        const api = `https://api.ootaizumi.web.id/ai/gptnano?prompt=${encodeURIComponent(prompt)}&imageUrl=${encodeURIComponent(uploadedURL)}`;
+
+        const api = `https://api.deline.web.id/ai/toprompt?url=${encodeURIComponent(uploadedURL)}`;
         const result = await axios.get(api);
 
-    
-        await client.sendMessage(m.chat, { delete: loadingMsg.key });
-
-        if (result.data?.result) {
-            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-            return client.sendMessage(
-                m.chat,
-                {
-                    text: `🔍 *Image Analysis Results*\n\n*Prompt Used:* ${prompt}\n\n*Analysis:*\n${result.data.result}\n\n—\n*Powered by Tσxιƈ-ɱԃȥ*`,
-                },
-                { quoted: m }
-            );
+        if (!result.data?.status || !result.data?.result?.original) {
+            throw new Error('api returned invalid response');
         }
 
-        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        m.reply("The AI returned utter nonsense. Perhaps your image is as indecipherable as your life choices.");
+        const originalText = result.data.result.original;
+
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
+        await client.sendMessage(
+            m.chat,
+            {
+                text: `◈━━━━━━━━━━━━━━━◈\n│❒ image analysis\n│❒ prompt: ${prompt}\n│❒ \n│❒ ${originalText}\n│❒ tσxιƈ-ɱԃȥ\n◈━━━━━━━━━━━━━━━◈`,
+            },
+            { quoted: m }
+        );
 
     } catch (err) {
-        console.error('Image analysis error:', err);
-        
-       
-        try {
-            if (loadingMsg) await client.sendMessage(m.chat, { delete: loadingMsg.key });
-        } catch (e) {}
+        console.error('image analysis error:', err);
         
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        await m.reply(`Analysis failed spectacularly. Error: ${err.message}\n\nTry again when you've collected more than two brain cells.`);
+        
+        let errorMessage = 'analysis failed';
+        if (err.message.includes('upload failed')) errorMessage = 'upload failed';
+        if (err.message.includes('invalid response')) errorMessage = 'api returned invalid response';
+        
+        await m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ ${errorMessage}\n│❒ error: ${err.message}\n◈━━━━━━━━━━━━━━━◈`);
     }
 };
