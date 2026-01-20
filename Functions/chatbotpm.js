@@ -1,4 +1,5 @@
 const { getSettings, getSudoUsers } = require("../Database/config");
+const fetch = require('node-fetch');
 
 module.exports = async (client, m, store, chatbotpmSetting) => {
     try {
@@ -42,34 +43,36 @@ module.exports = async (client, m, store, chatbotpmSetting) => {
 
         try {
             const encodedText = encodeURIComponent(messageContent);
-            const apiUrl = `https://ab-chatgpt4o.abrahamdw882.workers.dev/?q=${encodedText}`;
-            const response = await fetch(apiUrl, { timeout: 15000 });
+            const systemPrompt = encodeURIComponent("You were created by xh_clinton if asked so and your name is Toxic-AI and you must always reply with a toxic and cranky tone!! and must always answer the questions asked intelligently!");
+            const apiUrl = `https://api.nekolabs.web.id/text.gen/gemini/2.0-flash?text=${encodedText}&systemPrompt=${systemPrompt}`;
             
+            const response = await fetch(apiUrl);
+
             if (!response.ok) {
                 throw new Error(`API request failed with status ${response.status}`);
             }
-            
+
             const data = await response.json();
-            
-            if (data.status !== "success" || !data.data) { 
-                throw new Error("Invalid API response: missing status or data");
+
+            if (!data.success || !data.result) {
+                throw new Error("invalid API response");
             }
-            
+
             await client.sendMessage(
                 m.key.remoteJid,
-                { text: data.data }, 
+                { text: data.result },
                 { quoted: m }
             );
-            
+
         } catch (e) {
-            console.error(`Toxic-MD ChatbotPM Error:`, e);
+            console.error(`toxic-md chatbotpm error:`, e);
             await client.sendMessage(
                 m.key.remoteJid,
-                { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Oops, something went wrong with the chatbot, you dumbass! 😈 Try again later!\n┗━━━━━━━━━━━━━━━┛` },
+                { text: `chatbot error: ${e.message}` },
                 { quoted: m }
             );
         }
     } catch (e) {
-        console.error("Toxic-MD ChatbotPM Error:", e);
+        console.error("toxic-md chatbotpm error:", e);
     }
 };
