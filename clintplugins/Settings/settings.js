@@ -11,48 +11,117 @@ module.exports = async (context) => {
     const bannedUsers = await getBannedUsers();
     const groupCount = Object.keys(await client.groupFetchAllParticipating()).length;
 
-    const formatStylishReply = (message) => {
-      return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
+    const formatSetting = (title, value, command, example) => {
+      return `╭─ *${title}* \n│\n│❒ Status: ${value}\n│❒ Change: \`${command}\`\n│❒ Example: \`${example}\`\n╰─\n`;
     };
 
-    const buttons = [
-      { buttonId: `${prefix}botname`, buttonText: { displayText: 'Botname 🤖' }, type: 1 },
-      { buttonId: `${prefix}prefix`, buttonText: { displayText: 'Prefix ⚙️' }, type: 1 },
-      { buttonId: `${prefix}autoread`, buttonText: { displayText: 'Autoread 👀' }, type: 1 },
-      { buttonId: `${prefix}autoview`, buttonText: { displayText: 'Autoview Status 📸' }, type: 1 },
-      { buttonId: `${prefix}autolike`, buttonText: { displayText: 'Autolike Status ❤️' }, type: 1 },
-      { buttonId: `${prefix}reaction`, buttonText: { displayText: 'React Emoji 😈' }, type: 1 },
-      { buttonId: `${prefix}setpackname`, buttonText: { displayText: 'Sticker Watermark 🖼️' }, type: 1 },
-      { buttonId: `${prefix}autobio`, buttonText: { displayText: 'Autobio 📝' }, type: 1 },
-      { buttonId: `${prefix}anticall`, buttonText: { displayText: 'Anticall 📞' }, type: 1 },
-      { buttonId: `${prefix}antidelete`, buttonText: { displayText: 'Antidelete 🗑️' }, type: 1 },
-      { buttonId: `${prefix}presence`, buttonText: { displayText: 'Presence 🌐' }, type: 1 },
-      { buttonId: `${prefix}mode`, buttonText: { displayText: 'Mode 🔒' }, type: 1 },
-      { buttonId: `${prefix}chatbotpm`, buttonText: { displayText: 'Chatbot PM 💬' }, type: 1 },
-    ];
-
-    const message = formatStylishReply(
-      `*Toxic-MD Settings* 🔥\n\n` +
-      `Botname: ${botName}\n` +
-      `Prefix: ${settings.prefix || 'None'}\n` +
-      `Antidelete: ${settings.antidelete ? '✅ ON' : '❌ OFF'}\n` +
-      `Chatbot PM: ${settings.chatbotpm ? '✅ ON' : '❌ OFF'}\n` +
-      `Sudo Users: ${sudoUsers.length > 0 ? sudoUsers.join(', ') : 'None'}\n` +
-      `Banned Users: ${bannedUsers.length}\n` +
-      `Total Groups: ${groupCount}\n\n` +
-      `Tap a button to configure a setting! 😈`
-    );
+    const message = 
+      `╭─ *TOXIC-MD SETTINGS* ─╮\n` +
+      `│\n` +
+      `│❒ Bot Name: ${botName}\n` +
+      `│❒ Sudo Users: ${sudoUsers.length || 0}\n` +
+      `│❒ Banned Users: ${bannedUsers.length || 0}\n` +
+      `│❒ Total Groups: ${groupCount || 0}\n` +
+      `│\n` +
+      `╰───────────────────────╯\n\n` +
+      
+      formatSetting(
+        'AUTOLIKE SETTING',
+        settings.autolike ? '✅ ON' : '❌ OFF',
+        `${prefix}autolike on/off`,
+        `${prefix}autolike on`
+      ) +
+      
+      formatSetting(
+        'AUTOVIEWSTATUS SETTING',
+        settings.autoview ? '✅ ON' : '❌ OFF',
+        `${prefix}autoview on/off`,
+        `${prefix}autoview off`
+      ) +
+      
+      formatSetting(
+        'AUTOREAD SETTING',
+        settings.autoread ? '✅ ON' : '❌ OFF',
+        `${prefix}autoread on/off`,
+        `${prefix}autoread on`
+      ) +
+      
+      formatSetting(
+        'REACTION EMOJI',
+        settings.autolikeemoji || 'random ❤️',
+        `${prefix}reaction <emoji>`,
+        `${prefix}reaction 🔥`
+      ) +
+      
+      formatSetting(
+        'BOT PREFIX',
+        settings.prefix || '.',
+        `${prefix}prefix <symbol>`,
+        `${prefix}prefix !`
+      ) +
+      
+      formatSetting(
+        'AUTOBIO SETTING',
+        settings.autobio ? '✅ ON' : '❌ OFF',
+        `${prefix}autobio on/off`,
+        `${prefix}autobio on`
+      ) +
+      
+      formatSetting(
+        'ANTICALL SETTING',
+        settings.anticall ? '✅ ON' : '❌ OFF',
+        `${prefix}anticall on/off`,
+        `${prefix}anticall on`
+      ) +
+      
+      formatSetting(
+        'CHATBOT PM',
+        settings.chatbotpm ? '✅ ON' : '❌ OFF',
+        `${prefix}chatbotpm on/off`,
+        `${prefix}chatbotpm on`
+      ) +
+      
+      formatSetting(
+        'BOT MODE',
+        settings.mode || 'public',
+        `${prefix}mode <public/private>`,
+        `${prefix}mode private`
+      ) +
+      
+      formatSetting(
+        'PRESENCE',
+        settings.presence || 'online',
+        `${prefix}presence <online/typing/recording>`,
+        `${prefix}presence typing`
+      ) +
+      
+      formatSetting(
+        'ANTIDELETE',
+        settings.antidelete ? '✅ ON' : '❌ OFF',
+        `${prefix}antidelete on/off`,
+        `${prefix}antidelete on`
+      ) +
+      
+      formatSetting(
+        'STICKER PACKNAME',
+        settings.packname || 'Toxic-MD',
+        `${prefix}setpackname <text>`,
+        `${prefix}setpackname YourName`
+      ) +
+      
+      `╭─ *QUICK TIPS* ─╮\n` +
+      `│❒ Use exact commands as shown\n` +
+      `│❒ No spaces in emojis: ${prefix}reaction🔥\n` +
+      `│❒ Only owner can change settings\n` +
+      `│❒ Settings save instantly\n` +
+      `╰─ *tσxιƈ-ɱԃȥ* ─╯`;
 
     await client.sendMessage(
       m.chat,
       {
-        text: message,
-        footer: '> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ',
-        buttons,
-        headerType: 1,
-        viewOnce: true,
+        text: message
       },
-      { quoted: m, ad: true }
+      { quoted: m }
     );
   });
 };
