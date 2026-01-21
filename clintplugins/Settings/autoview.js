@@ -27,7 +27,7 @@ module.exports = async (context) => {
         if (settings.autoview === newState) {
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`Autoview is already ${value.toUpperCase()}, you brainless fool! 😈 Stop wasting my time! 🖕`) },
+            { text: formatStylishReply(`Autoview Status is already ${value.toUpperCase()}, you brainless fool! 😈 Stop wasting my time! 🖕`) },
             { quoted: m, ad: true }
           );
         }
@@ -35,7 +35,7 @@ module.exports = async (context) => {
         await updateSetting('autoview', newState);
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply(`Autoview ${value.toUpperCase()}! 🔥 ${newState ? 'I’ll view every status like a king! 😈' : 'I’m done with your boring statuses. 😴'}`) },
+          { text: formatStylishReply(`Autoview Status ${value.toUpperCase()}! 🔥 ${newState ? 'I’ll view every status like a king! 😈' : 'I’m done with your boring statuses. 😴'}`) },
           { quoted: m, ad: true }
         );
       }
