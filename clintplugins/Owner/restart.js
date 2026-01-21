@@ -3,11 +3,13 @@ const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m } = context;
-        await m.reply("🔄 Toxic-MD restarting... Do not spam commands.");
+        
+        await client.sendMessage(m.chat, { react: { text: '🔄', key: m.key } });
+        await m.reply("Restarting Toxic-MD");
+        
         const { exec } = require('child_process');
-        exec('heroku restart', (error) => {
-            if (error) m.reply("Restart failed. Manual restart required.");
-        });
+        exec('heroku restart', () => {});
+        
         setTimeout(() => { process.exit(0); }, 3000);
     });
 };
