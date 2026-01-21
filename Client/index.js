@@ -61,7 +61,7 @@ function cleanupSessionFiles() {
         files.forEach(file => {
             const filePath = path.join(sessionName, file);
             const stats = fs.statSync(filePath);
-            
+
             const shouldKeep = keepFiles.some(pattern => {
                 if (pattern.endsWith('-')) return file.startsWith(pattern);
                 return file === pattern;
@@ -70,7 +70,7 @@ function cleanupSessionFiles() {
             if (!shouldKeep) {
                 const fileAge = Date.now() - stats.mtimeMs;
                 const hoursOld = fileAge / (1000 * 60 * 60);
-                
+
                 if (hoursOld > 24) {
                     fs.unlinkSync(filePath);
                     console.log(`🗑️ Cleaned up old file: ${file}`);
@@ -126,12 +126,12 @@ async function startToxic() {
       }
       return message;
     },
-    version: version,
-    browser: ["Ubuntu", "Chrome", "125"],
+    version: (await (await fetch('https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Defaults/baileys-version.json')).json()).version,
+    browser: ["Ubuntu", 'Chrome', "20.0.04"],
     logger: pino({ level: 'silent' }),
     auth: {
       creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: 'silent', stream: 'store' })),
+      keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: "silent", stream: 'store' }))
     }
   });
 
