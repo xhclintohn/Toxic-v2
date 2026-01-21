@@ -34,7 +34,7 @@ module.exports = async (context) => {
 
       await client.sendMessage(m.chat, {
         interactiveMessage: {
-          header: `🎭 Reaction Emoji Settings\n\nCurrent: ${currentText}\n\n• Use "${prefix}reaction random" for random emojis\n• Use "${prefix}reaction <emoji>" for specific emoji`,
+          header: `Status Reaction Emoji Settings\n\nCurrent: ${currentText}\n\n• Use "${prefix}reaction random" for random emojis\n• Use "${prefix}reaction <emoji>" for specific emoji`,
           footer: "Powered by Toxic-MD",
           buttons: [
             {
