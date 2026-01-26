@@ -2,18 +2,29 @@ const ownerMiddleware = require('../../utility/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
-        const { client, m } = context;
+        const { client, m, store } = context;
 
         if (!m?.chat) return;
 
-        // Avoid weird system / broadcast chats (optional but safer)
+        // Optional: skip weird chats
         if (m.chat.endsWith('@broadcast') || m.chat.endsWith('@newsletter')) {
             return m.reply('⚠️ Cannot clear this type of chat.');
         }
 
         try {
-            // Clear chat on bot session only
-            await client.chatModify({ clear: true }, m.chat);
+            // Try to provide lastMessages if you have a store (optional, but cleaner)
+            let lastMessages;
+            if (store?.chats?.[m.chat] && Array.isArray(store.chats[m.chat]) && store.chats[m.chat].length) {
+                lastMessages = store.chats[m.chat].slice(-1); // last message only
+            }
+
+            await client.chatModify(
+                {
+                    delete: true,
+                    lastMessages // can be undefined, Baileys handles it
+                },
+                m.chat
+            );
 
             await m.reply(`✅ Chat cleared on my side.\n—\nTσxιƈ-ɱԃȥ`);
         } catch (err) {
