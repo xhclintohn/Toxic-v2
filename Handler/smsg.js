@@ -17,7 +17,7 @@ const kali = readFileSync(filePath);
 
 function smsg(conn, m, store) {
   if (!m) return {};
-  let M = m.constructor;
+  let M = proto.WebMessageInfo;
 
   if (m.key) {
     m.id = m.key.id;
