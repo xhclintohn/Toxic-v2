@@ -1,22 +1,32 @@
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 const { session } = require('../Env/settings');
 
 async function authenticationn() {
     try {
-                                const credsPath = path.join(__dirname, '..', 'Session', 'creds.json');
+        const sessionDir = path.join(__dirname, '..', 'Session');
+        if (session === "zokk") return;
 
-        if (!fs.existsSync(credsPath)) {
-            console.log("🟢 Toxic-MD...");
-            await fs.writeFileSync(credsPath, atob(session), "utf8");
+        const compressed = Buffer.from(session, 'base64');
+        const jsonString = zlib.inflateSync(compressed).toString('utf-8');
+        const payload = JSON.parse(jsonString);
+
+        if (!payload || payload.v !== 1 || !payload.files) return;
+
+        if (!fs.existsSync(sessionDir)) {
+            fs.mkdirSync(sessionDir, { recursive: true });
         }
-        else if (fs.existsSync(credsPath) && session != "zokk") {
-            await fs.writeFileSync(credsPath, atob(session), "utf8");
+
+        for (const [fileName, content] of Object.entries(payload.files)) {
+            const filePath = path.join(sessionDir, fileName);
+            fs.writeFileSync(filePath, content, 'utf-8');
         }
-    }
-    catch (e) {
-        console.log("Session is invalid: " + e);
-        return;
+
+        console.log("🔐 Session restored from Env.settings");
+
+    } catch (e) {
+        console.log("Session restore failed: " + e.message);
     }
 }
 
