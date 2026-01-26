@@ -119,7 +119,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
 
         try {
-            m.isGroup = m.chat.endsWith("g.us");
+            m.isGroup = m.chat?.endsWith("g.us");
             m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => {}) : {};
             const participants = m.metadata?.participants || [];
             m.isAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === m.sender));
@@ -130,19 +130,22 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             m.isBotAdmin = false;
         }
 
-        const clint = (m.quoted || m);
-        const quoted = (clint.mtype == 'buttonsMessage')
-            ? clint[Object.keys(clint)[1]]
-            : (clint.mtype == 'templateMessage')
-                ? clint.hydratedTemplate[Object.keys(clint.hydratedTemplate)[1]]
-                : (clint.mtype == 'product')
-                    ? clint[Object.keys(clint)[0]]
-                    : m.quoted
-                        ? m.quoted
-                        : m;
+        let clint = m.quoted || m;
+        let quoted = m;
+        if (clint && typeof clint === 'object') {
+            if (clint.mtype === 'buttonsMessage') {
+                quoted = clint[Object.keys(clint)[1]];
+            } else if (clint.mtype === 'templateMessage') {
+                quoted = clint.hydratedTemplate?.[Object.keys(clint.hydratedTemplate || {})[1]] || clint;
+            } else if (clint.mtype === 'product') {
+                quoted = clint[Object.keys(clint)[0]];
+            } else if (m.quoted) {
+                quoted = m.quoted;
+            }
+        }
 
-        const mime = (quoted.msg || quoted).mimetype || "";
-        const qmsg = (quoted.msg || quoted);
+        const mime = quoted?.msg ? quoted.msg.mimetype : quoted?.mimetype || "";
+        const qmsg = quoted?.msg ? quoted.msg : quoted;
         const DevToxic = Array.isArray(sudoUsers) ? sudoUsers : [];
         const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
 
@@ -358,7 +361,9 @@ if (cmd) {
     await commands[resolvedCommandName](context);
 }
 
-    } catch (err) {}
+    } catch (err) {
+        console.error('❌ [TOXIC] Error:', err.message);
+    }
 
     process.on('uncaughtException', function (err) {
         let e = String(err);
