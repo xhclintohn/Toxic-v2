@@ -149,7 +149,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const DevToxic = Array.isArray(sudoUsers) ? sudoUsers : [];
         const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
 
-        const groupMetadata = m.isGroup ? m.metadata : "";
+        const groupMetadata = m.isGroup ? m.metadata : {};
         const participants = m.isGroup && groupMetadata ? groupMetadata.participants || [] : [];
         const isBotAdmin = m.isBotAdmin;
         const isAdmin = m.isAdmin;
@@ -167,7 +167,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             packname, generateProfilePicture, groupMetadata, toxicspeed, mycode, fetchJson, exec,
             getRandom, UploadFileUgu, TelegraPh, prefix, cmd, botname, mode, gcpresence, antitag,
             antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate,
-            getGroupAdmins: () => participants.filter(p => p.admin !== null).map(p => p.jid), pict, Tag
+            getGroupAdmins: () => [], pict, Tag
         };
 
         const bannedMessages = [
@@ -347,19 +347,19 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         }
 
         await antilink(client, m, store);
-await chatbotpm(client, m, store, chatbotpmSetting);
-await status_saver(client, m, Owner, prefix);
-await gcPresence(client, m);
-await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
+        await chatbotpm(client, m, store, chatbotpmSetting);
+        await status_saver(client, m, Owner, prefix);
+        await gcPresence(client, m);
+        await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
 
-const exemptGroup = "120363156185607326@g.us";
-if (m.chat !== exemptGroup) {
-    await antistatusmention(client, m);
-}
+        const exemptGroup = "120363156185607326@g.us";
+        if (m.chat !== exemptGroup) {
+            await antistatusmention(client, m);
+        }
 
-if (cmd) {
-    await commands[resolvedCommandName](context);
-}
+        if (cmd) {
+            await commands[resolvedCommandName](context);
+        }
 
     } catch (err) {
         console.error('❌ [TOXIC] Error:', err.message);
