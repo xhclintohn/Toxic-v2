@@ -38,9 +38,10 @@ const { getSettings, getBannedUsers, banUser } = require("../Database/config");
 const { botname } = require('../Env/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('../Handler/commandHandler');
-authenticationn();
-
 const path = require('path');
+const zlib = require('zlib');
+
+authenticationn();
 
 const sessionName = path.join(__dirname, '..', 'Session');
 
@@ -51,35 +52,56 @@ const antidelete = require('../Functions/antidelete');
 const antilink = require('../Functions/antilink');
 const antistatusmention = require('../Functions/antistatusmention');
 
-function cleanupSessionFiles() {
-    try {
-        if (!fs.existsSync(sessionName)) return;
-
-        const files = fs.readdirSync(sessionName);
-        const keepFiles = ['creds.json', 'app-state-sync-version.json', 'pre-key-', 'session-', 'sender-key-', 'app-state-sync-key-'];
-
-        files.forEach(file => {
-            const filePath = path.join(sessionName, file);
-            const stats = fs.statSync(filePath);
-
-            const shouldKeep = keepFiles.some(pattern => {
-                if (pattern.endsWith('-')) return file.startsWith(pattern);
-                return file === pattern;
-            });
-
-            if (!shouldKeep) {
-                const fileAge = Date.now() - stats.mtimeMs;
-                const hoursOld = fileAge / (1000 * 60 * 60);
-
-                if (hoursOld > 24) {
-                    fs.unlinkSync(filePath);
-                    console.log(`🗑️ Cleaned up old file: ${file}`);
-                }
-            }
-        });
-    } catch (error) {
-        console.error('❌ Session cleanup error:', error.message);
+function restoreSessionFromEnv() {
+  const sessionId = process.env.SESSION_ID;
+  if (!sessionId) return;
+  try {
+    const compressed = Buffer.from(sessionId, 'base64');
+    const jsonString = zlib.inflateSync(compressed).toString('utf-8');
+    const payload = JSON.parse(jsonString);
+    if (!payload || payload.v !== 1 || !payload.files) return;
+    if (!fs.existsSync(sessionName)) {
+      fs.mkdirSync(sessionName, { recursive: true });
     }
+    for (const [fileName, content] of Object.entries(payload.files)) {
+      const filePath = path.join(sessionName, fileName);
+      fs.writeFileSync(filePath, content, 'utf-8');
+    }
+    console.log('✅ Session files restored from SESSION_ID');
+  } catch (err) {
+    console.error('❌ Failed to restore session from SESSION_ID:', err.message);
+  }
+}
+
+function cleanupSessionFiles() {
+  try {
+    if (!fs.existsSync(sessionName)) return;
+
+    const files = fs.readdirSync(sessionName);
+    const keepFiles = ['creds.json', 'app-state-sync-version.json', 'pre-key-', 'session-', 'sender-key-', 'app-state-sync-key-'];
+
+    files.forEach(file => {
+      const filePath = path.join(sessionName, file);
+      const stats = fs.statSync(filePath);
+
+      const shouldKeep = keepFiles.some(pattern => {
+        if (pattern.endsWith('-')) return file.startsWith(pattern);
+        return file === pattern;
+      });
+
+      if (!shouldKeep) {
+        const fileAge = Date.now() - stats.mtimeMs;
+        const hoursOld = fileAge / (1000 * 60 * 60);
+
+        if (hoursOld > 24) {
+          fs.unlinkSync(filePath);
+          console.log(`🗑️ Cleaned up old file: ${file}`);
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Session cleanup error:', error.message);
+  }
 }
 
 async function startToxic() {
@@ -95,6 +117,7 @@ async function startToxic() {
   const { autobio, mode, anticall } = settingss;
   const { version } = await fetchLatestBaileysVersion();
 
+  restoreSessionFromEnv();
   const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
   const client = toxicConnect({
@@ -204,7 +227,7 @@ async function startToxic() {
     let settings = await getSettings();
     if (!settings) return;
 
-    const { autoread, autolike, autoview, presence, autolikeemoji } = settings;
+    const { autoread, autolike, autolikeemoji, autoview, presence } = settings;
 
     let mek = messages[0];
     if (!mek || !mek.key) return;
@@ -266,8 +289,8 @@ async function startToxic() {
     mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
 
     if (!mek.message) {
-        console.error('❌ [MESSAGE HANDLER] mek.message is undefined');
-        return;
+      console.error('❌ [MESSAGE HANDLER] mek.message is undefined');
+      return;
     }
 
     await antilink(client, mek, store);
@@ -490,3 +513,4 @@ fs.watchFile(file, () => {
   delete require.cache[file];
   require(file);
 });
+```0
