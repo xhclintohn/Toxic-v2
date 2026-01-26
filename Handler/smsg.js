@@ -1,14 +1,4 @@
-const {
-  default: toxicConnect,
-  useMultiFileAuthState,
-  DisconnectReason,
-  fetchLatestBaileysVersion,
-  makeInMemoryStore,
-  downloadContentFromMessage,
-  jidDecode,
-  proto,
-  getContentType,
-} = require("@whiskeysockets/baileys");
+const { getContentType } = require("@whiskeysockets/baileys");
 const { readFileSync } = require("fs");
 const path = require("path");
 
@@ -16,8 +6,8 @@ const filePath = path.resolve(__dirname, "../toxic.jpg");
 const kali = readFileSync(filePath);
 
 function smsg(conn, m, store) {
-  if (!m) return m;
-  let M = proto.WebMessageInfo;
+  if (!m) return {};
+  let M = m.constructor;
 
   if (m.key) {
     m.id = m.key.id;
@@ -27,8 +17,7 @@ function smsg(conn, m, store) {
     m.isGroup = m.chat?.endsWith("@g.us");
     m.sender = conn.decodeJid(
       (m.fromMe && conn.user?.id) ||
-      m.participant ||
-      m.key.participant ||
+      m.key?.participant ||
       m.chat ||
       ""
     );
@@ -36,14 +25,17 @@ function smsg(conn, m, store) {
   }
 
   if (m.message) {
-    m.mtype = getContentType(m.message);
+    try {
+      m.mtype = getContentType(m.message);
+    } catch {
+      m.mtype = 'unknown';
+    }
 
-    m.msg =
-      m.mtype === "viewOnceMessage"
-        ? m.message[m.mtype]
-          ? m.message[m.mtype].message[getContentType(m.message[m.mtype].message)]
-          : undefined
-        : m.message[m.mtype];
+    if (m.mtype === "viewOnceMessage" && m.message[m.mtype]) {
+      m.msg = m.message[m.mtype].message[getContentType(m.message[m.mtype].message)];
+    } else {
+      m.msg = m.message[m.mtype];
+    }
 
     m.body =
       m.message?.conversation ||
@@ -52,7 +44,6 @@ function smsg(conn, m, store) {
       (m.mtype === "listResponseMessage" && m.msg?.singleSelectReply?.selectedRowId) ||
       (m.mtype === "buttonsResponseMessage" && m.msg?.selectedButtonId) ||
       (m.mtype === "viewOnceMessage" && m.msg?.caption) ||
-      m.text ||
       "";
 
     m.text =
@@ -65,12 +56,13 @@ function smsg(conn, m, store) {
       m.msg?.title ||
       "";
 
-    let quoted = (m.quoted = m.msg?.contextInfo?.quotedMessage || null);
+    let quoted = m.msg?.contextInfo?.quotedMessage;
+    m.quoted = quoted || null;
     m.mentionedJid = m.msg?.contextInfo?.mentionedJid || [];
 
     if (m.quoted) {
       let type = getContentType(quoted);
-      m.quoted = m.quoted[type];
+      m.quoted = quoted[type];
       if (["productMessage"].includes(type)) {
         type = getContentType(m.quoted);
         m.quoted = m.quoted[type];
@@ -100,7 +92,7 @@ function smsg(conn, m, store) {
       m.getQuotedObj = m.getQuotedMessage = async () => {
         if (!m.quoted.id) return false;
         let q = await store.loadMessage(m.chat, m.quoted.id, conn);
-        return exports.smsg(conn, q, store);
+        return smsg(conn, q, store);
       };
 
       let vM = (m.quoted.fakeObj = M.fromObject({
@@ -161,7 +153,7 @@ function smsg(conn, m, store) {
     );
   };
 
-  m.copy = () => exports.smsg(conn, M.fromObject(M.toObject(m)));
+  m.copy = () => smsg(conn, M.fromObject(M.toObject(m)));
   m.copyNForward = (jid = m.chat, forceForward = false, options = {}) =>
     conn.copyNForward(jid, m, forceForward, options);
 
