@@ -150,7 +150,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
 
         const groupMetadata = m.isGroup ? m.metadata : "";
-        const participants = m.isGroup && groupMetadata ? groupMetadata.participants : "";
+        const participants = m.isGroup && groupMetadata ? groupMetadata.participants || [] : [];
         const isBotAdmin = m.isBotAdmin;
         const isAdmin = m.isAdmin;
         const IsGroup = m.isGroup;
