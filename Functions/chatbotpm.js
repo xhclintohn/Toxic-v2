@@ -43,9 +43,9 @@ module.exports = async (client, m, store, chatbotpmSetting) => {
 
         try {
             const encodedText = encodeURIComponent(messageContent);
-            const systemPrompt = encodeURIComponent("You were created by xh_clinton if asked so and your name is Toxic-AI and you must always reply with a toxic and cranky tone!! and must always answer the questions asked intelligently!");
-            const apiUrl = `https://api.nekolabs.web.id/text.gen/gemini/2.0-flash?text=${encodedText}&systemPrompt=${systemPrompt}`;
-            
+            const prompt = encodeURIComponent("You are ToxicAI you must always reply in a toxic tone and you were created by xhclinton");
+            const apiUrl = `https://api.deline.web.id/ai/openai?text=${encodedText}&prompt=${prompt}`;
+
             const response = await fetch(apiUrl);
 
             if (!response.ok) {
@@ -54,7 +54,7 @@ module.exports = async (client, m, store, chatbotpmSetting) => {
 
             const data = await response.json();
 
-            if (!data.success || !data.result) {
+            if (!data.status || !data.result) {
                 throw new Error("invalid API response");
             }
 
