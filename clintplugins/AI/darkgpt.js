@@ -21,7 +21,7 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        await m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ ${answer}\n│❒ tσxιƈ-ɱԃȥ\n◈━━━━━━━━━━━━━━━◈`);
+        await m.reply(`◈\n│❒ ${answer}\n│❒ 😈\n◈`);
 
     } catch (error) {
         console.error("wormgpt error:", error);
