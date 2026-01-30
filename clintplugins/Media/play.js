@@ -13,18 +13,18 @@ module.exports = {
 
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-      const response = await fetch(`https://api.ootaizumi.web.id/downloader/spotifyplay?query=${encodeURIComponent(query)}`);
+      const response = await fetch(`https://apiziaul.vercel.app/api/downloader/ytplaymp3?query=${encodeURIComponent(query)}`);
       const data = await response.json();
 
-      if (!data.status || !data.result?.download) {
+      if (!data.status || !data.result?.downloadUrl) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return m.reply(`No song found for "${query}". Your music taste is as bad as your search skills.`);
       }
 
       const song = data.result;
-      const audioUrl = song.download;
+      const audioUrl = song.downloadUrl;
       const filename = song.title || "Unknown Song";
-      const artist = song.artists || "Unknown Artist";
+      const artist = "Unknown Artist";
 
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
@@ -36,8 +36,8 @@ module.exports = {
           externalAdReply: {
             title: filename.substring(0, 30),
             body: artist.substring(0, 30),
-            thumbnailUrl: song.image || "",
-            sourceUrl: song.external_url || "",
+            thumbnailUrl: song.thumbnail || "",
+            sourceUrl: song.videoUrl || "",
             mediaType: 1,
             renderLargerThumbnail: true,
           },
@@ -48,13 +48,13 @@ module.exports = {
         document: { url: audioUrl },
         mimetype: "audio/mpeg",
         fileName: `${filename.replace(/[<>:"/\\|?*]/g, '_')}.mp3`,
-        caption: `🎵 ${filename} - ${artist}\n—\nTσxιƈ-ɱԃȥ`
+        caption: `🎵 ${filename}\n—\nTσxιƈ-ɱԃȥ`
       }, { quoted: m });
 
     } catch (error) {
       console.error('Spotify error:', error);
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-      await m.reply(`Spotify download failed. The universe rejects your music taste.\nError: ${error.message}`);
+      await m.reply(` Play failed. The universe rejects your music taste.\nError: ${error.message}`);
     }
   }
 };
