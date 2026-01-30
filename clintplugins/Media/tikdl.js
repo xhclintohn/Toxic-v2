@@ -10,27 +10,30 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         const encodedUrl = encodeURIComponent(text);
-        const response = await fetch(`https://api.nekolabs.web.id/downloader/tiktok?url=${encodedUrl}`);
+        const response = await fetch(`https://api.gimita.id/api/downloader/tiktok?url=${encodedUrl}`, {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo4LCJ1c2VybmFtZSI6InhoX2NsaW50b24iLCJyb2xlIjoidXNlciIsInN1YnNjcmlwdGlvbl90aWVyIjoiZnJlZSIsImlzcyI6ImdpbWl0YS1hcGkiLCJleHAiOjE3Njk2ODY2NTIsImlhdCI6MTc2OTY4NTc1Mn0.OgVHy66TFuGO_sh3UlKBXAg_NegR-_w3_0rWrJ275Cw"
+            }
+        });
         const data = await response.json();
 
-        if (!data?.success || !data?.result?.videoUrl) {
+        if (!data?.success || !data?.data?.video) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply("failed to download that garbage tiktok! either the link is dead or your taste in content is so bad even the api rejected it.");
         }
 
-        const videoUrl = data.result.videoUrl;
-        const musicUrl = data.result.musicUrl;
-        const username = data.result.author?.username || "unknown";
-        const authorName = data.result.author?.name || "unknown";
-        const stats = data.result.stats || {};
-        const musicInfo = data.result.music_info || {};
+        const videoUrl = data.data.video.hd || data.data.video.sd;
+        const musicUrl = data.data.audio?.url;
+        const username = data.data.author?.name || "unknown";
+        const stats = data.data.stats || {};
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
         const videoResponse = await fetch(videoUrl);
         const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
 
-        const caption = `◈━━━━━━━━━━━━━━━◈\n│❒ tiktok download ✅\n│❒ author: ${authorName}\n│❒ username: ${username}\n│❒ views: ${stats.play || "0"}\n│❒ likes: ${stats.like || "0"}\n│❒ comments: ${stats.comment || "0"}\n│❒ shares: ${stats.share || "0"}\n│❒ music: ${musicInfo.title || "none"}\n│❒ artist: ${musicInfo.author || "none"}\n│❒ tσxιƈ-ɱԃȥ\n◈━━━━━━━━━━━━━━━◈`;
+        const caption = `◈━━━━━━━━━━━━━━━◈\n│❒ tiktok download ✅\n│❒ author: ${username}\n│❒ views: ${stats.views || "0"}\n│❒ likes: ${stats.likes || "0"}\n│❒ comments: ${stats.comments || "0"}\n│❒ tσxιƈ-ɱԃȥ\n◈━━━━━━━━━━━━━━━◈`;
 
         await client.sendMessage(m.chat, {
             video: videoBuffer,
@@ -47,7 +50,7 @@ module.exports = async (context) => {
                     audio: musicBuffer,
                     mimetype: "audio/mpeg",
                     ptt: false,
-                    fileName: `${musicInfo.title || 'tiktok_audio'}.mp3`
+                    fileName: `tiktok_audio.mp3`
                 });
             } catch (audioError) {
                 console.log("audio extraction failed:", audioError.message);
