@@ -9,11 +9,11 @@ module.exports = async (context) => {
 
   try {
     const encodedText = encodeURIComponent(text);
-    const apiUrl = `https://api.nekolabs.web.id/discovery/lyrics/search?q=${encodedText}`;
+    const apiUrl = `https://api.deline.web.id/tools/lyrics?title=${encodedText}`;
     const response = await fetch(apiUrl);
     const data = await response.json();
 
-    if (!data.success || !data.result || data.result.length === 0) {
+    if (!data.status || !data.result || data.result.length === 0) {
       return m.reply(`NO LYRICS FOUND FOR "${text}" 🤡 MAYBE THE SONG SUCKS`);
     }
 
