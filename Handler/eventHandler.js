@@ -1,4 +1,4 @@
-const { getGroupSetting, getSudoUsers } = require("../Database/config");
+const { getGroupSettings, getSudoUsers } = require("../Database/config");
 
 const Events = async (client, event, pict) => {
     const botJid = await client.decodeJid(client.user.id);
@@ -7,7 +7,7 @@ const Events = async (client, event, pict) => {
         const metadata = await client.groupMetadata(event.id);
         const participants = event.participants;
         const desc = metadata.desc || "Some boring group, I guess.";
-        const groupSettings = await getGroupSetting(event.id);
+        const groupSettings = await getGroupSettings(event.id);
         const eventsEnabled = groupSettings?.events === true;
         const antidemote = groupSettings?.antidemote === true;
         const antipromote = groupSettings?.antipromote === true;
@@ -21,7 +21,7 @@ const Events = async (client, event, pict) => {
             try {
                 dpUrl = await client.profilePictureUrl(participant, "image");
             } catch {
-                dpUrl = pict; // Fallback to default pic if user has no DP
+                dpUrl = pict;
             }
 
             if (eventsEnabled && event.action === "add") {
@@ -44,7 +44,6 @@ const Events = async (client, event, pict) => {
                         mentions: [participant]
                     });
                 } catch {
-                    // Keep it chill, no error spam
                 }
             } else if (eventsEnabled && event.action === "remove") {
                 try {
@@ -65,7 +64,6 @@ const Events = async (client, event, pict) => {
                         mentions: [participant]
                     });
                 } catch {
-                    // No whining about errors
                 }
             }
 
@@ -105,7 +103,6 @@ const Events = async (client, event, pict) => {
                         mentions: [event.author, participant]
                     });
                 } catch {
-                    // Errors? Pfft, we don’t care
                 }
             } else if (event.action === "promote" && antipromote) {
                 try {
@@ -142,7 +139,6 @@ const Events = async (client, event, pict) => {
                         mentions: [event.author, participant]
                     });
                 } catch {
-                    // Errors are for the weak
                 }
             }
         }
@@ -158,7 +154,6 @@ const Events = async (client, event, pict) => {
 ╰───「 🔥 Powered by T𝐨𝐱𝐢c-M𝐃 🔥 」`
             });
         } catch {
-            // If this fails, we’re just cursed
         }
     }
 };
