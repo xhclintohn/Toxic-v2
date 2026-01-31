@@ -14,10 +14,6 @@ return (isUpperCase ? text.toUpperCase() : text.toLowerCase())
 .join('');
 };
 
-if (text) {
-return client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, ${m.pushName}, what’s with the extra garbage? Just say !repo, you idiot.` }, { quoted: m });
-}
-
 try {
 const repoUrl = 'https://api.github.com/repos/xhclintohn/Toxic-MD';
 const response = await fetch(repoUrl);
@@ -39,14 +35,16 @@ const repoInfo = {
 const createdDate = new Date(repoInfo.createdAt).toLocaleDateString('en-GB');  
 const lastUpdateDate = new Date(repoInfo.lastUpdate).toLocaleDateString('en-GB');  
 
-const replyText = `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botname} Repo*\n\n` +  
-                 `🌟 *Sƚαɾʂ*: ${repoInfo.stars} (y’all better star)\n` +  
-                 `🔗 *Fσɾƙʂ*: ${repoInfo.forks} (do fork)\n` +  
-                 `📅 *Cɾҽαƚҽԃ*: ${createdDate} (born to rule)\n` +  
-                 `🕒 *Lαʂƚ Uρԃαƚҽԃ*: ${lastUpdateDate} (still fresh)\n` +  
-                 `👤 *Oɯɳҽɾ*: ${repoInfo.owner} (that’s me)\n` +  
-                 `🔍 *Vιʂιƚ*: ${repoInfo.htmlUrl} (check the repo)\n\n` +  
-                 `│❒ Wanna know the genius behind this? Hit the button below!`;  
+const replyText = `*『 𝚃𝙾𝚇𝙸𝙲-MD 』*
+
+╭───(    \`𝚂𝚢𝚜𝚝𝚎𝚖 𝙸𝚗𝚏𝚘\`    )───
+> ───≫ 🔗 𝚁𝙴𝙿𝙾𝚂𝙸𝚃𝙾𝚁𝚈 ≫ <<───
+> \`々\` 𝐒𝐭𝐚𝐫𝐬 : ${repoInfo.stars}
+> \`々\` 𝐅𝐨𝐫𝐤𝐬 : ${repoInfo.forks}
+> \`々\` 𝐂𝐫𝐞𝐚𝐭𝐞𝐝 : ${createdDate}
+> \`々\` 𝐋𝐚𝐬𝐭 𝐔𝐩𝐝𝐚𝐭𝐞 : ${lastUpdateDate}
+> \`々\` 𝐎𝐰𝐧𝐞𝐫 : ${repoInfo.owner}
+╰──────────────────☉`;
 
 await client.sendMessage(m.chat, {  
   text: replyText,  
@@ -60,7 +58,7 @@ await client.sendMessage(m.chat, {
     externalAdReply: {  
       showAdAttribution: false,  
       title: `${botname}`,  
-      body: `Yo! Don’t fuck this up.`,  
+      body: `Don't fuck this up.`,  
       sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,  
       mediaType: 1,  
       renderLargerThumbnail: true  
@@ -70,6 +68,8 @@ await client.sendMessage(m.chat, {
 
 } catch (error) {
 console.error('Error in repo command:', error);
-await client.sendMessage(m.chat, { text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Couldn’t grab repo info, something’s fucked up. Check it yourself: https://github.com/xhclintohn/Toxic-MD` }, { quoted: m });
+await client.sendMessage(m.chat, { 
+    text: `*『 𝚃𝙾𝚇𝙸𝙲-MD 』*\n\n╭───( \`𝙴𝚛𝚛𝚘𝚛\` )───\n> \`»\` Couldn't fetch repo data\n> \`»\` ${error.message}\n╰──────────────────☉`
+}, { quoted: m });
 }
 };
