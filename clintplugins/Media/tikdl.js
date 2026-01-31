@@ -33,7 +33,15 @@ module.exports = async (context) => {
         const videoResponse = await fetch(videoUrl);
         const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
 
-        const caption = `◈━━━━━━━━━━━━━━━◈\n│❒ tiktok download ✅\n│❒ author: ${username}\n│❒ views: ${stats.views || "0"}\n│❒ likes: ${stats.likes || "0"}\n│❒ comments: ${stats.comments || "0"}\n│❒ tσxιƈ-ɱԃȥ\n◈━━━━━━━━━━━━━━━◈`;
+        const caption = `*『 𝚃𝙾𝚇𝙸𝙲-MD 』*
+
+╭───(    \`𝚂𝚢𝚜𝚝𝚎𝚖 𝙸𝚗𝚏𝚘\`    )───
+> ───≫ 🔗 𝚃𝙸𝙺𝚃𝙾𝙺 𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝚁 ≫ <<───
+> \`々\` 𝐀𝐮𝐭𝐡𝐨𝐫 : ${username}
+> \`々\` 𝐕𝐢𝐞𝐰𝐬 : ${stats.views || "0"}
+> \`々\` 𝐋𝐢𝐤𝐞𝐬 : ${stats.likes || "0"}
+> \`々\� 𝐂𝐨𝐦𝐦𝐞𝐧𝐭𝐬 : ${stats.comments || "0"}
+╰──────────────────☉`;
 
         await client.sendMessage(m.chat, {
             video: videoBuffer,
@@ -60,6 +68,12 @@ module.exports = async (context) => {
     } catch (error) {
         console.error("tiktok error:", error);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        await m.reply(`the fuck? tiktok download crashed harder than your iq.\nerror: ${error.message}\ntry again or go touch grass.`);
+        await m.reply(`*『 𝚃𝙾𝚇𝙸𝙲-MD 』*
+
+╭───(    \`𝙴𝚛𝚛𝚘𝚛\`    )───
+> ───≫ 🔗 𝚃𝙸𝙺𝚃𝙾𝙺 𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳 ≫ <<───
+> \`々\` 𝐄𝐫𝐫𝐨𝐫 : ${error.message}
+> \`々\` 𝐅𝐢𝐱 : Try again later
+╰──────────────────☉`);
     }
 };
