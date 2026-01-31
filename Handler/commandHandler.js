@@ -120,6 +120,7 @@ const aliases = {
     search: "yts",
     youtubesearch: "yts",
     xd: "retrieve",
+    vid: "alldl",
     reset: "revoke",
     mute: "close",
     app: "apk",
