@@ -39,6 +39,11 @@ const replyText = `*『 𝚃𝙾𝚇𝙸𝙲-MD 』*
 
 ╭───(    \`𝚂𝚢𝚜𝚝𝚎𝚖 𝙸𝚗𝚏𝚘\`    )───
 > ───≫ 🔗 𝚁𝙴𝙿𝙾𝚂𝙸𝚃𝙾𝚁𝚈 ≫ <<───
+
+            Link 👇🏻
+            
+ [https://github.com/xhclintohn/Toxic-MD]
+
 > \`々\` 𝐒𝐭𝐚𝐫𝐬 : ${repoInfo.stars}
 > \`々\` 𝐅𝐨𝐫𝐤𝐬 : ${repoInfo.forks}
 > \`々\` 𝐂𝐫𝐞𝐚𝐭𝐞𝐝 : ${createdDate}
@@ -50,7 +55,7 @@ await client.sendMessage(m.chat, {
   text: replyText,  
   footer: `Pσɯҽɾҽԃ Ⴆყ ${botname}`,  
   buttons: [  
-    { buttonId: `${prefix}dev`, buttonText: { displayText: `👤 ${toFancyFont('DEV')}` }, type: 1 }  
+    { buttonId: `${prefix}dev`, buttonText: { displayText: `👤 ${toFancyFont('DEVELOPER')}` }, type: 1 }  
   ],  
   headerType: 1,  
   viewOnce: true,  
