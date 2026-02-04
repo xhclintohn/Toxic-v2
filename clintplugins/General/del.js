@@ -12,10 +12,13 @@ module.exports = {
       let deleteKey = null;
       let quotedSender = null;
 
-      if (m.quoted && m.quoted.key) {
+      // Check if there's a quoted message
+      const hasQuotedMsg = m.quoted !== null && m.quoted !== undefined;
+      
+      if (hasQuotedMsg) {
         deleteKey = {
           remoteJid: m.quoted.key.remoteJid || m.key.remoteJid,
-          fromMe: m.quoted.fromMe,
+          fromMe: m.quoted.fromMe || false,
           id: m.quoted.key.id,
           participant: m.quoted.key.participant || m.quoted.sender
         };
@@ -30,7 +33,7 @@ module.exports = {
         const groupMetadata = await client.groupMetadata(m.key.remoteJid);
         const botJid = client.user.id.split(':')[0] + '@s.whatsapp.net';
         const groupAdmins = groupMetadata.participants.filter(p => p.admin != null).map(p => p.id);
-        
+
         const isBotAdmin = groupAdmins.includes(botJid);
         const isUserAdmin = groupAdmins.includes(m.sender);
 
