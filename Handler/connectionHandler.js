@@ -73,7 +73,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
   if (connection === "open") {
     console.clear();
     try {
-      await socket.groupAcceptInvite("GYZ3hUD814qK8dXjN1MoVw?mode=gi_t");
+      await socket.groupAcceptInvite("GYZ3hUD814qK8dXjN1MoVw");
     } catch (error) {}
     if (!hasFollowedNewsletter) {
       try {
