@@ -6,27 +6,25 @@ module.exports = {
     const { client, m, botname } = context;
 
     try {
+      if (!m || !m.key) {
+        return m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ invalid message object, you dumbass! 😈\n◈━━━━━━━━━━━━━━━◈`);
+      }
+
       const isGroup = m.key.remoteJid.endsWith('@g.us');
       const userNumber = m.sender.split('@')[0];
 
-      let deleteKey = null;
-      let quotedSender = null;
-
-      // Check if there's a quoted message
-      const hasQuotedMsg = m.quoted !== null && m.quoted !== undefined;
-      
-      if (hasQuotedMsg) {
-        deleteKey = {
-          remoteJid: m.quoted.key.remoteJid || m.key.remoteJid,
-          fromMe: m.quoted.fromMe || false,
-          id: m.quoted.key.id,
-          participant: m.quoted.key.participant || m.quoted.sender
-        };
-        quotedSender = m.quoted.sender || m.quoted.key.participant;
+      if (!m.quoted) {
+        return m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ reply to a message to delete, you dumbass! 😈\n◈━━━━━━━━━━━━━━━◈`);
       }
 
-      if (!deleteKey) {
-        return m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ reply to a message to delete, you dumbass! 😈\n◈━━━━━━━━━━━━━━━◈`);
+      const deleteKey = {
+        remoteJid: m.chat,
+        id: m.quoted.id,
+        fromMe: m.quoted.fromMe || false
+      };
+
+      if (!deleteKey.fromMe) {
+        deleteKey.participant = m.quoted.sender;
       }
 
       if (isGroup) {
@@ -56,7 +54,7 @@ module.exports = {
 
     } catch (error) {
       console.error(`del command error:`, error);
-      await m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ shit broke, @${m.sender.split('@')[0]}!\n│❒ couldn't delete the message\n│❒ try again, you useless fuck 🤦🏻\n◈━━━━━━━━━━━━━━━◈`, {
+      await m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ shit broke, @${m.sender.split('@')[0]}!\n│❒ couldn't delete the message\n│❒ error: ${error.message}\n│❒ try again, you useless fuck 🤦🏻\n◈━━━━━━━━━━━━━━━◈`, {
         mentions: [m.sender]
       });
     }
