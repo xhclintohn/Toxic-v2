@@ -1,58 +1,45 @@
 const middleware = require('../../utility/botUtil/middleware');
+const { botname } = require('../../Env/settings');
 
-module.exports = async (context) => {
-  await middleware(context, async () => {
-    const { client, m, botNumber } = context;
+module.exports = {
+  name: 'remove',
+  aliases: ['kick', 'yeet', 'boot', 'removemember'],
+  description: 'Removes a user from a group',
+  run: async (context) => {
+    await middleware(context, async () => {
+      const { client, m, botNumber, prefix } = context;
+      const bName = botname || 'Toxic-MD';
 
-    // Log message context for debugging
-    console.log(`Kick command context: isGroup=${m.isGroup}, mentionedJid=${JSON.stringify(m.mentionedJid)}, quotedSender=${m.quoted?.sender || 'none'}`);
+      if (!m.quoted && (!m.mentionedJid || m.mentionedJid.length === 0)) {
+        return m.reply(`*${bName} Rᴇᴍᴏᴠᴇ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Usᴀɢᴇ ≪───\n> \`々\` Mention or quote a user.\n> \`々\` Example: ${prefix}kick @user\n> \`々\` Don't make me guess, idiot.\n╰──────────────────☉`);
+      }
 
-    // Check if a user is mentioned or quoted
-    if (!m.quoted && (!m.mentionedJid || m.mentionedJid.length === 0)) {
-      return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, dumbass, mention a user or quote their message! Don’t make me guess.`);
-    }
+      const users = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null);
+      if (!users) {
+        return m.reply(`*${bName} Rᴇᴍᴏᴠᴇ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Iɴᴠᴀʟɪᴅ ≪───\n> \`々\` No valid user found.\n> \`々\` Tag or quote someone.\n╰──────────────────☉`);
+      }
 
-    // Get the target user (mentioned or quoted)
-    const users = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null);
-    if (!users) {
-      console.error(`No valid user found: mentionedJid=${JSON.stringify(m.mentionedJid)}, quotedSender=${m.quoted?.sender || 'none'}`);
-      return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ What the hell? No user found. Tag or quote someone, idiot.`);
-    }
+      if (typeof users !== 'string' || (!users.includes('@s.whatsapp.net') && !users.includes('@lid'))) {
+        return m.reply(`*${bName} Rᴇᴍᴏᴠᴇ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Iɴᴠᴀʟɪᴅ ≪───\n> \`々\` Invalid user format.\n> \`々\` Tag a valid user.\n╰──────────────────☉`);
+      }
 
-    // Validate JID format
-    if (
-      typeof users !== 'string' ||
-      (!users.includes('@s.whatsapp.net') && !users.includes('@lid'))
-    ) {
-      console.error(`Invalid JID format: ${users}`);
-      return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Invalid user format. Tag a valid user, you moron.`);
-    }
+      const parts = users.split('@')[0];
 
-    // Extract phone number part from JID
-    const parts = users.split('@')[0];
-    if (!parts) {
-      console.error(`Failed to extract number from JID: ${users}`);
-      return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Something’s fucked up with that user’s ID. Try again, idiot.`);
-    }
+      const botJid = await client.decodeJid(client.user.id);
+      if (users === botNumber || users === botJid || users.split('@')[0] === botJid.split('@')[0]) {
+        return m.reply(`*${bName} Rᴇᴍᴏᴠᴇ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Nɪᴄᴇ Tʀʏ ≪───\n> \`々\` You can't kick me, loser.\n> \`々\` I'm the boss here.\n╰──────────────────☉`);
+      }
 
-    // Prevent kicking the bot itself
-    if (users === botNumber) {
-      return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Nice try, loser, you can’t kick me! I’m the boss here. 🦄`);
-    }
-
-    try {
-      // Attempt to remove the user from the group
-      await client.groupParticipantsUpdate(m.chat, [users], 'remove');
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n│❒ @${parts} got yeeted from the group! Good riddance, trash. 🚫`,
-        { mentions: [users] }
-      );
-    } catch (error) {
-      console.error(`Error in kick command: ${error.stack}`);
-      await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n│❒ Shit went wrong, couldn’t kick @${parts}. Maybe I’m not admin? Fix it, moron.`,
-        { mentions: [users] }
-      );
-    }
-  });
+      try {
+        await client.groupParticipantsUpdate(m.chat, [users], 'remove');
+        await m.reply(`*${bName} Rᴇᴍᴏᴠᴇ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Kɪᴄᴋᴇᴅ ≪───\n> \`々\` @${parts} got yeeted out.\n> \`々\` Good riddance, trash.\n╰──────────────────☉`, {
+          mentions: [users]
+        });
+      } catch (error) {
+        await m.reply(`*${bName} Rᴇᴍᴏᴠᴇ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Fᴀɪʟᴇᴅ ≪───\n> \`々\` Couldn't kick @${parts}.\n> \`々\` Am I even admin here?\n╰──────────────────☉`, {
+          mentions: [users]
+        });
+      }
+    });
+  }
 };

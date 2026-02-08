@@ -1,99 +1,60 @@
 const fs = require('fs');
 const path = require('path');
+const { botname } = require('../../Env/settings');
 
-module.exports = async (context) => {
-    const { client, m, prefix, pict, botname } = context;
-
-    if (!botname) {
-        console.error(`Botname not set, you useless fuck.`);
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ Bot's fucked. No botname in context. Yell at your dev, dipshit.\n◈━━━━━━━━━━━━━━━━◈`);
-    }
-
-    if (!pict) {
-        console.error(`Pict not set, you brain-dead moron.`);
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ No image to send, you idiot. Fix your shitty context.\n◈━━━━━━━━━━━━━━━━◈`);
-    }
+module.exports = {
+  name: 'alive',
+  aliases: ['bot', 'test', 'isalive', 'status'],
+  description: 'Checks if the bot is alive and running',
+  run: async (context) => {
+    const { client, m, prefix, pict } = context;
+    const bName = botname || 'Toxic-MD';
 
     try {
-        const caption = `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo ${m.pushName}, *${botname}* is alive and ready to fuck shit up! 🖕\n│❒ \n│❒ Type *${prefix}menu* to see what I can do, you pathetic loser.\n◈━━━━━━━━━━━━━━━━◈\n│❒ Powered by *xh_clinton*, 'cause you're too dumb to code`;
+      const uptime = process.uptime();
+      const days = Math.floor(uptime / 86400);
+      const hours = Math.floor((uptime % 86400) / 3600);
+      const mins = Math.floor((uptime % 3600) / 60);
+      const secs = Math.floor(uptime % 60);
+      const uptimeStr = `${days}d ${hours}h ${mins}m ${secs}s`;
 
-        // Handle pict (image) input
-        let imageOptions;
-        if (Buffer.isBuffer(pict)) {
-            console.log(`[ALIVE-DEBUG] pict is a Buffer, saving to temp file`);
-            const tempImagePath = path.join(__dirname, 'temp_alive_image.jpg');
-            try {
-                fs.writeFileSync(tempImagePath, pict);
-                imageOptions = { url: tempImagePath };
-            } catch (err) {
-                console.error(`[ALIVE-ERROR] Failed to save temp image: ${err.stack}`);
-                throw new Error(`Couldn’t process your shitty image buffer, dipshit: ${err.message}`);
-            }
-        } else if (typeof pict === 'string') {
-            console.log(`[ALIVE-DEBUG] pict is a string: ${pict}`);
-            // Validate if pict is a valid URL or file path
-            if (pict.startsWith('http://') || pict.startsWith('https://') || fs.existsSync(pict)) {
-                imageOptions = { url: pict };
-            } else {
-                throw new Error(`Invalid pict path or URL: ${pict}`);
-            }
-        } else {
-            throw new Error(`pict is some weird-ass type: ${typeof pict}`);
-        }
+      const caption = `*${bName} Aʟɪᴠᴇ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ I'ᴍ Aʟɪᴠᴇ ≪───\n> \`々\` Yo ${m.pushName}, I'm up and running.\n> \`々\` Been alive for ${uptimeStr}.\n> \`々\` Type *${prefix}menu* if you need\n> \`々\` help, which you probably do.\n> \`々\` Powered by xh_clinton.\n╰──────────────────☉`;
 
-        // Send the image with toxic caption
+      if (pict && Buffer.isBuffer(pict)) {
         await client.sendMessage(m.chat, {
-            image: imageOptions,
-            caption: caption,
-            mentions: [m.sender]
+          image: pict,
+          caption: caption,
+          mentions: [m.sender]
         }, { quoted: m });
+      } else {
+        await client.sendMessage(m.chat, {
+          text: caption,
+          mentions: [m.sender]
+        }, { quoted: m });
+      }
 
-        // Clean up temp image if created
-        if (imageOptions.url.startsWith(__dirname)) {
-            try {
-                fs.unlinkSync(imageOptions.url);
-                console.log(`[ALIVE-DEBUG] Cleaned up temp image: ${imageOptions.url}`);
-            } catch (err) {
-                console.error(`[ALIVE-ERROR] Failed to clean up temp image: ${err.stack}`);
-            }
-        }
+      const possibleAudioPaths = [
+        path.join(__dirname, '..', 'xh_clinton', 'test.mp3'),
+        path.join(process.cwd(), 'xh_clinton', 'test.mp3'),
+        path.join(__dirname, 'xh_clinton', 'test.mp3'),
+      ];
 
-        // Audio file paths with extra toxicity
-        const possibleAudioPaths = [
-            path.join(__dirname, 'xh_clinton', 'test.mp3'),
-            path.join(process.cwd(), 'xh_clinton', 'test.mp3'),
-            path.join(__dirname, '..', 'xh_clinton', 'test.mp3'),
-        ];
-
-        let audioFound = false;
-        for (const audioPath of possibleAudioPaths) {
-            console.log(`[ALIVE-DEBUG] Checking audio path: ${audioPath}`);
-            try {
-                if (fs.existsSync(audioPath)) {
-                    await client.sendMessage(m.chat, {
-                        audio: { url: audioPath },
-                        ptt: true,
-                        mimetype: 'audio/mpeg',
-                        fileName: 'fuck-you.mp3'
-                    }, { quoted: m });
-                    audioFound = true;
-                    console.log(`[ALIVE-DEBUG] Sent audio from: ${audioPath}`);
-                    break;
-                } else {
-                    console.log(`[ALIVE-DEBUG] Audio not found at: ${audioPath}`);
-                }
-            } catch (err) {
-                console.error(`[ALIVE-ERROR] Failed to send audio from ${audioPath}: ${err.stack}`);
-            }
-        }
-
-        if (!audioFound) {
-            console.error('❌ Audio file not found at any path, you incompetent dev');
-            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ FUCK! ${m.pushName}, couldn't find the voice note.\n│❒ Check xh_clinton/test.mp3, you worthless piece of shit.\n◈━━━━━━━━━━━━━━━━◈`);
-        }
+      for (const audioPath of possibleAudioPaths) {
+        try {
+          if (fs.existsSync(audioPath)) {
+            await client.sendMessage(m.chat, {
+              audio: { url: audioPath },
+              ptt: true,
+              mimetype: 'audio/mpeg',
+              fileName: 'toxic-alive.mp3'
+            }, { quoted: m });
+            break;
+          }
+        } catch (err) {}
+      }
 
     } catch (error) {
-        console.error(`[ALIVE-ERROR] ALIVE COMMAND CRASHED LIKE YOUR LIFE: ${error.stack}`);
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│❒ SHIT BROKE, ${m.pushName}!\n│❒ Error: ${error.message}\n│❒ Try again when you grow a brain, loser.\n◈━━━━━━━━━━━━━━━━◈`);
+      await m.reply(`*${bName} Eʀʀᴏʀ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Cʀᴀsʜᴇᴅ ≪───\n> \`々\` Something broke, ${m.pushName}.\n> \`々\` Error: ${error.message}\n> \`々\` Try again when I feel like it.\n╰──────────────────☉`);
     }
+  }
 };

@@ -13,7 +13,7 @@ if (!text.includes('whatsapp.com/channel')) {
         return m.reply(`Doesnt look like a WhatsApp channel link, uh?`);
     }
 
-const response = await fetch(`https://itzpire.com/stalk/whatsapp-channel?url=${text}`);
+const response = await fetch(`https:
 
 const data = await response.json()
 

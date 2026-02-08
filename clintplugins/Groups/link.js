@@ -7,9 +7,9 @@ module.exports = async (context) => {
         try {
             let response = await client.groupInviteCode(m.chat); 
             await client.sendText(m.chat, 
-`◈━━━━━━━━━━━━━━━━◈
-│❒ *GROUP LINK* ❒
-◈━━━━━━━━━━━━━━━━◈
+`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
+> 々 *GROUP LINK* ❒
+╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
             
 https://chat.whatsapp.com/${response}
 
@@ -20,9 +20,9 @@ https://chat.whatsapp.com/${response}
         } catch (error) {
             console.error('Error generating group link:', error);
             await client.sendText(m.chat, 
-`◈━━━━━━━━━━━━━━━━◈
-│❒ *ERROR* ❒
-◈━━━━━━━━━━━━━━━━◈
+`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
+> 々 *ERROR* ❒
+╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
 
 ❌ Failed to generate group link.
 Please try again later.`, 

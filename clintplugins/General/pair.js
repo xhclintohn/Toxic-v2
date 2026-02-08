@@ -66,7 +66,7 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, {
             text: `✅ *Pairing code for \( {number}:*\n\n> * \){code}*\n\n` +
                   `Copy the code above and use it in your pairing site/app.\n\n` +
-                  `◈━━━━━━━━━━━◈\n` +
+                  `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
                   `SESSION CONNECTED\n\n` +
                   `The code above is your pairing code. Use it to connect your bot!\n\n` +
                   `Need help? Contact:\n` +
@@ -76,7 +76,7 @@ module.exports = async (context) => {
                   `> Instagram: https://www.instagram.com/xh_clinton\n` +
                   `> Repo: https://github.com/xhclintohn/Toxic-MD\n\n` +
                   `Don't forget to ⭐ the repo!\n` +
-                  `◈━━━━━━━━━━━◈`
+                  `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`
         }, { quoted: m });
 
         await Toxic_MD_Client.ws.close();

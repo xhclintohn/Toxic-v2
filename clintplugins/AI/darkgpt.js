@@ -4,7 +4,7 @@ module.exports = async (context) => {
     const { client, m, text, prefix } = context;
 
     if (!text) {
-        return m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ wormgpt - uncensored ai\n│❒ example: ${prefix}wormgpt how to hack a website?\n◈━━━━━━━━━━━━━━━◈`);
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 wormgpt - uncensored ai\n> 々 example: ${prefix}wormgpt how to hack a website?\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
     }
 
     try {
@@ -21,7 +21,7 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        await m.reply(`◈\n│❒ ${answer}\n│❒ 😈\n◈`);
+        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${answer}\n> 々 😈\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
 
     } catch (error) {
         console.error("wormgpt error:", error);
@@ -40,6 +40,6 @@ module.exports = async (context) => {
             errorMessage = error.message;
         }
 
-        await m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ ${errorMessage}\n│❒ tσxιƈ-ɱԃȥ\n◈━━━━━━━━━━━━━━━◈`);
+        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${errorMessage}\n> 々 𝐓𝐨𝐱𝐢𝐜-𝐌D\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
     }
 };

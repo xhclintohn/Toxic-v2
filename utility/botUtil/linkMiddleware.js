@@ -2,15 +2,15 @@ module.exports = async (context, next) => {
     const { m, isBotAdmin } = context;
 
     if (!m.isGroup) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈
-│❒ This command only works in groups! 
-◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
+> 々 This command only works in groups! 
+╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
     }
     
     if (!isBotAdmin) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈
-│❒ I need admin rights to get the group link! 
-◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
+> 々 I need admin rights to get the group link! 
+╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
     }
 
     await next(); // Proceed to the next function (main handler)

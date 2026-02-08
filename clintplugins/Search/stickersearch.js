@@ -9,26 +9,26 @@ module.exports = {
 
     if (!botname) {
       console.error(`Botname not set, you useless fuck.`);
-      return m.reply(`◈━━━━━━━━━━━━━━━━◈\nBot’s toast, no botname found! Yell at the dev, you legend.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`);
+      return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\nBot’s toast, no botname found! Yell at the dev, you legend.\nCheck https://github.com/xhclintohn/Toxic-MD\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
     }
 
     try {
       // Validate m.sender
       if (!m.sender || typeof m.sender !== 'string' || !m.sender.includes('@s.whatsapp.net')) {
         console.error(`Invalid m.sender: ${JSON.stringify(m.sender)}`);
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nCan’t read your number, you beast! Try again.\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\nCan’t read your number, you beast! Try again.\nCheck https://github.com/xhclintohn/Toxic-MD\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
       }
 
       const userNumber = m.sender.split('@')[0];
 
       // Check for search term
       if (!text) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nGimme a search term, @${userNumber}! Don’t choke, you legend. 🖼️\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\nGimme a search term, @${userNumber}! Don’t choke, you legend. 🖼️\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`, { mentions: [m.sender] });
       }
 
       // Notify in groups
       if (m.isGroup) {
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\nSpamming groups? I got you in DMs, @${userNumber}! 📥🔥\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
+        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\nSpamming groups? I got you in DMs, @${userNumber}! 📥🔥\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`, { mentions: [m.sender] });
       }
 
       const tenorApiKey = 'AIzaSyCyouca1_KKy4W_MG1xsPzuku5oa8W358c';
@@ -40,7 +40,7 @@ module.exports = {
 
       const results = gifResponse.data.results;
       if (!results || results.length === 0) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nNo stickers found for "${text}", @${userNumber}! Try something else, you slacker. 😈\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\nNo stickers found for "${text}", @${userNumber}! Try something else, you slacker. 😈\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`, { mentions: [m.sender] });
       }
 
       // Send up to 8 stickers
@@ -63,7 +63,7 @@ module.exports = {
 
     } catch (error) {
       console.error(`Sticker command fucked up: ${error.stack}`);
-      await m.reply(`◈━━━━━━━━━━━━━━━━◈\nSticker fetch failed, @${userNumber}! Something’s busted, try again. 😈\nCheck https://github.com/xhclintohn/Toxic-MD\n◈━━━━━━━━━━━━━━━━◈`, { mentions: [m.sender] });
+      await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\nSticker fetch failed, @${userNumber}! Something’s busted, try again. 😈\nCheck https://github.com/xhclintohn/Toxic-MD\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`, { mentions: [m.sender] });
     }
   }
 };

@@ -4,7 +4,7 @@ module.exports = async (context) => {
     const { client, m, text, botname } = context;
 
     const formatStylishReply = (message) => {
-        return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
+        return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${message}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
     };
 
     const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {

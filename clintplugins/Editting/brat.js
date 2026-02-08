@@ -12,7 +12,7 @@ module.exports = {
 
         if (!text) {
             return client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━◈\n│❒ what am i, a mind reader? @${m.sender.split('@')[0]}! you forgot the text, genius. 🤦🏻\n│❒ example: ${prefix}brat i'm a dumbass\n◈━━━━━━━━━━━━━━━◈`,
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 what am i, a mind reader? @${m.sender.split('@')[0]}! you forgot the text, genius. 🤦🏻\n> 々 example: ${prefix}brat i'm a dumbass\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`,
                 mentions: [m.sender]
             }, { quoted: m });
         }
@@ -66,7 +66,7 @@ module.exports = {
             }
 
             await client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━◈\n│❒ brat sticker failed, you disappointment.\n│❒ ${errorMessage}\n◈━━━━━━━━━━━━━━━◈`
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 brat sticker failed, you disappointment.\n> 々 ${errorMessage}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`
             }, { quoted: m });
         }
     }

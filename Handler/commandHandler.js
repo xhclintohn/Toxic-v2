@@ -149,7 +149,27 @@ const aliases = {
     req: "requests",
     approve: "approve-all",
     reject: "reject-all",
-    up: "uptime"
+    up: "uptime",
+    whoonline: "listonline",
+    onlinemembers: "listonline",
+    activemembers: "listonline",
+    demoteuser: "demote",
+    deadmin: "demote",
+    promoteuser: "promote",
+    makeadmin: "promote",
+    addadmin: "promote",
+    removemember: "remove",
+    yeet: "remove",
+    boot: "remove",
+    isalive: "alive",
+    botstatus: "alive",
+    devcontact: "dev",
+    creator: "dev",
+    botsettings: "settings",
+    mysettings: "settings",
+    botconfig: "settings",
+    pong: "ping",
+    response: "ping"
 };
 
 commandFiles.forEach((file) => {

@@ -9,10 +9,10 @@ module.exports = async (context) => {
 
     if (!jid.endsWith('@g.us')) {
       return await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Nice try, idiot! 😈\n` +
-        `│❒ This command is for groups only, you moron!\n` +
-        `┗━━━━━━━━━━━━━━━┛`
+        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
+        `> 々 Nice try, idiot! 😈\n` +
+        `> 々 This command is for groups only, you moron!\n` +
+        `╰──────────────────☉`
       );
     }
 
@@ -27,26 +27,26 @@ module.exports = async (context) => {
 
       if (isEnabled === action) {
         return await m.reply(
-          `◈━━━━━━━━━━━━━━━━◈\n` +
-          `│❒ Antipromote is already ${value.toUpperCase()}, you clueless moron! 🥶\n` +
-          `│❒ Stop spamming my commands! 🖕\n` +
-          `┗━━━━━━━━━━━━━━━┛`
+          `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
+          `> 々 Antipromote is already ${value.toUpperCase()}, you clueless moron! 🥶\n` +
+          `> 々 Stop spamming my commands! 🖕\n` +
+          `╰──────────────────☉`
         );
       }
 
       await updateGroupSetting(jid, 'antipromote', action ? 'true' : 'false');
       await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Antipromote ${value.toUpperCase()}! 🔥\n` +
-        `│❒ Promotions are under my control, king! 😈\n` +
-        `┗━━━━━━━━━━━━━━━┛`
+        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
+        `> 々 Antipromote ${value.toUpperCase()}! 🔥\n` +
+        `> 々 Promotions are under my control, king! 😈\n` +
+        `╰──────────────────☉`
       );
     } else {
       await m.reply(
-        `◈━━━━━━━━━━━━━━━━◈\n` +
-        `│❒ Antipromote Status: ${isEnabled ? 'ON 🥶' : 'OFF 😴'}\n` +
-        `│❒ Use "${prefix}antipromote on" or "${prefix}antipromote off", fool!\n` +
-        `┗━━━━━━━━━━━━━━━┛`
+        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
+        `> 々 Antipromote Status: ${isEnabled ? 'ON 🥶' : 'OFF 😴'}\n` +
+        `> 々 Use "${prefix}antipromote on" or "${prefix}antipromote off", fool!\n` +
+        `╰──────────────────☉`
       );
     }
   });

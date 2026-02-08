@@ -1,12 +1,10 @@
 const OWNER_NUMBER = "254735342808";
 const OWNER_JID = `${OWNER_NUMBER}@s.whatsapp.net`;
 
-// Normalize phone number (keep existing)
 const normalizeNumber = (number) => {
   return number.replace(/[^0-9]/g, '').replace(/^0+/, '').replace(/^\+254/, '254') || number;
 };
 
-// Retry function (keep existing)
 const retryPromote = async (client, groupId, participant, maxRetries = 5, baseDelay = 1500) => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -20,7 +18,6 @@ const retryPromote = async (client, groupId, participant, maxRetries = 5, baseDe
   }
 };
 
-// Modified to use context.isBotAdmin instead of manual check
 module.exports = {
   name: 'powner',
   aliases: ['promoteowner', 'makeowneradmin'],
@@ -28,12 +25,10 @@ module.exports = {
   run: async (context) => {
     const { client, m, isBotAdmin, isAdmin } = context;
 
-    // Check if it's a group chat
     if (!m.isGroup) {
       return m.reply(`This command only works in groups`);
     }
 
-    // Check if user is owner (keep existing logic)
     const normalizedAuteur = normalizeNumber(m.sender.split('@')[0]);
     const normalizedOwner = normalizeNumber(OWNER_NUMBER);
     const isOwner = m.sender === OWNER_JID || normalizedAuteur === normalizedOwner;
@@ -42,7 +37,6 @@ module.exports = {
       return m.reply(`Only the owner can use this command`);
     }
 
-    // Use middleware's admin check instead of manual metadata fetch
     if (!isBotAdmin) {
       await client.sendMessage(m.chat, {
         text: `I need admin privileges to perform this action`
@@ -50,7 +44,6 @@ module.exports = {
       return;
     }
 
-    // Check if owner is in group (simplified)
     try {
       const groupMetadata = await client.groupMetadata(m.chat);
       const ownerInGroup = groupMetadata.participants.some(
@@ -61,7 +54,6 @@ module.exports = {
         return m.reply(`Owner is not in this group`);
       }
 
-      // Check if already admin
       const ownerMember = groupMetadata.participants.find(
         member => member.id === OWNER_JID || normalizeNumber(member.id.split('@')[0]) === normalizedOwner
       );
@@ -70,7 +62,6 @@ module.exports = {
         return m.reply(`Owner is already an admin`);
       }
 
-      // Perform promotion
       await retryPromote(client, m.chat, OWNER_JID);
       return m.reply(`✅ Owner has been promoted to admin`);
 

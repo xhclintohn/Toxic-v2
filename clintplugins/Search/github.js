@@ -125,7 +125,7 @@ module.exports = async (context) => {
     await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
     if (!text) {
-      return m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ please provide a github username or repo\n│❒ example: .github octocat\n│❒ example: .github node.js\n◈━━━━━━━━━━━━━━━◈`);
+      return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 please provide a github username or repo\n> 々 example: .github octocat\n> 々 example: .github node.js\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
     }
 
     let result;
@@ -160,9 +160,9 @@ module.exports = async (context) => {
 
     if (isUser) {
       thumb = await getBuffer(result.profile_pic);
-      caption = `◈━━━━━━━━━━━━━━━◈\n` +
-                `│❒ github user profile\n` +
-                `◈━━━━━━━━━━━━━━━◈\n` +
+      caption = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
+                `> 々 github user profile\n` +
+                `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
                 `│🔖 username: ${result.username || 'n/a'}\n` +
                 `│♦️ name: ${result.name || 'n/a'}\n` +
                 `│✨ bio: ${result.bio || 'n/a'}\n` +
@@ -174,15 +174,15 @@ module.exports = async (context) => {
                 `│📝 gists: ${result.public_gists || 0}\n` +
                 `│📧 email: ${result.email || 'private'}\n` +
                 `│🔗 profile: ${result.html_url}\n` +
-                `◈━━━━━━━━━━━━━━━◈\n` +
-                `│❒ tσxιƈ-ɱԃȥ\n` +
-                `◈━━━━━━━━━━━━━━━◈`;
+                `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
+                `> 々 𝐓𝐨𝐱𝐢𝐜-𝐌D\n` +
+                `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`;
 
     } else if (isRepo) {
       thumb = await getBuffer(result.owner_avatar);
-      caption = `◈━━━━━━━━━━━━━━━◈\n` +
-                `│❒ github repository\n` +
-                `◈━━━━━━━━━━━━━━━◈\n` +
+      caption = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
+                `> 々 github repository\n` +
+                `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
                 `│📦 repo: ${result.full_name}\n` +
                 `│📝 description: ${result.description || 'no description'}\n` +
                 `│👤 owner: ${result.owner}\n` +
@@ -195,9 +195,9 @@ module.exports = async (context) => {
                 `│📄 license: ${result.license}\n` +
                 `│🌿 branch: ${result.default_branch}\n` +
                 `│🔗 url: ${result.html_url}\n` +
-                `◈━━━━━━━━━━━━━━━◈\n` +
-                `│❒ tσxιƈ-ɱԃȥ\n` +
-                `◈━━━━━━━━━━━━━━━◈`;
+                `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
+                `> 々 𝐓𝐨𝐱𝐢𝐜-𝐌D\n` +
+                `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`;
     }
 
     if (thumb) {
@@ -213,6 +213,6 @@ module.exports = async (context) => {
     if (error.message.includes('not found')) errorMessage = 'not found on github';
     if (error.message.includes('rate limit')) errorMessage = 'rate limit exceeded';
     
-    await m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ ${errorMessage}\n◈━━━━━━━━━━━━━━━◈`);
+    await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${errorMessage}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
   }
 };

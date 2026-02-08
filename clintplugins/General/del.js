@@ -7,14 +7,14 @@ module.exports = {
 
     try {
       if (!m || !m.key) {
-        return m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ invalid message object, you dumbass! 😈\n◈━━━━━━━━━━━━━━━◈`);
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 invalid message object, you dumbass! 😈\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
       }
 
       const isGroup = m.key.remoteJid.endsWith('@g.us');
       const userNumber = m.sender.split('@')[0];
 
       if (!m.quoted) {
-        return m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ reply to a message to delete, you dumbass! 😈\n◈━━━━━━━━━━━━━━━◈`);
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 reply to a message to delete, you dumbass! 😈\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
       }
 
       const deleteKey = {
@@ -36,11 +36,11 @@ module.exports = {
         const isUserAdmin = groupAdmins.includes(m.sender);
 
         if (!isBotAdmin) {
-          return m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ i'm not admin, you lazy fuck!\n│❒ can't delete messages in this group\n│❒ make me admin first! 🤖\n◈━━━━━━━━━━━━━━━◈`);
+          return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 i'm not admin, you lazy fuck!\n> 々 can't delete messages in this group\n> 々 make me admin first! 🤖\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
         }
 
         if (!deleteKey.fromMe && !isUserAdmin) {
-          return m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ you're not admin, @${userNumber}!\n│❒ only admins can delete others' messages\n│❒ get promoted or shut up 🤡\n◈━━━━━━━━━━━━━━━◈`, {
+          return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 you're not admin, @${userNumber}!\n> 々 only admins can delete others' messages\n> 々 get promoted or shut up 🤡\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`, {
             mentions: [m.sender]
           });
         }
@@ -48,13 +48,13 @@ module.exports = {
 
       await client.sendMessage(m.key.remoteJid, { delete: deleteKey });
 
-      await m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ message deleted, you sneaky bastard @${userNumber}! 🗑️\n│❒ powered by ${botname} 😈\n◈━━━━━━━━━━━━━━━◈`, {
+      await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 message deleted, you sneaky bastard @${userNumber}! 🗑️\n> 々 powered by ${botname} 😈\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`, {
         mentions: [m.sender]
       });
 
     } catch (error) {
       console.error(`del command error:`, error);
-      await m.reply(`◈━━━━━━━━━━━━━━━◈\n│❒ shit broke, @${m.sender.split('@')[0]}!\n│❒ couldn't delete the message\n│❒ error: ${error.message}\n│❒ try again, you useless fuck 🤦🏻\n◈━━━━━━━━━━━━━━━◈`, {
+      await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 shit broke, @${m.sender.split('@')[0]}!\n> 々 couldn't delete the message\n> 々 error: ${error.message}\n> 々 try again, you useless fuck 🤦🏻\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`, {
         mentions: [m.sender]
       });
     }

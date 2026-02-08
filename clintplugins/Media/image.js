@@ -11,7 +11,7 @@ module.exports = {
     const query = m.body.replace(new RegExp(`^${prefix}(image|img|pic|searchimage)\\s*`, 'i'), '').trim();
     if (!query) {
       return client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, @${m.sender.split('@')[0]}! 😤 You forgot the search query!\n│❒ Example: ${prefix}image cute cats\n┗━━━━━━━━━━━━━━━┛`,
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Yo, @${m.sender.split('@')[0]}! 😤 You forgot the search query!\n> 々 Example: ${prefix}image cute cats\n╰──────────────────☉`,
         mentions: [m.sender]
       }, { quoted: m });
     }
@@ -26,7 +26,7 @@ module.exports = {
       if (!data.status || !data.result || data.result.length === 0) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return client.sendMessage(m.chat, {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ No images found for "${query}"! 😢\n│❒ Try a different search term.\n┗━━━━━━━━━━━━━━━┛`
+          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 No images found for "${query}"! 😢\n> 々 Try a different search term.\n╰──────────────────☉`
         }, { quoted: m });
       }
 
@@ -89,7 +89,7 @@ module.exports = {
       if (cards.length === 0) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return client.sendMessage(m.chat, {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Failed to load any images for "${query}"! 😢\n┗━━━━━━━━━━━━━━━┛`
+          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Failed to load any images for "${query}"! 😢\n╰──────────────────☉`
         }, { quoted: m });
       }
 
@@ -130,7 +130,7 @@ module.exports = {
       console.error('Image search error:', error);
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
       await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Oops, @${m.sender.split('@')[0]}! 😤 Image search failed!\n│❒ Error: ${error.message}\n│❒ Try again later.\n┗━━━━━━━━━━━━━━━┛`,
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Oops, @${m.sender.split('@')[0]}! 😤 Image search failed!\n> 々 Error: ${error.message}\n> 々 Try again later.\n╰──────────────────☉`,
         mentions: [m.sender]
       }, { quoted: m });
     }

@@ -1,64 +1,79 @@
-const { getSettings } = require('../../Database/config');
+const { botname } = require('../../Env/settings');
 
 module.exports = {
   name: 'listonline',
-  aliases: ['online', 'active', 'onlineusers'],
-  description: 'List currently online group members',
+  aliases: ['online', 'active', 'onlineusers', 'whoonline', 'whos-online'],
+  description: 'List currently online group members by subscribing to presence updates',
   run: async (context) => {
     const { client, m } = context;
+    const bName = botname || 'Toxic-MD';
 
     if (!m.isGroup) {
       return client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ This command is for groups only, idiot.\n│❒ Use it in a WhatsApp group.\n┗━━━━━━━━━━━━━━━┛`
+        text: `*${bName} Gʀᴏᴜᴘ Oɴʟʏ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Gʀᴏᴜᴘ Cᴏᴍᴍᴀɴᴅ ≪───\n> \`々\` This ain't a group, genius.\n> \`々\` Use this in a group chat.\n╰──────────────────☉`
       }, { quoted: m });
     }
 
     try {
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-    
       const groupMetadata = await client.groupMetadata(m.chat);
       const participants = groupMetadata.participants || [];
+      const groupName = groupMetadata.subject || 'Unknown Group';
 
-     
-      const onlineUsers = participants
-        .filter(p => p.presence && (p.presence === 'available' || p.presence === 'composing'))
-        .map(p => p.id);
+      const presenceResults = {};
 
-      if (onlineUsers.length === 0) {
+      const presenceHandler = (json) => {
+        const chatId = Object.keys(json)[0];
+        if (chatId === m.chat) {
+          const presences = json[chatId]?.presences || json[chatId];
+          if (presences && typeof presences === 'object') {
+            for (const [jid, data] of Object.entries(presences)) {
+              if (jid.includes('@')) {
+                const status = data?.lastKnownPresence || data;
+                if (status === 'available' || status === 'composing' || status === 'recording') {
+                  presenceResults[jid] = status;
+                }
+              }
+            }
+          }
+        }
+      };
+
+      client.ev.on('presence.update', presenceHandler);
+
+      try {
+        await client.presenceSubscribe(m.chat);
+      } catch (e) {}
+
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      client.ev.off('presence.update', presenceHandler);
+
+      const onlineJids = Object.keys(presenceResults);
+
+      if (onlineJids.length === 0) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return client.sendMessage(m.chat, {
-          text: `◈━━━━━━━━━━━━━━━━◈\n│❒ No one is online right now... or they all have privacy on like cowards.\n│❒ Try again later, loser.\n┗━━━━━━━━━━━━━━━┛`
+          text: `*${bName} Oɴʟɪɴᴇ Cʜᴇᴄᴋ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Nᴏ Oɴᴇ Oɴʟɪɴᴇ ≪───\n> \`々\` Group: ${groupName}\n> \`々\` Either everyone's hiding or\n> \`々\` they all have privacy on.\n> \`々\` Cowards, the lot of them.\n╰──────────────────☉`
         }, { quoted: m });
       }
 
-  
-      const onlineList = onlineUsers
-        .map((jid, index) => `\( {index + 1}. 🟢 @ \){jid.split('@')[0]}`)
+      const onlineList = onlineJids
+        .map((jid, index) => `> \`々\` ${index + 1}. @${jid.split('@')[0]}`)
         .join('\n');
 
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
       await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n` +
-              `│❒ *Online Members (${onlineUsers.length})*\n` +
-              `│\n` +
-              `${onlineList}\n` +
-              `┗━━━━━━━━━━━━━━━┛\n` +
-              `> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`,
-        mentions: onlineUsers
+        text: `*${bName} Oɴʟɪɴᴇ Usᴇʀs*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Oɴʟɪɴᴇ Mᴇᴍʙᴇʀs ≪───\n> \`々\` Group: ${groupName}\n> \`々\` Online: ${onlineJids.length}/${participants.length}\n>\n${onlineList}\n╰──────────────────☉`,
+        mentions: onlineJids
       }, { quoted: m });
 
     } catch (error) {
-      console.error('ListOnline error:', error);
-
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-
       await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n` +
-              `│❒ Failed to fetch online users.\n` +
-              `│❒ Error: ${error.message || 'Unknown'}\n` +
-              `┗━━━━━━━━━━━━━━━┛`
+        text: `*${bName} Eʀʀᴏʀ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Fᴀɪʟᴇᴅ ≪───\n> \`々\` Couldn't fetch online users.\n> \`々\` Error: ${error.message || 'Unknown'}\n> \`々\` Try again, or don't. I don't care.\n╰──────────────────☉`
       }, { quoted: m });
     }
   }

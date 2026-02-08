@@ -4,7 +4,7 @@ module.exports = async (context) => {
     const { client, m, participants } = context;
 
     if (!m.isGroup) {
-        return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Command meant for groups.\n◈━━━━━━━━━━━━━━━━◈');
+        return m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Command meant for groups.\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───');
     }
 
     try {
@@ -18,10 +18,10 @@ module.exports = async (context) => {
 
         const cont = './contacts.vcf';
 
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ A moment, Toxic-MD is compiling ${gcdata.participants.length} contacts into a VCF...\n◈━━━━━━━━━━━━━━━━◈`);
+        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ A moment, Toxic-MD is compiling ${gcdata.participants.length} contacts into a VCF...\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
 
         await fs.promises.writeFile(cont, vcard);
-        await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Import this VCF in a separate email account to avoid messing with your contacts...\n◈━━━━━━━━━━━━━━━━◈');
+        await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Import this VCF in a separate email account to avoid messing with your contacts...\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───');
 
         await client.sendMessage(
             m.chat,
@@ -37,6 +37,6 @@ module.exports = async (context) => {
         await fs.promises.unlink(cont);
     } catch (error) {
         console.error(`VCF error: ${error.message}`);
-        await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Failed to generate VCF. Try again later.\n◈━━━━━━━━━━━━━━━━◈');
+        await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Failed to generate VCF. Try again later.\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───');
     }
 };

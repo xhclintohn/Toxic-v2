@@ -34,21 +34,21 @@ module.exports = {
         (!targetUser.includes('@s.whatsapp.net') && !targetUser.includes('@lid'))
       ) {
         console.error(`Invalid target user: ${JSON.stringify(targetUser)}`);
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nWho the fuck am I torching? Tag someone or I’ll roast your sorry ass to ashes!\n◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\nWho the fuck am I torching? Tag someone or I’ll roast your sorry ass to ashes!\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
       }
 
       // Extract target number
       targetNumber = targetUser.split('@')[0];
       if (!targetNumber) {
         console.error(`Failed to extract target number from JID: ${targetUser}`);
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈\nThis user’s ID is fucked beyond repair. Try again, you brainless twit!\n◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\nThis user’s ID is fucked beyond repair. Try again, you brainless twit!\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
       }
 
     
       const checkingMsg = await client.sendMessage(
         m.chat,
         {
-          text: `◈━━━━━━━━━━━━━━━━◈\nCracking open @${targetNumber}'s soul for gay vibes... 🩸\nThis is gonna hurt like hell, you weakling!\n◈━━━━━━━━━━━━━━━━◈`,
+          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\nCracking open @${targetNumber}'s soul for gay vibes... 🩸\nThis is gonna hurt like hell, you weakling!\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`,
           mentions: [targetUser],
         },
         { quoted: m }
@@ -253,7 +253,7 @@ module.exports = {
       }
 
       // Build the final toxic result message
-      const resultMsg = `◈━━━━━━━━━━━━━━━━◈
+      const resultMsg = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
 *GAY METER RESULTS* ${emoji}
 
 *TARGET:* @${targetNumber}
@@ -262,7 +262,7 @@ module.exports = {
 *VERDICT:* ${roast}${insult}
 
 *DISCLAIMER:* This is 100% accurate and scientific, you sensitive snowflake! Cry about it! 😈
-◈━━━━━━━━━━━━━━━━◈`;
+╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`;
 
       // Send the final result
       await client.sendMessage(
@@ -286,7 +286,7 @@ module.exports = {
       }
     } catch (error) {
       console.error(`Gaycheck command detonated: ${error.stack}`);
-      await m.reply(`◈━━━━━━━━━━━━━━━━◈\nThis shit blew up harder than your ego! Can’t check gay levels now, you doomed idiot!\n◈━━━━━━━━━━━━━━━━◈`);
+      await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\nThis shit blew up harder than your ego! Can’t check gay levels now, you doomed idiot!\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
     }
   },
 };

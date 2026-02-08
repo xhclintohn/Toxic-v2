@@ -13,8 +13,6 @@ module.exports = {
       }
       const buttonName = args[0];
       const command = args[1];
-      // Store in database (pseudo-code)
-      // await saveCustomButton(buttonName, command);
       await client.sendMessage(m.chat, { text: `Added button "${buttonName}" for command "${command}"` }, { quoted: m });
     } catch (error) {
       console.error(`AddButton error: ${error.stack}`);

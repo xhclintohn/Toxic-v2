@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 const FormData = require('form-data');
 
 const formatStylishReply = (message) => {
-    return `◈━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━◈`;
+    return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${message}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`;
 };
 
 async function uploadToCatbox(buffer) {
@@ -83,7 +83,7 @@ module.exports = async (context) => {
             m.chat,
             {
                 image: imageBuffer,
-                caption: `◈━━━━━━━━━━━━━━━◈\n│❒ enhanced image ✅\n│❒ tσxιƈ-ɱԃȥ\n◈━━━━━━━━━━━━━━━◈`
+                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 enhanced image ✅\n> 々 𝐓𝐨𝐱𝐢𝐜-𝐌D\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`
             },
             { quoted: m }
         );

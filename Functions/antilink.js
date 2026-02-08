@@ -55,13 +55,13 @@ module.exports = async (client, m) => {
         // Toxic warning message
         await client.sendMessage(m.chat, {
             text:
-                `◈━━❰ *Toxic-MD Antilink* ❱━━◈\n` +
+                `╭───( *Toxic-MD Antilink* )───\n` +
                 `│ 😒 @${m.sender.split("@")[0]}, you really thought you could drop a link here?\n` +
                 `│ 🧹 Message swept away.\n` +
                 (antilinkMode === "remove"
                     ? `│ 🚪 And now you're getting kicked. Actions ➤ Consequences.\n`
                     : `│ ⚠️ Try that again and see what happens.\n`) +
-                `┗━━━━━━━━━━━━━━━━┛`,
+                `╰──────────────────☉`,
             mentions: [m.sender],
         });
 
@@ -75,19 +75,19 @@ module.exports = async (client, m) => {
 
                 await client.sendMessage(m.chat, {
                     text:
-                        `◈━━❰ *Toxic-MD* ❱━━◈\n` +
+                        `╭───( *Toxic-MD* )───\n` +
                         `│ 🚫 @${tag} has been *yeeted* out for dropping links.\n` +
                         `│ Next time, read the rules. If you can.\n` +
-                        `┗━━━━━━━━━━━━━━┛`,
+                        `╰──────────────────☉`,
                     mentions: [user],
                 });
             } catch {
                 await client.sendMessage(m.chat, {
                     text:
-                        `◈━━❰ *Toxic-MD* ❱━━◈\n` +
+                        `╭───( *Toxic-MD* )───\n` +
                         `│ 🤦 Can't kick @${tag}. Probably missing admin perms.\n` +
                         `│ Fix that, boss.\n` +
-                        `┗━━━━━━━━━━━━━━┛`,
+                        `╰──────────────────☉`,
                     mentions: [user],
                 });
             }

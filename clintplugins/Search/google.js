@@ -4,12 +4,12 @@ module.exports = async (context) => {
 
   if (!text) {
     m.reply(
-      "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
-      "│ ❒ ERROR\n" +
-      "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
+      "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n" +
+      "> `々` ERROR\n" +
+      "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n" +
       "│ 🚫 Please provide a search term!\n" +
-      "│ ❒ Example: .google What is treason\n" +
-      "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈"
+      "> `々` Example: .google What is treason\n" +
+      "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───"
     );
     return;
   }
@@ -21,38 +21,38 @@ module.exports = async (context) => {
 
     if (data.items.length == 0) {
       m.reply(
-        "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
-        "│ ❒ ERROR\n" +
-        "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
+        "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n" +
+        "> `々` ERROR\n" +
+        "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n" +
         "│ ❌ Unable to find any results\n" +
-        "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈"
+        "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───"
       );
       return;
     }
 
     let tex = "";
-    tex += "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n";
-    tex += "│ ❒ GOOGLE SEARCH\n";
-    tex += "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n";
+    tex += "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n";
+    tex += "> `々` GOOGLE SEARCH\n";
+    tex += "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n";
     tex += "│ 🔍 Search Term: " + text + "\n";
-    tex += "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n";
+    tex += "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n";
 
     for (let i = 0; i < data.items.length; i++) {
-      tex += "│ ❒ Result " + (i + 1) + "\n";
+      tex += "> `々` Result " + (i + 1) + "\n";
       tex += "│ 🪧 Title: " + data.items[i].title + "\n";
       tex += "│ 📝 Description: " + data.items[i].snippet + "\n";
       tex += "│ 🌐 Link: " + data.items[i].link + "\n";
-      tex += "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n";
+      tex += "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n";
     }
 
     m.reply(tex);
   } catch (e) {
     m.reply(
-      "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
-      "│ ❒ ERROR\n" +
-      "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈\n" +
+      "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n" +
+      "> `々` ERROR\n" +
+      "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n" +
       "│ ❌ An error occurred: " + e.message + "\n" +
-      "◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◈"
+      "╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───"
     );
   }
 };

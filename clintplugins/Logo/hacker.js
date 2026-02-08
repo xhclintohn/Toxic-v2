@@ -9,7 +9,7 @@ module.exports = {
 
     if (!text) {
       return client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Yo, @${m.sender.split('@')[0]}! 😤 You forgot the text!\n│❒ Example: ${prefix}hacker Toxic-MD\n┗━━━━━━━━━━━━━━━┛`,
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Yo, @${m.sender.split('@')[0]}! 😤 You forgot the text!\n> 々 Example: ${prefix}hacker Toxic-MD\n╰──────────────────☉`,
         mentions: [m.sender]
       }, { quoted: m });
     }
@@ -46,7 +46,7 @@ module.exports = {
 
       await client.sendMessage(m.chat, {
         image: { url: logoUrl },
-        caption: `◈━━━━━━━━━━━━━━━━◈\n│❒ *Hacker Neon Logo Generated*\n│❒ Text: ${text}\n┗━━━━━━━━━━━━━━━┛\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+        caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 *Hacker Neon Logo Generated*\n> 々 Text: ${text}\n╰──────────────────☉\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`
       }, { quoted: m });
 
     } catch (error) {
@@ -60,7 +60,7 @@ module.exports = {
       if (error.message.includes('extract')) errorMsg += ' Couldn’t find the image. API might be down.';
 
       await client.sendMessage(m.chat, {
-        text: `◈━━━━━━━━━━━━━━━━◈\n│❒ ${errorMsg}\n│❒ Try again or use a shorter text.\n┗━━━━━━━━━━━━━━━┛`
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${errorMsg}\n> 々 Try again or use a shorter text.\n╰──────────────────☉`
       }, { quoted: m });
     }
   }

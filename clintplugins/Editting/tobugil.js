@@ -27,7 +27,7 @@ module.exports = {
 
         if (!m.quoted) {
             return client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Quote an image, you blind moron. 🤦🏻\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Quote an image, you blind moron. 🤦🏻\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
         }
 
@@ -36,7 +36,7 @@ module.exports = {
 
         if (!mime.startsWith("image/")) {
             return client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ That's not an image, you illiterate fool. 🖼️\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 That's not an image, you illiterate fool. 🖼️\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
         }
 
@@ -93,7 +93,7 @@ module.exports = {
             }
 
             await client.sendMessage(m.chat, {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ ${errorMessage}\n◈━━━━━━━━━━━━━━━━◈\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${errorMessage}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
         }
     },

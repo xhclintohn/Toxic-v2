@@ -3,7 +3,7 @@ module.exports = async (context) => {
   const yts = require("yt-search");
 
   const formatStylishReply = (message) => {
-    return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n◈━━━━━━━━━━━━━━━━◈`;
+    return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${message}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`;
   };
 
   if (!text) {
@@ -28,15 +28,15 @@ module.exports = async (context) => {
   const thumbnail = song.thumbnail || "";
   const videoUrl = song.url;
 
-  const response = `◈━━━━━━━━━━━━━━━━◈\n` +
-                  `│❒ *${title}* found for ${m.pushName}! 🎶\n` +
+  const response = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
+                  `> 々 *${title}* found for ${m.pushName}! 🎶\n` +
                   `│🎤 *Artist*: ${artist}\n` +
                   `│👀 *Views*: ${views}\n` +
                   `│⏱ *Duration*: ${duration}\n` +
                   `│📅 *Uploaded*: ${uploaded}\n` +
                   (thumbnail ? `│🖼 *Thumbnail*: ${thumbnail}\n` : '') +
                   `│🔗 *Video*: ${videoUrl}\n` +
-                  `◈━━━━━━━━━━━━━━━━◈\n` +
+                  `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
                   `Powered by Toxic-MD`;
 
   await m.reply(formatStylishReply(response));

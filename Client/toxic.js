@@ -122,8 +122,10 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             m.isGroup = m.chat?.endsWith("g.us");
             m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => {}) : {};
             const participants = m.metadata?.participants || [];
-            m.isAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === m.sender));
-            m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && p.jid === botNumber));
+            const senderNum = m.sender?.split('@')[0];
+            const botNum = botNumber?.split('@')[0];
+            m.isAdmin = Boolean(participants.find(p => p.admin !== null && (p.id === m.sender || p.id?.split('@')[0] === senderNum)));
+            m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && (p.id === botNumber || p.id?.split('@')[0] === botNum)));
         } catch (error) {
             m.metadata = {};
             m.isAdmin = false;
@@ -200,7 +202,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
             if (bannedUsers.includes(senderNumber)) {
                 await client.sendMessage(m.chat, {
-                    text: `◈━━━━━━━━━━━━━━━━◈\n│❒ Banned, huh? You're too pathetic to use my commands. Get lost! 💀`
+                    text: `*𝐓𝐨𝐱𝐢𝐜-𝐌D Bᴀɴɴᴇᴅ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Bᴀɴɴᴇᴅ ≪───\n> \`々\` You're banned from using\n> \`々\` my commands. Get lost.\n╰──────────────────☉`
                 }, { quoted: fakeQuoted });
                 return;
             }
@@ -284,11 +286,19 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     const botJid = client.decodeJid(client.user.id);
                     const sender = client.decodeJid(deletedMessage.key.participant || deletedMessage.key.remoteJid);
                     const deleter = m.key.participant ? m.key.participant.split('@')[0] : 'Unknown';
-                    const groupName = chatJidToSearch.endsWith('@g.us') ? 'Group' : 'Private Chat';
+                    let groupName = 'Private Chat';
+                    if (chatJidToSearch.endsWith('@g.us')) {
+                        try {
+                            const gMeta = await client.groupMetadata(chatJidToSearch);
+                            groupName = gMeta?.subject || 'Unknown Group';
+                        } catch (e) {
+                            groupName = 'Unknown Group';
+                        }
+                    }
                     const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
                     const messageType = getMessageType(deletedMessage.message);
                     try {
-                        const notification = `*AntiDelete Detected*\n\n*Time:* ${deleteTime}\n*Chat:* ${groupName}\n*Message Type:* ${messageType}\n*Deleted by:* @${deleter}\n*Sender:* @${sender.split('@')[0]}`;
+                        const notification = `*𝐓𝐨𝐱𝐢𝐜-𝐌D Aɴᴛɪ-Dᴇʟᴇᴛᴇ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n> \`々\` Time: ${deleteTime}\n> \`々\` Chat: ${groupName}\n> \`々\` Type: ${messageType}\n> \`々\` Deleted by: @${deleter}\n> \`々\` Sender: @${sender.split('@')[0]}\n╰──────────────────☉`;
                         if (deletedMessage.message.conversation) {
                             await client.sendMessage(botJid, {
                                 text: `${notification}\n\n📝 *Deleted Message:*\n${deletedMessage.message.conversation}`,

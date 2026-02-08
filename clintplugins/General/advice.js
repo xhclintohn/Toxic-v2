@@ -1,4 +1,3 @@
-//advice.js
 
 const advice = require("badadvice");
 

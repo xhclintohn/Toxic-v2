@@ -35,7 +35,7 @@ module.exports = {
 
         // === 1. MUST REPLY ===
         if (!m.quoted) {
-            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│You must *reply* to an image!\n│Example: Reply image → \`.toanime\`\n┗━━━━━━━━━━━━━━━┛`);
+            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n│You must *reply* to an image!\n│Example: Reply image → \`.toanime\`\n╰──────────────────☉`);
         }
 
         const quoted = m.quoted;
@@ -49,11 +49,11 @@ module.exports = {
         }
 
         if (!quotedMime || !quotedMime.startsWith('image/')) {
-            return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│The replied message is *not an image*!\n│Please reply to a *photo*.\n┗━━━━━━━━━━━━━━━┛`);
+            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n│The replied message is *not an image*!\n│Please reply to a *photo*.\n╰──────────────────☉`);
         }
 
         // === 3. PROCESSING ===
-        const processing = await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│Converting to anime...\n│Please wait!\n┗━━━━━━━━━━━━━━━┛`);
+        const processing = await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n│Converting to anime...\n│Please wait!\n╰──────────────────☉`);
 
         try {
             // === 4. DOWNLOAD ===
@@ -62,7 +62,7 @@ module.exports = {
 
             // === 5. SIZE ===
             if (media.length > 10 * 1024 * 1024) {
-                return m.reply(`◈━━━━━━━━━━━━━━━━◈\n│Image too large! Max 10MB.\n┗━━━━━━━━━━━━━━━┛`);
+                return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n│Image too large! Max 10MB.\n╰──────────────────☉`);
             }
 
             // === 6. UPLOAD ===
@@ -83,7 +83,7 @@ module.exports = {
             // === 8. SEND RESULT ===
             await client.sendMessage(m.chat, {
                 image: animeBuffer,
-                caption: `◈━━━━━━━━━━━━━━━━◈\n│ANIME TRANSFORMATION COMPLETE!\n│@everyone look at this weeb\n┗━━━━━━━━━━━━━━━┛`,
+                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n│ANIME TRANSFORMATION COMPLETE!\n│@everyone look at this weeb\n╰──────────────────☉`,
                 mentions: [m.sender]
             }, { quoted: m });
 
@@ -98,7 +98,7 @@ module.exports = {
                 : err.message.includes('timeout') ? 'API timed out.'
                 : `Failed: ${err.message}`;
 
-            await m.reply(`◈━━━━━━━━━━━━━━━━◈\n│${errorMsg}\n┗━━━━━━━━━━━━━━━┛`);
+            await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n│${errorMsg}\n╰──────────────────☉`);
         }
     }
 };

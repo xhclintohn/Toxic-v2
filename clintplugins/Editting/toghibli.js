@@ -35,21 +35,21 @@ module.exports = async (context) => {
     const quotedMime = quoted.mimetype || mime || '';
 
     if (!/image/.test(quotedMime)) {
-        return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Please reply to or send an image with this command.\n◈━━━━━━━━━━━━━━━━◈');
+        return m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Please reply to or send an image with this command.\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───');
     }
 
-    await m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Creating your Ghibli-style artwork... please wait 🎨\n◈━━━━━━━━━━━━━━━━◈');
+    await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Creating your Ghibli-style artwork... please wait 🎨\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───');
 
     try {
         // Step 1: Download image
         const media = await quoted.download();
         if (!media) {
-            return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ Failed to download the image. Try again.\n◈━━━━━━━━━━━━━━━━◈');
+            return m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Failed to download the image. Try again.\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───');
         }
 
         // Step 2: Size limit check
         if (media.length > 10 * 1024 * 1024) {
-            return m.reply('◈━━━━━━━━━━━━━━━━◈\n❒ The image is too large (max 10MB).\n◈━━━━━━━━━━━━━━━━◈');
+            return m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ The image is too large (max 10MB).\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───');
         }
 
         // Step 3: Upload image to get a public URL
@@ -71,11 +71,11 @@ module.exports = async (context) => {
             m.chat,
             {
                 image: ghibliImage,
-                caption: '◈━━━━━━━━━━━━━━━━◈\n❒ Your image has been reimagined in *Studio Ghibli* style! 🌸\n◈━━━━━━━━━━━━━━━━◈',
+                caption: '╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Your image has been reimagined in *Studio Ghibli* style! 🌸\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───',
             },
             { quoted: m }
         );
     } catch (err) {
-        await m.reply(`◈━━━━━━━━━━━━━━━━◈\n❒ Error while generating Ghibli-style image: ${err.message}\n◈━━━━━━━━━━━━━━━━◈`);
+        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Error while generating Ghibli-style image: ${err.message}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
     }
 };

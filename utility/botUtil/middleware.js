@@ -2,23 +2,16 @@ const middleware = async (context, next) => {
     const { m, isBotAdmin, isAdmin } = context;
 
     if (!m.isGroup) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈
-│❒ This command isn’t for lone wolves. Try again in a group. 🐺
-◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`*𝐓𝐨𝐱𝐢𝐜-𝐌D Gʀᴏᴜᴘ Oɴʟʏ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Rᴇsᴛʀɪᴄᴛᴇᴅ ≪───\n> \`々\` This command is for groups only.\n> \`々\` Go find a group, lone wolf.\n╰──────────────────☉`);
     }
     if (!isAdmin) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈
-│❒ You think you’re worthy? 
-│❒ Admin privileges are required—go beg for them. 😤
-◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`*𝐓𝐨𝐱𝐢𝐜-𝐌D Aᴅᴍɪɴ Oɴʟʏ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Nᴏ Pᴇʀᴍɪssɪᴏɴ ≪───\n> \`々\` Admin privileges required.\n> \`々\` Go beg for admin rights,\n> \`々\` you pathetic peasant.\n╰──────────────────☉`);
     }
     if (!isBotAdmin) {
-        return m.reply(`◈━━━━━━━━━━━━━━━━◈
-│❒ I need admin rights to obey, unlike you who blindly follows. 🫵 
-◈━━━━━━━━━━━━━━━━◈`);
+        return m.reply(`*𝐓𝐨𝐱𝐢𝐜-𝐌D Nᴇᴇᴅs Aᴅᴍɪɴ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Bᴏᴛ Nᴏᴛ Aᴅᴍɪɴ ≪───\n> \`々\` I need admin rights to do this.\n> \`々\` Make me admin first, fool.\n╰──────────────────☉`);
     }
 
-    await next(); // Proceed to the next function (main handler)
+    await next();
 };
 
 module.exports = middleware;

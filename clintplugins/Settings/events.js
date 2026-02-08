@@ -7,7 +7,7 @@ module.exports = async (context) => {
     const jid = m.chat;
 
     const formatStylishReply = (message) => {
-      return `◈━━━━━━━━━━━━━━━━◈\n│❒ ${message}\n┗━━━━━━━━━━━━━━━┛`;
+      return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${message}\n╰──────────────────☉`;
     };
 
     try {
