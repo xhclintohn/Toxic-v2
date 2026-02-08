@@ -7,12 +7,12 @@
     "start": "node index.js"
   },
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@vitalets/google-translate-api": "^9.2.0",
-    "@whiskeysockets/baileys": "latest",
+    "@whiskeysockets/baileys": "npm:toxic-baileys",
     "acrcloud": "^1.2.0",
     "async": "^3.2.5",
     "awesome-phonenumber": "^6.2.0",
