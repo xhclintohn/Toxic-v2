@@ -1,0 +1,80 @@
+const { botname } = require('../../config/settings');
+
+module.exports = {
+  name: 'listonline',
+  aliases: ['online', 'active', 'onlineusers', 'whoonline', 'whos-online'],
+  description: 'List currently online group members by subscribing to presence updates',
+  run: async (context) => {
+    const { client, m } = context;
+    const bName = botname || 'Toxic-MD';
+
+    if (!m.isGroup) {
+      return client.sendMessage(m.chat, {
+        text: `*${bName} Gʀᴏᴜᴘ Oɴʟʏ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Gʀᴏᴜᴘ Cᴏᴍᴍᴀɴᴅ ≪───\n> \`々\` This ain't a group, genius.\n> \`々\` Use this in a group chat.\n╰──────────────────☉`
+      }, { quoted: m });
+    }
+
+    try {
+      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+
+      const groupMetadata = await client.groupMetadata(m.chat);
+      const participants = groupMetadata.participants || [];
+      const groupName = groupMetadata.subject || 'Unknown Group';
+
+      const presenceResults = {};
+
+      const presenceHandler = (json) => {
+        const chatId = Object.keys(json)[0];
+        if (chatId === m.chat) {
+          const presences = json[chatId]?.presences || json[chatId];
+          if (presences && typeof presences === 'object') {
+            for (const [jid, data] of Object.entries(presences)) {
+              if (jid.includes('@')) {
+                const status = data?.lastKnownPresence || data;
+                if (status === 'available' || status === 'composing' || status === 'recording') {
+                  presenceResults[jid] = status;
+                }
+              }
+            }
+          }
+        }
+      };
+
+      client.ev.on('presence.update', presenceHandler);
+
+      try {
+        await client.presenceSubscribe(m.chat);
+      } catch (e) {}
+
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      client.ev.off('presence.update', presenceHandler);
+
+      const onlineJids = Object.keys(presenceResults);
+
+      if (onlineJids.length === 0) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        return client.sendMessage(m.chat, {
+          text: `*${bName} Oɴʟɪɴᴇ Cʜᴇᴄᴋ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Nᴏ Oɴᴇ Oɴʟɪɴᴇ ≪───\n> \`々\` Group: ${groupName}\n> \`々\` Either everyone's hiding or\n> \`々\` they all have privacy on.\n> \`々\` Cowards, the lot of them.\n╰──────────────────☉`
+        }, { quoted: m });
+      }
+
+      const onlineList = onlineJids
+        .map((jid, index) => `> \`々\` ${index + 1}. @${jid.split('@')[0]}`)
+        .join('\n');
+
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
+      await client.sendMessage(m.chat, {
+        text: `*${bName} Oɴʟɪɴᴇ Usᴇʀs*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Oɴʟɪɴᴇ Mᴇᴍʙᴇʀs ≪───\n> \`々\` Group: ${groupName}\n> \`々\` Online: ${onlineJids.length}/${participants.length}\n>\n${onlineList}\n╰──────────────────☉`,
+        mentions: onlineJids
+      }, { quoted: m });
+
+    } catch (error) {
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+      await client.sendMessage(m.chat, {
+        text: `*${bName} Eʀʀᴏʀ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Fᴀɪʟᴇᴅ ≪───\n> \`々\` Couldn't fetch online users.\n> \`々\` Error: ${error.message || 'Unknown'}\n> \`々\` Try again, or don't. I don't care.\n╰──────────────────☉`
+      }, { quoted: m });
+    }
+  }
+};
