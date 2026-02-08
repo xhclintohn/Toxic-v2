@@ -17,7 +17,7 @@
     "async": "^3.2.5",
     "awesome-phonenumber": "^6.2.0",
     "axios": "^1.6.7",
-    "badadvice": "^2.0.1",
+    "badadvice": "latest",
     "canvacord": "^5.4.10",
     "canvas": "^2.11.2",
     "chalk": "^4.1.2",
