@@ -31,7 +31,7 @@
     "google-tts-api": "^2.0.2",
     "human-readable": "^0.2.1",
     "imgur": "^2.3.0",
-    "jimp": "^0.22.12",
+    "jimp": "latest",
     "lodash": "^4.17.21",
     "luxon": "^3.4.4",
     "moment-timezone": "^0.5.45",
