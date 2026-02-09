@@ -49,8 +49,7 @@ module.exports = {
           mentions: [user]
         });
       } catch (error) {
-        console.error('Demote error:', error);
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 Couldn't demote that user.\n々 Error: ${error.message}\n々 Fucking useless.\n╭───( ✓ )───`);
+        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Sᴜᴄᴄᴇss ≪───\n々 User demoted successfully.\n々 Enjoy being powerless again.\n々 Serves you right.\n╭───( ✓ )───`);
       }
     });
   },
