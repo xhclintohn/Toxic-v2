@@ -12,7 +12,7 @@
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@vitalets/google-translate-api": "^9.2.0",
-    "@whiskeysockets/baileys": "npm:toxic-baileys",
+    "@whiskeysockets/baileys": "github:kayzennotdev/bail.git",
     "acrcloud": "^1.2.0",
     "async": "^3.2.5",
     "awesome-phonenumber": "^6.2.0",
