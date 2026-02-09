@@ -149,37 +149,32 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => ({})) : {};
             const participants = m.metadata?.participants || [];
             
-            const extractPhone = (jid) => {
-                if (!jid) return '';
-                const numbers = jid.replace(/\D/g, '');
-                return numbers.slice(-9);
-            };
-            
-            const senderPhone = extractPhone(m.sender);
-            const botPhone = extractPhone(botNumber);
+            console.log('=== ADMIN DETECTION ===');
+            console.log('Sender JID:', m.sender);
+            console.log('Bot JID:', botNumber);
             
             let userAdminFound = false;
             let botAdminFound = false;
             
             for (const p of participants) {
-                const participantId = p.id || p.jid || '';
-                const participantPhone = extractPhone(participantId);
+                const participantJid = p.jid || p.id;
                 
-                if (!userAdminFound && participantPhone === senderPhone && p.admin !== null) {
-                    userAdminFound = true;
+                if (participantJid === m.sender) {
+                    userAdminFound = p.admin !== null;
+                    console.log('Found sender:', participantJid, 'Admin:', userAdminFound);
                 }
                 
-                if (!botAdminFound && participantPhone === botPhone && p.admin !== null) {
-                    botAdminFound = true;
+                if (participantJid === botNumber) {
+                    botAdminFound = p.admin !== null;
+                    console.log('Found bot:', participantJid, 'Admin:', botAdminFound);
                 }
-                
-                if (userAdminFound && botAdminFound) break;
             }
             
             m.isAdmin = userAdminFound;
             m.isBotAdmin = botAdminFound;
             
         } catch (error) {
+            console.error('Admin check error:', error);
             m.metadata = {};
             m.isAdmin = false;
             m.isBotAdmin = false;
