@@ -89,7 +89,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const bannedUsers = await getBannedUsers();
         let settings = await getSettings();
         if (!settings) {
-            console.error("Toxic-MD: Settings not found, cannot proceed!");
             return;
         }
 
@@ -148,31 +147,31 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             m.isGroup = m.chat?.endsWith("g.us");
             m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => ({})) : {};
             const participants = m.metadata?.participants || [];
-            
+
             console.log('=== ADMIN DETECTION ===');
             console.log('Sender JID:', m.sender);
             console.log('Bot JID:', botNumber);
-            
+
             let userAdminFound = false;
             let botAdminFound = false;
-            
+
             for (const p of participants) {
                 const participantJid = p.jid || p.id;
-                
+
                 if (participantJid === m.sender) {
                     userAdminFound = p.admin !== null;
                     console.log('Found sender:', participantJid, 'Admin:', userAdminFound);
                 }
-                
+
                 if (participantJid === botNumber) {
                     botAdminFound = p.admin !== null;
                     console.log('Found bot:', participantJid, 'Admin:', botAdminFound);
                 }
             }
-            
+
             m.isAdmin = userAdminFound;
             m.isBotAdmin = botAdminFound;
-            
+
         } catch (error) {
             console.error('Admin check error:', error);
             m.metadata = {};
@@ -555,7 +554,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         }
 
     } catch (err) {
-        console.error('❌ [TOXIC] Error:', err.message);
     }
 };
 
