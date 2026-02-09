@@ -14,7 +14,11 @@ module.exports = {
         return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Usᴀɢᴇ ≪───\n々 Mention or quote a user.\n々 Example: ${prefix}promote @user\n々 Do I have to spell everything?\n╭───( ✓ )───`);
       }
 
-      const users = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null);
+      let users = m.mentionedJid ? m.mentionedJid[0] : null;
+      if (!users && m.quoted) {
+        users = m.quoted.sender;
+      }
+      
       if (!users) {
         return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Iɴᴠᴀʟɪᴅ ≪───\n々 Invalid user specified.\n々 Tag someone properly, fool.\n╭───( ✓ )───`);
       }
@@ -27,7 +31,8 @@ module.exports = {
           mentions: [users]
         });
       } catch (error) {
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 Couldn't promote that user.\n々 Error: ${error.message}\n╭───( ✓ )───`);
+        console.error('Promote error:', error);
+        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 Couldn't promote that user.\n々 Make sure I'm admin first, dumbass.\n╭───( ✓ )───`);
       }
     });
   }
