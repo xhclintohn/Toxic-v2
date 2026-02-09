@@ -27,25 +27,25 @@ module.exports = async (context) => {
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        if (!m.quoted) return m.reply('Reply to an image.');
+        if (!m.quoted) return m.reply('Reply to an image, you blind idiot.');
         const q = m.quoted;
 
         const mime = q.mimetype || '';
         if (!mime.startsWith('image/')) {
-            return m.reply('That is not an image.');
+            return m.reply('That is not an image, are you stupid? 🤦🏻');
         }
 
         const prompt = text || 'make it look epic';
 
         const mediaBuffer = await q.download?.();
         if (!mediaBuffer || !Buffer.isBuffer(mediaBuffer)) {
-            throw new Error('Failed to download image');
+            throw new Error('Failed to download image, network issue maybe?');
         }
 
         const uploadedUrl = await uploadToCatbox(mediaBuffer);
 
-        const apiUrl = `https://www.movanest.xyz/v2/img2img?image_url=${encodeURIComponent(uploadedUrl)}&prompt=${encodeURIComponent(prompt)}&your_api_key=movanest-key17WR5ISK4U`;
-        
+        const apiUrl = `https://api.danzy.web.id/api/ai/editimg?url=${encodeURIComponent(uploadedUrl)}&prompt=${encodeURIComponent(prompt)}`;
+
         const res = await axios.get(
             apiUrl,
             {
@@ -56,14 +56,14 @@ module.exports = async (context) => {
             }
         );
 
-        if (!res.data || !res.data.results || !res.data.results.resultUrl) {
-            throw new Error('Invalid API response format');
+        if (!res.data || !res.data.status || !res.data.result || !res.data.result.imageUrl) {
+            throw new Error('API failed to edit the image.');
         }
 
-        const resultUrl = res.data.results.resultUrl;
+        const imageUrl = res.data.result.imageUrl;
 
         const imageResponse = await axios.get(
-            resultUrl,
+            imageUrl,
             {
                 responseType: 'arraybuffer',
                 headers: {
@@ -74,7 +74,7 @@ module.exports = async (context) => {
         );
 
         if (!imageResponse.data || imageResponse.data.length < 1000) {
-            throw new Error('Edited image is empty or too small');
+            throw new Error('Edited image is too small or corrupted.');
         }
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
@@ -83,19 +83,15 @@ module.exports = async (context) => {
             m.chat,
             {
                 image: Buffer.from(imageResponse.data),
-                caption: `Done.\nPrompt: "${prompt}"\n—\nTσxιƈ-ɱԃȥ`
+                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Eᴅɪᴛᴇᴅ Iᴍᴀɢᴇ ≪───\n々 Prompt: "${prompt}"\n々 Stop wasting my time\n々 with basic edits.\n╭───( ✓ )───`
             },
             { quoted: m }
         );
 
     } catch (err) {
-        console.error('Edit Error:', {
-            message: err.message,
-            status: err.response?.status,
-            data: err.response?.data
-        });
+        console.error('Edit Error:', err.message);
 
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        m.reply(`Edit failed.\nError: ${err.message}`);
+        m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 Image edit failed.\n々 Error: ${err.message}\n々 Try again, you useless fuck.\n╭───( ✓ )───`);
     }
 };
