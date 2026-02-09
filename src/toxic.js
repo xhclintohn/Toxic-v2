@@ -89,6 +89,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const bannedUsers = await getBannedUsers();
         let settings = await getSettings();
         if (!settings) {
+            console.error("Toxic-MD: Settings not found!");
             return;
         }
 
@@ -147,33 +148,26 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             m.isGroup = m.chat?.endsWith("g.us");
             m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => ({})) : {};
             const participants = m.metadata?.participants || [];
-
-            console.log('=== ADMIN DETECTION ===');
-            console.log('Sender JID:', m.sender);
-            console.log('Bot JID:', botNumber);
-
+            
             let userAdminFound = false;
             let botAdminFound = false;
-
+            
             for (const p of participants) {
                 const participantJid = p.jid || p.id;
-
+                
                 if (participantJid === m.sender) {
                     userAdminFound = p.admin !== null;
-                    console.log('Found sender:', participantJid, 'Admin:', userAdminFound);
                 }
-
+                
                 if (participantJid === botNumber) {
                     botAdminFound = p.admin !== null;
-                    console.log('Found bot:', participantJid, 'Admin:', botAdminFound);
                 }
             }
-
+            
             m.isAdmin = userAdminFound;
             m.isBotAdmin = botAdminFound;
-
+            
         } catch (error) {
-            console.error('Admin check error:', error);
             m.metadata = {};
             m.isAdmin = false;
             m.isBotAdmin = false;
@@ -364,17 +358,16 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
                     const messageType = getMessageType(deletedMessage.message);
                     try {
-                        const notification = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───`;
                         const msg = extractInnerMessage(deletedMessage.message);
                         if (msg.conversation) {
                             await client.sendMessage(botJid, {
-                                text: `${notification}\n\n${msg.conversation}`,
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📝 *Deleted Content:*\n${msg.conversation}`,
                                 mentions: [sender]
                             });
                         }
                         else if (msg.extendedTextMessage?.text) {
                             await client.sendMessage(botJid, {
-                                text: `${notification}\n\n${msg.extendedTextMessage.text}`,
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📝 *Deleted Content:*\n${msg.extendedTextMessage.text}`,
                                 mentions: [sender]
                             });
                         }
@@ -383,7 +376,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             const buf = await client.downloadMediaMessage(msg.imageMessage);
                             await client.sendMessage(botJid, {
                                 image: buf,
-                                caption: `${notification}\n${caption}`,
+                                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📸 *Deleted Image:*\n${caption}`,
                                 mentions: [sender]
                             });
                         }
@@ -392,13 +385,16 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             const buf = await client.downloadMediaMessage(msg.videoMessage);
                             await client.sendMessage(botJid, {
                                 video: buf,
-                                caption: `${notification}\n${caption}`,
+                                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n🎥 *Deleted Video:*\n${caption}`,
                                 mentions: [sender]
                             });
                         }
                         else if (msg.audioMessage) {
                             const buf = await client.downloadMediaMessage(msg.audioMessage);
-                            await client.sendMessage(botJid, { text: notification, mentions: [sender] });
+                            await client.sendMessage(botJid, { 
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n🎵 *Deleted Audio*`,
+                                mentions: [sender] 
+                            });
                             await client.sendMessage(botJid, {
                                 audio: buf,
                                 ptt: msg.audioMessage.ptt || false,
@@ -407,7 +403,10 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         }
                         else if (msg.stickerMessage) {
                             const buf = await client.downloadMediaMessage(msg.stickerMessage);
-                            await client.sendMessage(botJid, { text: notification, mentions: [sender] });
+                            await client.sendMessage(botJid, { 
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n😀 *Deleted Sticker*`,
+                                mentions: [sender] 
+                            });
                             await client.sendMessage(botJid, { sticker: buf });
                         }
                         else if (msg.documentMessage) {
@@ -416,14 +415,17 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                                 document: buf,
                                 mimetype: msg.documentMessage.mimetype || 'application/octet-stream',
                                 fileName: msg.documentMessage.fileName || 'document',
-                                caption: `${notification}\n${msg.documentMessage.caption || ''}`,
+                                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📄 *Deleted Document:*\n${msg.documentMessage.caption || ''}`,
                                 mentions: [sender]
                             });
                         }
                         else if (msg.contactMessage) {
                             const vcard = msg.contactMessage.vcard;
                             const displayName = msg.contactMessage.displayName || 'Contact';
-                            await client.sendMessage(botJid, { text: `${notification}\n\n${displayName}`, mentions: [sender] });
+                            await client.sendMessage(botJid, { 
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n👤 *Deleted Contact:*\n${displayName}`, 
+                                mentions: [sender] 
+                            });
                             await client.sendMessage(botJid, {
                                 contacts: { displayName, contacts: [{ vcard }] }
                             });
@@ -431,7 +433,10 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         else if (msg.contactsArrayMessage) {
                             const contacts = msg.contactsArrayMessage.contacts || [];
                             const displayName = msg.contactsArrayMessage.displayName || 'Contacts';
-                            await client.sendMessage(botJid, { text: `${notification}\n\n${displayName} (${contacts.length} contacts)`, mentions: [sender] });
+                            await client.sendMessage(botJid, { 
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n👥 *Deleted Contacts (${contacts.length}):*\n${displayName}`, 
+                                mentions: [sender] 
+                            });
                             for (const c of contacts) {
                                 await client.sendMessage(botJid, {
                                     contacts: { displayName: c.displayName, contacts: [{ vcard: c.vcard }] }
@@ -439,7 +444,10 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             }
                         }
                         else if (msg.locationMessage) {
-                            await client.sendMessage(botJid, { text: notification, mentions: [sender] });
+                            await client.sendMessage(botJid, { 
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📍 *Deleted Location*`, 
+                                mentions: [sender] 
+                            });
                             await client.sendMessage(botJid, {
                                 location: {
                                     degreesLatitude: msg.locationMessage.degreesLatitude,
@@ -451,7 +459,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         }
                         else if (msg.liveLocationMessage) {
                             await client.sendMessage(botJid, {
-                                text: `${notification}\n\nLat: ${msg.liveLocationMessage.degreesLatitude}\nLng: ${msg.liveLocationMessage.degreesLongitude}`,
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📍 *Deleted Live Location*\nLat: ${msg.liveLocationMessage.degreesLatitude}\nLng: ${msg.liveLocationMessage.degreesLongitude}`,
                                 mentions: [sender]
                             });
                         }
@@ -460,13 +468,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             const pollName = poll.name || 'Poll';
                             const options = (poll.options || []).map(o => o.optionName).join('\n々 ');
                             await client.sendMessage(botJid, {
-                                text: `${notification}\n\nPoll: ${pollName}\n々 ${options}`,
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📊 *Deleted Poll:*\n${pollName}\n々 ${options}`,
                                 mentions: [sender]
                             });
                         }
                         else {
                             await client.sendMessage(botJid, {
-                                text: `${notification}\n\nMessage type could not be recovered`,
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n⚠️ *Deleted content could not be recovered*`,
                                 mentions: [sender]
                             });
                         }
@@ -554,6 +562,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         }
 
     } catch (err) {
+        console.error('❌ [TOXIC] Error:', err.message);
     }
 };
 
