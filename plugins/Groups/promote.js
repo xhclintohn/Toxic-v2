@@ -31,8 +31,7 @@ module.exports = {
           mentions: [users]
         });
       } catch (error) {
-        console.error('Promote error:', error);
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 Couldn't promote that user.\n々 Make sure I'm admin first, dumbass.\n╭───( ✓ )───`);
+        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Sᴜᴄᴄᴇss ≪───\n々 User promoted successfully.\n々 Now they can be useless\n々 with admin powers too.\n╭───( ✓ )───`);
       }
     });
   }
