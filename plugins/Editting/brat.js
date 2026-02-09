@@ -1,5 +1,4 @@
-const fetch = require('node-fetch');
-const { Sticker, StickerTypes } = require('wa-sticker-formatter');
+const axios = require('axios');
 
 module.exports = {
     name: 'brat',
@@ -12,7 +11,7 @@ module.exports = {
 
         if (!text) {
             return client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 what am i, a mind reader? @${m.sender.split('@')[0]}! you forgot the text, genius. 🤦🏻\n々 example: ${prefix}brat i'm a dumbass\n╭───( ✓ )───`,
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 what am i, a mind reader? @${m.sender.split('@')[0]}! you forgot the text, genius. 🤦🏻\n々 example: ${prefix}brat i'm a dumbass\n╭───(  )───`,
                 mentions: [m.sender]
             }, { quoted: m });
         }
@@ -21,52 +20,44 @@ module.exports = {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
             const apiUrl = `https://api.nekolabs.web.id/canvas/brat?text=${encodeURIComponent(text)}`;
-            const response = await fetch(apiUrl);
-
-            if (!response.ok) {
-                throw new Error(`api says you're not worth the response: ${response.status}`);
-            }
-
-            const imageBuffer = await response.buffer();
-
-            if (!imageBuffer || imageBuffer.length < 1000) {
-                throw new Error('api returned empty image');
-            }
-
-            const sticker = new Sticker(imageBuffer, {
-                pack: 'your bratty demands',
-                author: 'toxic-md',
-                type: StickerTypes.FULL,
-                categories: ['😤', '🤡'],
-                quality: 50,
-                background: 'transparent'
+            
+            const response = await axios.get(apiUrl, {
+                responseType: 'arraybuffer',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
             });
+
+            if (!response.data || response.data.length < 1000) {
+                throw new Error('API returned empty image');
+            }
 
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-            const stickerBuffer = await sticker.toBuffer();
-
             await client.sendMessage(m.chat, {
-                sticker: stickerBuffer
+                image: response.data,
+                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Bʀᴀᴛ Tᴇxᴛ ≪───\n々 "${text}"\n々 Stop being so needy.\n╭───(  )───`
             }, { quoted: m });
 
         } catch (error) {
-            console.error('brat command crashed because of you:', error);
+            console.error('Brat command error:', error);
 
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
 
-            let errorMessage = 'your sticker failed. shocking.';
+            let errorMessage = 'your brat text failed. shocking.';
 
             if (error.message.includes('status')) {
-                errorMessage = 'api died from cringe. try again when your text is less stupid.';
+                errorMessage = 'API died from cringe. Try again when your text is less stupid.';
             } else if (error.message.includes('Network')) {
-                errorMessage = 'your internet is as weak as your personality.';
+                errorMessage = 'Your internet is as weak as your personality.';
+            } else if (error.message.includes('empty')) {
+                errorMessage = 'API returned empty image. Your text was too cringe even for the API.';
             } else {
-                errorMessage = `even the error is embarrassed: ${error.message}`;
+                errorMessage = `Even the error is embarrassed: ${error.message}`;
             }
 
             await client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 brat sticker failed, you disappointment.\n々 ${errorMessage}\n╭───( ✓ )───`
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 Brat text generation failed.\n々 ${errorMessage}\n╭───(  )───`
             }, { quoted: m });
         }
     }
