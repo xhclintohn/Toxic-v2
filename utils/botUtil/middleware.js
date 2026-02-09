@@ -22,36 +22,95 @@ const middleware = async (context, next) => {
         // DEBUG: Log all participants
         console.log('=== PARTICIPANTS ===');
         participants.forEach(p => {
-            console.log(`ID: ${p.id}, Admin: ${p.admin}, You: ${p.id.includes(client.user.id.split('@')[0])}, Sender: ${p.id.includes(m.sender.split('@')[0])}`);
+            console.log(`ID: ${p.id}, Admin: ${p.admin}`);
         });
         
-        // Helper function to normalize IDs
+        // Helper function to normalize IDs for comparison
         const normalizeId = (id) => {
-            // Remove @s.whatsapp.net, @c.us, @g.us and :number suffix
+            // Remove all suffixes and prefixes
             return id.split('@')[0].split(':')[0];
         };
         
-        // Normalize bot ID
-        const botIdNormalized = normalizeId(client.user.id);
-        console.log('Normalized Bot ID:', botIdNormalized);
+        // Get the bot's phone number (without country code)
+        const botPhoneNumber = normalizeId(client.user.id); // "254799283147"
+        const senderPhoneNumber = normalizeId(m.sender); // "254735342808"
+        
+        console.log('Bot Phone Number:', botPhoneNumber);
+        console.log('Sender Phone Number:', senderPhoneNumber);
         
         // Check if bot is admin
         let isBotAdmin = false;
         let isAdmin = false;
         
         for (const p of participants) {
-            const participantIdNormalized = normalizeId(p.id);
+            const participantId = p.id;
             
-            // Check if this is the bot
-            if (participantIdNormalized === botIdNormalized) {
-                isBotAdmin = p.admin === 'admin' || p.admin === true || p.admin === 'superadmin';
-                console.log('Found bot in participants. Admin status:', p.admin, 'Result:', isBotAdmin);
+            // Check for LID format OR regular format
+            // LID format: 106236687175694@lid
+            // Regular format: 254799283147:12@s.whatsapp.net
+            
+            if (participantId.includes('@lid')) {
+                // For LID format, we need to check if this participant matches our numbers
+                // We'll get the actual numbers from a mapping or cache
+                // For now, we'll check admin status based on other methods
+                
+                // If you have a way to map LID to phone numbers, do it here
+                // Otherwise, we need to use a different approach
+                
+                console.log('Found LID participant:', participantId);
+            } else {
+                // Regular format
+                const participantPhoneNumber = normalizeId(participantId);
+                
+                // Check if this is the bot
+                if (participantPhoneNumber === botPhoneNumber) {
+                    isBotAdmin = p.admin === 'admin' || p.admin === true || p.admin === 'superadmin';
+                    console.log('Found bot (regular format). Admin status:', p.admin, 'Result:', isBotAdmin);
+                }
+                
+                // Check if this is the message sender
+                if (participantPhoneNumber === senderPhoneNumber) {
+                    isAdmin = p.admin === 'admin' || p.admin === true || p.admin === 'superadmin';
+                    console.log('Found sender (regular format). Admin status:', p.admin, 'Result:', isAdmin);
+                }
             }
+        }
+        
+        // IF we didn't find in regular format, try alternative approach
+        if (!isBotAdmin || !isAdmin) {
+            console.log('Trying alternative LID mapping approach...');
             
-            // Check if this is the message sender
-            if (participantIdNormalized === normalizeId(m.sender)) {
-                isAdmin = p.admin === 'admin' || p.admin === true || p.admin === 'superadmin';
-                console.log('Found sender in participants. Admin status:', p.admin, 'Result:', isAdmin);
+            // Method 1: Use WhatsApp's internal mapping if available
+            // Some libraries store LID-to-number mapping
+            
+            // Method 2: Fetch participant info differently
+            try {
+                // Try to get participant info using WhatsApp's methods
+                const chat = await client.getChatById(m.chat);
+                
+                // Check bot admin status
+                const me = chat.participants.find(p => 
+                    p.id._serialized === client.user.id || 
+                    p.id.user === botPhoneNumber
+                );
+                
+                if (me) {
+                    isBotAdmin = me.isAdmin || me.admin;
+                    console.log('Alternative - Bot admin:', isBotAdmin, me);
+                }
+                
+                // Check sender admin status
+                const sender = chat.participants.find(p => 
+                    p.id._serialized === m.sender || 
+                    p.id.user === senderPhoneNumber
+                );
+                
+                if (sender) {
+                    isAdmin = sender.isAdmin || sender.admin;
+                    console.log('Alternative - Sender admin:', isAdmin, sender);
+                }
+            } catch (altError) {
+                console.log('Alternative method failed:', altError);
             }
         }
         
