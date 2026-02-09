@@ -1,0 +1,57 @@
+{
+  "name": "Toxic-MD",
+  "version": "2.0.0",
+  "description": "A lightning-fast WhatsApp bot with multi-device support, built on Node.js & Baileys.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@vitalets/google-translate-api": "^9.2.0",
+    "@whiskeysockets/baileys": "npm:toxic-baileys",
+    "acrcloud": "^1.2.0",
+    "async": "^3.2.5",
+    "awesome-phonenumber": "^6.2.0",
+    "axios": "^1.6.7",
+    "badadvice": "latest",
+    "canvacord": "^5.4.10",
+    "canvas": "^2.11.2",
+    "chalk": "^4.1.2",
+    "cheerio": "^1.0.0-rc.12",
+    "compile-run": "^2.3.3",
+    "express": "^4.18.2",
+    "figlet": "^1.7.0",
+    "file-type": "^16.5.4",
+    "fluent-ffmpeg": "^2.1.2",
+    "form-data": "^4.0.0",
+    "google-tts-api": "^2.0.2",
+    "human-readable": "^0.2.1",
+    "imgur": "^2.3.0",
+    "jimp": "latest",
+    "lodash": "^4.17.21",
+    "luxon": "^3.4.4",
+    "moment-timezone": "^0.5.45",
+    "node-fetch": "^2.7.0",
+    "node-id3": "^0.2.6",
+    "node-webpmux": "^3.1.7",
+    "node-youtube-music": "^0.9.0",
+    "performance-now": "^2.1.0",
+    "pg": "^8.11.3",
+    "pino": "^8.19.0",
+    "querystring": "^0.2.1",
+    "random-useragent": "^0.5.0",
+    "wa-sticker-formatter": "^4.4.4",
+    "wikipedia": "^2.1.2",
+    "youtubedl-core": "^4.11.5",
+    "youtube-yts": "^1.4.0",
+    "ytdl-core": "^4.11.5",
+    "yt-search": "^2.10.4"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.8"
+  }
+}
