@@ -148,18 +148,37 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             m.isGroup = m.chat?.endsWith("g.us");
             m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => ({})) : {};
             const participants = m.metadata?.participants || [];
-            const senderNum = m.sender?.split('@')[0]?.split(':')[0];
-            const botNum = botNumber?.split('@')[0]?.split(':')[0];
-            m.isAdmin = Boolean(participants.find(p => {
-                if (!p.admin) return false;
-                const pNum = p.id?.split('@')[0]?.split(':')[0];
-                return pNum === senderNum;
-            }));
-            m.isBotAdmin = Boolean(participants.find(p => {
-                if (!p.admin) return false;
-                const pNum = p.id?.split('@')[0]?.split(':')[0];
-                return pNum === botNum;
-            }));
+            
+            const extractPhone = (jid) => {
+                if (!jid) return '';
+                const numbers = jid.replace(/\D/g, '');
+                return numbers.slice(-9);
+            };
+            
+            const senderPhone = extractPhone(m.sender);
+            const botPhone = extractPhone(botNumber);
+            
+            let userAdminFound = false;
+            let botAdminFound = false;
+            
+            for (const p of participants) {
+                const participantId = p.id || p.jid || '';
+                const participantPhone = extractPhone(participantId);
+                
+                if (!userAdminFound && participantPhone === senderPhone && p.admin !== null) {
+                    userAdminFound = true;
+                }
+                
+                if (!botAdminFound && participantPhone === botPhone && p.admin !== null) {
+                    botAdminFound = true;
+                }
+                
+                if (userAdminFound && botAdminFound) break;
+            }
+            
+            m.isAdmin = userAdminFound;
+            m.isBotAdmin = botAdminFound;
+            
         } catch (error) {
             m.metadata = {};
             m.isAdmin = false;
