@@ -18,19 +18,19 @@ module.exports = {
       try { groupCount = Object.keys(await client.groupFetchAllParticipating()).length; } catch (e) {}
 
       const fmt = (name, desc, status, cmd, example) => {
-        return `> \`々\` *${name}*\n>     ${desc}\n>     Status: ${status}\n>     Change: \`${cmd}\`\n>     Example: \`${example}\`\n>\n`;
+        return `々 *${name}*\n>     ${desc}\n>     Status: ${status}\n>     Change: \`${cmd}\`\n>     Example: \`${example}\`\n>\n`;
       };
 
       const message =
         `*${bName} Sᴇᴛᴛɪɴɢs*\n\n` +
-        `╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n` +
-        `> ───≫ Bᴏᴛ Iɴғᴏ ≪───\n` +
-        `> \`々\` Bot Name: ${bName}\n` +
-        `> \`々\` Sudo Users: ${sudoUsers.length}\n` +
-        `> \`々\` Banned Users: ${bannedUsers.length}\n` +
-        `> \`々\` Total Groups: ${groupCount}\n` +
+        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
+        `───≫ Bᴏᴛ Iɴғᴏ ≪───\n` +
+        `々 Bot Name: ${bName}\n` +
+        `々 Sudo Users: ${sudoUsers.length}\n` +
+        `々 Banned Users: ${bannedUsers.length}\n` +
+        `々 Total Groups: ${groupCount}\n` +
         `>\n` +
-        `> ───≫ Aʟʟ Sᴇᴛᴛɪɴɢs ≪───\n>\n` +
+        `───≫ Aʟʟ Sᴇᴛᴛɪɴɢs ≪───\n>\n` +
         fmt(
           'Auto-Like Status',
           'Automatically reacts to contacts status updates with an emoji.',
@@ -109,6 +109,13 @@ module.exports = {
           `${prefix}antidelete on`
         ) +
         fmt(
+          'Anti-Edit Tracker',
+          'Catches edited messages and sends original + edited to your DM.',
+          settings.antiedit ? '✅ ON' : '❌ OFF',
+          `${prefix}antiedit on/off`,
+          `${prefix}antiedit on`
+        ) +
+        fmt(
           'Sticker Pack Name',
           'Sets the pack name shown on stickers created by the bot.',
           settings.packname || 'Toxic-MD',
@@ -122,11 +129,11 @@ module.exports = {
           `${prefix}startmessage on/off`,
           `${prefix}startmessage off`
         ) +
-        `> ───≫ Tɪᴘs ≪───\n` +
-        `> \`々\` Only owner/sudo can change settings.\n` +
-        `> \`々\` Settings save instantly to database.\n` +
-        `> \`々\` Stop bothering me with dumb questions.\n` +
-        `╰──────────────────☉`;
+        `───≫ Tɪᴘs ≪───\n` +
+        `々 Only owner/sudo can change settings.\n` +
+        `々 Settings save instantly to database.\n` +
+        `々 Stop bothering me with dumb questions.\n` +
+        `╭───( ✓ )───`;
 
       await client.sendMessage(m.chat, { text: message }, { quoted: m });
     });

@@ -8,7 +8,7 @@ module.exports = {
         const { client, m, prefix, botname } = context;
 
         const formatStylishReply = (message) => {
-            return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${message}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`;
+            return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
         };
 
         /**
@@ -18,7 +18,7 @@ module.exports = {
         
         if (!prompt) {
             return client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Yo, @${m.sender.split('@')[0]}! 😤 You forgot the prompt!\n> 々 Example: ${prefix}imagine a cat playing football\n> 々 Or: ${prefix}dream a fantasy landscape\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`,
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, @${m.sender.split('@')[0]}! 😤 You forgot the prompt!\n々 Example: ${prefix}imagine a cat playing football\n々 Or: ${prefix}dream a fantasy landscape\n╭───( ✓ )───`,
                 mentions: [m.sender]
             }, { quoted: m });
         }

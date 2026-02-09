@@ -16,7 +16,7 @@ module.exports = async (context) => {
     const { client, m, mime, pushname } = context;
 
     if (!m.sender.includes('your-owner-number@s.whatsapp.net')) {
-        return m.reply('╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n`々` Only owners can use this command.\n╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───');
+        return m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Only owners can use this command.\n╭───( ✓ )───');
     }
 
     commandQueue.push({
@@ -24,19 +24,19 @@ module.exports = async (context) => {
         run: async ({ client, m, mime, pushname }) => {
             try {
                 if (!m.quoted) {
-                    return m.reply('╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n`々` Quote an image, a short video, or a sticker to change watermark.\n╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───');
+                    return m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Quote an image, a short video, or a sticker to change watermark.\n╭───( ✓ )───');
                 }
 
                 if (!/image|video|image\/webp/.test(mime)) {
-                    return m.reply('╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n`々` This is neither a sticker, image, nor a short video!\n╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───');
+                    return m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 This is neither a sticker, image, nor a short video!\n╭───( ✓ )───');
                 }
 
                 if (m.quoted.videoMessage && m.quoted.videoMessage.seconds > 30) {
-                    return m.reply('╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n`々` Videos must be 30 seconds or shorter.\n╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───');
+                    return m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Videos must be 30 seconds or shorter.\n╭───( ✓ )───');
                 }
 
                 const tempFile = path.join(__dirname, `temp-watermark-${Date.now()}.${/image\/webp/.test(mime) ? 'webp' : /image/.test(mime) ? 'jpg' : 'mp4'}`);
-                await m.reply('╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n`々` A moment, Toxic-MD is creating the sticker...\n╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───');
+                await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 A moment, Toxic-MD is creating the sticker...\n╭───( ✓ )───');
 
                 const media = await client.downloadAndSaveMediaMessage(m.quoted, tempFile);
 
@@ -56,7 +56,7 @@ module.exports = async (context) => {
                 await fs.unlink(tempFile).catch(() => console.warn('Failed to delete temp file'));
             } catch (error) {
                 console.error(`WatermarkSticker error: ${error.message}`);
-                await m.reply('╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───\n`々` An error occurred while creating the sticker. Please try again.\n╭───(    `𝐓𝐨𝐱𝐢𝐜-𝐌D`    )───');
+                await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 An error occurred while creating the sticker. Please try again.\n╭───( ✓ )───');
             }
         }
     });

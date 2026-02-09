@@ -50,7 +50,7 @@ module.exports = {
     const { client, m, text, prefix } = context;
 
     if (!text) {
-      let preview = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 *Fancy Text Generator*\n> 々 Usage: ${prefix}fancy <number> <your text>\n> 々 Example: \( {prefix}fancy 1 Toxic-MD\n│\n│ Available styles (1- \){Object.keys(fancyStyles).length}):\n`;
+      let preview = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 *Fancy Text Generator*\n々 Usage: ${prefix}fancy <number> <your text>\n々 Example: \( {prefix}fancy 1 Toxic-MD\n│\n│ Available styles (1- \){Object.keys(fancyStyles).length}):\n`;
 
       const example = 'Toxic';
       for (let i = 1; i <= Object.keys(fancyStyles).length; i++) {
@@ -58,7 +58,7 @@ module.exports = {
         if (styled) preview += `│ ${i}. ${styled}\n`;
       }
 
-      preview += `╰──────────────────☉\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
+      preview += `╭───( ✓ )───\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
 
       return client.sendMessage(m.chat, { text: preview }, { quoted: m });
     }
@@ -68,14 +68,14 @@ module.exports = {
 
     if (isNaN(styleNum) || styleNum < 1 || styleNum > Object.keys(fancyStyles).length) {
       return client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Invalid style number!\n> 々 Use 1-${Object.keys(fancyStyles).length}\n> 々 Example: ${prefix}fancy 1 Toxic-MD\n╰──────────────────☉`
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Invalid style number!\n々 Use 1-${Object.keys(fancyStyles).length}\n々 Example: ${prefix}fancy 1 Toxic-MD\n╭───( ✓ )───`
       }, { quoted: m });
     }
 
     const inputText = args.slice(1).join(' ');
     if (!inputText) {
       return client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 No text provided!\n> 々 ${prefix}fancy ${styleNum} Your Text Here\n╰──────────────────☉`
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 No text provided!\n々 ${prefix}fancy ${styleNum} Your Text Here\n╭───( ✓ )───`
       }, { quoted: m });
     }
 
@@ -88,7 +88,7 @@ module.exports = {
 
     } catch (error) {
       await client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Failed to apply fancy style.\n> 々 Try again or use a different number.\n╰──────────────────☉`
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Failed to apply fancy style.\n々 Try again or use a different number.\n╭───( ✓ )───`
       }, { quoted: m });
     }
   }

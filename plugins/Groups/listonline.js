@@ -10,7 +10,7 @@ module.exports = {
 
     if (!m.isGroup) {
       return client.sendMessage(m.chat, {
-        text: `*${bName} Gʀᴏᴜᴘ Oɴʟʏ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Gʀᴏᴜᴘ Cᴏᴍᴍᴀɴᴅ ≪───\n> \`々\` This ain't a group, genius.\n> \`々\` Use this in a group chat.\n╰──────────────────☉`
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Gʀᴏᴜᴘ Cᴏᴍᴍᴀɴᴅ ≪───\n々 This ain't a group, genius.\n々 Use this in a group chat.\n╭───( ✓ )───`
       }, { quoted: m });
     }
 
@@ -55,25 +55,25 @@ module.exports = {
       if (onlineJids.length === 0) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return client.sendMessage(m.chat, {
-          text: `*${bName} Oɴʟɪɴᴇ Cʜᴇᴄᴋ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Nᴏ Oɴᴇ Oɴʟɪɴᴇ ≪───\n> \`々\` Group: ${groupName}\n> \`々\` Either everyone's hiding or\n> \`々\` they all have privacy on.\n> \`々\` Cowards, the lot of them.\n╰──────────────────☉`
+          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Nᴏ Oɴᴇ Oɴʟɪɴᴇ ≪───\n々 Group: ${groupName}\n々 Either everyone's hiding or\n々 they all have privacy on.\n々 Cowards, the lot of them.\n╭───( ✓ )───`
         }, { quoted: m });
       }
 
       const onlineList = onlineJids
-        .map((jid, index) => `> \`々\` ${index + 1}. @${jid.split('@')[0]}`)
+        .map((jid, index) => `々 ${index + 1}. @${jid.split('@')[0]}`)
         .join('\n');
 
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
       await client.sendMessage(m.chat, {
-        text: `*${bName} Oɴʟɪɴᴇ Usᴇʀs*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Oɴʟɪɴᴇ Mᴇᴍʙᴇʀs ≪───\n> \`々\` Group: ${groupName}\n> \`々\` Online: ${onlineJids.length}/${participants.length}\n>\n${onlineList}\n╰──────────────────☉`,
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Oɴʟɪɴᴇ Mᴇᴍʙᴇʀs ≪───\n々 Group: ${groupName}\n々 Online: ${onlineJids.length}/${participants.length}\n>\n${onlineList}\n╭───( ✓ )───`,
         mentions: onlineJids
       }, { quoted: m });
 
     } catch (error) {
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
       await client.sendMessage(m.chat, {
-        text: `*${bName} Eʀʀᴏʀ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Fᴀɪʟᴇᴅ ≪───\n> \`々\` Couldn't fetch online users.\n> \`々\` Error: ${error.message || 'Unknown'}\n> \`々\` Try again, or don't. I don't care.\n╰──────────────────☉`
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 Couldn't fetch online users.\n々 Error: ${error.message || 'Unknown'}\n々 Try again, or don't. I don't care.\n╭───( ✓ )───`
       }, { quoted: m });
     }
   }

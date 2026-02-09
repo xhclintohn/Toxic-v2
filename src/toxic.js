@@ -22,7 +22,7 @@ const ownerMiddleware = require('../utils/botUtil/Ownermiddleware');
 
 process.setMaxListeners(0);
 cleanupOldMessages();
-setInterval(() => cleanupOldMessages(), 24 * 60 * 60 * 1000);
+setInterval(() => cleanupOldMessages(), 12 * 60 * 60 * 1000);
 
 function shouldStoreMessage(m) {
     const remoteJid = m.chat || m.key?.remoteJid;
@@ -42,19 +42,45 @@ function normalizeJidForStorage(jid) {
 }
 
 function getMessageType(message) {
+    if (!message) return '❓ Unknown';
+    const viewOnce = message.viewOnceMessage || message.viewOnceMessageV2 || message.viewOnceMessageV2Extension;
+    if (viewOnce) {
+        const inner = viewOnce.message || viewOnce;
+        if (inner.imageMessage) return '👁️ View Once Image';
+        if (inner.videoMessage) return '👁️ View Once Video';
+        if (inner.audioMessage) return '👁️ View Once Audio';
+        return '👁️ View Once';
+    }
     if (message.conversation) return '📝 Text';
     if (message.imageMessage) return '🖼️ Image';
     if (message.videoMessage) return '🎥 Video';
     if (message.audioMessage) return '🔊 Audio';
     if (message.stickerMessage) return '😀 Sticker';
     if (message.documentMessage) return '📄 Document';
+    if (message.documentWithCaptionMessage) return '📄 Document';
     if (message.contactMessage) return '👤 Contact';
+    if (message.contactsArrayMessage) return '👤 Contacts';
     if (message.locationMessage) return '📍 Location';
+    if (message.liveLocationMessage) return '📍 Live Location';
+    if (message.pollCreationMessage || message.pollCreationMessageV3) return '📊 Poll';
     if (message.extendedTextMessage?.text) return '📝 Extended Text';
     if (message.buttonsResponseMessage) return '🔘 Button Response';
     if (message.listResponseMessage) return '📋 List Response';
     if (message.templateButtonReplyMessage) return '🎨 Template Button';
+    if (message.editedMessage) return '✏️ Edited';
     return '❓ Unknown';
+}
+
+function extractInnerMessage(message) {
+    if (!message) return message;
+    if (message.ephemeralMessage?.message) {
+        return extractInnerMessage(message.ephemeralMessage.message);
+    }
+    if (message.viewOnceMessage?.message) return extractInnerMessage(message.viewOnceMessage.message);
+    if (message.viewOnceMessageV2?.message) return extractInnerMessage(message.viewOnceMessageV2.message);
+    if (message.viewOnceMessageV2Extension?.message) return extractInnerMessage(message.viewOnceMessageV2Extension.message);
+    if (message.documentWithCaptionMessage?.message) return message.documentWithCaptionMessage.message;
+    return message;
 }
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
@@ -210,7 +236,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
             if (bannedUsers.includes(senderNumber)) {
                 await client.sendMessage(m.chat, {
-                    text: `*𝐓𝐨𝐱𝐢𝐜-𝐌D Bᴀɴɴᴇᴅ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Bᴀɴɴᴇᴅ ≪───\n> \`々\` You're banned from using\n> \`々\` my commands. Get lost.\n╰──────────────────☉`
+                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Bᴀɴɴᴇᴅ ≪───\n々 You're banned from using\n々 my commands. Get lost.\n╭───( ✓ )───`
                 }, { quoted: fakeQuoted });
                 return;
             }
@@ -228,8 +254,14 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     store.chats[normalizedJid] = [];
                 }
                 const messageId = m.key.id;
+                let storedMessage = m.message || {};
+                const viewOnceWrapper = storedMessage.viewOnceMessage || storedMessage.viewOnceMessageV2 || storedMessage.viewOnceMessageV2Extension;
+                if (viewOnceWrapper?.message) {
+                    storedMessage = { ...storedMessage, ...viewOnceWrapper.message };
+                }
                 const messageWithTimestamp = {
                     ...m,
+                    message: storedMessage,
                     timestamp: Date.now(),
                     originalRemoteJid: remoteJid,
                     normalizedRemoteJid: normalizedJid
@@ -240,10 +272,23 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     originalJid: remoteJid,
                     timestamp: Date.now()
                 };
-                if (store.chats[normalizedJid].length > 30) {
+                if (store.chats[normalizedJid].length > 20) {
                     const removedMsg = store.chats[normalizedJid].shift();
                     if (removedMsg?.key?.id) {
                         delete store.messageMap[removedMsg.key.id];
+                    }
+                }
+                const totalMapped = Object.keys(store.messageMap).length;
+                if (totalMapped > 2000) {
+                    const chatKeys = Object.keys(store.chats);
+                    for (const ck of chatKeys) {
+                        if (['key', 'idGetter', 'dict', 'array'].includes(ck)) continue;
+                        if (store.chats[ck] && store.chats[ck].length > 10) {
+                            const removed = store.chats[ck].splice(0, store.chats[ck].length - 10);
+                            for (const rm of removed) {
+                                if (rm?.key?.id) delete store.messageMap[rm.key.id];
+                            }
+                        }
                     }
                 }
             }
@@ -306,61 +351,177 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
                     const messageType = getMessageType(deletedMessage.message);
                     try {
-                        const notification = `*𝐓𝐨𝐱𝐢𝐜-𝐌D Aɴᴛɪ-Dᴇʟᴇᴛᴇ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n> \`々\` Time: ${deleteTime}\n> \`々\` Chat: ${groupName}\n> \`々\` Type: ${messageType}\n> \`々\` Deleted by: @${deleter}\n> \`々\` Sender: @${sender.split('@')[0]}\n╰──────────────────☉`;
-                        if (deletedMessage.message.conversation) {
+                        const notification = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───`;
+                        const msg = extractInnerMessage(deletedMessage.message);
+                        if (msg.conversation) {
                             await client.sendMessage(botJid, {
-                                text: `${notification}\n\n📝 *Deleted Message:*\n${deletedMessage.message.conversation}`,
+                                text: `${notification}\n\n${msg.conversation}`,
                                 mentions: [sender]
                             });
                         }
-                        else if (deletedMessage.message.imageMessage) {
-                            const caption = deletedMessage.message.imageMessage.caption || '';
-                            const imageBuffer = await client.downloadMediaMessage(deletedMessage.message.imageMessage);
+                        else if (msg.extendedTextMessage?.text) {
                             await client.sendMessage(botJid, {
-                                image: imageBuffer,
+                                text: `${notification}\n\n${msg.extendedTextMessage.text}`,
+                                mentions: [sender]
+                            });
+                        }
+                        else if (msg.imageMessage) {
+                            const caption = msg.imageMessage.caption || '';
+                            const buf = await client.downloadMediaMessage(msg.imageMessage);
+                            await client.sendMessage(botJid, {
+                                image: buf,
                                 caption: `${notification}\n${caption}`,
                                 mentions: [sender]
                             });
                         }
-                        else if (deletedMessage.message.videoMessage) {
-                            const caption = deletedMessage.message.videoMessage.caption || '';
-                            const videoBuffer = await client.downloadMediaMessage(deletedMessage.message.videoMessage);
+                        else if (msg.videoMessage) {
+                            const caption = msg.videoMessage.caption || '';
+                            const buf = await client.downloadMediaMessage(msg.videoMessage);
                             await client.sendMessage(botJid, {
-                                video: videoBuffer,
+                                video: buf,
                                 caption: `${notification}\n${caption}`,
                                 mentions: [sender]
                             });
                         }
-                        else if (deletedMessage.message.audioMessage) {
-                            const audioBuffer = await client.downloadMediaMessage(deletedMessage.message.audioMessage);
+                        else if (msg.audioMessage) {
+                            const buf = await client.downloadMediaMessage(msg.audioMessage);
+                            await client.sendMessage(botJid, { text: notification, mentions: [sender] });
                             await client.sendMessage(botJid, {
-                                audio: audioBuffer,
-                                ptt: true,
-                                caption: notification,
+                                audio: buf,
+                                ptt: msg.audioMessage.ptt || false,
+                                mimetype: 'audio/mpeg'
+                            });
+                        }
+                        else if (msg.stickerMessage) {
+                            const buf = await client.downloadMediaMessage(msg.stickerMessage);
+                            await client.sendMessage(botJid, { text: notification, mentions: [sender] });
+                            await client.sendMessage(botJid, { sticker: buf });
+                        }
+                        else if (msg.documentMessage) {
+                            const buf = await client.downloadMediaMessage(msg.documentMessage);
+                            await client.sendMessage(botJid, {
+                                document: buf,
+                                mimetype: msg.documentMessage.mimetype || 'application/octet-stream',
+                                fileName: msg.documentMessage.fileName || 'document',
+                                caption: `${notification}\n${msg.documentMessage.caption || ''}`,
                                 mentions: [sender]
                             });
                         }
-                        else if (deletedMessage.message.stickerMessage) {
-                            const stickerBuffer = await client.downloadMediaMessage(deletedMessage.message.stickerMessage);
+                        else if (msg.contactMessage) {
+                            const vcard = msg.contactMessage.vcard;
+                            const displayName = msg.contactMessage.displayName || 'Contact';
+                            await client.sendMessage(botJid, { text: `${notification}\n\n${displayName}`, mentions: [sender] });
                             await client.sendMessage(botJid, {
-                                sticker: stickerBuffer,
-                                caption: notification,
+                                contacts: { displayName, contacts: [{ vcard }] }
+                            });
+                        }
+                        else if (msg.contactsArrayMessage) {
+                            const contacts = msg.contactsArrayMessage.contacts || [];
+                            const displayName = msg.contactsArrayMessage.displayName || 'Contacts';
+                            await client.sendMessage(botJid, { text: `${notification}\n\n${displayName} (${contacts.length} contacts)`, mentions: [sender] });
+                            for (const c of contacts) {
+                                await client.sendMessage(botJid, {
+                                    contacts: { displayName: c.displayName, contacts: [{ vcard: c.vcard }] }
+                                });
+                            }
+                        }
+                        else if (msg.locationMessage) {
+                            await client.sendMessage(botJid, { text: notification, mentions: [sender] });
+                            await client.sendMessage(botJid, {
+                                location: {
+                                    degreesLatitude: msg.locationMessage.degreesLatitude,
+                                    degreesLongitude: msg.locationMessage.degreesLongitude,
+                                    name: msg.locationMessage.name || '',
+                                    address: msg.locationMessage.address || ''
+                                }
+                            });
+                        }
+                        else if (msg.liveLocationMessage) {
+                            await client.sendMessage(botJid, {
+                                text: `${notification}\n\nLat: ${msg.liveLocationMessage.degreesLatitude}\nLng: ${msg.liveLocationMessage.degreesLongitude}`,
                                 mentions: [sender]
                             });
                         }
-                        else if (deletedMessage.message.extendedTextMessage?.text) {
+                        else if (msg.pollCreationMessage || msg.pollCreationMessageV3) {
+                            const poll = msg.pollCreationMessage || msg.pollCreationMessageV3;
+                            const pollName = poll.name || 'Poll';
+                            const options = (poll.options || []).map(o => o.optionName).join('\n々 ');
                             await client.sendMessage(botJid, {
-                                text: `${notification}\n\n📝 *Deleted Message:*\n${deletedMessage.message.extendedTextMessage.text}`,
+                                text: `${notification}\n\nPoll: ${pollName}\n々 ${options}`,
                                 mentions: [sender]
                             });
-                        } else {
+                        }
+                        else {
                             await client.sendMessage(botJid, {
-                                text: `${notification}\n\n⚠️ *Message type cannot be recovered*`,
+                                text: `${notification}\n\nMessage type could not be recovered`,
                                 mentions: [sender]
                             });
                         }
                     } catch (error) {}
                 }
+            }
+        }
+
+        if (m.message?.protocolMessage?.type === 14 || m.message?.editedMessage) {
+            const currentSettings = await getSettings();
+            const isAntieditEnabled = currentSettings?.antiedit === true;
+            if (isAntieditEnabled && store?.chats && store?.messageMap) {
+                try {
+                    const editedProto = m.message.protocolMessage || {};
+                    const editKey = editedProto.key || m.message.editedMessage?.message?.protocolMessage?.key;
+                    const newMessage = editedProto.editedMessage?.message || m.message.editedMessage?.message;
+                    if (editKey && newMessage) {
+                        const editedMessageId = editKey.id;
+                        const editedRemoteJid = editKey.remoteJid || m.chat;
+                        const normalizedEditJid = normalizeJidForStorage(editedRemoteJid);
+                        if (editedRemoteJid !== 'status@broadcast' && !editedRemoteJid.includes('@broadcast') && !editedRemoteJid.includes('@newsletter')) {
+                            let originalMessage = null;
+                            let chatJid = null;
+                            if (store.messageMap[editedMessageId]) {
+                                chatJid = store.messageMap[editedMessageId].normalizedJid;
+                            } else {
+                                chatJid = normalizedEditJid;
+                            }
+                            if (store.chats[chatJid]) {
+                                originalMessage = store.chats[chatJid].find(msg => msg.key.id === editedMessageId);
+                            }
+                            if (!originalMessage) {
+                                for (const [jid, messages] of Object.entries(store.chats)) {
+                                    if (['key', 'idGetter', 'dict', 'array'].includes(jid)) continue;
+                                    const found = messages.find(msg => msg.key.id === editedMessageId);
+                                    if (found) { originalMessage = found; break; }
+                                }
+                            }
+                            const botJid = client.decodeJid(client.user.id);
+                            const editor = m.key.participant ? m.key.participant.split('@')[0] : m.sender?.split('@')[0] || 'Unknown';
+                            let groupName = 'Private Chat';
+                            if (editedRemoteJid.endsWith('@g.us')) {
+                                try {
+                                    const gMeta = await client.groupMetadata(editedRemoteJid);
+                                    groupName = gMeta?.subject || 'Unknown Group';
+                                } catch (e) { groupName = 'Unknown Group'; }
+                            }
+                            const editTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
+                            let originalText = '';
+                            if (originalMessage?.message) {
+                                const origMsg = extractInnerMessage(originalMessage.message);
+                                originalText = origMsg.conversation || origMsg.extendedTextMessage?.text || origMsg.imageMessage?.caption || origMsg.videoMessage?.caption || '';
+                            }
+                            const newInner = extractInnerMessage(newMessage);
+                            const newText = newInner.conversation || newInner.extendedTextMessage?.text || newInner.imageMessage?.caption || newInner.videoMessage?.caption || '';
+                            if (originalText || newText) {
+                                const notification = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Eᴅɪᴛᴇᴅ Msɢ ≪───\n々 Time: ${editTime}\n々 Chat: ${groupName}\n々 Edited by: @${editor}\n╭───( ✓ )───`;
+                                let fullMsg = notification;
+                                if (originalText) fullMsg += `\n\nOriginal:\n${originalText}`;
+                                if (newText) fullMsg += `\n\nEdited to:\n${newText}`;
+                                await client.sendMessage(botJid, {
+                                    text: fullMsg,
+                                    mentions: [m.key.participant || m.sender]
+                                });
+                            }
+                        }
+                    }
+                } catch (error) {}
             }
         }
 
@@ -382,15 +543,15 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     } catch (err) {
         console.error('❌ [TOXIC] Error:', err.message);
     }
-
-    process.on('uncaughtException', function (err) {
-        let e = String(err);
-        if (e.includes("conflict")) return;
-        if (e.includes("not-authorized")) return;
-        if (e.includes("Socket connection timeout")) return;
-        if (e.includes("rate-overlimit")) return;
-        if (e.includes("Connection Closed")) return;
-        if (e.includes("Timed Out")) return;
-        if (e.includes("Value not found")) return;
-    });
 };
+
+process.on('uncaughtException', function (err) {
+    let e = String(err);
+    if (e.includes("conflict")) return;
+    if (e.includes("not-authorized")) return;
+    if (e.includes("Socket connection timeout")) return;
+    if (e.includes("rate-overlimit")) return;
+    if (e.includes("Connection Closed")) return;
+    if (e.includes("Timed Out")) return;
+    if (e.includes("Value not found")) return;
+});

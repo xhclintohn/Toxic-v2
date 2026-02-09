@@ -61,7 +61,7 @@ module.exports = async (client, m) => {
                 (antilinkMode === "remove"
                     ? `│ 🚪 And now you're getting kicked. Actions ➤ Consequences.\n`
                     : `│ ⚠️ Try that again and see what happens.\n`) +
-                `╰──────────────────☉`,
+                `╭───( ✓ )───`,
             mentions: [m.sender],
         });
 
@@ -78,7 +78,7 @@ module.exports = async (client, m) => {
                         `╭───( *Toxic-MD* )───\n` +
                         `│ 🚫 @${tag} has been *yeeted* out for dropping links.\n` +
                         `│ Next time, read the rules. If you can.\n` +
-                        `╰──────────────────☉`,
+                        `╭───( ✓ )───`,
                     mentions: [user],
                 });
             } catch {
@@ -87,7 +87,7 @@ module.exports = async (client, m) => {
                         `╭───( *Toxic-MD* )───\n` +
                         `│ 🤦 Can't kick @${tag}. Probably missing admin perms.\n` +
                         `│ Fix that, boss.\n` +
-                        `╰──────────────────☉`,
+                        `╭───( ✓ )───`,
                     mentions: [user],
                 });
             }

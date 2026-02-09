@@ -10,12 +10,12 @@ module.exports = async (context) => {
 
         switch (command) {
             case 'setgroupname':
-                if (!newText) return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Yo, give me a new group name! Usage: ${prefix}setgroupname <new name>\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
-                if (newText.length > 100) return m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Group name can’t be longer than 100 characters, genius! 😑\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───');
+                if (!newText) return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Yo, give me a new group name! Usage: ${prefix}setgroupname <new name>\n╭───( ✓ )───`);
+                if (newText.length > 100) return m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Group name can’t be longer than 100 characters, genius! 😑\n╭───( ✓ )───');
 
                 try {
                     await client.groupUpdateSubject(m.chat, newText);
-                    await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Group name slammed to "${newText}"! Let’s keep the chaos going! 😈\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`, {
+                    await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Group name slammed to "${newText}"! Let’s keep the chaos going! 😈\n╭───( ✓ )───`, {
                         contextInfo: {
                             externalAdReply: {
                                 title: `Toxic-MD`,
@@ -28,16 +28,16 @@ module.exports = async (context) => {
                     });
                 } catch (error) {
                     console.error('Error updating group subject:', error);
-                    await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Failed to update group name. WhatsApp’s acting up, not me! 😬\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───');
+                    await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Failed to update group name. WhatsApp’s acting up, not me! 😬\n╭───( ✓ )───');
                 }
                 break;
 
             case 'setgroupdesc':
-                if (!newText) return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Gimme a new description! Usage: ${prefix}setgroupdesc <new description>\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
+                if (!newText) return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Gimme a new description! Usage: ${prefix}setgroupdesc <new description>\n╭───( ✓ )───`);
 
                 try {
                     await client.groupUpdateDescription(m.chat, newText);
-                    await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Group description updated! Time to flex that new vibe! 🔥\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───', {
+                    await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Group description updated! Time to flex that new vibe! 🔥\n╭───( ✓ )───', {
                         contextInfo: {
                             externalAdReply: {
                                 title: `Toxic-MD`,
@@ -50,18 +50,18 @@ module.exports = async (context) => {
                     });
                 } catch (error) {
                     console.error('Error updating group description:', error);
-                    await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Couldn’t update the description. Blame WhatsApp’s nonsense! 😬\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───');
+                    await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Couldn’t update the description. Blame WhatsApp’s nonsense! 😬\n╭───( ✓ )───');
                 }
                 break;
 
             case 'setgrouprestrict':
                 const action = newText.toLowerCase();
-                if (!['on', 'off'].includes(action)) return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Usage: ${prefix}setgrouprestrict <on|off>\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
+                if (!['on', 'off'].includes(action)) return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Usage: ${prefix}setgrouprestrict <on|off>\n╭───( ✓ )───`);
 
                 try {
                     const restrict = action === 'on';
                     await client.groupSettingUpdate(m.chat, restrict ? 'locked' : 'unlocked');
-                    await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Group editing is now ${restrict ? 'locked to admins only' : 'open to all members'}! Keep it toxic! 😎\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`, {
+                    await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Group editing is now ${restrict ? 'locked to admins only' : 'open to all members'}! Keep it toxic! 😎\n╭───( ✓ )───`, {
                         contextInfo: {
                             externalAdReply: {
                                 title: `Toxic-MD`,
@@ -74,12 +74,12 @@ module.exports = async (context) => {
                     });
                 } catch (error) {
                     console.error('Error updating group settings:', error);
-                    await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Failed to update group settings. WhatsApp’s tripping again! 😬\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───');
+                    await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Failed to update group settings. WhatsApp’s tripping again! 😬\n╭───( ✓ )───');
                 }
                 break;
 
             default:
-                await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Invalid groupmeta command! Use ${prefix}setgroupname, ${prefix}setgroupdesc, or ${prefix}setgrouprestrict\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
+                await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Invalid groupmeta command! Use ${prefix}setgroupname, ${prefix}setgroupdesc, or ${prefix}setgrouprestrict\n╭───( ✓ )───`);
         }
     });
 };

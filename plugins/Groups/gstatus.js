@@ -9,7 +9,7 @@ module.exports = {
     const { client, m, prefix, isBotAdmin, IsGroup, botname } = context;
 
    
-    const formatMsg = (text) => `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n${text}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`;
+    const formatMsg = (text) => `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n${text}\n╭───( ✓ )───`;
 
     try {
       if (!botname) {

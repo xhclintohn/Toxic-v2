@@ -69,7 +69,7 @@ module.exports = {
             }
 
             await client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${errorMessage}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${errorMessage}\n╭───( ✓ )───\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
         }
     },

@@ -11,7 +11,7 @@ module.exports = {
       if (!m.mentionedJid || m.mentionedJid.length === 0) {
         if (!m.quoted || !m.quoted.sender) {
           console.error('No tagged or quoted user provided');
-          return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Yo, perv, tag someone or quote a message to fuck! I ain’t doing this without a target!`);
+          return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, perv, tag someone or quote a message to fuck! I ain’t doing this without a target!`);
         }
       }
 
@@ -24,20 +24,20 @@ module.exports = {
         (!targetUser.includes('@s.whatsapp.net') && !targetUser.includes('@lid'))
       ) {
         console.error(`Invalid target user: ${JSON.stringify(targetUser)}`);
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Invalid user, dumbass! Tag or quote a real person to fuck!`);
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Invalid user, dumbass! Tag or quote a real person to fuck!`);
       }
 
       const targetNumber = targetUser.split('@')[0];
       const senderNumber = m.sender.split('@')[0];
       if (!targetNumber || !senderNumber) {
         console.error(`Failed to extract numbers: target=${targetUser}, sender=${m.sender}`);
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Something’s fucked up with the user IDs. Try again, idiot!`);
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Something’s fucked up with the user IDs. Try again, idiot!`);
       }
 
       const fuckingMsg = await client.sendMessage(
         m.chat,
         {
-          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 @${senderNumber} is getting ready to fuck @${targetNumber}... 😈\n> 々 This is gonna be wild, bitch!\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`,
+          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 @${senderNumber} is getting ready to fuck @${targetNumber}... 😈\n々 This is gonna be wild, bitch!\n╭───( ✓ )───`,
           mentions: [m.sender, targetUser],
         },
         { quoted: m }
@@ -74,7 +74,7 @@ module.exports = {
 *VERDICT:* ${intensity.description.replace('@TARGET', `@${targetNumber}`).replace('@SENDER', `@${senderNumber}`)}
 
 *DISCLAIMER:* This was 100% consensual in this fictional world, you filthy animal! Cry about it! 😈
-╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`;
+╭───( ✓ )───`;
 
       await client.sendMessage(
         m.chat,
@@ -94,7 +94,7 @@ module.exports = {
       }
     } catch (error) {
       console.error(`Fuck command exploded: ${error.stack}`);
-      await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Shit broke harder than your bedframe! Can’t fuck right now, you unlucky bastard.`);
+      await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Shit broke harder than your bedframe! Can’t fuck right now, you unlucky bastard.`);
     }
   },
 };

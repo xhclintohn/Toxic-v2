@@ -1,7 +1,7 @@
 const { getSettings } = require("../database/config");
 
 const formatStylishReply = (message) => {
-    return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${message}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`;
+    return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
 };
 
 module.exports = async (client, m) => {

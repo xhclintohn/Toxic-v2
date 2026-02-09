@@ -10,9 +10,9 @@ module.exports = async (context) => {
     const formatStylishReply = (message) => {
         return (
             `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-            `> 々 ${message}\n` +
-            `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-            `> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ 😈`
+            `々 ${message}\n` +
+            `╭───( ✓ )───\n` +
+            `Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ 😈`
         );
     };
 
@@ -66,7 +66,7 @@ module.exports = async (context) => {
                                         text: "Your bot is already on the latest version, genius."
                                     },
                                     footer: {
-                                        text: "> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
+                                        text: "Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
                                     },
                                     nativeFlowMessage: {
                                         buttons: [
@@ -107,7 +107,7 @@ module.exports = async (context) => {
                                     text: `🆕 Update Available, Dumbass\n\nNew version found. You're still using outdated garbage.\n\n📌 *Commit:* ${latestCommit.commit.message}\n👤 *Author:* ${latestCommit.commit.author.name}\n🕒 *Date:* ${new Date(latestCommit.commit.author.date).toLocaleString()}\n\nTo update your worthless bot, tap the button below. if you're unable to tap the buttons type ${prefix}triggerupdate Don't ask me how to tap, you monkey. 🐒😂`
                                 },
                                 footer: {
-                                    text: "> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
+                                    text: "Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
                                 },
                                 nativeFlowMessage: {
                                     buttons: [

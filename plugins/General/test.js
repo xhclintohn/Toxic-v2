@@ -9,7 +9,7 @@ module.exports = {
     const { client, m, botname, text } = context;
 
     if (text) {
-      return client.sendMessage(m.chat, { text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Yo, ${m.pushName}, what’s this extra garbage? Just say .test, you clown.` }, { quoted: m });
+      return client.sendMessage(m.chat, { text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, ${m.pushName}, what’s this extra garbage? Just say .test, you clown.` }, { quoted: m });
     }
 
     try {
@@ -38,13 +38,13 @@ module.exports = {
       } else {
         console.error('❌ Audio file not found at any of the following paths:', possibleAudioPaths);
         await client.sendMessage(m.chat, {
-          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Shit, couldn’t find test.mp3 in xh_clinton/. Fix your files, you slacker.\n\nPowered by *${botname}*`
+          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Shit, couldn’t find test.mp3 in xh_clinton/. Fix your files, you slacker.\n\nPowered by *${botname}*`
         }, { quoted: m });
       }
     } catch (error) {
       console.error('Error in test command:', error);
       await client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Yo, something fucked up the test audio. Try again later, dumbass.\n\nPowered by *${botname}*`
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, something fucked up the test audio. Try again later, dumbass.\n\nPowered by *${botname}*`
       }, { quoted: m });
     }
   }

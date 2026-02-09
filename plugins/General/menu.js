@@ -18,7 +18,7 @@ module.exports = {
         if (cleanText !== '' && !['menu', 'help', 'commands', 'list'].includes(cleanText.split(' ')[0].toLowerCase())) {
             const commandName = cleanText.split(' ')[0];
             await client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Yo \( {m.pushName}, what's with the extra bullshit after " \){commandName}"? Just type *${prefix}menu* properly, moron. 🖕\n╰──────────────────☉`
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo \( {m.pushName}, what's with the extra bullshit after " \){commandName}"? Just type *${prefix}menu* properly, moron. 🖕\n╭───( ✓ )───`
             }, { quoted: m });
             return;
         }
@@ -39,7 +39,7 @@ module.exports = {
                 .join('');
         };
 
-        const menuText = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 *( 💬 ) - Hello, @${m.pushName}* Welcome to the bots Menu\n\n` +
+        const menuText = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 *( 💬 ) - Hello, @${m.pushName}* Welcome to the bots Menu\n\n` +
             `- 計さ Bot INFORMATION✓\n\n` +
             `⌬ *Bσƚ*: \n` +
             `𝐓𝐨𝐱𝐢𝐜-𝐌𝐃 (bow down)\n` +

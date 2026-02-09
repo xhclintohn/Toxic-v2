@@ -12,7 +12,7 @@ module.exports = {
 
         if (!sessionId) {
             return client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Yo, where's the session ID? You created the temp mail, right? 🤦🏻\n> 々 Usage: ${prefix}tempinbox YOUR_SESSION_ID\n> 々 Example: ${prefix}tempinbox U2Vzc2lvbjoc5LI1OhFHh4tv21skV965\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, where's the session ID? You created the temp mail, right? 🤦🏻\n々 Usage: ${prefix}tempinbox YOUR_SESSION_ID\n々 Example: ${prefix}tempinbox U2Vzc2lvbjoc5LI1OhFHh4tv21skV965\n╭───( ✓ )───\nPσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
         }
 
@@ -33,11 +33,11 @@ module.exports = {
 
             if (totalEmails === 0) {
                 return client.sendMessage(m.chat, {
-                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 📭 Inbox is empty, genius. No emails yet.\n> 々 Use your temp email somewhere and check back.\n> 々 Total Emails: 0\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 📭 Inbox is empty, genius. No emails yet.\n々 Use your temp email somewhere and check back.\n々 Total Emails: 0\n╭───( ✓ )───\nPσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
                 }, { quoted: m });
             }
 
-            let inboxText = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 📬 Inbox: ${totalEmails} email${totalEmails > 1 ? 's' : ''} found\n`;
+            let inboxText = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 📬 Inbox: ${totalEmails} email${totalEmails > 1 ? 's' : ''} found\n`;
 
             emails.forEach((email, index) => {
                 inboxText += `│\n│ 📨 Email ${index + 1}:\n│ From: ${email.from || 'Unknown'}\n│ Subject: ${email.subject || 'No Subject'}\n`;
@@ -52,7 +52,7 @@ module.exports = {
                 }
             });
 
-            inboxText += `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
+            inboxText += `╭───( ✓ )───\nPσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
 
             if (inboxText.length > 4000) {
                 const firstPart = inboxText.substring(0, 4000);
@@ -80,7 +80,7 @@ module.exports = {
             }
 
             await client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${errorMessage}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${errorMessage}\n╭───( ✓ )───\nPσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
             }, { quoted: m });
         }
     },

@@ -11,7 +11,7 @@ module.exports = {
       if (!m.mentionedJid || m.mentionedJid.length === 0) {
         if (!m.quoted || !m.quoted.sender) {
           console.error('No tagged or quoted user provided');
-          return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Yo, moron, tag someone or quote a message to kiss! I ain’t kissing nobody without a target!`);
+          return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, moron, tag someone or quote a message to kiss! I ain’t kissing nobody without a target!`);
         }
       }
 
@@ -24,20 +24,20 @@ module.exports = {
         (!targetUser.includes('@s.whatsapp.net') && !targetUser.includes('@lid'))
       ) {
         console.error(`Invalid target user: ${JSON.stringify(targetUser)}`);
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Invalid user, dumbass! Tag or quote a real person to kiss!`);
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Invalid user, dumbass! Tag or quote a real person to kiss!`);
       }
 
       const targetNumber = targetUser.split('@')[0];
       const senderNumber = m.sender.split('@')[0];
       if (!targetNumber || !senderNumber) {
         console.error(`Failed to extract numbers: target=${targetUser}, sender=${m.sender}`);
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Something’s fucked up with the user IDs. Try again, idiot!`);
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Something’s fucked up with the user IDs. Try again, idiot!`);
       }
 
       const kissingMsg = await client.sendMessage(
         m.chat,
         {
-          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 @${senderNumber} is puckering up to kiss @${targetNumber}... 💋\n> 々 Hope you’re ready for this, loser!\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`,
+          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 @${senderNumber} is puckering up to kiss @${targetNumber}... 💋\n々 Hope you’re ready for this, loser!\n╭───( ✓ )───`,
           mentions: [m.sender, targetUser],
         },
         { quoted: m }
@@ -74,7 +74,7 @@ module.exports = {
 *VERDICT:* ${intensity.description.replace('@TARGET', `@${targetNumber}`).replace('@SENDER', `@${senderNumber}`)}
 
 *DISCLAIMER:* This kiss was 100% legit, you hopeless romantic! Deal with it! 😈
-╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`;
+╭───( ✓ )───`;
 
       await client.sendMessage(
         m.chat,
@@ -94,7 +94,7 @@ module.exports = {
       }
     } catch (error) {
       console.error(`Kiss command exploded: ${error.stack}`);
-      await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Shit broke harder than your love life! Can’t kiss right now, you pathetic fuck.`);
+      await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Shit broke harder than your love life! Can’t kiss right now, you pathetic fuck.`);
     }
   },
 };

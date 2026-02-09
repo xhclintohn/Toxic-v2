@@ -24,14 +24,14 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         if (!m.quoted) {
-            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 quote an image first\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
+            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 quote an image first\n╭───( ✓ )───`);
         }
 
         const q = m.quoted || m;
         const mime = (q.msg || q).mimetype || "";
 
         if (!mime.startsWith("image/")) {
-            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 that's not an image\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
+            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 that's not an image\n╭───( ✓ )───`);
         }
 
         const mediaBuffer = await q.download();
@@ -53,7 +53,7 @@ module.exports = async (context) => {
         await client.sendMessage(
             m.chat,
             {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 image analysis\n> 々 prompt: ${prompt}\n> 々 \n> 々 ${originalText}\n> 々 𝐓𝐨𝐱𝐢𝐜-𝐌D\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`,
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 image analysis\n々 prompt: ${prompt}\n々 \n々 ${originalText}\n々 𝐓𝐨𝐱𝐢𝐜-𝐌D\n╭───( ✓ )───`,
             },
             { quoted: m }
         );
@@ -67,6 +67,6 @@ module.exports = async (context) => {
         if (err.message.includes('upload failed')) errorMessage = 'upload failed';
         if (err.message.includes('invalid response')) errorMessage = 'api returned invalid response';
         
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${errorMessage}\n> 々 error: ${err.message}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`);
+        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${errorMessage}\n々 error: ${err.message}\n╭───( ✓ )───`);
     }
 };

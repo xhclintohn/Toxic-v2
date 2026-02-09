@@ -19,35 +19,37 @@ module.exports = async (context) => {
         );
       }
 
+      const validPresenceValues = ['online', 'offline', 'recording', 'typing'];
       const value = args.join(" ").toLowerCase();
 
-      if (value === 'on' || value === 'off') {
-        const action = value === 'on';
-        if (settings.startmessage === action) {
+      if (validPresenceValues.includes(value)) {
+        if (settings.presence === value) {
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`Start message is already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time. 😈`) },
+            { text: formatStylishReply(`Presence is already ${value.toUpperCase()}, genius. Stop wasting my time.`) },
             { quoted: m, ad: true }
           );
         }
 
-        await updateSetting('startmessage', action);
+        await updateSetting('presence', value);
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply(`Start message ${value.toUpperCase()} activated! 🔥 ${action ? 'Welcome messages will be sent on connection! 🎉' : 'No more annoying welcome messages, you antisocial prick! 🚫'}`) },
+          { text: formatStylishReply(`Presence set to ${value.toUpperCase()}. Bot’s flexing that status now!`) },
           { quoted: m, ad: true }
         );
       }
 
       const buttons = [
-        { buttonId: `${prefix}startmessage on`, buttonText: { displayText: "ON 🎉" }, type: 1 },
-        { buttonId: `${prefix}startmessage off`, buttonText: { displayText: "OFF 🚫" }, type: 1 },
+        { buttonId: `${prefix}presence online`, buttonText: { displayText: "ONLINE 🟢" }, type: 1 },
+        { buttonId: `${prefix}presence offline`, buttonText: { displayText: "OFFLINE ⚫" }, type: 1 },
+        { buttonId: `${prefix}presence recording`, buttonText: { displayText: "RECORDING 🎙️" }, type: 1 },
+        { buttonId: `${prefix}presence typing`, buttonText: { displayText: "TYPING ⌨️" }, type: 1 },
       ];
 
       await client.sendMessage(
         m.chat,
         {
-          text: formatStylishReply(`Start message is ${settings.startmessage ? 'ON 🎉' : 'OFF 🚫'}, dumbass. Pick a vibe, noob! 😈`),
+          text: formatStylishReply(`Presence is ${settings.presence ? settings.presence.toUpperCase() : 'NONE'}. Pick a vibe, fam! 🔥`),
           footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
           buttons,
           headerType: 1,
@@ -58,7 +60,7 @@ module.exports = async (context) => {
     } catch (error) {
       await client.sendMessage(
         m.chat,
-        { text: formatStylishReply("Shit broke, couldn't mess with start message. Database or something's fucked. Try later.") },
+        { text: formatStylishReply("Shit broke, couldn’t update presence. Database or something’s fucked. Try later.") },
         { quoted: m, ad: true }
       );
     }

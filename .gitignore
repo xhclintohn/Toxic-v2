@@ -7,6 +7,8 @@ vite.config.ts.*
 auth_info_baileys/
 session/
 sessions/
+Session/
+message_data/
 *.log
 .replit
 replit.md
@@ -16,3 +18,5 @@ replit.md
 .upm/
 snippets/
 package-lock.json
+.breakpoints
+generated-icon.png

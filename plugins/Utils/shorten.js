@@ -8,7 +8,7 @@ module.exports = {
         const { client, m, text } = context;
 
         const formatStylishReply = (message) => {
-            return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${message}\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
+            return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
         };
 
         if (!text) {

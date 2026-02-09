@@ -10,7 +10,7 @@ module.exports = {
     const prompt = m.body.replace(new RegExp(`^${prefix}(sora|soraai|genvideo)\\s*`, 'i'), '').trim();
     if (!prompt) {
       return client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Yo, @${m.sender.split('@')[0]}! 😤 You forgot the prompt!\n> 々 Example: ${prefix}sora a cat dancing in space\n╰──────────────────☉`,
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, @${m.sender.split('@')[0]}! 😤 You forgot the prompt!\n々 Example: ${prefix}sora a cat dancing in space\n╭───( ✓ )───`,
         mentions: [m.sender]
       }, { quoted: m });
     }
@@ -86,7 +86,7 @@ module.exports = {
       console.error('Sora error:', error);
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
       await client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 Video generation failed!\n> 々 Error: ${error.message}\n> 々 Try a different prompt.\n╰──────────────────☉`
+        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Video generation failed!\n々 Error: ${error.message}\n々 Try a different prompt.\n╭───( ✓ )───`
       }, { quoted: m });
     }
   }

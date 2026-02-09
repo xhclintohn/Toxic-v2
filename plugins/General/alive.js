@@ -18,7 +18,7 @@ module.exports = {
       const secs = Math.floor(uptime % 60);
       const uptimeStr = `${days}d ${hours}h ${mins}m ${secs}s`;
 
-      const caption = `*${bName} Aʟɪᴠᴇ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ I'ᴍ Aʟɪᴠᴇ ≪───\n> \`々\` Yo ${m.pushName}, I'm up and running.\n> \`々\` Been alive for ${uptimeStr}.\n> \`々\` Type *${prefix}menu* if you need\n> \`々\` help, which you probably do.\n> \`々\` Powered by xh_clinton.\n╰──────────────────☉`;
+      const caption = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ I'ᴍ Aʟɪᴠᴇ ≪───\n々 Yo ${m.pushName}, I'm up and running.\n々 Been alive for ${uptimeStr}.\n々 Type *${prefix}menu* if you need\n々 help, which you probably do.\n々 Powered by xh_clinton.\n╭───( ✓ )───`;
 
       if (pict && Buffer.isBuffer(pict)) {
         await client.sendMessage(m.chat, {
@@ -54,7 +54,7 @@ module.exports = {
       }
 
     } catch (error) {
-      await m.reply(`*${bName} Eʀʀᴏʀ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Cʀᴀsʜᴇᴅ ≪───\n> \`々\` Something broke, ${m.pushName}.\n> \`々\` Error: ${error.message}\n> \`々\` Try again when I feel like it.\n╰──────────────────☉`);
+      await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Cʀᴀsʜᴇᴅ ≪───\n々 Something broke, ${m.pushName}.\n々 Error: ${error.message}\n々 Try again when I feel like it.\n╭───( ✓ )───`);
     }
   }
 };

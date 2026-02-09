@@ -6,7 +6,7 @@ module.exports = async (context) => {
     const { client, m, args, prefix } = context;
 
     const formatStylishReply = (message) => {
-      return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n> 々 ${message}\n╰──────────────────☉`;
+      return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
     };
 
     try {
