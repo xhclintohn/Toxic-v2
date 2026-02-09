@@ -120,12 +120,20 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         try {
             m.isGroup = m.chat?.endsWith("g.us");
-            m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => {}) : {};
+            m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => ({})) : {};
             const participants = m.metadata?.participants || [];
-            const senderNum = m.sender?.split('@')[0];
-            const botNum = botNumber?.split('@')[0];
-            m.isAdmin = Boolean(participants.find(p => p.admin !== null && (p.id === m.sender || p.id?.split('@')[0] === senderNum)));
-            m.isBotAdmin = Boolean(participants.find(p => p.admin !== null && (p.id === botNumber || p.id?.split('@')[0] === botNum)));
+            const senderNum = m.sender?.split('@')[0]?.split(':')[0];
+            const botNum = botNumber?.split('@')[0]?.split(':')[0];
+            m.isAdmin = Boolean(participants.find(p => {
+                if (!p.admin) return false;
+                const pNum = p.id?.split('@')[0]?.split(':')[0];
+                return pNum === senderNum;
+            }));
+            m.isBotAdmin = Boolean(participants.find(p => {
+                if (!p.admin) return false;
+                const pNum = p.id?.split('@')[0]?.split(':')[0];
+                return pNum === botNum;
+            }));
         } catch (error) {
             m.metadata = {};
             m.isAdmin = false;
@@ -232,7 +240,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     originalJid: remoteJid,
                     timestamp: Date.now()
                 };
-                if (store.chats[normalizedJid].length > 100) {
+                if (store.chats[normalizedJid].length > 30) {
                     const removedMsg = store.chats[normalizedJid].shift();
                     if (removedMsg?.key?.id) {
                         delete store.messageMap[removedMsg.key.id];

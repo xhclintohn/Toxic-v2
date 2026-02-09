@@ -21,14 +21,12 @@ const FileType = require("file-type");
 const { exec, spawn, execSync } = require("child_process");
 const axios = require("axios");
 const chalk = require("chalk");
-const figlet = require("figlet");
 const express = require("express");
 const app = express();
 const port = process.env.PORT || 10000;
-const _ = require("lodash");
 const PhoneNumber = require("awesome-phonenumber");
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('../lib/exif');
-const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, await, sleep } = require('../lib/botFunctions');
+const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, sleep } = require('../lib/botFunctions');
 const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
 
 const authenticationn = require('../auth/auth.js');
@@ -45,11 +43,8 @@ const path = require('path');
 const sessionName = path.join(__dirname, '..', 'Session');
 
 const groupEvents = require("../handlers/eventHandler");
-const groupEvents2 = require("../handlers/eventHandler");
 const connectionHandler = require('../handlers/connectionHandler');
-const antidelete = require('../features/antidelete');
 const antilink = require('../features/antilink');
-const antistatusmention = require('../features/antistatusmention');
 
 function cleanupSessionFiles() {
     try {
@@ -139,7 +134,7 @@ async function startToxic() {
 
   setInterval(() => {
     store.writeToFile("store.json");
-  }, 3000);
+  }, 60000);
 
   if (autobio) {
     setInterval(() => {
@@ -147,7 +142,7 @@ async function startToxic() {
       client.updateProfileStatus(
         `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi' })}.`
       );
-    }, 10 * 1000);
+    }, 60 * 1000);
   }
 
   const processedCalls = new Set();
@@ -398,7 +393,6 @@ async function startToxic() {
   client.ev.on("group-participants.update", async (m) => {
     try {
       groupEvents(client, m);
-      groupEvents2(client, m);
     } catch (error) {
       console.error('❌ [GROUP EVENT] Error:', error.message);
     }

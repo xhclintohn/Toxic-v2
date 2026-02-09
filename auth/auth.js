@@ -4,14 +4,19 @@ const { session } = require('../config/settings');
 
 async function authenticationn() {
     try {
-                                const credsPath = path.join(__dirname, '..', 'Session', 'creds.json');
+        const sessionDir = path.join(__dirname, '..', 'Session');
+        const credsPath = path.join(sessionDir, 'creds.json');
+
+        if (!fs.existsSync(sessionDir)) {
+            fs.mkdirSync(sessionDir, { recursive: true });
+        }
 
         if (!fs.existsSync(credsPath)) {
             console.log("🟢🤖...");
-            await fs.writeFileSync(credsPath, atob(session), "utf8");
+            fs.writeFileSync(credsPath, atob(session), "utf8");
         }
         else if (fs.existsSync(credsPath) && session != "zokk") {
-            await fs.writeFileSync(credsPath, atob(session), "utf8");
+            fs.writeFileSync(credsPath, atob(session), "utf8");
         }
     }
     catch (e) {

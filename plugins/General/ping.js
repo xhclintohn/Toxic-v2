@@ -28,10 +28,11 @@ module.exports = {
             };
 
             const mem = process.memoryUsage();
-            const usedMB = (mem.heapUsed / 1024 / 1024).toFixed(2);
+            const usedMB = (mem.rss / 1024 / 1024).toFixed(2);
             const totalMB = (mem.heapTotal / 1024 / 1024).toFixed(2);
+            const platform = process.env.DYNO ? 'Heroku' : process.env.REPLIT_DEPLOYMENT ? 'Replit' : process.platform;
 
-            const text = `*${bName} Pɪɴɢ Nᴏᴡ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Pɪɴɢ ≪───\n> \`々\` 𝐋𝐚𝐭𝐞𝐧𝐜𝐲 : ${responseSpeed}ms\n> \`々\` 𝐒𝐞𝐫𝐯𝐞𝐫 𝐓𝐢𝐦𝐞 : ${new Date().toLocaleString()}\n> \`々\` 𝐔𝐩𝐭𝐢𝐦𝐞 : ${formatUptime(process.uptime())}\n> \`々\` 𝐌𝐞𝐦𝐨𝐫𝐲 : ${usedMB}/${totalMB} MB\n> \`々\` 𝐍𝐨𝐝𝐞𝐉𝐒 : ${process.version}\n> \`々\` 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦 : ${process.platform}\n╰──────────────────☉`;
+            const text = `*${bName} Pɪɴɢ Nᴏᴡ*\n\n╭───(    \`𝐓𝐨𝐱𝐢𝐜-𝐌D\`    )───\n> ───≫ Pɪɴɢ ≪───\n> \`々\` 𝐋𝐚𝐭𝐞𝐧𝐜𝐲 : ${responseSpeed}ms\n> \`々\` 𝐒𝐞𝐫𝐯𝐞𝐫 𝐓𝐢𝐦𝐞 : ${new Date().toLocaleString()}\n> \`々\` 𝐔𝐩𝐭𝐢𝐦𝐞 : ${formatUptime(process.uptime())}\n> \`々\` 𝐌𝐞𝐦𝐨𝐫𝐲 : ${usedMB}/${totalMB} MB\n> \`々\` 𝐍𝐨𝐝𝐞𝐉𝐒 : ${process.version}\n> \`々\` 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦 : ${platform}\n╰──────────────────☉`;
 
             await client.sendMessage(m.chat, { text }, { quoted: m });
 
