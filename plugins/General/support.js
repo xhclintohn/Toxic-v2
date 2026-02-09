@@ -5,13 +5,13 @@ module.exports = async (context) => {
 ╭━━〔 *Toxic-MD Support Links* 〕━━━━╮
 
 > 👑 *Owner*  
-https:
+https://wa.me/254735342808
 
 > 📢 *Channel Link*  
-https:
+https://whatsapp.com/channel/0029VagJlnG6xCSU2tS1Vz19
 
 > 👥 *Group*  
-https:
+https://chat.whatsapp.com/GYZ3hUD814qK8dXjN1MoVw?mode=gi_t
 
 ╰━━━━━━━━━━━━━━━━━━━━━━━╯
 > Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ
