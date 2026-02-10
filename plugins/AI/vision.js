@@ -24,19 +24,17 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         if (!m.quoted) {
-            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 quote an image first\n╭───( ✓ )───`);
+            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 quote an image first\n╭───(  )───`);
         }
 
         const q = m.quoted || m;
         const mime = (q.msg || q).mimetype || "";
 
         if (!mime.startsWith("image/")) {
-            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 that's not an image\n╭───( ✓ )───`);
+            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 that's not an image\n╭───(  )───`);
         }
 
         const mediaBuffer = await q.download();
-        const prompt = text || "describe this image";
-
         const uploadedURL = await uploadToCatbox(mediaBuffer);
 
         const api = `https://api.deline.web.id/ai/toprompt?url=${encodeURIComponent(uploadedURL)}`;
@@ -47,26 +45,27 @@ module.exports = async (context) => {
         }
 
         const originalText = result.data.result.original;
+        const promptText = text ? `Prompt: ${text}\n\n` : '';
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
         await client.sendMessage(
             m.chat,
             {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 image analysis\n々 prompt: ${prompt}\n々 \n々 ${originalText}\n々 𝐓𝐨𝐱𝐢𝐜-𝐌D\n╭───( ✓ )───`,
+                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Iᴍᴀɢᴇ Aɴᴀʟʏsɪs ≪───\n${promptText}${originalText}\n╭───(  )───`,
             },
             { quoted: m }
         );
 
     } catch (err) {
         console.error('image analysis error:', err);
-        
+
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        
+
         let errorMessage = 'analysis failed';
         if (err.message.includes('upload failed')) errorMessage = 'upload failed';
         if (err.message.includes('invalid response')) errorMessage = 'api returned invalid response';
-        
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${errorMessage}\n々 error: ${err.message}\n╭───( ✓ )───`);
+
+        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 ${errorMessage}\n々 error: ${err.message}\n╭───(  )───`);
     }
 };
