@@ -1,24 +1,22 @@
-const fetch = require('node-fetch');
+const axios = require('axios');
 const FormData = require('form-data');
-
-const formatStylishReply = (message) => {
-    return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
-};
 
 async function uploadToCatbox(buffer) {
     const form = new FormData();
     form.append('reqtype', 'fileupload');
     form.append('fileToUpload', buffer, { filename: 'image.png' });
 
-    const response = await fetch('https://catbox.moe/user/api.php', {
-        method: 'POST',
-        body: form,
-        headers: form.getHeaders(),
-    });
+    const response = await axios.post(
+        'https://catbox.moe/user/api.php',
+        form,
+        {
+            headers: form.getHeaders(),
+        }
+    );
 
-    const text = await response.text();
+    const text = response.data;
     if (!text.includes('catbox')) {
-        throw new Error('upload failed');
+        throw new Error('Upload failed');
     }
 
     return text.trim();
@@ -28,7 +26,7 @@ module.exports = async (context) => {
     const { client, m, text } = context;
 
     if (!text && !m.quoted && !(m.mtype === 'imageMessage' && m.body.includes('.remini'))) {
-        return m.reply(formatStylishReply("give me an image you dumbass 🤦🏻\nexample: .remini https://image.com/trash.png or reply to image"));
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Mɪssɪɴɢ Iᴍᴀɢᴇ ≪───\n々 Give me an image you dumbass 🤦🏻\n々 Example: .remini https://image.com/trash.png\n々 Or reply to an image\n╭───(  )───`);
     }
 
     let imageUrl = text;
@@ -38,8 +36,8 @@ module.exports = async (context) => {
             const buffer = await client.downloadMediaMessage(m.quoted);
             imageUrl = await uploadToCatbox(buffer);
         } catch (uploadError) {
-            console.error(`upload failed: ${uploadError.message}`);
-            return m.reply(formatStylishReply("can't upload your shitty image 🤦🏻 try again"));
+            console.error(`Upload failed: ${uploadError.message}`);
+            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Uᴘʟᴏᴀᴅ Fᴀɪʟᴇᴅ ≪───\n々 Can't upload your shitty image 🤦🏻\n々 Try again, idiot\n╭───(  )───`);
         }
     }
 
@@ -48,33 +46,31 @@ module.exports = async (context) => {
             const buffer = await client.downloadMediaMessage(m);
             imageUrl = await uploadToCatbox(buffer);
         } catch (uploadError) {
-            console.error(`upload failed: ${uploadError.message}`);
-            return m.reply(formatStylishReply("can't upload your shitty image 🤦🏻 try again"));
+            console.error(`Upload failed: ${uploadError.message}`);
+            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Uᴘʟᴏᴀᴅ Fᴀɪʟᴇᴅ ≪───\n々 Can't upload your shitty image 🤦🏻\n々 Try again, idiot\n╭───(  )───`);
         }
     }
 
     if (!imageUrl || imageUrl === '.remini') {
-        return m.reply(formatStylishReply("no valid image you clueless twat 🤡"));
+        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Nᴏ Iᴍᴀɢᴇ ≪───\n々 No valid image, you clueless twat 🤡\n╭───(  )───`);
     }
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         const encodedUrl = encodeURIComponent(imageUrl);
-        const apiUrl = `https://api.nekolabs.web.id/tools/upscale/ihancer?imageUrl=${encodedUrl}&size=medium`;
+        const apiUrl = `https://api.deline.web.id/tools/hd?url=${encodedUrl}`;
 
-        const response = await fetch(apiUrl);
-        const result = await response.json();
+        const response = await axios.get(apiUrl, {
+            responseType: 'arraybuffer',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'image/*'
+            }
+        });
 
-        if (!result.success || !result.result) {
-            throw new Error('api returned error');
-        }
-
-        const imageResponse = await fetch(result.result);
-        const imageBuffer = await imageResponse.buffer();
-
-        if (!imageBuffer || imageBuffer.length < 1000) {
-            throw new Error('api didnt return an image 🤦🏻');
+        if (!response.data || response.data.length < 1000) {
+            throw new Error('API returned empty image');
         }
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
@@ -82,15 +78,23 @@ module.exports = async (context) => {
         await client.sendMessage(
             m.chat,
             {
-                image: imageBuffer,
-                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 enhanced image ✅\n々 𝐓𝐨𝐱𝐢𝐜-𝐌D\n╭───( ✓ )───`
+                image: response.data,
+                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Eɴʜᴀɴᴄᴇᴅ Iᴍᴀɢᴇ ≪───\n々 Your shitty image is now HD.\n々 Still looks like garbage though.\n╭───(  )───`
             },
             { quoted: m }
         );
 
     } catch (error) {
-        console.error(`error in remini: ${error.message}`);
+        console.error(`Remini error: ${error.message}`);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        await m.reply(formatStylishReply(`shit broke 🤦🏻 error: ${error.message}`));
+        
+        let errorMsg = `Shit broke 🤦🏻 Error: ${error.message}`;
+        if (error.response?.status === 404) {
+            errorMsg = 'API not found. Maybe your image URL is trash.';
+        } else if (error.message.includes('timeout')) {
+            errorMsg = 'API timed out. Too busy fixing your ugly image.';
+        }
+        
+        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 ${errorMsg}\n╭───(  )───`);
     }
 };
