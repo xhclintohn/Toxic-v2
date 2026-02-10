@@ -20,7 +20,7 @@ const antistatusmention = require('../features/antistatusmention');
 
 const ownerMiddleware = require('../utils/botUtil/Ownermiddleware');
 
-process.setMaxListeners(0);
+process.setMaxListeners(50);
 cleanupOldMessages();
 setInterval(() => cleanupOldMessages(), 12 * 60 * 60 * 1000);
 

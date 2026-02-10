@@ -40,32 +40,9 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
 
   if (connection === "close") {
     const statusCode = new Boom(lastDisconnect?.error)?.output.statusCode;
-    switch (statusCode) {
-      case DisconnectReason.badSession:
-        process.exit();
-        break;
-      case DisconnectReason.connectionClosed:
-        reconnect();
-        break;
-      case DisconnectReason.connectionLost:
-        reconnect();
-        break;
-      case DisconnectReason.connectionReplaced:
-        process.exit();
-        break;
-      case DisconnectReason.loggedOut:
-        hasSentStartMessage = false;
-        hasFollowedNewsletter = false;
-        process.exit();
-        break;
-      case DisconnectReason.restartRequired:
-        reconnect();
-        break;
-      case DisconnectReason.timedOut:
-        reconnect();
-        break;
-      default:
-        reconnect();
+    if (statusCode === DisconnectReason.loggedOut) {
+      hasSentStartMessage = false;
+      hasFollowedNewsletter = false;
     }
     return;
   }

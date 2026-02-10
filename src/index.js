@@ -46,6 +46,25 @@ const groupEvents = require("../handlers/eventHandler");
 const connectionHandler = require('../handlers/connectionHandler');
 const antilink = require('../features/antilink');
 
+let cachedSettings = null;
+let settingsCacheTime = 0;
+const SETTINGS_CACHE_TTL = 30000;
+
+async function getCachedSettings() {
+    const now = Date.now();
+    if (cachedSettings && (now - settingsCacheTime) < SETTINGS_CACHE_TTL) {
+        return cachedSettings;
+    }
+    cachedSettings = await getSettings();
+    settingsCacheTime = now;
+    return cachedSettings;
+}
+
+function invalidateSettingsCache() {
+    cachedSettings = null;
+    settingsCacheTime = 0;
+}
+
 function cleanupSessionFiles() {
     try {
         if (!fs.existsSync(sessionName)) return;
@@ -55,21 +74,24 @@ function cleanupSessionFiles() {
 
         files.forEach(file => {
             const filePath = path.join(sessionName, file);
-            const stats = fs.statSync(filePath);
+            try {
+                const stats = fs.statSync(filePath);
 
-            const shouldKeep = keepFiles.some(pattern => {
-                if (pattern.endsWith('-')) return file.startsWith(pattern);
-                return file === pattern;
-            });
+                const shouldKeep = keepFiles.some(pattern => {
+                    if (pattern.endsWith('-')) return file.startsWith(pattern);
+                    return file === pattern;
+                });
 
-            if (!shouldKeep) {
-                const fileAge = Date.now() - stats.mtimeMs;
-                const hoursOld = fileAge / (1000 * 60 * 60);
+                if (!shouldKeep) {
+                    const fileAge = Date.now() - stats.mtimeMs;
+                    const hoursOld = fileAge / (1000 * 60 * 60);
 
-                if (hoursOld > 24) {
-                    fs.unlinkSync(filePath);
-                    console.log(`🗑️ Cleaned up old file: ${file}`);
+                    if (hoursOld > 24) {
+                        fs.unlinkSync(filePath);
+                        console.log(`🗑️ Cleaned up old file: ${file}`);
+                    }
                 }
+            } catch (fileError) {
             }
         });
     } catch (error) {
@@ -77,8 +99,13 @@ function cleanupSessionFiles() {
     }
 }
 
+let cleanupInterval = null;
+let autobioInterval = null;
+let storeWriteInterval = null;
+
 async function startToxic() {
-  setInterval(cleanupSessionFiles, 24 * 60 * 60 * 1000);
+  if (cleanupInterval) clearInterval(cleanupInterval);
+  cleanupInterval = setInterval(cleanupSessionFiles, 24 * 60 * 60 * 1000);
   cleanupSessionFiles();
 
   let settingss = await getSettings();
@@ -87,6 +114,9 @@ async function startToxic() {
     return;
   }
 
+  cachedSettings = settingss;
+  settingsCacheTime = Date.now();
+
   const { autobio, mode, anticall } = settingss;
   const { version } = await fetchLatestBaileysVersion();
 
@@ -94,11 +124,11 @@ async function startToxic() {
 
   const client = toxicConnect({
     printQRInTerminal: false,
-    syncFullHistory: true,
-    markOnlineOnConnect: false,
+    syncFullHistory: false,
+    markOnlineOnConnect: true,
     connectTimeoutMs: 60000,
-    defaultQueryTimeoutMs: 0,
-    keepAliveIntervalMs: 10000,
+    defaultQueryTimeoutMs: 60000,
+    keepAliveIntervalMs: 30000,
     generateHighQualityLinkPreview: true,
     patchMessageBeforeSending: (message) => {
       const requiresPatch = !!(
@@ -121,7 +151,7 @@ async function startToxic() {
       }
       return message;
     },
-    version: (await (await fetch('https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Defaults/baileys-version.json')).json()).version,
+    version,
     browser: ["Ubuntu", 'Chrome', "20.0.04"],
     logger: pino({ level: 'silent' }),
     auth: {
@@ -132,223 +162,211 @@ async function startToxic() {
 
   store.bind(client.ev);
 
-  setInterval(() => {
-    store.writeToFile("store.json");
-  }, 60000);
+  if (storeWriteInterval) clearInterval(storeWriteInterval);
+  storeWriteInterval = setInterval(() => {
+    try {
+      store.writeToFile("store.json");
+    } catch (e) {}
+  }, 300000);
 
+  if (autobioInterval) clearInterval(autobioInterval);
   if (autobio) {
-    setInterval(() => {
-      const date = new Date();
-      client.updateProfileStatus(
-        `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi' })}.`
-      );
+    autobioInterval = setInterval(() => {
+      try {
+        const date = new Date();
+        client.updateProfileStatus(
+          `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi' })}.`
+        );
+      } catch (e) {}
     }, 60 * 1000);
   }
 
   const processedCalls = new Set();
 
+  setInterval(() => {
+    processedCalls.clear();
+  }, 10 * 60 * 1000);
+
   client.ws.on('CB:call', async (json) => {
-    const settingszs = await getSettings();
-    if (!settingszs?.anticall) return;
+    try {
+      const settingszs = await getCachedSettings();
+      if (!settingszs?.anticall) return;
 
-    const callId = json.content[0].attrs['call-id'];
-    const callerJid = json.content[0].attrs['call-creator'];
+      const callId = json.content?.[0]?.attrs?.['call-id'];
+      const callerJid = json.content?.[0]?.attrs?.['call-creator'];
+      if (!callId || !callerJid) return;
 
-    const isGroupCall = callerJid.endsWith('@g.us');
-    if (isGroupCall) return;
+      const isGroupCall = callerJid.endsWith('@g.us');
+      if (isGroupCall) return;
 
-    const callerNumber = callerJid.replace(/[@.a-z]/g, "");
+      const callerNumber = callerJid.replace(/[@.a-z]/g, "");
 
-    if (processedCalls.has(callId)) {
-      return;
-    }
-    processedCalls.add(callId);
-
-    const fakeQuoted = {
-      key: {
-        participant: '0@s.whatsapp.net',
-        remoteJid: '0@s.whatsapp.net',
-        id: callId
-      },
-      message: {
-        conversation: "Verified"
-      },
-      contextInfo: {
-        mentionedJid: [callerJid],
-        forwardingScore: 999,
-        isForwarded: true
+      if (processedCalls.has(callId)) {
+        return;
       }
-    };
+      processedCalls.add(callId);
 
-    await client.rejectCall(callId, callerJid);
-    await client.sendMessage(callerJid, {
-      text: "> Calling without permission is highly prohibited ⚠️!"
-    }, { quoted: fakeQuoted });
+      const fakeQuoted = {
+        key: {
+          participant: '0@s.whatsapp.net',
+          remoteJid: '0@s.whatsapp.net',
+          id: callId
+        },
+        message: {
+          conversation: "Verified"
+        },
+        contextInfo: {
+          mentionedJid: [callerJid],
+          forwardingScore: 999,
+          isForwarded: true
+        }
+      };
 
-    const bannedUsers = await getBannedUsers();
-    if (!bannedUsers.includes(callerNumber)) {
-      await banUser(callerNumber);
+      await client.rejectCall(callId, callerJid);
+      await client.sendMessage(callerJid, {
+        text: "> Calling without permission is highly prohibited ⚠️!"
+      }, { quoted: fakeQuoted });
+
+      const bannedUsers = await getBannedUsers();
+      if (!bannedUsers.includes(callerNumber)) {
+        await banUser(callerNumber);
+      }
+    } catch (callError) {
+      console.error('❌ [CALL HANDLER] Error:', callError.message);
     }
   });
-
-  const processedStatusMessages = new Set();
 
   client.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
 
-    let settings = await getSettings();
+    let settings = await getCachedSettings();
     if (!settings) return;
 
     const { autoread, autolike, autoview, presence, autolikeemoji } = settings;
 
-    let mek = messages[0];
-    if (!mek || !mek.key) return;
+    for (const mek of messages) {
+      if (!mek || !mek.key) continue;
 
-    const remoteJid = mek.key.remoteJid;
-    const sender = client.decodeJid(mek.key.participant || mek.key.remoteJid);
+      const remoteJid = mek.key.remoteJid;
 
-    if (remoteJid === "status@broadcast") {
-      if (autolike && mek.key) {
-        try {
-          let reactEmoji = autolikeemoji || 'random';
-
-          if (reactEmoji === 'random') {
-            const emojis = ['❤️', '👍', '🔥', '😍', '👏', '🎉', '🤩', '💯', '✨', '🌟'];
-            reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-          }
-
-          const nickk = client.decodeJid(client.user.id);
-
-          await client.sendMessage(mek.key.remoteJid, { 
-            react: { 
-              text: reactEmoji, 
-              key: mek.key 
-            } 
-          }, { statusJidList: [mek.key.participant, nickk] });
-        } catch (sendError) {
+      if (remoteJid === "status@broadcast") {
+        if (autolike && mek.key) {
           try {
-            await client.sendMessage(mek.key.remoteJid, { 
-              react: { 
-                text: reactEmoji, 
-                key: mek.key 
-              } 
-            });
-          } catch (error2) {
-            console.error('❌ [AUTOLIKE] Failed to react:', error2.message);
+            let reactEmoji = autolikeemoji || 'random';
+
+            if (reactEmoji === 'random') {
+              const emojis = ['❤️', '👍', '🔥', '😍', '👏', '🎉', '🤩', '💯', '✨', '🌟'];
+              reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            }
+
+            const nickk = client.decodeJid(client.user.id);
+
+            await client.sendMessage(mek.key.remoteJid, {
+              react: {
+                text: reactEmoji,
+                key: mek.key
+              }
+            }, { statusJidList: [mek.key.participant, nickk] });
+          } catch (sendError) {
+            try {
+              let reactEmoji = autolikeemoji || '❤️';
+              await client.sendMessage(mek.key.remoteJid, {
+                react: {
+                  text: reactEmoji,
+                  key: mek.key
+                }
+              });
+            } catch (error2) {
+            }
           }
         }
+
+        if (autoview) {
+          try {
+            await client.readMessages([mek.key]);
+          } catch (error) {
+          }
+        }
+
+        continue;
       }
 
-      if (autoview) {
+      if (!mek.message) continue;
+
+      mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
+
+      if (!mek.message) continue;
+
+      await antilink(client, mek, store);
+
+      if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
         try {
           await client.readMessages([mek.key]);
+        } catch (error) {}
+      }
 
-          setTimeout(async () => {
-            try {
-              await client.readMessages([mek.key]);
-            } catch (error) {}
-          }, 500);
-        } catch (error) {
-          console.error('❌ [AUTOVIEW] Failed to view:', error.message);
+      if (remoteJid.endsWith('@s.whatsapp.net')) {
+        const Chat = remoteJid;
+        try {
+          if (presence === 'online') {
+            await client.sendPresenceUpdate("available", Chat);
+          } else if (presence === 'typing') {
+            await client.sendPresenceUpdate("composing", Chat);
+          } else if (presence === 'recording') {
+            await client.sendPresenceUpdate("recording", Chat);
+          } else {
+            await client.sendPresenceUpdate("unavailable", Chat);
+          }
+        } catch (error) {}
+      }
+
+      if (!client.public && !mek.key.fromMe) continue;
+
+      if (mek.message?.listResponseMessage) {
+        const selectedCmd = mek.message.listResponseMessage.singleSelectReply?.selectedRowId;
+        if (selectedCmd) {
+          const effectivePrefix = settings?.prefix || '.';
+          let command = selectedCmd.startsWith(effectivePrefix)
+            ? selectedCmd.slice(effectivePrefix.length).toLowerCase()
+            : selectedCmd.toLowerCase();
+
+          const listM = {
+            ...mek,
+            body: selectedCmd,
+            text: selectedCmd,
+            command: command,
+            prefix: effectivePrefix,
+            sender: mek.key.remoteJid,
+            from: mek.key.remoteJid,
+            chat: mek.key.remoteJid,
+            isGroup: mek.key.remoteJid.endsWith('@g.us')
+          };
+
+          try {
+            require("./toxic")(client, listM, { type: "notify" }, store);
+          } catch (error) {
+            console.error('❌ [LIST SELECTION] Error:', error.message);
+          }
+          continue;
         }
       }
 
-      return;
-    }
-
-    if (!mek.message) return;
-
-    mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
-
-    if (!mek.message) {
-        console.error('❌ [MESSAGE HANDLER] mek.message is undefined');
-        return;
-    }
-
-    await antilink(client, mek, store);
-
-    if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
       try {
-        await client.readMessages([mek.key]);
-      } catch (error) {}
-    }
-
-    if (remoteJid.endsWith('@s.whatsapp.net')) {
-      const Chat = remoteJid;
-      if (presence === 'online') {
-        try {
-          await client.sendPresenceUpdate("available", Chat);
-        } catch (error) {}
-      } else if (presence === 'typing') {
-        try {
-          await client.sendPresenceUpdate("composing", Chat);
-        } catch (error) {}
-      } else if (presence === 'recording') {
-        try {
-          await client.sendPresenceUpdate("recording", Chat);
-        } catch (error) {}
-      } else {
-        try {
-          await client.sendPresenceUpdate("unavailable", Chat);
-        } catch (error) {}
-      }
-    }
-
-    if (!client.public && !mek.key.fromMe) return;
-
-    try {
-      m = smsg(client, mek, store);
-      require("./toxic")(client, m, { type: "notify" }, store);
-    } catch (error) {
-      console.error('❌ [MESSAGE HANDLER] Error:', error.message);
-    }
-  });
-
-  client.ev.on("messages.upsert", async ({ messages }) => {
-    const msg = messages[0];
-    if (!msg.message) return;
-
-    if (msg.message.listResponseMessage) {
-      const selectedCmd = msg.message.listResponseMessage.singleSelectReply.selectedRowId;
-
-      const settings = await getSettings();
-      const effectivePrefix = settings?.prefix || '.';
-
-      let command = selectedCmd.startsWith(effectivePrefix)
-        ? selectedCmd.slice(effectivePrefix.length).toLowerCase()
-        : selectedCmd.toLowerCase();
-
-      const m = {
-        ...msg,
-        body: selectedCmd,
-        text: selectedCmd,
-        command: command,
-        prefix: effectivePrefix,
-        sender: msg.key.remoteJid,
-        from: msg.key.remoteJid,
-        chat: msg.key.remoteJid,
-        isGroup: msg.key.remoteJid.endsWith('@g.us')
-      };
-
-      try {
+        const m = smsg(client, mek, store);
         require("./toxic")(client, m, { type: "notify" }, store);
       } catch (error) {
-        console.error('❌ [LIST SELECTION] Error:', error.message);
+        console.error('❌ [MESSAGE HANDLER] Error:', error.message);
       }
     }
   });
 
   client.ev.on("messages.update", async (updates) => {
     for (const update of updates) {
-      if (update.key && update.key.remoteJid === "status@broadcast" && update.update.messageStubType === 1) {
-        const settings = await getSettings();
-        if (settings.autoview) {
+      if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
+        const settings = await getCachedSettings();
+        if (settings?.autoview) {
           try {
-            const mek = {
-              key: update.key,
-              message: {}
-            };
-            await client.readMessages([mek.key]);
+            await client.readMessages([update.key]);
           } catch (error) {}
         }
       }
@@ -356,7 +374,11 @@ async function startToxic() {
   });
 
   process.on("unhandledRejection", (reason, promise) => {
-    console.error('❌ [UNHANDLED ERROR] Unhandled Rejection:', reason.message?.substring(0, 200) || reason);
+    console.error('❌ [UNHANDLED ERROR] Unhandled Rejection:', reason?.message?.substring(0, 200) || reason);
+  });
+
+  process.on("uncaughtException", (error) => {
+    console.error('❌ [UNCAUGHT ERROR]:', error?.message?.substring(0, 200) || error);
   });
 
   client.decodeJid = (jid) => {
@@ -368,7 +390,7 @@ async function startToxic() {
   };
 
   client.getName = (jid, withoutContact = false) => {
-    id = client.decodeJid(jid);
+    const id = client.decodeJid(jid);
     withoutContact = client.withoutContact || withoutContact;
     let v;
     if (id.endsWith("@g.us"))
@@ -399,8 +421,8 @@ async function startToxic() {
   });
 
   let reconnectAttempts = 0;
-  const maxReconnectAttempts = 5;
-  const baseReconnectDelay = 5000;
+  const maxReconnectAttempts = 10;
+  const baseReconnectDelay = 3000;
 
   client.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect } = update;
@@ -413,14 +435,24 @@ async function startToxic() {
 
     if (connection === "close") {
       if (reason === DisconnectReason.loggedOut || reason === 401) {
-        await fs.rmSync(sessionName, { recursive: true, force: true });
+        try {
+          fs.rmSync(sessionName, { recursive: true, force: true });
+        } catch (e) {}
+        invalidateSettingsCache();
         return startToxic();
       }
 
       if (reconnectAttempts < maxReconnectAttempts) {
-        const delay = baseReconnectDelay * Math.pow(2, reconnectAttempts);
+        const delay = Math.min(baseReconnectDelay * Math.pow(2, reconnectAttempts), 60000);
         reconnectAttempts++;
+        console.log(`⏳ Reconnecting in ${delay/1000}s (attempt ${reconnectAttempts}/${maxReconnectAttempts})...`);
         setTimeout(() => startToxic(), delay);
+        return;
+      } else {
+        console.log(`❌ Max reconnection attempts reached. Restarting in 60s...`);
+        reconnectAttempts = 0;
+        setTimeout(() => startToxic(), 60000);
+        return;
       }
     }
 
@@ -475,7 +507,7 @@ app.listen(port, () => console.log(`Server listening on port http://localhost:${
 
 startToxic();
 
-module.exports = startToxic;
+module.exports = { startToxic, invalidateSettingsCache };
 
 let file = require.resolve(__filename);
 fs.watchFile(file, () => {
