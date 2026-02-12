@@ -4,10 +4,10 @@ const ytdl = require("ytdl-core");
 module.exports = async (context) => {
     const { client, m, text, botname } = context;
 
-    if (!botname) return m.reply("The bot is nameless and broken. Direct your rage at the incompetent developer.");
-    if (!text) return m.reply(`You forgot the YouTube link, ${m.pushName}. Are you incapable of following a simple instruction?`);
+    if (!botname) return m.reply("╭───(    TOXIC-MD    )───\n├ Bot is nameless and broken. Blame the dev.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+    if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ You forgot the YouTube link, ${m.pushName}.\n├ Can you even follow simple instructions?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     const urls = text.match(/(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?[a-zA-Z0-9_-]{11})/gi);
-    if (!urls) return m.reply("That is not a valid YouTube link. Do you understand how URLs work?");
+    if (!urls) return m.reply("╭───(    TOXIC-MD    )───\n├ That's not a valid YouTube link. Learn how URLs work.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -36,7 +36,7 @@ module.exports = async (context) => {
             await client.sendMessage(m.chat, { document: { url: audioUrl }, fileName: `${title}.mp3`, mimetype: mimeType }, { quoted: m });
         } catch (fallbackError) {
             console.error(`Fallback error: ${fallbackError.message}`);
-            await m.reply(`Both download methods failed. The universe itself rejects your request. Error: ${fallbackError.message}`);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ YTMP3 ERROR ≪───\n├ \n├ Both download methods failed.\n├ The universe rejects your request.\n├ ${fallbackError.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     }
 };

@@ -4,13 +4,13 @@ module.exports = async (context) => {
   const { client, m, text } = context;
 
   if (!text) {
-    return m.reply("Enter title, idea, and slogan.\nFormat: _logogen Title|Idea|Slogan_\n\n*Example:* _logogen ToxicTech|AI-Powered Services|Innovation Meets Simplicity_");
+    return m.reply('╭───(    TOXIC-MD    )───\n├───≫ LOGO GEN ≪───\n├ \n├ Enter title, idea, and slogan.\n├ Format: _logogen Title|Idea|Slogan_\n├ \n├ Example: _logogen ToxicTech|AI-Powered\n├ Services|Innovation Meets Simplicity_\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
   }
 
   const [title, idea, slogan] = text.split("|");
 
   if (!title || !idea || !slogan) {
-    return m.reply("Incorrect format.\nUse: _logogen Title|Idea|Slogan_");
+    return m.reply('╭───(    TOXIC-MD    )───\n├───≫ LOGO GEN ≪───\n├ \n├ Incorrect format, are you illiterate?\n├ Use: _logogen Title|Idea|Slogan_\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
   }
 
   try {
@@ -31,17 +31,17 @@ module.exports = async (context) => {
     const { data } = await axios.post("https://www.sologo.ai/v1/api/logo/logo_generate", payload);
 
     if (!data.data.logoList || data.data.logoList.length === 0) {
-      return m.reply("Failed to generate logo. Please try again.");
+      return m.reply('╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Failed to generate logo.\n├ Try again, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
     }
 
     for (const logo of data.data.logoList) {
       await client.sendMessage(m.chat, {
         image: { url: logo.logo_thumb },
-        caption: `_Generated Logo for "${title}"_`
+        caption: `╭───(    TOXIC-MD    )───\n├───≫ LOGO ≪───\n├ \n├ Generated Logo for "${title}"\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: m });
     }
   } catch (err) {
     console.error("Logo generation error:", err);
-    await m.reply("An error occurred while creating the logo.");
+    await m.reply('╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ An error occurred while creating\n├ the logo. Pathetic.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
   }
 };

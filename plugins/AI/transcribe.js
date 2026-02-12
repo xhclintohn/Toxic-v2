@@ -8,28 +8,28 @@ module.exports = async (context) => {
   const mime = (quoted.msg || quoted).mimetype || '';
 
   if (!/audio|video/.test(mime)) {
-    return m.reply('Send or reply to an audio/video file with the caption _transcribe_idiot');
+    return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Send or reply to an audio/video file with the caption _transcribe_ idiot\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 
-  m.reply('*Processing, please wait...*');
+  m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Tʀᴀɴsᴄʀɪʙɪɴɢ ≪───\n├ \n├ Processing, please wait...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
   try {
     const buffer = await m.quoted.download();
 
     if (buffer.length > 5 * 1024 * 1024) {
-      return m.reply('Maximum file size is 5 MB.');
+      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Maximum file size is 5 MB.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     const result = await transcribeWithTalknotes(buffer);
 
     if (!result || !result.text) {
-      return m.reply('Failed to extract text. Please try again later.');
+      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Failed to extract text. Please try again later.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
-    return m.reply(`*Transcription Result:*\n\n${result.text}`);
+    return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Tʀᴀɴsᴄʀɪᴘᴛɪᴏɴ ≪───\n├ \n├ ${result.text}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   } catch (error) {
     console.error(error);
-    m.reply('An error occurred while processing the file.');
+    m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ An error occurred while processing the file.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 };
 

@@ -11,7 +11,7 @@ module.exports = {
       if (!m.mentionedJid || m.mentionedJid.length === 0) {
         if (!m.quoted || !m.quoted.sender) {
           console.error('No tagged or quoted user provided');
-          return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, perv, tag someone or quote a message to fuck! I ain’t doing this without a target!`);
+          return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Yo, perv, tag someone or quote\n├ a message to fuck! I ain't doing\n├ this without a target!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
       }
 
@@ -24,20 +24,20 @@ module.exports = {
         (!targetUser.includes('@s.whatsapp.net') && !targetUser.includes('@lid'))
       ) {
         console.error(`Invalid target user: ${JSON.stringify(targetUser)}`);
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Invalid user, dumbass! Tag or quote a real person to fuck!`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Invalid user, dumbass! Tag or\n├ quote a real person to fuck!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       const targetNumber = targetUser.split('@')[0];
       const senderNumber = m.sender.split('@')[0];
       if (!targetNumber || !senderNumber) {
         console.error(`Failed to extract numbers: target=${targetUser}, sender=${m.sender}`);
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Something’s fucked up with the user IDs. Try again, idiot!`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Something's fucked up with the\n├ user IDs. Try again, idiot!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       const fuckingMsg = await client.sendMessage(
         m.chat,
         {
-          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 @${senderNumber} is getting ready to fuck @${targetNumber}... 😈\n々 This is gonna be wild, bitch!\n╭───( ✓ )───`,
+          text: `╭───(    TOXIC-MD    )───\n├ \n├ @${senderNumber} is getting ready\n├ to fuck @${targetNumber}...\n├ This is gonna be wild, bitch!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
           mentions: [m.sender, targetUser],
         },
         { quoted: m }
@@ -48,33 +48,36 @@ module.exports = {
       const intensities = [
         {
           level: 'Awkward',
-          description: 'a clumsy, embarrassing attempt that made @TARGET laugh their ass off! @SENDER, you’re a fucking disaster!',
-          emoji: '😂',
+          description: 'a clumsy, embarrassing attempt that made @TARGET laugh their ass off! @SENDER, you\'re a fucking disaster!',
+          emoji: '',
         },
         {
           level: 'Steamy',
-          description: 'a hot and heavy session that got @TARGET all flustered! @SENDER, you’re not half bad!',
-          emoji: '🔥',
+          description: 'a hot and heavy session that got @TARGET all flustered! @SENDER, you\'re not half bad!',
+          emoji: '',
         },
         {
           level: 'Legendary',
-          description: 'an earth-shattering fuck that left @TARGET in awe! @SENDER, you’re a goddamn sex god!',
-          emoji: '💦🔥',
+          description: 'an earth-shattering fuck that left @TARGET in awe! @SENDER, you\'re a goddamn sex god!',
+          emoji: '',
         },
       ];
       const intensity = intensities[Math.floor(Math.random() * intensities.length)];
 
-      const resultMsg = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
-*FUCK REPORT* ${intensity.emoji}
-
-*INITIATOR:* @${senderNumber}
-*VICTIM:* @${targetNumber}
-*INTENSITY:* ${intensity.level}
-
-*VERDICT:* ${intensity.description.replace('@TARGET', `@${targetNumber}`).replace('@SENDER', `@${senderNumber}`)}
-
-*DISCLAIMER:* This was 100% consensual in this fictional world, you filthy animal! Cry about it! 😈
-╭───( ✓ )───`;
+      const resultMsg = `╭───(    TOXIC-MD    )───
+├───≫ FUCK REPORT ≪───
+├ 
+├ *INITIATOR:* @${senderNumber}
+├ *VICTIM:* @${targetNumber}
+├ *INTENSITY:* ${intensity.level}
+├ 
+├ *VERDICT:* ${intensity.description.replace('@TARGET', `@${targetNumber}`).replace('@SENDER', `@${senderNumber}`)}
+├ 
+├ *DISCLAIMER:* This was 100% consensual
+├ in this fictional world, you filthy animal!
+├ Cry about it!
+╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
       await client.sendMessage(
         m.chat,
@@ -94,7 +97,7 @@ module.exports = {
       }
     } catch (error) {
       console.error(`Fuck command exploded: ${error.stack}`);
-      await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Shit broke harder than your bedframe! Can’t fuck right now, you unlucky bastard.`);
+      await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Shit broke harder than your\n├ bedframe! Can't fuck right now,\n├ you unlucky bastard.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
   },
 };

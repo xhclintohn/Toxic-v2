@@ -11,11 +11,11 @@ module.exports = {
       const bName = botname || 'Toxic-MD';
 
       if (!isBotAdmin) {
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Nᴏᴛ Aᴅᴍɪɴ ≪───\n々 I'm not admin here, fool.\n々 Make me admin first, then\n々 come crawling back.\n╭───( ✓ )───`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ NOT ADMIN ≪───\n├ \n├ I'm not admin here, fool.\n├ Make me admin first, then\n├ come crawling back.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       if (!m.quoted && (!m.mentionedJid || m.mentionedJid.length === 0)) {
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Usᴀɢᴇ ≪───\n々 Mention or quote a user.\n々 Example: ${prefix}demote @user\n々 Don't waste my time.\n╭───( ✓ )───`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ USAGE ≪───\n├ \n├ Mention or quote a user.\n├ Example: ${prefix}demote @user\n├ Don't waste my time.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       let user = m.mentionedJid ? m.mentionedJid[0] : null;
@@ -24,7 +24,7 @@ module.exports = {
       }
       
       if (!user) {
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Iɴᴠᴀʟɪᴅ ≪───\n々 Invalid user specified.\n々 Tag someone properly.\n╭───( ✓ )───`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ INVALID ≪───\n├ \n├ Invalid user specified.\n├ Tag someone properly.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       const userNumber = user.split('@')[0];
@@ -39,17 +39,17 @@ module.exports = {
         });
         
         if (!targetAdmin) {
-          return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Nᴏᴛ Aᴅᴍɪɴ ≪───\n々 @${userNumber} isn't even admin.\n々 Can't demote a peasant.\n╭───( ✓ )───`, {
+          return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ NOT ADMIN ≪───\n├ \n├ @${userNumber} isn't even admin.\n├ Can't demote a peasant.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, {
             mentions: [user]
           });
         }
 
         await client.groupParticipantsUpdate(m.chat, [user], 'demote');
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇᴍᴏᴛᴇᴅ ≪───\n々 @${userNumber} got stripped of admin.\n々 Back to being a nobody.\n╭───( ✓ )───`, {
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ DEMOTED ≪───\n├ \n├ @${userNumber} got stripped of admin.\n├ Back to being a nobody.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, {
           mentions: [user]
         });
       } catch (error) {
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Sᴜᴄᴄᴇss ≪───\n々 User demoted successfully.\n々 Enjoy being powerless again.\n々 Serves you right.\n╭───( ✓ )───`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ SUCCESS ≪───\n├ \n├ User demoted successfully.\n├ Enjoy being powerless again.\n├ Serves you right.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
     });
   },

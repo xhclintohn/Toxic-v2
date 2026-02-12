@@ -18,14 +18,14 @@ module.exports = {
         const { client, m, mime } = context;
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-            if (!m.quoted) return m.reply('The command requires a STICKER. Your empty reply suggests you cannot read.');
+            if (!m.quoted) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO VIDEO ≪───\n├ \n├ The command requires a STICKER.\n├ Your empty reply suggests you\n├ cannot read.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             const quotedMime = m.quoted.mimetype || '';
-            if (!/webp/.test(quotedMime)) return m.reply('That is a file, not a sticker. The .webp extension is a clue you seem to have missed.');
-            const statusMsg = await m.reply('Forcing your static sticker into a video. A pointless endeavor.');
+            if (!/webp/.test(quotedMime)) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO VIDEO ≪───\n├ \n├ That is a file, not a sticker.\n├ The .webp extension is a clue\n├ you seem to have missed.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+            const statusMsg = await m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO VIDEO ≪───\n├ \n├ Forcing your static sticker into\n├ a video. A pointless endeavor.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             const stickerBuffer = await m.quoted.download();
             if (!stickerBuffer) {
                 await client.sendMessage(m.chat, { delete: statusMsg.key });
-                return m.reply('Failed to download. Your sticker is as inaccessible as common sense.');
+                return m.reply('╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Failed to download. Your sticker is\n├ as inaccessible as common sense.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             }
             const stickerUrl = await uploadToCatbox(stickerBuffer);
             const encodedUrl = encodeURIComponent(stickerUrl);
@@ -37,8 +37,8 @@ module.exports = {
             const videoBuffer = Buffer.from(videoResponse.data);
             await client.sendMessage(m.chat, { delete: statusMsg.key });
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-            await client.sendMessage(m.chat, { video: videoBuffer, caption: 'Behold, your motionless "video".\n—\nTσxιƈ-ɱԃȥ' }, { quoted: m });
-            await client.sendMessage(m.chat, { document: videoBuffer, mimetype: 'video/mp4', fileName: `sticker_${Date.now()}.mp4`, caption: 'Document version. Marginally more useful.\n—\nTσxιƈ-ɱԃȥ' }, { quoted: m });
+            await client.sendMessage(m.chat, { video: videoBuffer, caption: '╭───(    TOXIC-MD    )───\n├───≫ TO VIDEO ≪───\n├ \n├ Behold, your motionless "video".\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: m });
+            await client.sendMessage(m.chat, { document: videoBuffer, mimetype: 'video/mp4', fileName: `sticker_${Date.now()}.mp4`, caption: '╭───(    TOXIC-MD    )───\n├───≫ MP4 FILE ≪───\n├ \n├ Document version. Marginally\n├ more useful.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: m });
         } catch (err) {
             console.error('ToMP4 error:', err);
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
@@ -47,7 +47,7 @@ module.exports = {
             if (err.message.includes('Network Error')) userMessage = 'A network error. Are you connected to the void?';
             if (err.message.includes('Upload Refused')) userMessage = "The upload service rejected your file. It has taste.";
             if (err.message.includes('converter deemed')) userMessage = 'The conversion API refused to process this. Try a simpler sticker.';
-            await m.reply(`${userMessage}\nError: ${err.message}`);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ ${userMessage}\n├ Error: ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     }
 };

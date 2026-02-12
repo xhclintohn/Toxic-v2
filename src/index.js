@@ -489,12 +489,39 @@ async function startToxic() {
     return trueFileName;
   };
 
-  console.log(`🚀 Toxic-MD started successfully!`);
-  console.log(`📊 Current settings:`);
-  console.log(`   • Autolike: ${settingss.autolike ? '✅ ON' : '❌ OFF'}`);
-  console.log(`   • Autoview: ${settingss.autoview ? '✅ ON' : '❌ OFF'}`);
-  console.log(`   • Autoread: ${settingss.autoread ? '✅ ON' : '❌ OFF'}`);
-  console.log(`   • Reaction Emoji: ${settingss.autolikeemoji || 'random'}`);
+  const totalCmds = totalCommands || 0;
+  const mem = process.memoryUsage();
+  const usedMB = (mem.rss / 1024 / 1024).toFixed(2);
+  const platform = process.env.DYNO ? 'Heroku' : process.env.REPLIT_DEPLOYMENT ? 'Replit' : process.platform;
+
+  console.log(chalk.green(`\n╔══════════════════════════════════════╗`));
+  console.log(chalk.green(`║`) + chalk.bold.cyan(`     TOXIC-MD v2 - CONNECTED`) + chalk.green(`         ║`));
+  console.log(chalk.green(`╠══════════════════════════════════════╣`));
+  console.log(chalk.green(`║`) + chalk.white(` Bot Name    : ${(botname || 'Toxic-MD').padEnd(21)}`) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Prefix      : ${(settingss.prefix || '.').padEnd(21)}`) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Mode        : ${(settingss.mode || 'public').padEnd(21)}`) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Platform    : ${String(platform).padEnd(21)}`) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` NodeJS      : ${process.version.padEnd(21)}`) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Memory      : ${(usedMB + ' MB').padEnd(21)}`) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Commands    : ${String(totalCmds).padEnd(21)}`) + chalk.green(`║`));
+  console.log(chalk.green(`╠══════════════════════════════════════╣`));
+  console.log(chalk.green(`║`) + chalk.bold.yellow(`  FEATURE STATUS`) + chalk.green(`                      ║`));
+  console.log(chalk.green(`╠══════════════════════════════════════╣`));
+  console.log(chalk.green(`║`) + chalk.white(` Anticall    : ${settingss.anticall ? '✅ ON ' : '❌ OFF'} `.padEnd(22)) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Autobio     : ${settingss.autobio ? '✅ ON ' : '❌ OFF'} `.padEnd(22)) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Autolike    : ${settingss.autolike ? '✅ ON ' : '❌ OFF'} `.padEnd(22)) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Autoview    : ${settingss.autoview ? '✅ ON ' : '❌ OFF'} `.padEnd(22)) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Autoread    : ${settingss.autoread ? '✅ ON ' : '❌ OFF'} `.padEnd(22)) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` ChatbotPM   : ${settingss.chatbotpm ? '✅ ON ' : '❌ OFF'} `.padEnd(22)) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Antidelete  : ${settingss.antidelete ? '✅ ON ' : '❌ OFF'} `.padEnd(22)) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Antiedit    : ${settingss.antiedit ? '✅ ON ' : '❌ OFF'} `.padEnd(22)) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Antilink    : ${(settingss.antilink || 'off').padEnd(21)}`) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Presence    : ${(settingss.presence || 'online').padEnd(21)}`) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` React Emoji : ${(settingss.autolikeemoji || 'random').padEnd(21)}`) + chalk.green(`║`));
+  console.log(chalk.green(`║`) + chalk.white(` Start Msg   : ${settingss.startmessage ? '✅ ON ' : '❌ OFF'} `.padEnd(22)) + chalk.green(`║`));
+  console.log(chalk.green(`╠══════════════════════════════════════╣`));
+  console.log(chalk.green(`║`) + chalk.gray(`  Powered by xh_clinton`) + chalk.green(`               ║`));
+  console.log(chalk.green(`╚══════════════════════════════════════╝\n`));
 }
 
 app.use(express.static('public'));

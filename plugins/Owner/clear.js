@@ -8,7 +8,7 @@ module.exports = async (context) => {
 
      
         if (m.chat.endsWith('@broadcast') || m.chat.endsWith('@newsletter')) {
-            return m.reply('⚠️ Cannot clear this type of chat.');
+            return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Cannot clear this type of chat.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
         try {
@@ -26,10 +26,10 @@ module.exports = async (context) => {
                 m.chat
             );
 
-            await m.reply(`✅ Chat cleared.\n—\nTσxιƈ-ɱԃȥ`);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ CLEARED ≪───\n├ \n├ Chat cleared.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         } catch (err) {
             console.error('Clear chat failed:', err);
-            await m.reply('⚠️ Failed to clear chat.');
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Failed to clear chat.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     });
 };

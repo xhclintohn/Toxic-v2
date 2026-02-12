@@ -4,15 +4,15 @@ const fetch = require("node-fetch");
 module.exports = async (context) => {
     const { client, m, text } = context;
 
-    if (!text) return m.reply("Are you mute? Give me a video name. It's not rocket science.");
-    if (text.length > 100) return m.reply("Your 'video title' is longer than your attention span. Keep it under 100 characters.");
+    if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Give me a video name, it's not rocket science.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+    if (text.length > 100) return m.reply("╭───(    TOXIC-MD    )───\n├ Title longer than your attention span. Under 100 chars!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
         const searchQuery = `${text} official`;
         const searchResult = await yts(searchQuery);
         const video = searchResult.videos[0];
-        if (!video) return m.reply(`Nothing found for "${text}". Your taste is as nonexistent as the results.`);
+        if (!video) return m.reply(`╭───(    TOXIC-MD    )───\n├ Nothing found for "${text}". Your taste doesn't exist.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         const encodedUrl = encodeURIComponent(video.url);
         const response = await fetch(`https://api.ootaizumi.web.id/downloader/youtube?url=${encodedUrl}&format=720`, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Accept": "application/json" } });
         const data = await response.json();
@@ -41,6 +41,6 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         let userMessage = 'Download failed. The universe despises your video choice.';
         if (error.message.includes('API returned')) userMessage = 'The video service rejected the request.';
-        await m.reply(`${userMessage}\nError: ${error.message}`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ VIDEO ERROR ≪───\n├ \n├ ${userMessage}\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

@@ -1,21 +1,19 @@
 module.exports = async (context) => {
   const { client, m } = context;
 
-  const message = `
-╭━━〔 *Toxic-MD Support Links* 〕━━━━╮
-
-> 👑 *Owner*  
-https:
-
-> 📢 *Channel Link*  
-https:
-
-> 👥 *Group*  
-https:
-
-╰━━━━━━━━━━━━━━━━━━━━━━━╯
-> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ
-`;
+  const message = `╭───(    TOXIC-MD    )───
+├───≫ Sᴜᴘᴘᴏʀᴛ Lɪɴᴋs ≪───
+├ 
+├ *Owner*
+├ https:
+├ 
+├ *Channel Link*
+├ https:
+├ 
+├ *Group*
+├ https:
+╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
   try {
     await client.sendMessage(
@@ -25,6 +23,6 @@ https:
     );
   } catch (error) {
     console.error("Support command error:", error);
-    await m.reply("⚠️ Failed to send support links. Please try again.");
+    await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Failed to send support links.\n├ Try again, you impatient fool.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 };

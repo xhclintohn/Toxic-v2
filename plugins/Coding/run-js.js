@@ -10,11 +10,10 @@ async function runCode() {
   try {
     let result = await node.runSource(code);
     console.log(result);
-    m.reply(result.stdout);
-    m.reply(result.stderr);
+    m.reply(`╭───(    TOXIC-MD    )───\n├───≫ JS OUTPUT ≪───\n├ \n├ ${result.stdout || 'No output'}\n${result.stderr ? '├ stderr: ' + result.stderr + '\n' : ''}╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   } catch (err) {
     console.log(err);
-    m.reply(err.stderr);
+    m.reply(`╭───(    TOXIC-MD    )───\n├───≫ JS ERROR ≪───\n├ \n├ ${err.stderr || err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 }
 
@@ -22,7 +21,7 @@ runCode();
 
 } else { 
 
-m.reply('Quote a valid and short JavaScript code to compile')
+m.reply('╭───(    TOXIC-MD    )───\n├───≫ JS COMPILER ≪───\n├ \n├ Quote a valid and short JavaScript\n├ code to compile, you absolute walnut.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧')
 
 }
 

@@ -33,13 +33,14 @@ module.exports = async (context) => {
         const videoResponse = await fetch(videoUrl);
         const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
 
-        const caption = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
-───≫ 🔗 TikTok Download ≪───
-々 Author : ${username}
-々 Views : ${stats.views || "0"}
-々 Likes : ${stats.likes || "0"}
-々 Comments : ${stats.comments || "0"}
-╭───( ✓ )───`;
+        const caption = `╭───(    TOXIC-MD    )───
+├───≫ 🔗 TikTok Download ≪───
+├ Author : ${username}
+├ Views : ${stats.views || "0"}
+├ Likes : ${stats.likes || "0"}
+├ Comments : ${stats.comments || "0"}
+╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
         await client.sendMessage(m.chat, {
             video: videoBuffer,
@@ -66,10 +67,11 @@ module.exports = async (context) => {
     } catch (error) {
         console.error("tiktok error:", error);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
-───≫ Error ≪───
-々 Error : ${error.message}
-々 Fix : Try again later
-╭───( ✓ )───`);
+        await m.reply(`╭───(    TOXIC-MD    )───
+├───≫ Error ≪───
+├ Error : ${error.message}
+├ Fix : Try again later
+╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

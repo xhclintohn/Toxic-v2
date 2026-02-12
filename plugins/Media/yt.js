@@ -15,7 +15,8 @@ module.exports = async (context) => {
   const { client, m, text } = context;
 
   const formatStylishReply = (message) => {
-    return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
+    return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
   };
 
   if (!text || !isValidYouTubeUrl(text)) {

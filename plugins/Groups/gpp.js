@@ -2,7 +2,7 @@ const { getSettings } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 
 const formatStylishReply = (message) => {
-    return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
+    return `╭───(    TOXIC-MD    )───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 };
 
 module.exports = async (context) => {
@@ -42,7 +42,7 @@ module.exports = async (context) => {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
             await client.updateProfilePicture(m.chat, imageBuffer);
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-            return m.reply(formatStylishReply("Group picture updated ✅"));
+            return m.reply(formatStylishReply("Group picture updated"));
         } catch (error) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply(formatStylishReply("Failed to update picture"));

@@ -63,9 +63,9 @@ module.exports = {
             {  
                 interactiveMessage: {  
                     body: { 
-                        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo @${m.pushName}! You actually bothered to check if I'm alive? 🙄\n々 ${botname} is active 24/7, unlike your brain cells. 🧠⚡\n々 Stop wasting my time and pick something useful below.\n╭───( ✓ )───` 
+                        text: `╭───(    TOXIC-MD    )───\n├───≫ Sᴛᴀʀᴛ ≪───\n├ \n├ Yo @${m.pushName}! You actually bothered\n├ to check if I'm alive?\n├ ${botname} is active 24/7, unlike\n├ your brain cells.\n├ Stop wasting my time and pick\n├ something useful below.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` 
                     },  
-                    footer: { text: `> Pσɯҽɾҽԃ Ⴆყ ${botname}` },  
+                    footer: { text: `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` },  
                     nativeFlowMessage: {  
                         buttons: [  
                             {  

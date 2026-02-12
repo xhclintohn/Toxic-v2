@@ -4,12 +4,12 @@ module.exports = async (context) => {
 
   if (!text) {
     m.reply(
-      "╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n" +
-      "々 ERROR\n" +
-      "╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n" +
+      "╭───(    TOXIC-MD    )───\n" +
+      "├ ERROR\n" +
+      "╭───(    TOXIC-MD    )───\n" +
       "│ 🚫 Please provide a search term!\n" +
-      "々 Example: .google What is treason\n" +
-      "╭───( ✓ )───"
+      "├ Example: .google What is treason\n" +
+      "╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧"
     );
     return;
   }
@@ -21,38 +21,38 @@ module.exports = async (context) => {
 
     if (data.items.length == 0) {
       m.reply(
-        "╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n" +
-        "々 ERROR\n" +
-        "╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n" +
+        "╭───(    TOXIC-MD    )───\n" +
+        "├ ERROR\n" +
+        "╭───(    TOXIC-MD    )───\n" +
         "│ ❌ Unable to find any results\n" +
-        "╭───( ✓ )───"
+        "╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧"
       );
       return;
     }
 
     let tex = "";
-    tex += "╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n";
-    tex += "々 GOOGLE SEARCH\n";
-    tex += "╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n";
+    tex += "╭───(    TOXIC-MD    )───\n";
+    tex += "├ GOOGLE SEARCH\n";
+    tex += "╭───(    TOXIC-MD    )───\n";
     tex += "│ 🔍 Search Term: " + text + "\n";
-    tex += "╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n";
+    tex += "╭───(    TOXIC-MD    )───\n";
 
     for (let i = 0; i < data.items.length; i++) {
-      tex += "々 Result " + (i + 1) + "\n";
+      tex += "├ Result " + (i + 1) + "\n";
       tex += "│ 🪧 Title: " + data.items[i].title + "\n";
       tex += "│ 📝 Description: " + data.items[i].snippet + "\n";
       tex += "│ 🌐 Link: " + data.items[i].link + "\n";
-      tex += "╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n";
+      tex += "╭───(    TOXIC-MD    )───\n";
     }
 
     m.reply(tex);
   } catch (e) {
     m.reply(
-      "╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n" +
-      "々 ERROR\n" +
-      "╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n" +
+      "╭───(    TOXIC-MD    )───\n" +
+      "├ ERROR\n" +
+      "╭───(    TOXIC-MD    )───\n" +
       "│ ❌ An error occurred: " + e.message + "\n" +
-      "╭───( ✓ )───"
+      "╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧"
     );
   }
 };

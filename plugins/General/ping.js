@@ -32,12 +32,12 @@ module.exports = {
             const totalMB = (mem.heapTotal / 1024 / 1024).toFixed(2);
             const platform = process.env.DYNO ? 'Heroku' : process.env.REPLIT_DEPLOYMENT ? 'Replit' : process.platform;
 
-            const text = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Pɪɴɢ ≪───\n々 𝐋𝐚𝐭𝐞𝐧𝐜𝐲 : ${responseSpeed}ms\n々 𝐒𝐞𝐫𝐯𝐞𝐫 𝐓𝐢𝐦𝐞 : ${new Date().toLocaleString()}\n々 𝐔𝐩𝐭𝐢𝐦𝐞 : ${formatUptime(process.uptime())}\n々 𝐌𝐞𝐦𝐨𝐫𝐲 : ${usedMB}/${totalMB} MB\n々 𝐍𝐨𝐝𝐞𝐉𝐒 : ${process.version}\n々 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦 : ${platform}\n╭───( ✓ )───`;
+            const text = `╭───(    TOXIC-MD    )───\n├───≫ Pɪɴɢ ≪───\n├ \n├ 𝐋𝐚𝐭𝐞𝐧𝐜𝐲 : ${responseSpeed}ms\n├ 𝐒𝐞𝐫𝐯𝐞𝐫 𝐓𝐢𝐦𝐞 : ${new Date().toLocaleString()}\n├ 𝐔𝐩𝐭𝐢𝐦𝐞 : ${formatUptime(process.uptime())}\n├ 𝐌𝐞𝐦𝐨𝐫𝐲 : ${usedMB}/${totalMB} MB\n├ 𝐍𝐨𝐝𝐞𝐉𝐒 : ${process.version}\n├ 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦 : ${platform}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
             await client.sendMessage(m.chat, { text }, { quoted: m });
 
         } catch (error) {
-            await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Pɪɴɢ Fᴀɪʟᴇᴅ ≪───\n々 The ping command crashed.\n々 Much like your life choices.\n╭───( ✓ )───`);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Pɪɴɢ Fᴀɪʟᴇᴅ ≪───\n├ \n├ The ping command crashed.\n├ Much like your life choices.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     }
 };

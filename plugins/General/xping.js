@@ -96,10 +96,10 @@ module.exports = {
 
                 ctx.fillStyle = C.cyan;
                 ctx.font = "bold 24px sans-serif";
-                ctx.fillText("⚡ Toxic-MD SYSTEM DASHBOARD", 40, 50);
+                ctx.fillText("Toxic-MD SYSTEM DASHBOARD", 40, 50);
                 ctx.fillStyle = C.subtext;
                 ctx.font = "16px sans-serif";
-                ctx.fillText("Heroku Instance • Real-Time Monitor", 40, 75);
+                ctx.fillText("Heroku Instance | Real-Time Monitor", 40, 75);
 
                 const boxY = 110;
                 const boxW = 280;
@@ -163,14 +163,14 @@ module.exports = {
 
                 ctx.fillStyle = C.subtext;
                 ctx.font = "14px sans-serif";
-                ctx.fillText("⬆ Response Time", netX + 20, boxY + 90);
+                ctx.fillText("Response Time", netX + 20, boxY + 90);
                 ctx.fillStyle = C.text;
                 ctx.font = "bold 18px sans-serif";
                 ctx.fillText(`${pingSpeed}ms`, netX + 20, boxY + 115);
 
                 ctx.fillStyle = C.subtext;
                 ctx.font = "14px sans-serif";
-                ctx.fillText("⬇ Bot Uptime", netX + 20, boxY + 160);
+                ctx.fillText("Bot Uptime", netX + 20, boxY + 160);
                 ctx.fillStyle = C.text;
                 ctx.font = "bold 16px sans-serif";
                 ctx.fillText(botUptime.split(' ')[0] + ' ' + botUptime.split(' ')[1], netX + 20, boxY + 185);
@@ -207,7 +207,7 @@ module.exports = {
                 ctx.textAlign = "center";
                 ctx.fillStyle = C.subtext;
                 ctx.font = "italic 12px sans-serif";
-                ctx.fillText(`Toxic-MD Dashboard™ • ${new Date().toLocaleString()}`, W / 2, H - 15);
+                ctx.fillText(`Toxic-MD Dashboard | ${new Date().toLocaleString()}`, W / 2, H - 15);
 
                 return canvas.toBuffer("image/png");
             };
@@ -216,12 +216,12 @@ module.exports = {
             
             await client.sendMessage(m.chat, {
                 image: imageBuffer,
-                caption: `*— Bot Status ⌬*\n• *Runtime :* ${formatUptime(process.uptime())}\n• *Response Speed :* ${(toxicspeed || 0.0094).toFixed(4)} ms\n• *CPU Usage :* ${(Math.floor(Math.random() * 40) + 5) + '%'}\n\n—\n*Tσxιƈ-ɱԃȥ*`
+                caption: `╭───(    TOXIC-MD    )───\n├───≫ Bᴏᴛ Sᴛᴀᴛᴜs ≪───\n├ \n├ Runtime : ${formatUptime(process.uptime())}\n├ Response Speed : ${(toxicspeed || 0.0094).toFixed(4)} ms\n├ CPU Usage : ${(Math.floor(Math.random() * 40) + 5) + '%'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
 
         } catch (error) {
             console.error(`Ping error:`, error);
-            await m.reply("The ping command is broken. Much like your ability to use a bot correctly.");
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ The ping command is broken.\n├ Much like your ability to use\n├ a bot correctly.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     }
 };

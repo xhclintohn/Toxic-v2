@@ -8,7 +8,7 @@ module.exports = async (context) => {
 try {
 const fs = require("fs");
 
-if(!msgToxic) { m.reply('REPLY TO A FUCKING IMAGE RIGHT NOW!'); return } ;
+if(!msgToxic) { m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ REPLY TO A FUCKING IMAGE RIGHT NOW!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`); return } ;
 
 
 let media;
@@ -16,7 +16,7 @@ if (msgToxic.imageMessage) {
      media = msgToxic.imageMessage
 
   } else {
-    m.reply('THIS IS NOT A FUCKING IMAGE! REPLY TO AN IMAGE!'); return
+    m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ THIS IS NOT A FUCKING IMAGE!\n├ REPLY TO AN IMAGE!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`); return
   } ;
 
 var medis = await client.downloadAndSaveMediaMessage(media);
@@ -50,11 +50,11 @@ client.query({
             })
 
                     fs.unlinkSync(medis)
-                    m.reply("Bot Profile Picture Updated")
+                    m.reply(`╭───(    TOXIC-MD    )───\n├───≫ UPDATED ≪───\n├ \n├ Bot Profile Picture Updated.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`)
 
 } catch (error) {
 
-m.reply("An error occured while updating bot profile photo\n" + error)
+m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ An error occured while updating\n├ bot profile photo.\n├ ${error}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`)
 
 }
 

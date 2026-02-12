@@ -8,34 +8,20 @@ module.exports = {
   run: async (context) => {
     const { client, m, prefix, botname } = context;
 
-    /**
-     * Extract URL from message
-     */
     const url = m.body.replace(new RegExp(`^${prefix}(fetch|get|url|web)\\s*`, 'i'), '').trim();
 
     if (!url) {
       return client.sendMessage(m.chat, {
-        text: `🛜 *GET Request*\n\n📃 *Response JSON:*\n${JSON.stringify({
-          success: false,
-          message: "Missing required URL parameter",
-          required: ["url"],
-          missing: ["url"],
-          usage: `${prefix}fetch https://example.com`,
-          timestamp: new Date().toISOString()
-        }, null, 2)}`
+        text: `╭───(    TOXIC-MD    )───\n├───≫ FETCH ≪───\n├ \n├ You forgot the URL, genius.\n├ Usage: ${prefix}fetch https://example.com\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: m });
     }
 
-    // Basic URL validation
     let targetUrl = url;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       targetUrl = 'https://' + url;
     }
 
     try {
-      /**
-       * Fetch data from URL
-       */
       const response = await fetch(targetUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -49,11 +35,7 @@ module.exports = {
 
       const contentType = response.headers.get('content-type') || '';
 
-      /**
-       * Handle different content types
-       */
       if (contentType.includes('application/json')) {
-        // JSON response
         const data = await response.json();
 
         const responseData = {
@@ -66,15 +48,13 @@ module.exports = {
           timestamp: new Date().toISOString()
         };
 
-        // If JSON is too long, send as file
         if (JSON.stringify(responseData).length > 1500) {
           responseData.data = "[Data too large - sent as file]";
           
           await client.sendMessage(m.chat, {
-            text: `🛜 *GET Request*\n\n📃 *Response JSON:*\n${JSON.stringify(responseData, null, 2)}`
+            text: `╭───(    TOXIC-MD    )───\n├───≫ FETCH RESULT ≪───\n├ \n├ URL: ${targetUrl}\n├ Status: ${response.status}\n├ Type: JSON (too large, sent as file)\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
           }, { quoted: m });
 
-          // Send full data as file
           await client.sendMessage(m.chat, {
             document: Buffer.from(JSON.stringify({
               success: true,
@@ -89,56 +69,27 @@ module.exports = {
             fileName: `fetch_result_${Date.now()}.json`
           }, { quoted: m });
         } else {
-          // Send as message
           await client.sendMessage(m.chat, {
-            text: `🛜 *GET Request*\n\n📃 *Response JSON:*\n${JSON.stringify(responseData, null, 2)}`
+            text: `╭───(    TOXIC-MD    )───\n├───≫ FETCH RESULT ≪───\n├ \n├ URL: ${targetUrl}\n├ Status: ${response.status}\n├ Type: JSON\n├ \n${JSON.stringify(responseData, null, 2)}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
           }, { quoted: m });
         }
 
       } else if (contentType.includes('text/html')) {
-        // HTML response
         const html = await response.text();
 
-        // Extract title from HTML
         const titleMatch = html.match(/<title>(.*?)<\/title>/i);
         const title = titleMatch ? titleMatch[1] : 'No title found';
 
-        const responseData = {
-          success: true,
-          message: "HTML content fetched successfully",
-          url: targetUrl,
-          status: response.status,
-          contentType: contentType,
-          title: title,
-          contentLength: html.length,
-          preview: html.replace(/<[^>]*>/g, '').substring(0, 200).trim(),
-          timestamp: new Date().toISOString()
-        };
-
         await client.sendMessage(m.chat, {
-          text: `🛜 *GET Request*\n\n📃 *Response JSON:*\n${JSON.stringify(responseData, null, 2)}`
+          text: `╭───(    TOXIC-MD    )───\n├───≫ FETCH RESULT ≪───\n├ \n├ URL: ${targetUrl}\n├ Status: ${response.status}\n├ Type: HTML\n├ Title: ${title}\n├ Length: ${html.length} chars\n├ Preview: ${html.replace(/<[^>]*>/g, '').substring(0, 200).trim()}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         }, { quoted: m });
 
       } else if (contentType.includes('text/plain')) {
-        // Plain text response
         const text = await response.text();
 
-        const responseData = {
-          success: true,
-          message: "Text content fetched successfully",
-          url: targetUrl,
-          status: response.status,
-          contentType: contentType,
-          contentLength: text.length,
-          content: text.length > 500 ? text.substring(0, 500) + "..." : text,
-          timestamp: new Date().toISOString()
-        };
-
         if (text.length > 1500) {
-          responseData.content = "[Content too large - sent as file]";
-          
           await client.sendMessage(m.chat, {
-            text: `🛜 *GET Request*\n\n📃 *Response JSON:*\n${JSON.stringify(responseData, null, 2)}`
+            text: `╭───(    TOXIC-MD    )───\n├───≫ FETCH RESULT ≪───\n├ \n├ URL: ${targetUrl}\n├ Status: ${response.status}\n├ Type: Plain Text (too large, sent as file)\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
           }, { quoted: m });
 
           await client.sendMessage(m.chat, {
@@ -148,46 +99,23 @@ module.exports = {
           }, { quoted: m });
         } else {
           await client.sendMessage(m.chat, {
-            text: `🛜 *GET Request*\n\n📃 *Response JSON:*\n${JSON.stringify(responseData, null, 2)}`
+            text: `╭───(    TOXIC-MD    )───\n├───≫ FETCH RESULT ≪───\n├ \n├ URL: ${targetUrl}\n├ Status: ${response.status}\n├ Type: Plain Text\n├ Content:\n├ ${text}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
           }, { quoted: m });
         }
 
       } else if (contentType.includes('image/')) {
-        // Image response
         const imageBuffer = await response.buffer();
-
-        const responseData = {
-          success: true,
-          message: "Image fetched successfully",
-          url: targetUrl,
-          status: response.status,
-          contentType: contentType,
-          size: `${(imageBuffer.length / 1024).toFixed(2)} KB`,
-          timestamp: new Date().toISOString()
-        };
 
         await client.sendMessage(m.chat, {
           image: imageBuffer,
-          caption: `🛜 *GET Request*\n\n📃 *Response JSON:*\n${JSON.stringify(responseData, null, 2)}`
+          caption: `╭───(    TOXIC-MD    )───\n├───≫ FETCH RESULT ≪───\n├ \n├ URL: ${targetUrl}\n├ Status: ${response.status}\n├ Type: Image\n├ Size: ${(imageBuffer.length / 1024).toFixed(2)} KB\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         }, { quoted: m });
 
       } else {
-        // Other content types
         const data = await response.text();
 
-        const responseData = {
-          success: true,
-          message: "Content fetched successfully",
-          url: targetUrl,
-          status: response.status,
-          contentType: contentType,
-          contentLength: data.length,
-          preview: data.length > 500 ? data.substring(0, 500) + "..." : data,
-          timestamp: new Date().toISOString()
-        };
-
         await client.sendMessage(m.chat, {
-          text: `🛜 *GET Request*\n\n📃 *Response JSON:*\n${JSON.stringify(responseData, null, 2)}`
+          text: `╭───(    TOXIC-MD    )───\n├───≫ FETCH RESULT ≪───\n├ \n├ URL: ${targetUrl}\n├ Status: ${response.status}\n├ Type: ${contentType}\n├ Length: ${data.length} chars\n├ Preview: ${data.length > 500 ? data.substring(0, 500) + "..." : data}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         }, { quoted: m });
       }
 
@@ -196,21 +124,15 @@ module.exports = {
 
       let errorMessage = error.message;
       if (error.name === 'TimeoutError') {
-        errorMessage = 'Request timed out after 30 seconds';
+        errorMessage = 'Request timed out after 30 seconds, you impatient fool';
       } else if (error.code === 'ENOTFOUND') {
-        errorMessage = 'Could not resolve the URL. Check if the domain exists.';
+        errorMessage = 'Could not resolve the URL. That domain doesn\'t exist, genius.';
       } else if (error.code === 'ECONNREFUSED') {
-        errorMessage = 'Connection refused. The server may be down.';
+        errorMessage = 'Connection refused. Server is dead, like your brain cells.';
       }
 
       await client.sendMessage(m.chat, {
-        text: `🛜 *GET Request*\n\n📃 *Response JSON:*\n${JSON.stringify({
-          success: false,
-          message: "Fetch request failed",
-          url: targetUrl,
-          error: errorMessage,
-          timestamp: new Date().toISOString()
-        }, null, 2)}`
+        text: `╭───(    TOXIC-MD    )───\n├───≫ FETCH FAILED ≪───\n├ \n├ URL: ${targetUrl}\n├ Error: ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: m });
     }
   }

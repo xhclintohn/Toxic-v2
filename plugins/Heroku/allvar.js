@@ -8,7 +8,7 @@ module.exports = async (context) => {
         const { client, m, text, Owner } = context;
 
         if (!herokuAppName || !herokuApiKey) {
-            await m.reply("It looks like the Heroku app name or API key is not set. Please make sure you have set the `HEROKU_APP_NAME` and `HEROKU_API_KEY` environment variables.");
+            await m.reply("╭───(    TOXIC-MD    )───\n├ Heroku app name or API key not set, you clown.\n├ Set HEROKU_APP_NAME and HEROKU_API_KEY first!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
             return;
         }
 
@@ -28,23 +28,24 @@ module.exports = async (context) => {
                 let configMessage = "";
 
                 if (configVars && Object.keys(configVars).length > 0) {
-                    configMessage = "⚙️ Current Heroku Config Vars\n\n";
+                    configMessage = "╭───(    TOXIC-MD    )───\n├───≫ HEROKU VARS ≪───\n├ \n";
                     for (const [key, value] of Object.entries(configVars)) {
-                        configMessage += `${key}: ${value}\n\n`;  
+                        configMessage += `├ ${key}: ${value}\n`;  
                     }
+                    configMessage += "╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧";
 
                     if (m.isGroup) {
                         await client.sendMessage(m.sender, { text: configMessage }, { quoted: m });
-                        await m.reply("For security reasons, the vars have been sent to your inbox.");
+                        await m.reply("╭───(    TOXIC-MD    )───\n├ Vars sent to your inbox for security, idiot.\n├ Don't leak your secrets in group!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
                     } else {
                         await m.reply(configMessage);
                     }
                 } else {
-                    await m.reply("No config vars found for your Heroku app.");
+                    await m.reply("╭───(    TOXIC-MD    )───\n├ No config vars found. Your Heroku app is empty af.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
                 }
             } catch (error) {
                 const errorMessage = error.response?.data || error.message;
-                await m.reply(`Failed to retrieve config vars. ${errorMessage}`);
+                await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ HEROKU ERROR ≪───\n├ \n├ Failed to retrieve config vars.\n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
                 console.error("Error fetching Heroku config vars:", errorMessage);
             }
         }

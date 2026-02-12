@@ -17,16 +17,7 @@ const Myself = await client.decodeJid(client.user.id);
                 calladd
         } = await client.fetchPrivacySettings(true);
         
-        const fnn = `*Current Privacy Settings*
-
-* Name : ${client.user.name}
-* Online: ${online}
-* Profile picture : ${profile}
-* Last seen : ${last}
-* Read receipt : ${readreceipts}
-* Group add : ${groupadd}
-* Status : ${status}
-* Call add : ${calladd}`;
+        const fnn = `╭───(    TOXIC-MD    )───\n├───≫ PRIVACY SETTINGS ≪───\n├ \n├ Name: ${client.user.name}\n├ Online: ${online}\n├ Profile Picture: ${profile}\n├ Last Seen: ${last}\n├ Read Receipt: ${readreceipts}\n├ Group Add: ${groupadd}\n├ Status: ${status}\n├ Call Add: ${calladd}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
 
 const avatar = await client.profilePictureUrl(Myself, 'image').catch(_ => 'https://telegra.ph/file/b34645ca1e3a34f1b3978.jpg');

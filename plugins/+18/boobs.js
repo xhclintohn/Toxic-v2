@@ -21,13 +21,13 @@ module.exports = {
 
             await client.sendMessage(m.chat, {
                 image: imageBuffer,
-                caption: "Here's your boobs, you horny bastard.\n—\nTσxιƈ-ɱԃȥ"
+                caption: `╭───(    TOXIC-MD    )───\n├───≫ NSFW ≪───\n├ \n├ Here's your boobs, you horny bastard.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
 
         } catch (error) {
             console.error('Boobs error:', error);
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            await m.reply(`Failed to get boobs. You're so unlucky even porn hates you.\nError: ${error.message}`);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Failed to get boobs. You're so\n├ unlucky even porn hates you.\n├ Error: ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     }
 };

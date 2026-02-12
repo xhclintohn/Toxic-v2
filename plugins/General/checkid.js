@@ -11,7 +11,7 @@ module.exports = {
       const link = linkMatch ? linkMatch[0] : null;
 
       if (!link) {
-        return m.reply(`Where's the link, you brainless ape?\nExample: ${prefix}checkid https://chat.whatsapp.com/xxxxx`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Where's the link, you brainless ape?\n├ Example: ${prefix}checkid\n├ https://chat.whatsapp.com/xxxxx\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -21,7 +21,7 @@ module.exports = {
         url = new URL(link);
       } catch {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        return m.reply("That's not even a valid URL. Are you trying to break my code on purpose?");
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ That's not even a valid URL.\n├ Are you trying to break my code?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       if (url.hostname === 'chat.whatsapp.com' && /^\/[A-Za-z0-9]{20,}$/.test(url.pathname)) {
@@ -33,8 +33,8 @@ module.exports = {
         
         await client.sendMessage(m.chat, {
           interactiveMessage: {
-            header: `📊 *Group Link Analysis*\n\n🔗 *Link:* ${link}\n📌 *Invite Code:* \`${code}\`\n\n*Group ID:* \`${id}\``,
-            footer: "Powered by Toxic-MD",
+            header: `╭───(    TOXIC-MD    )───\n├───≫ Gʀᴏᴜᴘ Aɴᴀʟʏsɪs ≪───\n├ \n├ *Link:* ${link}\n├ *Invite Code:* \`${code}\`\n├ *Group ID:* \`${id}\`\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+            footer: "©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧",
             buttons: [
               {
                 name: "cta_copy",
@@ -52,7 +52,7 @@ module.exports = {
         const code = url.pathname.split('/channel/')[1]?.split('/')[0];
         if (!code) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-          return m.reply("Invalid channel link format");
+          return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Invalid channel link format.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
         
         const res = await client.newsletterMetadata('invite', code, 'GUEST');
@@ -62,8 +62,8 @@ module.exports = {
         
         await client.sendMessage(m.chat, {
           interactiveMessage: {
-            header: `📢 *Channel Link Analysis*\n\n🔗 *Link:* ${link}\n📌 *Channel Code:* \`${code}\`\n\n*Channel ID:* \`${id}\``,
-            footer: "Powered by Toxic-MD",
+            header: `╭───(    TOXIC-MD    )───\n├───≫ Cʜᴀɴɴᴇʟ Aɴᴀʟʏsɪs ≪───\n├ \n├ *Link:* ${link}\n├ *Channel Code:* \`${code}\`\n├ *Channel ID:* \`${id}\`\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+            footer: "©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧",
             buttons: [
               {
                 name: "cta_copy",
@@ -79,13 +79,13 @@ module.exports = {
       }
       else {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        return m.reply("That's not a WhatsApp group or channel link. Are you blind or just stupid?");
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ That's not a WhatsApp group or\n├ channel link. Are you blind or\n├ just stupid?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
     } catch (error) {
       console.error('CheckID command error:', error);
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-      await m.reply(`CheckID command crashed.\nError: ${error.message}\nThe link is probably fake or expired.`);
+      await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Cʀᴀsʜᴇᴅ ≪───\n├ \n├ CheckID command crashed.\n├ Error: ${error.message}\n├ The link is probably fake or expired.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
   }
 };

@@ -4,7 +4,8 @@ module.exports = async (context) => {
   const { client, m, text } = context;
 
   const formatStylishReply = (message) => {
-    return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───\nPσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
+    return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧\nPσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
   };
 
   if (!text) {
@@ -33,7 +34,7 @@ module.exports = async (context) => {
 
     for (let i = 0; i < videos.length; i++) {
       const v = videos[i];
-      replyText += `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n`;
+      replyText += `╭───(    TOXIC-MD    )───\n`;
       replyText += `🎬 *Title:* ${v.title}\n`;
       replyText += `📎 *Link:* ${v.url}\n`;
       replyText += `👤 *Author:* ${v.author.name} (${v.author.url})\n`;
@@ -43,7 +44,8 @@ module.exports = async (context) => {
       replyText += `\n`;
     }
 
-    replyText += `╭───( ✓ )───\nPσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
+    replyText += `╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧\nPσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
 
     await client.sendMessage(
       m.chat,

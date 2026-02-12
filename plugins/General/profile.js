@@ -36,12 +36,12 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, {
             image: { url: ppUrl },
-            caption: `👤 ${name}\n—\nTσxιƈ-ɱԃȥ`,
+            caption: `╭───(    TOXIC-MD    )───\n├───≫ Pʀᴏꜰɪʟᴇ ≪───\n├ \n├ ${name}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
             mentions: targetUser !== m.sender ? [targetUser] : []
         }, { quoted: m });
 
     } catch (error) {
         console.error('Profile error:', error);
-        await m.reply('Failed to fetch profile. The user probably blocked you or their privacy settings are stricter than your intelligence.');
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Failed to fetch profile.\n├ The user probably blocked you or\n├ their privacy settings are stricter\n├ than your intelligence.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

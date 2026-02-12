@@ -36,13 +36,13 @@ module.exports = async (context) => {
 
                 if (!mediaMessage) {
                     await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-                    return m.reply("Where's the fvcking image or short video idiot.😑");
+                    return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STICKER ≪───\n├ \n├ Where\'s the fvcking image or\n├ short video, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
                 }
 
                 const isVideo = !!mediaMessage.videoMessage;
                 if (isVideo && mediaMessage.videoMessage.seconds > 30) {
                     await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-                    return m.reply('Videos must be 30 seconds or shorter.');
+                    return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STICKER ≪───\n├ \n├ Videos must be 30 seconds or shorter.\n├ Learn to read, moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
                 }
 
                 let mediaToDownload = null;
@@ -59,7 +59,7 @@ module.exports = async (context) => {
 
                 if (!mediaToDownload) {
                     await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-                    return m.reply("Couldn't find media to download.");
+                    return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STICKER ≪───\n├ \n├ Couldn\'t find media to download.\n├ You\'re hopeless.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
                 }
 
                 const tempFile = path.join(__dirname, `temp-sticker-${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`);
@@ -86,7 +86,7 @@ module.exports = async (context) => {
             } catch (error) {
                 console.error(`Sticker error: ${error.message}`);
                 await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-                await m.reply('Error while creating sticker. Try again.');
+                await m.reply('╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Error while creating sticker.\n├ Try again, you failure.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             }
         }
     });

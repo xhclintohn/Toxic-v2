@@ -19,41 +19,41 @@ module.exports = async (context) => {
         const ligue1Data = await fetchJson('https://api.dreaded.site/api/matches/FR');
         ligue1 = ligue1Data.data;
 
-        let message = `Today Football Matches ⚽\n\n`;
+        let message = `╭───(    TOXIC-MD    )───\n├───≫ TODAY'S MATCHES ≪───\n├ \n`;
 
-        message += typeof pl === 'string' ? `🇬🇧 Premier League:\n${pl}\n\n` : pl.length > 0 ? `🇬🇧 Premier League:\n${pl.map(match => {
+        message += typeof pl === 'string' ? `├ Premier League:\n├ ${pl}\n├ \n` : pl.length > 0 ? `├ Premier League:\n${pl.map(match => {
             const { game, date, time } = match;
-            return `${game}\nDate: ${date}\nTime: ${time} (EAT)\n`;
-        }).join('\n')}\n\n` : "🇬🇧 Premier League: No matches scheduled\n\n";
+            return `├ ${game}\n├ Date: ${date}\n├ Time: ${time} (EAT)\n`;
+        }).join('\n')}\n├ \n` : "├ Premier League: No matches scheduled\n├ \n";
 
         if (typeof laliga === 'string') {
-            message += `🇪🇸 La Liga:\n${laliga}\n\n`;
+            message += `├ La Liga:\n├ ${laliga}\n├ \n`;
         } else {
-            message += laliga.length > 0 ? `🇪🇸 La Liga:\n${laliga.map(match => {
+            message += laliga.length > 0 ? `├ La Liga:\n${laliga.map(match => {
                 const { game, date, time } = match;
-                return `${game}\nDate: ${date}\nTime: ${time} (EAT)\n`;
-            }).join('\n')}\n\n` : "🇪🇸 La Liga: No matches scheduled\n\n";
+                return `├ ${game}\n├ Date: ${date}\n├ Time: ${time} (EAT)\n`;
+            }).join('\n')}\n├ \n` : "├ La Liga: No matches scheduled\n├ \n";
         }
 
-        message += typeof bundesliga === 'string' ? `🇩🇪 Bundesliga:\n${bundesliga}\n\n` : bundesliga.length > 0 ? `🇩🇪 Bundesliga:\n${bundesliga.map(match => {
+        message += typeof bundesliga === 'string' ? `├ Bundesliga:\n├ ${bundesliga}\n├ \n` : bundesliga.length > 0 ? `├ Bundesliga:\n${bundesliga.map(match => {
             const { game, date, time } = match;
-            return `${game}\nDate: ${date}\nTime: ${time} (EAT)\n`;
-        }).join('\n')}\n\n` : "🇩🇪 Bundesliga: No matches scheduled\n\n";
+            return `├ ${game}\n├ Date: ${date}\n├ Time: ${time} (EAT)\n`;
+        }).join('\n')}\n├ \n` : "├ Bundesliga: No matches scheduled\n├ \n";
 
-        message += typeof serieA === 'string' ? `🇮🇹 Serie A:\n${serieA}\n\n` : serieA.length > 0 ? `🇮🇹 Serie A:\n${serieA.map(match => {
+        message += typeof serieA === 'string' ? `├ Serie A:\n├ ${serieA}\n├ \n` : serieA.length > 0 ? `├ Serie A:\n${serieA.map(match => {
             const { game, date, time } = match;
-            return `${game}\nDate: ${date}\nTime: ${time} (EAT)\n`;
-        }).join('\n')}\n\n` : "🇮🇹 Serie A: No matches scheduled\n\n";
+            return `├ ${game}\n├ Date: ${date}\n├ Time: ${time} (EAT)\n`;
+        }).join('\n')}\n├ \n` : "├ Serie A: No matches scheduled\n├ \n";
 
-        message += typeof ligue1 === 'string' ? `🇫🇷 Ligue 1:\n${ligue1}\n\n` : ligue1.length > 0 ? `🇫🇷 Ligue 1:\n${ligue1.map(match => {
+        message += typeof ligue1 === 'string' ? `├ Ligue 1:\n├ ${ligue1}\n├ \n` : ligue1.length > 0 ? `├ Ligue 1:\n${ligue1.map(match => {
             const { game, date, time } = match;
-            return `${game}\nDate: ${date}\nTime: ${time} (EAT)\n`;
-        }).join('\n')}\n\n` : "🇫🇷 Ligue 1: No matches scheduled\n\n";
+            return `├ ${game}\n├ Date: ${date}\n├ Time: ${time} (EAT)\n`;
+        }).join('\n')}\n├ \n` : "├ Ligue 1: No matches scheduled\n├ \n";
 
-        message += "Times and dates are in East African Timezone (EAT).";
+        message += "├ Times in East African Timezone (EAT)\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧";
 
         await m.reply(message);
     } catch (error) {
-        m.reply('Something went wrong. Unable to fetch matches.' + error);
+        m.reply("╭───(    TOXIC-MD    )───\n├ Can't fetch matches. Something broke.\n├ " + error + "\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
     }
 };

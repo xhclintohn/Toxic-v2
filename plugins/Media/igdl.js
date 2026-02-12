@@ -4,8 +4,8 @@ module.exports = async (context) => {
     const { client, m, text } = context;
 
     try {
-        if (!text) return m.reply("╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Mɪssɪɴɢ Uʀʟ ≪───\n々 Give me an Instagram link, you social media addict.\n╭───( ✓ )───");
-        if (!text.includes("instagram.com")) return m.reply("╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Iɴᴠᴀʟɪᴅ Uʀʟ ≪───\n々 That's not an Instagram link. Are your eyes broken?\n╭───( ✓ )───");
+        if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Mɪssɪɴɢ Uʀʟ ≪───\n├ Give me an Instagram link, you social media addict.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+        if (!text.includes("instagram.com")) return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Iɴᴠᴀʟɪᴅ Uʀʟ ≪───\n├ That's not an Instagram link. Are your eyes broken?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
@@ -15,7 +15,7 @@ module.exports = async (context) => {
 
         if (!data?.status || !data?.result?.url) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply("╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 Instagram download failed.\n々 The post is probably private or\n々 your link is garbage.\n╭───( ✓ )───");
+            return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ Instagram download failed.\n├ The post is probably private or\n├ your link is garbage.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
         const videoUrl = data.result.url;
@@ -23,7 +23,7 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        const caption = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Iɴsᴛᴀɢʀᴀᴍ Dᴏᴡɴʟᴏᴀᴅ ≪───\n々 Type: ${type}\n々 Stop wasting my time with\n々 your basic reel downloads.\n╭───( ✓ )───`;
+        const caption = `╭───(    TOXIC-MD    )───\n├───≫ Iɴsᴛᴀɢʀᴀᴍ Dᴏᴡɴʟᴏᴀᴅ ≪───\n├ Type: ${type}\n├ Stop wasting my time with\n├ your basic reel downloads.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
         if (type === 'video') {
             await client.sendMessage(m.chat, {
@@ -42,6 +42,6 @@ module.exports = async (context) => {
     } catch (error) {
         console.error("Instagram error:", error);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 Instagram download failed.\n々 Your link is as worthless as you are.\n々 Error: ${error.message}\n╭───( ✓ )───`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ Instagram download failed.\n├ Your link is as worthless as you are.\n├ Error: ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

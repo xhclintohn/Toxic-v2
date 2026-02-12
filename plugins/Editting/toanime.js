@@ -33,14 +33,12 @@ module.exports = {
     run: async (context) => {
         const { client, m } = context;
 
-        // === 1. MUST REPLY ===
         if (!m.quoted) {
-            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n│You must *reply* to an image!\n│Example: Reply image → \`.toanime\`\n╭───( ✓ )───`);
+            return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO ANIME ≪───\n├ \n├ You must *reply* to an image!\n├ Example: Reply image → .toanime\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
         const quoted = m.quoted;
 
-        // === 2. SAFE MIME CHECK ===
         let quotedMime = '';
         if (quoted.mtype === 'imageMessage' && quoted.msg?.mimetype) {
             quotedMime = quoted.msg.mimetype;
@@ -49,26 +47,21 @@ module.exports = {
         }
 
         if (!quotedMime || !quotedMime.startsWith('image/')) {
-            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n│The replied message is *not an image*!\n│Please reply to a *photo*.\n╭───( ✓ )───`);
+            return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO ANIME ≪───\n├ \n├ The replied message is *not an image*!\n├ Please reply to a *photo*, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
-        // === 3. PROCESSING ===
-        const processing = await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n│Converting to anime...\n│Please wait!\n╭───( ✓ )───`);
+        const processing = await m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO ANIME ≪───\n├ \n├ Converting to anime...\n├ Please wait!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
 
         try {
-            // === 4. DOWNLOAD ===
             const media = await quoted.download();
             if (!media || media.length === 0) throw new Error('Failed to download');
 
-            // === 5. SIZE ===
             if (media.length > 10 * 1024 * 1024) {
-                return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n│Image too large! Max 10MB.\n╭───( ✓ )───`);
+                return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO ANIME ≪───\n├ \n├ Image too large! Max 10MB.\n├ Compress it, you hoarder.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             }
 
-            // === 6. UPLOAD ===
             const { url: imageUrl } = await uploadImage(media);
 
-            // === 7. API CALL ===
             const apiResponse = await axios.get('https://fgsi.koyeb.app/api/ai/image/toAnime', {
                 params: {
                     apikey: 'fgsiapi-2dcdfa06-6d',
@@ -80,14 +73,12 @@ module.exports = {
 
             const animeBuffer = Buffer.from(apiResponse.data);
 
-            // === 8. SEND RESULT ===
             await client.sendMessage(m.chat, {
                 image: animeBuffer,
-                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n│ANIME TRANSFORMATION COMPLETE!\n│@everyone look at this weeb\n╭───( ✓ )───`,
+                caption: `╭───(    TOXIC-MD    )───\n├───≫ ANIME TRANSFORMATION ≪───\n├ \n├ ANIME TRANSFORMATION COMPLETE!\n├ Look at this weeb result.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 mentions: [m.sender]
             }, { quoted: m });
 
-            // === 9. CLEANUP ===
             await client.sendMessage(m.chat, { delete: processing.key });
 
         } catch (err) {
@@ -98,7 +89,7 @@ module.exports = {
                 : err.message.includes('timeout') ? 'API timed out.'
                 : `Failed: ${err.message}`;
 
-            await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n│${errorMsg}\n╭───( ✓ )───`);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ ${errorMsg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     }
 };

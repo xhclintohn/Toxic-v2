@@ -5,7 +5,7 @@ module.exports = async (context) => {
   const { client, m, text } = context;
 
   if (!text) {
-    return m.reply("You forgot the query, dumbass. Try: ${prefix}wallpaper anime girl, 5");
+    return m.reply("╭───(    TOXIC-MD    )───\n├ You forgot the query, dumbass.\n├ Try: .wallpaper anime girl, 5\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
   }
 
   let query, count;
@@ -27,19 +27,19 @@ module.exports = async (context) => {
 
     if (results.length === 0) {
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-      return m.reply(`No wallpapers found for "${query}". Your taste sucks.`);
+      return m.reply(`╭───(    TOXIC-MD    )───\n├ No wallpapers found for "${query}". Your taste sucks.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     const toSend = results.slice(0, count);
 
     for (let i = 0; i < toSend.length; i++) {
       const wp = toSend[i];
-      const caption = `*Wallpaper \( {i + 1}/ \){toSend.length}*\n\n` +
-                      `🔖 *Title:* ${wp.title || 'Untitled'}\n` +
-                      `📐 *Resolution:* ${wp.resolution || 'Unknown'}\n` +
-                      `📝 *Desc:* ${wp.description || 'No description'}\n` +
-                      `🔗 *Link:* ${wp.link || 'N/A'}\n\n` +
-                      `—\nTσxιƈ-ɱԃȥ`;
+      const caption = `╭───(    TOXIC-MD    )───\n├───≫ WALLPAPER ${i + 1}/${toSend.length} ≪───\n├ \n` +
+                      `├ Title: ${wp.title || 'Untitled'}\n` +
+                      `├ Resolution: ${wp.resolution || 'Unknown'}\n` +
+                      `├ Desc: ${wp.description || 'No description'}\n` +
+                      `├ Link: ${wp.link || 'N/A'}\n` +
+                      `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
       await client.sendMessage(m.chat, {
         image: { url: wp.image },
@@ -53,7 +53,7 @@ module.exports = async (context) => {
   } catch (err) {
     console.error('Wallpaper error:', err);
     await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-    m.reply(`Failed to fetch wallpapers. Site's probably down or your query is garbage.\nError: ${err.message}`);
+    m.reply(`╭───(    TOXIC-MD    )───\n├───≫ WALLPAPER ERROR ≪───\n├ \n├ Failed to fetch wallpapers. Site's probably dead.\n├ ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 };
 

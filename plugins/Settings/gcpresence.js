@@ -2,7 +2,8 @@ const { getSettings, getGroupSettings, updateGroupSetting } = require('../../dat
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 
 const formatStylishReply = (message) => {
-    return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
+    return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 };
 
 module.exports = async (context) => {

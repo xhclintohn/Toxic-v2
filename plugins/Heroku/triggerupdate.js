@@ -8,9 +8,10 @@ module.exports = async (context) => {
 
     const formatStylishReply = (message) => {
         return (
-            `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-            `々 ${message}\n` +
-            `╭───( ✓ )───\n` +
+            `╭───(    TOXIC-MD    )───\n` +
+            `├ ${message}\n` +
+            `╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧\n` +
             `Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ 😈`
         );
     };

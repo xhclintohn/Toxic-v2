@@ -4,34 +4,30 @@ module.exports = async (context) => {
   const { client, m, text } = context;
 
   try {
-    // Ensure user gave an emoji
     if (!text) {
-      return m.reply("😅 Please provide an emoji to animate!\nExample: `.togif 😂`");
+      return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO GIF ≪───\n├ \n├ Please provide an emoji to animate!\n├ Example: .togif 😂\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
     }
 
-    // Validate it's an emoji
     if (!/\p{Emoji}/u.test(text)) {
-      return m.reply("⚠️ That doesn’t look like an emoji. Try again with a real one!");
+      return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO GIF ≪───\n├ \n├ That doesn\'t look like an emoji.\n├ Try again with a real one, idiot!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
     }
 
-    await m.reply("🎬 Generating your animated emoji...");
+    await m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO GIF ≪───\n├ \n├ Generating your animated emoji...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
 
-    // Fetch the GIF from the API
     const apiUrl = `https://api-faa.my.id/faa/emojigerak?emoji=${encodeURIComponent(text)}`;
     const response = await axios.get(apiUrl, { responseType: "arraybuffer" });
 
-    // Send the GIF to the chat
     await client.sendMessage(
       m.chat,
       {
         video: Buffer.from(response.data),
         gifPlayback: true,
-        caption: `✨ *Animated Emoji: ${text}*\n\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`,
+        caption: `╭───(    TOXIC-MD    )───\n├───≫ ANIMATED EMOJI ≪───\n├ \n├ Animated Emoji: ${text}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
       },
       { quoted: m }
     );
   } catch (error) {
     console.error("togif command error:", error);
-    await m.reply(`❌ Failed to create emoji GIF: ${error.message}`);
+    await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Failed to create emoji GIF:\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 };

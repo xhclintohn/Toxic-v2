@@ -4,11 +4,11 @@ module.exports = async (context) => {
   const { client, m, text, prefix } = context;
 
   if (!text) {
-    return m.reply(`You braindead waste of space, give me something to work with!\nExample: ${prefix}gemini What's 2+2?`);
+    return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ You braindead waste of space, give me something to work with!\n├ Example: ${prefix}gemini What's 2+2?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 
   if (text.length > 500) {
-    return m.reply("Do you think I have infinite patience? Keep your rambling under 500 characters!");
+    return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Do you think I have infinite patience? Keep your rambling under 500 characters!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 
   try {
@@ -39,18 +39,18 @@ module.exports = async (context) => {
 
     if (!data.status || !data.result) {
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-      return m.reply("Gemini AI decided your question was too stupid to answer. Try something less brain-damaging.");
+      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Gemini AI decided your question was too stupid to answer. Try something less brain-damaging.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-    await m.reply(`${data.result}\n\nI did all the thinking for you, you're welcome.`);
+    await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Gᴇᴍɪɴɪ Rᴇsᴘᴏɴsᴇ ≪───\n├ \n├ ${data.result}\n├\n├ I did all the thinking for you, you're welcome.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
   } catch (error) {
     console.error("Gemini command error:", error);
     await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
     
-    let errorMsg = `Gemini crashed harder than your IQ.\nError: ${error.message}`;
+    let errorMsg = `Gemini crashed harder than your IQ.\n├ Error: ${error.message}`;
     
     if (error.message.includes('garbage instead of JSON')) {
       errorMsg = "Gemini API is returning HTML garbage. The service is probably down or you got rate-limited.";
@@ -58,6 +58,6 @@ module.exports = async (context) => {
       errorMsg = "Gemini took too long to think. Your question must be extra stupid.";
     }
     
-    return m.reply(`${errorMsg}\nTry again when you're less useless.`);
+    return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ ${errorMsg}\n├ Try again when you're less useless.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 };

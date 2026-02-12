@@ -7,7 +7,7 @@ module.exports = async (context) => {
         const { client, m, args, participants, text } = context;
 
 
-if (!m.isGroup) return m.reply('Command meant for groups');
+if (!m.isGroup) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Command meant for groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
 
 

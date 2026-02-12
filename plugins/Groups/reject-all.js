@@ -5,21 +5,21 @@ module.exports = async (context) => {
     const { client, m, isBotAdmin, isAdmin } = context;
 
     if (!m.isGroup) {
-      return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, genius, this command’s for groups. Quit embarrassing yourself.`);
+      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Yo, genius, this command's\n├ for groups. Quit embarrassing\n├ yourself.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     if (!isAdmin) {
-      return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Pfft, you? Admin? Get real, loser. Only admins can do this.`);
+      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Pfft, you? Admin? Get real,\n├ loser. Only admins can do this.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     if (!isBotAdmin) {
-      return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 I’m not admin, dipshit. Promote me or stop wasting my time.`);
+      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ I'm not admin, dipshit.\n├ Promote me or stop wasting\n├ my time.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     const responseList = await client.groupRequestParticipantsList(m.chat);
 
     if (responseList.length === 0) {
-      return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Wow, no one’s dumb enough to wanna join this trash group. No requests to reject, moron.`);
+      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ NO REQUESTS ≪───\n├ \n├ Wow, no one's dumb enough to\n├ wanna join this trash group.\n├ No requests to reject, moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     for (const participant of responseList) {
@@ -32,10 +32,10 @@ module.exports = async (context) => {
         console.log(response);
       } catch (error) {
         console.error('Error rejecting participant:', error);
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Screw-up alert! Couldn’t reject @${participant.jid.split('@')[0]}. Fix your damn group, idiot.`, { mentions: [participant.jid] });
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Screw-up alert! Couldn't reject\n├ @${participant.jid.split('@')[0]}.\n├ Fix your damn group, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, { mentions: [participant.jid] });
       }
     }
 
-    m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 All those pathetic join requests? REJECTED. Go cry about it, losers. 🚮`);
+    m.reply(`╭───(    TOXIC-MD    )───\n├───≫ REJECTED ≪───\n├ \n├ All those pathetic join requests?\n├ REJECTED. Go cry about it, losers.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   });
 };

@@ -35,23 +35,23 @@ const repoInfo = {
 const createdDate = new Date(repoInfo.createdAt).toLocaleDateString('en-GB');  
 const lastUpdateDate = new Date(repoInfo.lastUpdate).toLocaleDateString('en-GB');  
 
-const replyText = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
-───≫ Repository ≪───
-
-            Link
-            
- [https://github.com/xhclintohn/Toxic-MD]
-
-々 Stars : ${repoInfo.stars}
-々 Forks : ${repoInfo.forks}
-々 Created : ${createdDate}
-々 Last Update : ${lastUpdateDate}
-々 Owner : ${repoInfo.owner}
-╭───( ✓ )───`;
+const replyText = `╭───(    TOXIC-MD    )───
+├───≫ Repository ≪───
+├ 
+├ Link:
+├ https://github.com/xhclintohn/Toxic-MD
+├ 
+├ Stars : ${repoInfo.stars}
+├ Forks : ${repoInfo.forks}
+├ Created : ${createdDate}
+├ Last Update : ${lastUpdateDate}
+├ Owner : ${repoInfo.owner}
+╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
 await client.sendMessage(m.chat, {  
   text: replyText,  
-  footer: `Powered by ${botname}`,  
+  footer: `©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,  
   buttons: [  
     { buttonId: `${prefix}dev`, buttonText: { displayText: `${toFancyFont('DEVELOPER')}` }, type: 1 }  
   ],  
@@ -72,7 +72,7 @@ await client.sendMessage(m.chat, {
 } catch (error) {
 console.error('Error in repo command:', error);
 await client.sendMessage(m.chat, { 
-    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Couldn't fetch repo data\n々 ${error.message}\n╭───( ✓ )───`
+    text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Couldn't fetch repo data\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
 }, { quoted: m });
 }
 };

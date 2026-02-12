@@ -19,15 +19,15 @@ module.exports = async (context) => {
     };
 
     try {
-        if (!text) return m.reply("Provide a TikTok link for the audio.");
-        if (!text.includes("tiktok.com")) return m.reply("That is not a valid TikTok link.");
+        if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Provide a TikTok link, you clueless fool!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+        if (!text.includes("tiktok.com")) return m.reply("╭───(    TOXIC-MD    )───\n├ That's not a valid TikTok link, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
         const url = `https://api.dreaded.site/api/tiktok?url=${text}`;
         const data = await fetchTikTokData(url);
 
         const tikAudioUrl = data.tiktok.music;
 
-        m.reply(`TikTok audio data fetched successfully! Sending. . .`);
+        m.reply("╭───(    TOXIC-MD    )───\n├ TikTok audio fetched! Sending now...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
         const response = await fetch(tikAudioUrl);
 
@@ -45,6 +45,6 @@ module.exports = async (context) => {
         }, { quoted: m });
 
     } catch (error) {
-        m.reply(`Error: ${error.message}`);
+        m.reply(`╭───(    TOXIC-MD    )───\n├───≫ TIKTOK ERROR ≪───\n├ \n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

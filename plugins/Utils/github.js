@@ -2,7 +2,7 @@ module.exports = async (context) => {
 
 const { client, m, text } = context;
 
-if (!text) return m.reply('Provide a github username to stalk');
+if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Provide a GitHub username to stalk, you lazy bum.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
 try {
 
@@ -28,13 +28,13 @@ const data = await response.json()
     const updatedAt = data.data.updated_at;
 
     
-const message = `Username:- ${username}\n\nNickname:- ${nickname}\n\nBio:- ${bio}\n\nLink:- ${url}\n\nLocation:- ${location}\n\nFollowers:- ${followers}\n\nFollowing:- ${following}\n\nRepos:- ${publicRepos}\n\nCreated:- ${createdAt}`
+const message = `╭───(    TOXIC-MD    )───\n├───≫ GITHUB STALK ≪───\n├ \n├ Username: ${username}\n├ Nickname: ${nickname}\n├ Bio: ${bio}\n├ Link: ${url}\n├ Location: ${location}\n├ Followers: ${followers}\n├ Following: ${following}\n├ Repos: ${publicRepos}\n├ Created: ${createdAt}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
 
 await client.sendMessage(m.chat, { image: { url: profilePic}, caption: message}, {quoted: m})
 
 } catch (error) {
 
-m.reply("Unable to fetch data\n" + error)
+m.reply(`╭───(    TOXIC-MD    )───\n├───≫ GITHUB ERROR ≪───\n├ \n├ Unable to fetch data. ${error}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`)
 
 }
 

@@ -6,7 +6,7 @@ module.exports = async (context) => {
 
         const { getBinaryNodeChild, getBinaryNodeChildren } = require('@whiskeysockets/baileys');
 
-        if (!text) return m.reply("provide number to be added in this format.\n\nadd 254735342808");
+        if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Provide number to be added.\n├ Format: add 254735342808\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
         const _participants = participants.map((user) => user.id);
 
@@ -47,16 +47,16 @@ module.exports = async (context) => {
 
             let teza;
             if (user.attrs.error === 401) {
-                teza = `@${jid.split('@')[0]} has blocked the bot.`;
+                teza = `╭───(    TOXIC-MD    )───\n├ @${jid.split('@')[0]} has blocked the bot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
             } else if (user.attrs.error === 403) {
-                teza = `@${jid.split('@')[0]} has set privacy settings for group adding.`;
+                teza = `╭───(    TOXIC-MD    )───\n├ @${jid.split('@')[0]} has set privacy settings for group adding.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
             } else if (user.attrs.error === 408) {
-                teza = `@${jid.split('@')[0]} recently left the group.`;
+                teza = `╭───(    TOXIC-MD    )───\n├ @${jid.split('@')[0]} recently left the group.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
             } 
 
             await m.reply(teza);
 
-            let links = `${pushname} is trying to add or request you to join the group \( {groupMetadata.subject}:\n\nhttps://chat.whatsapp.com/ \){respon}\n\n${botname} 🤖`;
+            let links = `╭───(    TOXIC-MD    )───\n├───≫ GROUP INVITE ≪───\n├ \n├ ${pushname} is trying to add you to\n├ ${groupMetadata.subject}\n├ \n├ https://chat.whatsapp.com/${respon}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
             await client.sendMessage(jid, { text: links }, { quoted: m });
         }

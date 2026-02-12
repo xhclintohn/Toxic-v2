@@ -4,41 +4,35 @@ module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, text, args, Owner, botname } = context;
 
-        // Basic context checks with line-styled toxic replies
         if (!botname) {
             console.error(`Join-Error: botname missing in context.`);
             return m.reply(
-                `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Bot’s fucked. No botname in context. Yell at your dev, dumbass.\n╭───( ✓ )───`
+                `╭───(    TOXIC-MD    )───\n├ \n├ Bot's fucked. No botname in context.\n├ Yell at your dev, dumbass.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             );
         }
 
         if (!Owner) {
             console.error(`Join-Error: Owner missing in context.`);
             return m.reply(
-                `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Bot’s broken. No owner in context. Go cry to the dev.\n╭───( ✓ )───`
+                `╭───(    TOXIC-MD    )───\n├ \n├ Bot's broken. No owner in context.\n├ Go cry to the dev.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             );
         }
 
-        // Accept link from: command arg, replied message, or raw text anywhere
         let raw = (text && text.trim()) || (m.quoted && ((m.quoted.text) || (m.quoted && m.quoted.caption))) || "";
         raw = String(raw || "").trim();
 
         if (!raw) {
             return m.reply(
-                `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Provide a real group invite link or reply to one. Example: *${args && args[0] ? args[0] : '.join https://chat.whatsapp.com/abcdef...'}*\n╭───( ✓ )───`
+                `╭───(    TOXIC-MD    )───\n├───≫ USAGE ≪───\n├ \n├ Provide a real group invite link\n├ or reply to one.\n├ Example: *${args && args[0] ? args[0] : '.join https://chat.whatsapp.com/abcdef...'}*\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             );
         }
 
-        // Extract invite code robustly (supports full URL or plain code)
         const urlRegex = /(?:https?:\/\/)?chat\.whatsapp\.com\/([A-Za-z0-9_-]+)/i;
         const match = raw.match(urlRegex);
         let inviteCode = match ? match[1] : null;
 
-        // If no URL, maybe user sent only the code
         if (!inviteCode) {
-            // take first token (in case user typed ".join <code>")
             const token = raw.split(/\s+/)[0];
-            // simple validation: must be alphanumeric-ish and length > 10 (len varies)
             if (/^[A-Za-z0-9_-]{8,}$/.test(token)) {
                 inviteCode = token;
             }
@@ -46,28 +40,24 @@ module.exports = async (context) => {
 
         if (!inviteCode) {
             return m.reply(
-                `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 That ain't a valid link or invite code. Don’t waste my time.\n╭───( ✓ )───`
+                `╭───(    TOXIC-MD    )───\n├ \n├ That ain't a valid link or invite\n├ code. Don't waste my time.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             );
         }
 
-        inviteCode = inviteCode.replace(/\?.*$/, '').trim(); // strip query params if any
+        inviteCode = inviteCode.replace(/\?.*$/, '').trim();
 
         try {
-            // Get info first so we can show subject in success message
             const info = await client.groupGetInviteInfo(inviteCode);
             const subject = info?.subject || info?.groupMetadata?.subject || "Unknown Group";
 
-            // Try to accept invite
             await client.groupAcceptInvite(inviteCode);
 
             return m.reply(
-                `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ✅ Joined: *${subject}*\n々 Don’t spam, or I’ll ghost you. — ${botname}\n╭───( ✓ )───`
+                `╭───(    TOXIC-MD    )───\n├───≫ JOINED ≪───\n├ \n├ Joined: *${subject}*\n├ Don't spam, or I'll ghost you.\n├ — ${botname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             );
         } catch (error) {
-            // Log for debugging
             console.error(`[JOIN-ERROR] invite=${inviteCode}`, error && (error.stack || error));
 
-            // Try to normalize the error status code from various shapes
             const status =
                 (error && error.output && error.output.statusCode) ||
                 error?.statusCode ||
@@ -76,42 +66,40 @@ module.exports = async (context) => {
                 (error?.response && error.response.status) ||
                 null;
 
-            // Map common cases (keeping your original messages but a bit polished)
             if (status === 400 || status === 404) {
                 return m.reply(
-                    `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ❌ Group does not exist or the link is invalid. Stop sending me trash links.\n╭───( ✓ )───`
+                    `╭───(    TOXIC-MD    )───\n├ \n├ Group does not exist or the link\n├ is invalid. Stop sending trash links.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 );
             }
             if (status === 401) {
                 return m.reply(
-                    `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 🚫 I was previously removed from that group. I can’t rejoin using this link.\n╭───( ✓ )───`
+                    `╭───(    TOXIC-MD    )───\n├ \n├ I was previously removed from that\n├ group. I can't rejoin using this link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 );
             }
             if (status === 409) {
                 return m.reply(
-                    `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 🤨 I’m already in that group, genius. You trying to confuse me?\n╭───( ✓ )───`
+                    `╭───(    TOXIC-MD    )───\n├ \n├ I'm already in that group, genius.\n├ You trying to confuse me?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 );
             }
             if (status === 410) {
                 return m.reply(
-                    `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 🔄 That invite link was reset. Get a fresh one and try again.\n╭───( ✓ )───`
+                    `╭───(    TOXIC-MD    )───\n├ \n├ That invite link was reset. Get a\n├ fresh one and try again.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 );
             }
             if (status === 403) {
                 return m.reply(
-                    `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 🔒 I don’t have permission to join that group. Maybe it’s private.\n╭───( ✓ )───`
+                    `╭───(    TOXIC-MD    )───\n├ \n├ I don't have permission to join\n├ that group. Maybe it's private.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 );
             }
             if (status === 500) {
                 return m.reply(
-                    `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 📛 That group is full or server error. Try later or check the link.\n╭───( ✓ )───`
+                    `╭───(    TOXIC-MD    )───\n├ \n├ That group is full or server error.\n├ Try later or check the link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 );
             }
 
-            // If nothing matched, try to present a helpful message including raw error text
             const shortMsg = (error && (error.message || (typeof error === 'string' ? error : 'Unknown error'))) || 'Unknown error';
             return m.reply(
-                `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 💀 Failed to join: ${shortMsg}\n々 Check the link or try again. If it persists, check logs.\n╭───( ✓ )───`
+                `╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Failed to join: ${shortMsg}\n├ Check the link or try again.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             );
         }
     });

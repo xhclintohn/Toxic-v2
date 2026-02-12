@@ -27,12 +27,12 @@ module.exports = async (context) => {
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        if (!m.quoted) return m.reply('Reply to an image, you blind idiot.');
+        if (!m.quoted) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ IMG EDIT ≪───\n├ \n├ Reply to an image, you blind idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         const q = m.quoted;
 
         const mime = q.mimetype || '';
         if (!mime.startsWith('image/')) {
-            return m.reply('That is not an image, are you stupid? 🤦🏻');
+            return m.reply('╭───(    TOXIC-MD    )───\n├───≫ IMG EDIT ≪───\n├ \n├ That is not an image, are you stupid?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
         const prompt = text || 'make it look epic';
@@ -83,7 +83,7 @@ module.exports = async (context) => {
             m.chat,
             {
                 image: Buffer.from(imageResponse.data),
-                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Eᴅɪᴛᴇᴅ Iᴍᴀɢᴇ ≪───\n々 Prompt: "${prompt}"\n々 Stop wasting my time\n々 with basic edits.\n╭───( ✓ )───`
+                caption: `╭───(    TOXIC-MD    )───\n├───≫ EDITED IMAGE ≪───\n├ \n├ Prompt: "${prompt}"\n├ Stop wasting my time\n├ with basic edits.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             },
             { quoted: m }
         );
@@ -92,6 +92,6 @@ module.exports = async (context) => {
         console.error('Edit Error:', err.message);
 
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 Image edit failed.\n々 Error: ${err.message}\n々 Try again, you useless fuck.\n╭───( ✓ )───`);
+        m.reply(`╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Image edit failed.\n├ Error: ${err.message}\n├ Try again, you useless fuck.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

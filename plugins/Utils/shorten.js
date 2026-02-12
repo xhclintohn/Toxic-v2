@@ -8,7 +8,8 @@ module.exports = {
         const { client, m, text } = context;
 
         const formatStylishReply = (message) => {
-            return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
+            return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
         };
 
         if (!text) {
@@ -50,7 +51,7 @@ module.exports = {
                 interactiveMessage: {
                     header: `✅ URL SHORTENED SUCCESSFULLY`,
                     title: `Original URL:\n${url}\n\nShortened URL:\n${shortUrl}\n\nResponse Time: ${responseTime}`,
-                    footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+                    footer: "> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧",
                     buttons: [
                         {
                             name: "cta_copy",

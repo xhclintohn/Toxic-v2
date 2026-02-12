@@ -7,12 +7,12 @@ module.exports = async (context) => {
         const { client, m, text, Owner, prefix } = context;
 
         if (!herokuAppName || !herokuApiKey) {
-            await m.reply("It looks like the Heroku app name or API key is not set. Please make sure you have set the `HEROKU_APP_NAME` and `HEROKU_API_KEY` environment variables.");
+            await m.reply("╭───(    TOXIC-MD    )───\n├ Heroku app name or API key not set, you clown.\n├ Set HEROKU_APP_NAME and HEROKU_API_KEY first!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
             return;
         }
 
         if (!text) {
-            await m.reply(`Please enter the var to modify and its new value in this format: \`${prefix}setvar VAR_NAME=VALUE\`\nExample: \`${prefix}setvar MYCODE=254\``);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ SETVAR ≪───\n├ \n├ Provide a var and value, moron.\n├ Format: ${prefix}setvar VAR_NAME=VALUE\n├ Example: ${prefix}setvar MYCODE=254\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
             return;
         }
 
@@ -32,20 +32,20 @@ module.exports = async (context) => {
                 );
 
                 if (response.status === 200) {
-                    await m.reply(`Config var \`${varName}\` has been successfully updated to \`${value}\`. Wait 2min for change to effect as bot restarts.`);
+                    await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ SETVAR ≪───\n├ \n├ ${varName} updated to "${value}"\n├ Wait 2min for bot to restart, be patient.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
                 } else {
-                    await m.reply("Failed to update the config var. Please try again.");
+                    await m.reply("╭───(    TOXIC-MD    )───\n├ Failed to update the config var. Try again, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
                 }
             } catch (error) {
                 const errorMessage = error.response?.data || error.message;
-                await m.reply(`Failed to set the config var. ${errorMessage}`);
+                await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ HEROKU ERROR ≪───\n├ \n├ Failed to set config var.\n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
                 console.error("Error updating config var:", errorMessage);
             }
         }
 
         const parts = text.split("=");
         if (parts.length !== 2) {
-            await m.reply(`Invalid format. Please make sure to enter the var name and value in this format: \`${prefix}setvar VAR_NAME=VALUE\`\nExample: \`${prefix}setvar MYCODE=254\``);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├ Invalid format, you illiterate fool.\n├ Use: ${prefix}setvar VAR_NAME=VALUE\n├ Example: ${prefix}setvar MYCODE=254\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
             return;
         }
 

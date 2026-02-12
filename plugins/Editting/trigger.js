@@ -5,7 +5,7 @@ const canvacord = require("canvacord");
 module.exports = async (context) => {
         const { client, m, Tag, botname } = context;
 
-let cap = `Converted By ${botname}`;
+let cap = `╭───(    TOXIC-MD    )───\n├───≫ TRIGGER ≪───\n├ \n├ Converted By ${botname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
 try {
 
@@ -31,7 +31,7 @@ try {
             categories: ['🤩', '🎉'],
             id: '12345',
             quality: 75,
-            background: 'transparent' // The sticker background color (only for full stickers)
+            background: 'transparent'
         })
         const stikk = await sticker.toBuffer()
        await client.sendMessage(m.chat, {sticker: stikk}, {quoted: m})
@@ -41,7 +41,7 @@ try {
 
 } catch (e) {
 
-m.reply("Something wrong occured. 😞")  
+m.reply('╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Something wrong occured.\n├ Try again, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧')
 
 }
     }

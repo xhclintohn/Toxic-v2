@@ -18,7 +18,7 @@ module.exports = {
         if (cleanText !== '' && !['menu', 'help', 'commands', 'list'].includes(cleanText.split(' ')[0].toLowerCase())) {
             const commandName = cleanText.split(' ')[0];
             await client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo \( {m.pushName}, what's with the extra bullshit after " \){commandName}"? Just type *${prefix}menu* properly, moron. 🖕\n╭───( ✓ )───`
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo ${m.pushName}, what's with the\n├ extra bullshit after "${commandName}"?\n├ Just type *${prefix}menu* properly, moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
             return;
         }
@@ -39,19 +39,7 @@ module.exports = {
                 .join('');
         };
 
-        const menuText = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 *( 💬 ) - Hello, @${m.pushName}* Welcome to the bots Menu\n\n` +
-            `- 計さ Bot INFORMATION✓\n\n` +
-            `⌬ *Bσƚ*: \n` +
-            `𝐓𝐨𝐱𝐢𝐜-𝐌𝐃 (bow down)\n` +
-
-            `⌬ *Pɾҽϝιx*: \n` +
-            `${effectivePrefix} (learn it, dumbass)\n` +
-
-            `⌬ *Mσԃҽ*: \n` +
-            `${mode} ( ! )\n` +
-
-            `\n╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n\n` +
-            ` ( ! ) *Select a button below.* `;
+        const menuText = `╭───(    TOXIC-MD    )───\n├───≫ Mᴇɴᴜ ≪───\n├ \n├ Hello, @${m.pushName}\n├ \n├ Bot: TOXIC-MD\n├ Prefix: ${effectivePrefix}\n├ Mode: ${mode}\n├ \n├ Select a button below.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
         const msg = generateWAMessageFromContent(
             m.chat,
@@ -74,7 +62,7 @@ module.exports = {
                         hasMediaAttachment: true,
                     },
                     body: { text: menuText },
-                    footer: { text: `Pσɯҽɾҽԃ Ⴆყ ${botname}` },
+                    footer: { text: `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` },
                     nativeFlowMessage: {
                         buttons: [
                             {

@@ -15,23 +15,23 @@ module.exports = async (context) => {
   };
 
   if (text) {
-    return client.sendMessage(m.chat, { text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, ${m.pushName}, what’s with the extra bullshit? Just say ${prefix}credits, you moron.` }, { quoted: m });
+    return client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo, ${m.pushName}, what's with the extra\n├ bullshit? Just say ${prefix}credits, you moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: m });
   }
 
   try {
-    const replyText = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 *Credits, Bitches*\n\nAll hail *𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧*, the badass who built this bot from the ground up. Nobody else gets credit—fuck ‘em. This is my empire, and I run this shit solo.\n\nBow down to *𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧* 🫡`;
+    const replyText = `╭───(    TOXIC-MD    )───\n├───≫ Cʀᴇᴅɪᴛs ≪───\n├ \n├ All hail *𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧*, the badass who\n├ built this bot from the ground up.\n├ Nobody else gets credit—fuck 'em.\n├ This is my empire, and I run this\n├ shit solo.\n├ \n├ Bow down to *𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧*\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
     await client.sendMessage(m.chat, {
       text: replyText,
-      footer: `TPσɯҽɾҽԃ Ⴆყ Toxic-MD`,
+      footer: `©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
       buttons: [
-        { buttonId: `${prefix}dev`, buttonText: { displayText: `👤 ${toFancyFont('DEV')}` }, type: 1 }
+        { buttonId: `${prefix}dev`, buttonText: { displayText: `${toFancyFont('DEV')}` }, type: 1 }
       ],
       headerType: 1,
       viewOnce: true
     }, { quoted: m });
   } catch (error) {
     console.error('Error in credits command:', error);
-    await client.sendMessage(m.chat, { text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Shit went sideways, can’t show credits. Try again later, loser.` }, { quoted: m });
+    await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Shit went sideways, can't show credits.\n├ Try again later, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: m });
   }
 };

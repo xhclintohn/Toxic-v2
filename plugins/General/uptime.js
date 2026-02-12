@@ -2,7 +2,7 @@ module.exports = async (context) => {
   const { client, m, text, botname } = context;
 
   if (text) {
-    return client.sendMessage(m.chat, { text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 What’s with the extra crap, ${m.pushName}? Just say !uptime, dumbass.` }, { quoted: m });
+    return client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ What's with the extra crap, ${m.pushName}?\n├ Just say !uptime, dumbass.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: m });
   }
 
   try {
@@ -21,11 +21,11 @@ module.exports = async (context) => {
     };
 
     const uptimeText = formatUptime(process.uptime());
-    const replyText = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 *${botname} Uptime, Bitches*\n\nI’ve been awake for *${uptimeText}*, running shit like a boss.\n\nPowered by *${botname}*`;
+    const replyText = `╭───(    TOXIC-MD    )───\n├───≫ Uᴘᴛɪᴍᴇ ≪───\n├ \n├ *${botname} Uptime, Bitches*\n├ \n├ I've been awake for *${uptimeText}*,\n├ running shit like a boss.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
     await client.sendMessage(m.chat, { text: replyText }, { quoted: m });
   } catch (error) {
     console.error('Error in uptime command:', error);
-    await client.sendMessage(m.chat, { text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, something’s fucked up with the uptime check. Try again later, loser.` }, { quoted: m });
+    await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Something's fucked up with the\n├ uptime check. Try again later, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: m });
   }
 };

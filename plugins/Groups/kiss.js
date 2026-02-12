@@ -11,7 +11,7 @@ module.exports = {
       if (!m.mentionedJid || m.mentionedJid.length === 0) {
         if (!m.quoted || !m.quoted.sender) {
           console.error('No tagged or quoted user provided');
-          return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, moron, tag someone or quote a message to kiss! I ain’t kissing nobody without a target!`);
+          return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Yo, moron, tag someone or quote\n├ a message to kiss! I ain't kissing\n├ nobody without a target!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
       }
 
@@ -24,20 +24,20 @@ module.exports = {
         (!targetUser.includes('@s.whatsapp.net') && !targetUser.includes('@lid'))
       ) {
         console.error(`Invalid target user: ${JSON.stringify(targetUser)}`);
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Invalid user, dumbass! Tag or quote a real person to kiss!`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Invalid user, dumbass! Tag or\n├ quote a real person to kiss!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       const targetNumber = targetUser.split('@')[0];
       const senderNumber = m.sender.split('@')[0];
       if (!targetNumber || !senderNumber) {
         console.error(`Failed to extract numbers: target=${targetUser}, sender=${m.sender}`);
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Something’s fucked up with the user IDs. Try again, idiot!`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Something's fucked up with the\n├ user IDs. Try again, idiot!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       const kissingMsg = await client.sendMessage(
         m.chat,
         {
-          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 @${senderNumber} is puckering up to kiss @${targetNumber}... 💋\n々 Hope you’re ready for this, loser!\n╭───( ✓ )───`,
+          text: `╭───(    TOXIC-MD    )───\n├ \n├ @${senderNumber} is puckering up\n├ to kiss @${targetNumber}...\n├ Hope you're ready for this, loser!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
           mentions: [m.sender, targetUser],
         },
         { quoted: m }
@@ -49,32 +49,34 @@ module.exports = {
         {
           level: 'Awkward',
           description: 'a cringey, sloppy peck that made @TARGET gag! @SENDER, you kiss like a dead fish!',
-          emoji: '😖',
+          emoji: '',
         },
         {
           level: 'Sweet',
-          description: 'a decent smooch that got @TARGET blushing! @SENDER, not bad, but don’t get cocky!',
-          emoji: '😘',
+          description: 'a decent smooch that got @TARGET blushing! @SENDER, not bad, but don\'t get cocky!',
+          emoji: '',
         },
         {
           level: 'Passionate',
-          description: 'a steamy kiss that left @TARGET speechless! @SENDER, you’re a fucking Casanova!',
-          emoji: '🔥💋',
+          description: 'a steamy kiss that left @TARGET speechless! @SENDER, you\'re a fucking Casanova!',
+          emoji: '',
         },
       ];
       const intensity = intensities[Math.floor(Math.random() * intensities.length)];
 
-      const resultMsg = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
-*KISS REPORT* ${intensity.emoji}
-
-*KISSER:* @${senderNumber}
-*VICTIM:* @${targetNumber}
-*INTENSITY:* ${intensity.level}
-
-*VERDICT:* ${intensity.description.replace('@TARGET', `@${targetNumber}`).replace('@SENDER', `@${senderNumber}`)}
-
-*DISCLAIMER:* This kiss was 100% legit, you hopeless romantic! Deal with it! 😈
-╭───( ✓ )───`;
+      const resultMsg = `╭───(    TOXIC-MD    )───
+├───≫ KISS REPORT ≪───
+├ 
+├ *KISSER:* @${senderNumber}
+├ *VICTIM:* @${targetNumber}
+├ *INTENSITY:* ${intensity.level}
+├ 
+├ *VERDICT:* ${intensity.description.replace('@TARGET', `@${targetNumber}`).replace('@SENDER', `@${senderNumber}`)}
+├ 
+├ *DISCLAIMER:* This kiss was 100% legit,
+├ you hopeless romantic! Deal with it!
+╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
       await client.sendMessage(
         m.chat,
@@ -94,7 +96,7 @@ module.exports = {
       }
     } catch (error) {
       console.error(`Kiss command exploded: ${error.stack}`);
-      await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Shit broke harder than your love life! Can’t kiss right now, you pathetic fuck.`);
+      await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Shit broke harder than your love\n├ life! Can't kiss right now,\n├ you pathetic fuck.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
   },
 };

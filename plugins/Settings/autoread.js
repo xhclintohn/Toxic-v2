@@ -5,8 +5,8 @@ module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
 
-    const formatStylishReply = (message) => {
-      return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
+    const formatStylishReply = (title, message) => {
+      return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
     };
 
     try {
@@ -14,7 +14,7 @@ module.exports = async (context) => {
       if (!settings || Object.keys(settings).length === 0) {
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
+          { text: formatStylishReply("AUTOREAD", "Database is fucked, no settings found. Fix it, loser.") },
           { quoted: m, ad: true }
         );
       }
@@ -26,7 +26,7 @@ module.exports = async (context) => {
         if (settings.autoread === action) {
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`Autoread message already ${value.toUpperCase()}, genius. Stop wasting my time. 😈`) },
+            { text: formatStylishReply("AUTOREAD", `Autoread message already ${value.toUpperCase()}, genius. Stop wasting my time.`) },
             { quoted: m, ad: true }
           );
         }
@@ -34,21 +34,21 @@ module.exports = async (context) => {
         await updateSetting('autoread', action);
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply(`Autoread ${value.toUpperCase()} activated! 🔥 ${action ? 'Bot’s reading every message like a creep. 🥶' : 'No more spying on your trash messages. 😴'}`) },
+          { text: formatStylishReply("AUTOREAD", `Autoread ${value.toUpperCase()} activated! ${action ? 'Bot\'s reading every message like a creep.' : 'No more spying on your trash messages.'}`) },
           { quoted: m, ad: true }
         );
       }
 
       const buttons = [
-        { buttonId: `${prefix}autoread on`, buttonText: { displayText: "ON 🥶" }, type: 1 },
-        { buttonId: `${prefix}autoread off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
+        { buttonId: `${prefix}autoread on`, buttonText: { displayText: "ON" }, type: 1 },
+        { buttonId: `${prefix}autoread off`, buttonText: { displayText: "OFF" }, type: 1 },
       ];
 
       await client.sendMessage(
         m.chat,
         {
-          text: formatStylishReply(`Autoread’s ${settings.autoread ? 'ON 🥶' : 'OFF 😴'}, dumbass. Pick a vibe, noob! 😈`),
-          footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+          text: formatStylishReply("AUTOREAD", `Autoread's ${settings.autoread ? 'ON' : 'OFF'}, dumbass. Pick a vibe, noob!`),
+          footer: "> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧",
           buttons,
           headerType: 1,
           viewOnce: true,
@@ -58,7 +58,7 @@ module.exports = async (context) => {
     } catch (error) {
       await client.sendMessage(
         m.chat,
-        { text: formatStylishReply("Shit broke, couldn’t mess with autoread. Database or something’s fucked. Try later.") },
+        { text: formatStylishReply("AUTOREAD", "Shit broke, couldn't mess with autoread. Database or something's fucked. Try later.") },
         { quoted: m, ad: true }
       );
     }

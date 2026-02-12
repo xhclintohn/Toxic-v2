@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
+    "@octokit/rest": "^22.0.0",
     "@vitalets/google-translate-api": "^9.2.0",
     "@whiskeysockets/baileys": "npm:toxic-baileys",
     "acrcloud": "^1.2.0",
@@ -47,8 +48,8 @@
     "wa-sticker-formatter": "^4.4.4",
     "wikipedia": "^2.1.2",
     "youtubedl-core": "^4.11.5",
-    "ytdl-core": "^4.11.5",
-    "yt-search": "^2.10.4"
+    "yt-search": "^2.10.4",
+    "ytdl-core": "^4.11.5"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"

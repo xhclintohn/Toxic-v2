@@ -9,12 +9,12 @@ module.exports = async (context) => {
         const { client, m, text, Owner, prefix } = context;
 
         if (!herokuAppName || !herokuApiKey) {
-            await m.reply("It looks like the Heroku app name or API key is not set. Please make sure you have set the `HEROKU_APP_NAME` and `HEROKU_API_KEY` environment variables.");
+            await m.reply("╭───(    TOXIC-MD    )───\n├ Heroku app name or API key not set, you clown.\n├ Set HEROKU_APP_NAME and HEROKU_API_KEY first!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
             return;
         }
 
         if (!text) {
-            await m.reply(`Please enter the var name to get in the format: \`${prefix}getvar VAR_NAME\`\n\nExample: \`${prefix}getvar MYCODE\``);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ GETVAR ≪───\n├ \n├ Provide a var name, genius.\n├ Usage: ${prefix}getvar VAR_NAME\n├ Example: ${prefix}getvar MYCODE\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
             return;
         }
 
@@ -37,15 +37,15 @@ module.exports = async (context) => {
 
                 if (varValue) {
                     if (m.isGroup) {
-                        await m.reply("It is recommended to use this command in inbox to prevent exposing sensitive info like session and APIs.");
+                        await m.reply("╭───(    TOXIC-MD    )───\n├ Use this in inbox you fool!\n├ Don't expose your vars in group chat!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
                     }
-                    await m.reply(`Config var \`${varName}\` is set to ${varValue}.`);
+                    await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ GETVAR ≪───\n├ \n├ ${varName} = ${varValue}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
                 } else {
-                    await m.reply(`Config var \`${varName}\` does not exist.`);
+                    await m.reply(`╭───(    TOXIC-MD    )───\n├ Var "${varName}" doesn't exist, dumbass.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
                 }
             } catch (error) {
                 const errorMessage = error.response?.data || error.message;
-                await m.reply(`Failed to retrieve the config var. ${errorMessage}`);
+                await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ HEROKU ERROR ≪───\n├ \n├ Failed to retrieve config var.\n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
                 console.error("Error fetching config var:", errorMessage);
             }
         }

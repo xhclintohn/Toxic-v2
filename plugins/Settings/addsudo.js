@@ -17,29 +17,38 @@ module.exports = async (context) => {
 
     if (!numberToAdd || !/^\d+$/.test(numberToAdd)) {
       return await m.reply(
-        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-        `々 Pathetic attempt, moron! 😈\n` +
-        `々 Give me a valid number or quote a user, fool!\n` +
-        `╭───( ✓ )───`
+        `╭───(    TOXIC-MD    )───\n` +
+        `├───≫ ADD SUDO ≪───\n` +
+        `├ \n` +
+        `├ Pathetic attempt, moron!\n` +
+        `├ Give me a valid number or quote a user, fool!\n` +
+        `╰──────────────────☉\n` +
+        `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       );
     }
 
     const sudoUsers = await getSudoUsers();
     if (sudoUsers.includes(numberToAdd)) {
       return await m.reply(
-        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-        `々 Already a sudo user, you clueless twit! 🥶\n` +
-        `々 ${numberToAdd} is already in the elite ranks.\n` +
-        `╭───( ✓ )───`
+        `╭───(    TOXIC-MD    )───\n` +
+        `├───≫ ADD SUDO ≪───\n` +
+        `├ \n` +
+        `├ Already a sudo user, you clueless twit!\n` +
+        `├ ${numberToAdd} is already in the elite ranks.\n` +
+        `╰──────────────────☉\n` +
+        `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       );
     }
 
     await addSudoUser(numberToAdd);
     await m.reply(
-      `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-      `々 Bow down! 🔥\n` +
-      `々 ${numberToAdd} is now a Sudo King! 😈\n` +
-      `╭───( ✓ )───`
+      `╭───(    TOXIC-MD    )───\n` +
+      `├───≫ ADD SUDO ≪───\n` +
+      `├ \n` +
+      `├ Bow down!\n` +
+      `├ ${numberToAdd} is now a Sudo King!\n` +
+      `╰──────────────────☉\n` +
+      `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
     );
   });
 };

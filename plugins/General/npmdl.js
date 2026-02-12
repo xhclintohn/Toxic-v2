@@ -9,7 +9,7 @@ module.exports = {
 
         try {
             let query = m.text.trim();
-            if (!query) return m.reply("Provide a package name, you incompetent fool.");
+            if (!query) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Provide a package name,\n├ you incompetent fool.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
@@ -20,7 +20,7 @@ module.exports = {
                 const list = searchData?.result || searchData?.results || searchData?.data || [];
                 if (!Array.isArray(list) || list.length === 0) {
                     await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-                    return m.reply(`No packages found in scope *${query}*`);
+                    return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ No packages found in scope *${query}*\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
                 }
                 
                 query = list[0]?.name || list[0]?.package?.name || query;
@@ -46,13 +46,13 @@ module.exports = {
                 document: Buffer.from(fileBuffer),
                 fileName: fileName,
                 mimetype: 'application/gzip',
-                caption: `📦 ${query} v${latest}\n—\nTσxιƈ-ɱԃȥ`
+                caption: `╭───(    TOXIC-MD    )───\n├───≫ NPM ≪───\n├ \n├ ${query} v${latest}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
 
         } catch (error) {
             console.error('NPM download error:', error);
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            await m.reply(`Download failed. Error: ${error.message}`);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Download failed.\n├ Error: ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     }
 };

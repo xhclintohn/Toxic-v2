@@ -9,7 +9,7 @@ module.exports = async (context) => {
     };
 
     if (!text || !isValidYouTubeUrl(text)) {
-        return m.reply("That is not a valid YouTube URL. Are you intentionally wasting my time?");
+        return m.reply("╭───(    TOXIC-MD    )───\n├ That's not a valid YouTube URL.\n├ Are you intentionally wasting my time?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
     }
 
     try {
@@ -65,7 +65,7 @@ module.exports = async (context) => {
             }, { quoted: m });
         } catch (fallbackError) {
             console.error(`Fallback error: ${fallbackError.message}`);
-            await m.reply(`All download methods failed. Your request is fundamentally broken. Error: ${fallbackError.message}`);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ YTMP4 ERROR ≪───\n├ \n├ All download methods failed.\n├ Your request is fundamentally broken.\n├ ${fallbackError.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     }
 };

@@ -7,7 +7,8 @@ module.exports = async (context) => {
     const jid = m.chat;
 
     const formatStylishReply = (message) => {
-      return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
+      return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
     };
 
     try {
@@ -70,7 +71,7 @@ module.exports = async (context) => {
           text: formatStylishReply(
             `Events Status: ${isEnabled ? 'ON 🥶' : 'OFF 😴'}. Pick a vibe, noob! 😈`
           ),
-          footer: '> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ',
+          footer: '> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
           buttons,
           headerType: 1,
           viewOnce: true,

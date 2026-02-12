@@ -9,22 +9,22 @@ module.exports = {
 
     try {
       await client.sendMessage(m.chat, {
-        text: 'Choose an option from the list:',
+        text: `╭───(    TOXIC-MD    )───\n├───≫ Mᴇɴᴜ ≪───\n├ \n├ Choose an option from the list:\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
         footer: 'Toxic-MD Bot',
         sections: [
           {
             title: 'General Commands',
             rows: [
-              { title: '📌 Help', rowId: '.help', description: 'Get bot commands' },
-              { title: '🏓 Ping', rowId: '.ping', description: 'Check bot speed' },
-              { title: 'ℹ Info', rowId: '.info', description: 'View bot details' }
+              { title: 'Help', rowId: '.help', description: 'Get bot commands' },
+              { title: 'Ping', rowId: '.ping', description: 'Check bot speed' },
+              { title: 'Info', rowId: '.info', description: 'View bot details' }
             ]
           },
           {
             title: 'Fun Commands',
             rows: [
-              { title: '🎲 Random Fact', rowId: '.fact', description: 'Get a fun fact' },
-              { title: '😂 Joke', rowId: '.joke', description: 'Hear a joke' }
+              { title: 'Random Fact', rowId: '.fact', description: 'Get a fun fact' },
+              { title: 'Joke', rowId: '.joke', description: 'Hear a joke' }
             ]
           }
         ],

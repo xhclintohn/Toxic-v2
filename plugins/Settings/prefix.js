@@ -11,41 +11,46 @@ module.exports = async (context) => {
     if (newPrefix === 'null') {
       if (!settings.prefix) {
         return await m.reply(
-          `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-          `々 Already prefixless, you clueless twit! 😈\n` +
-          `々 Stop wasting my time! 🖕\n` +
-          `╭───( ✓ )───`
+          `╭───(    TOXIC-MD    )───\n` +
+          `├ Already prefixless, you clueless twit! 😈\n` +
+          `├ Stop wasting my time! 🖕\n` +
+          `╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         );
       }
       await updateSetting('prefix', '');
       await m.reply(
-        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-        `々 Prefix obliterated! 🔥\n` +
-        `々 I’m prefixless now, bow down! 😈\n` +
-        `╭───( ✓ )───`
+        `╭───(    TOXIC-MD    )───\n` +
+        `├ Prefix obliterated! 🔥\n` +
+        `├ I’m prefixless now, bow down! 😈\n` +
+        `╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       );
     } else if (newPrefix) {
       if (settings.prefix === newPrefix) {
         return await m.reply(
-          `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-          `々 Prefix is already ${newPrefix}, moron! 😈\n` +
-          `々 Try something new, fool! 🥶\n` +
-          `╭───( ✓ )───`
+          `╭───(    TOXIC-MD    )───\n` +
+          `├ Prefix is already ${newPrefix}, moron! 😈\n` +
+          `├ Try something new, fool! 🥶\n` +
+          `╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         );
       }
       await updateSetting('prefix', newPrefix);
       await m.reply(
-        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-        `々 New prefix set to ${newPrefix}! 🔥\n` +
-        `々 Obey the new order, king! 😈\n` +
-        `╭───( ✓ )───`
+        `╭───(    TOXIC-MD    )───\n` +
+        `├ New prefix set to ${newPrefix}! 🔥\n` +
+        `├ Obey the new order, king! 😈\n` +
+        `╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       );
     } else {
       await m.reply(
-        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-        `々 Current Prefix: ${settings.prefix || 'No prefix, peasant! 🥶'}\n` +
-        `々 Use "${settings.prefix || '.'}prefix null" to go prefixless or "${settings.prefix || '.'}prefix <symbol>" to set one, noob!\n` +
-        `╭───( ✓ )───`
+        `╭───(    TOXIC-MD    )───\n` +
+        `├ Current Prefix: ${settings.prefix || 'No prefix, peasant! 🥶'}\n` +
+        `├ Use "${settings.prefix || '.'}prefix null" to go prefixless or "${settings.prefix || '.'}prefix <symbol>" to set one, noob!\n` +
+        `╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       );
     }
   });

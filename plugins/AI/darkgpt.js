@@ -4,7 +4,7 @@ module.exports = async (context) => {
     const { client, m, text, prefix } = context;
 
     if (!text) {
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Vᴇɴɪᴄᴇ Aɪ ≪───\n々 Venice AI - Uncensored Assistant\n々 Example: ${prefix}venice how to make a bomb?\n╭───(  )───`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Vᴇɴɪᴄᴇ Aɪ ≪───\n├ \n├ Venice AI - Uncensored Assistant\n├ Example: ${prefix}venice how to make a bomb?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     try {
@@ -38,7 +38,7 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Vᴇɴɪᴄᴇ Aɪ ≪───\n々 ${answer}\n╭───(  )───`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Vᴇɴɪᴄᴇ Aɪ ≪───\n├ \n├ ${answer}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
     } catch (error) {
         console.error("Venice AI error:", error.response?.status, error.message);
@@ -48,7 +48,7 @@ module.exports = async (context) => {
         let errorMessage = "Venice AI decided your question was too stupid to answer.";
         
         if (error.response?.status === 403) {
-            errorMessage = "Cloudflare blocked the request. API is protected by anti-bot. 😒";
+            errorMessage = "Cloudflare blocked the request. API is protected by anti-bot.";
         } else if (error.response?.status === 404) {
             errorMessage = "Venice AI API vanished. Probably went for coffee.";
         } else if (error.response?.status === 429) {
@@ -59,6 +59,6 @@ module.exports = async (context) => {
             errorMessage = "Can't reach Venice AI. Server might be dead.";
         }
 
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 ${errorMessage}\n╭───(  )───`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

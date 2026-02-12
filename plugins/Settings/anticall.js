@@ -5,8 +5,8 @@ module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
 
-    const formatStylishReply = (message) => {
-      return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
+    const formatStylishReply = (title, message) => {
+      return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
     };
 
     try {
@@ -14,7 +14,7 @@ module.exports = async (context) => {
       if (!settings || Object.keys(settings).length === 0) {
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
+          { text: formatStylishReply("ANTICALL", "Database is fucked, no settings found. Fix it, loser.") },
           { quoted: m, ad: true }
         );
       }
@@ -27,7 +27,7 @@ module.exports = async (context) => {
         if (isEnabled === action) {
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`Yo, genius! 😈 Anticall is already ${value.toUpperCase()}! Stop wasting my time, moron. 🖕`) },
+            { text: formatStylishReply("ANTICALL", `Yo, genius! Anticall is already ${value.toUpperCase()}! Stop wasting my time, moron.`) },
             { quoted: m, ad: true }
           );
         }
@@ -35,21 +35,21 @@ module.exports = async (context) => {
         await updateSetting('anticall', action);
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply(`Anticall ${value.toUpperCase()} ! 🔥 Callers will get wrecked! 💀`) },
+          { text: formatStylishReply("ANTICALL", `Anticall ${value.toUpperCase()}! Callers will get wrecked!`) },
           { quoted: m, ad: true }
         );
       }
 
       const buttons = [
-        { buttonId: `${prefix}anticall on`, buttonText: { displayText: "ON 🥶" }, type: 1 },
-        { buttonId: `${prefix}anticall off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
+        { buttonId: `${prefix}anticall on`, buttonText: { displayText: "ON" }, type: 1 },
+        { buttonId: `${prefix}anticall off`, buttonText: { displayText: "OFF" }, type: 1 },
       ];
 
       await client.sendMessage(
         m.chat,
         {
-          text: formatStylishReply(`Anticall Status: ${isEnabled ? 'ON 🥶' : 'OFF 😴'}. Pick a vibe, noob! 😈`),
-          footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+          text: formatStylishReply("ANTICALL", `Anticall Status: ${isEnabled ? 'ON' : 'OFF'}. Pick a vibe, noob!`),
+          footer: "> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧",
           buttons,
           headerType: 1,
           viewOnce: true,
@@ -59,7 +59,7 @@ module.exports = async (context) => {
     } catch (error) {
       await client.sendMessage(
         m.chat,
-        { text: formatStylishReply("Shit broke, couldn’t update anticall. Database or something’s fucked. Try later.") },
+        { text: formatStylishReply("ANTICALL", "Shit broke, couldn't update anticall. Database or something's fucked. Try later.") },
         { quoted: m, ad: true }
       );
     }

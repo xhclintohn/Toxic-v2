@@ -9,10 +9,13 @@ module.exports = async (context) => {
 
     if (!jid.endsWith('@g.us')) {
       return await m.reply(
-        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-        `々 Epic fail, loser! 😈\n` +
-        `々 This command is for groups only, moron!\n` +
-        `╭───( ✓ )───`
+        `╭───(    TOXIC-MD    )───\n` +
+        `├───≫ ANTIDEMOTE ≪───\n` +
+        `├ \n` +
+        `├ Epic fail, loser!\n` +
+        `├ This command is for groups only, moron!\n` +
+        `╰──────────────────☉\n` +
+        `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       );
     }
 
@@ -27,26 +30,35 @@ module.exports = async (context) => {
 
       if (isEnabled === action) {
         return await m.reply(
-          `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-          `々 Antidemote is already ${value.toUpperCase()}, you brainless fool! 🥶\n` +
-          `々 Quit wasting my time! 🖕\n` +
-          `╭───( ✓ )───`
+          `╭───(    TOXIC-MD    )───\n` +
+          `├───≫ ANTIDEMOTE ≪───\n` +
+          `├ \n` +
+          `├ Antidemote is already ${value.toUpperCase()}, you brainless fool!\n` +
+          `├ Quit wasting my time!\n` +
+          `╰──────────────────☉\n` +
+          `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         );
       }
 
       await updateGroupSetting(jid, 'antidemote', action ? 'true' : 'false');
       await m.reply(
-        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-        `々 Antidemote ${value.toUpperCase()}! 🔥\n` +
-        `々 Demotions are under my watch, king! 😈\n` +
-        `╭───( ✓ )───`
+        `╭───(    TOXIC-MD    )───\n` +
+        `├───≫ ANTIDEMOTE ≪───\n` +
+        `├ \n` +
+        `├ Antidemote ${value.toUpperCase()}!\n` +
+        `├ Demotions are under my watch, king!\n` +
+        `╰──────────────────☉\n` +
+        `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       );
     } else {
       await m.reply(
-        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-        `々 Antidemote Status: ${isEnabled ? 'ON 🥶' : 'OFF 😴'}\n` +
-        `々 Use "${prefix}antidemote on" or "${prefix}antidemote off", peasant!\n` +
-        `╭───( ✓ )───`
+        `╭───(    TOXIC-MD    )───\n` +
+        `├───≫ ANTIDEMOTE ≪───\n` +
+        `├ \n` +
+        `├ Antidemote Status: ${isEnabled ? 'ON' : 'OFF'}\n` +
+        `├ Use "${prefix}antidemote on" or "${prefix}antidemote off", peasant!\n` +
+        `╰──────────────────☉\n` +
+        `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       );
     }
   });

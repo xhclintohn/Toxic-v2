@@ -10,12 +10,12 @@ module.exports = async (context) => {
         const q = m.quoted ? m.quoted : m;
         const mime = (q.msg || q).mimetype || '';
 
-        if (!mime) return m.reply('Please quote or send a media file to upload.');
+        if (!mime) return m.reply("╭───(    TOXIC-MD    )───\n├ Quote or send a media file to upload, dimwit.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
         const mediaBuffer = await q.download();
 
         if (mediaBuffer.length > 256 * 1024 * 1024) {
-            return m.reply('Media is too large. Max size is 256MB.');
+            return m.reply("╭───(    TOXIC-MD    )───\n├ Media too large! Max 256MB, you greedy fool.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -42,9 +42,9 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, {
             interactiveMessage: {
-                header: "Media Uploaded Successfully ✅",
-                title: `Media Link: \n\n${link}\n\nSize: ${fileSizeMB} MB`,
-                footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+                header: "╭───(    TOXIC-MD    )───\n├───≫ UPLOAD DONE ≪───",
+                title: `├ \n├ Link: ${link}\n├ Size: ${fileSizeMB} MB\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                footer: "> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧",
                 buttons: [
                     {
                         name: "cta_copy",
@@ -61,6 +61,6 @@ module.exports = async (context) => {
     } catch (err) {
         console.error('Upload error:', err);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        m.reply(`Error during upload: ${err.message}`);
+        m.reply(`╭───(    TOXIC-MD    )───\n├───≫ UPLOAD ERROR ≪───\n├ \n├ Upload failed. ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

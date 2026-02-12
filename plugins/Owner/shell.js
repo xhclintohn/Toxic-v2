@@ -13,7 +13,7 @@ await ownerMiddleware(context, async () => {
 
       
       if (!text) {
-        return m.reply("No command provided. Please provide a valid shell command.");
+        return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ No command provided. Provide a\n├ valid shell command, fool.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       const { exec } = require("child_process");
@@ -21,10 +21,10 @@ await ownerMiddleware(context, async () => {
     
       exec(text, (err, stdout, stderr) => {
         if (err) {
-          return m.reply(`Error: ${err.message}`);
+          return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ SHELL ERROR ≪───\n├ \n├ ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
         if (stderr) {
-          return m.reply(`stderr: ${stderr}`);
+          return m.reply(stderr);
         }
         if (stdout) {
           return m.reply(stdout);
@@ -32,7 +32,7 @@ await ownerMiddleware(context, async () => {
       });
 
     } catch (error) {
-      await m.reply("An error occurred while running the shell command\n" + error);
+      await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ SHELL ERROR ≪───\n├ \n├ An error occurred while running\n├ the shell command.\n├ ${error}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
                   })
 }

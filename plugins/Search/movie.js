@@ -8,9 +8,9 @@ module.exports = async (context) => {
     let fids = await axios.get(`http://www.omdbapi.com/?apikey=742b2d09&t=${text}&plot=full`);
     let imdbt = "";
 
-    imdbt += "╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n";
-    imdbt += "々 TOXIC-MD MOVIE SEARCH\n";
-    imdbt += "╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n";
+    imdbt += "╭───(    TOXIC-MD    )───\n";
+    imdbt += "├ TOXIC-MD MOVIE SEARCH\n";
+    imdbt += "╭───(    TOXIC-MD    )───\n";
     imdbt += "│ 🎬 Title       : " + fids.data.Title + "\n";
     imdbt += "│ 📅 Year        : " + fids.data.Year + "\n";
     imdbt += "│ ⭐ Rated       : " + fids.data.Rated + "\n";
@@ -28,7 +28,7 @@ module.exports = async (context) => {
     imdbt += "│ 🏭 Production  : " + fids.data.Production + "\n";
     imdbt += "│ 🌟 imdbRating  : " + fids.data.imdbRating + "\n";
     imdbt += "│ 🗳️ imdbVotes   : " + fids.data.imdbVotes + "\n";
-    imdbt += "╭───( ✓ )───";
+    imdbt += "╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧";
 
     await client.sendMessage(
       m.chat,

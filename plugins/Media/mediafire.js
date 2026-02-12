@@ -25,14 +25,14 @@ async function MediaFire(url, options) {
   }
 }
 
-if (!text) return m.reply("provide mediafire link for download");
+if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Provide a MediaFire link, you lazy bum!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
 if (!text.includes('mediafire.com')) {
-        return m.reply(`Doesnt look like a mediafire link, uh?`);
+        return m.reply("╭───(    TOXIC-MD    )───\n├ That doesn't look like a MediaFire link, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
     }
 
 
-await m.reply(`A moment...`);
+await m.reply("╭───(    TOXIC-MD    )───\n├ Hold on, fetching your file...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
 try {
 
@@ -41,7 +41,7 @@ try {
 
 
 if (!fileInfo || !fileInfo.length) {
-    return m.reply("Sorry, this file is no longer stored in mediafire.");
+    return m.reply("╭───(    TOXIC-MD    )───\n├ File no longer exists on MediaFire. Too slow!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 }
 
 
@@ -57,7 +57,7 @@ if (!fileInfo || !fileInfo.length) {
                 },
                 fileName: fileInfo[0].nama,
                 mimetype: fileInfo[0].mime,
-                caption: `${fileInfo[0].nama} downloaded by ${botname}`, 
+                caption: `╭───(    TOXIC-MD    )───\n├───≫ MEDIAFIRE DL ≪───\n├ \n├ File: ${fileInfo[0].nama}\n├ Downloaded by ${botname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, 
             },
             { quoted: m }
 
@@ -67,7 +67,7 @@ if (!fileInfo || !fileInfo.length) {
 } catch (error) {
 
 
-        m.reply(`An error occured:\n` + error);
+        m.reply(`╭───(    TOXIC-MD    )───\n├───≫ MEDIAFIRE ERROR ≪───\n├ \n├ Download failed, not my fault.\n├ ${error}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
 }

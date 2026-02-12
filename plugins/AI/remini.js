@@ -26,7 +26,7 @@ module.exports = async (context) => {
     const { client, m, text } = context;
 
     if (!text && !m.quoted && !(m.mtype === 'imageMessage' && m.body.includes('.remini'))) {
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Mɪssɪɴɢ Iᴍᴀɢᴇ ≪───\n々 Give me an image you dumbass 🤦🏻\n々 Example: .remini https://image.com/trash.png\n々 Or reply to an image\n╭───(  )───`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Mɪssɪɴɢ Iᴍᴀɢᴇ ≪───\n├ \n├ Give me an image you dumbass\n├ Example: .remini https://image.com/trash.png\n├ Or reply to an image\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     let imageUrl = text;
@@ -37,7 +37,7 @@ module.exports = async (context) => {
             imageUrl = await uploadToCatbox(buffer);
         } catch (uploadError) {
             console.error(`Upload failed: ${uploadError.message}`);
-            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Uᴘʟᴏᴀᴅ Fᴀɪʟᴇᴅ ≪───\n々 Can't upload your shitty image 🤦🏻\n々 Try again, idiot\n╭───(  )───`);
+            return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Uᴘʟᴏᴀᴅ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Can't upload your shitty image\n├ Try again, idiot\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     }
 
@@ -47,12 +47,12 @@ module.exports = async (context) => {
             imageUrl = await uploadToCatbox(buffer);
         } catch (uploadError) {
             console.error(`Upload failed: ${uploadError.message}`);
-            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Uᴘʟᴏᴀᴅ Fᴀɪʟᴇᴅ ≪───\n々 Can't upload your shitty image 🤦🏻\n々 Try again, idiot\n╭───(  )───`);
+            return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Uᴘʟᴏᴀᴅ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Can't upload your shitty image\n├ Try again, idiot\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     }
 
     if (!imageUrl || imageUrl === '.remini') {
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Nᴏ Iᴍᴀɢᴇ ≪───\n々 No valid image, you clueless twat 🤡\n╭───(  )───`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Nᴏ Iᴍᴀɢᴇ ≪───\n├ \n├ No valid image, you clueless twat\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     try {
@@ -79,7 +79,7 @@ module.exports = async (context) => {
             m.chat,
             {
                 image: response.data,
-                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Eɴʜᴀɴᴄᴇᴅ Iᴍᴀɢᴇ ≪───\n々 Your shitty image is now HD.\n々 Still looks like garbage though.\n╭───(  )───`
+                caption: `╭───(    TOXIC-MD    )───\n├───≫ Eɴʜᴀɴᴄᴇᴅ Iᴍᴀɢᴇ ≪───\n├ \n├ Your shitty image is now HD.\n├ Still looks like garbage though.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             },
             { quoted: m }
         );
@@ -88,13 +88,13 @@ module.exports = async (context) => {
         console.error(`Remini error: ${error.message}`);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         
-        let errorMsg = `Shit broke 🤦🏻 Error: ${error.message}`;
+        let errorMsg = `Shit broke. Error: ${error.message}`;
         if (error.response?.status === 404) {
             errorMsg = 'API not found. Maybe your image URL is trash.';
         } else if (error.message.includes('timeout')) {
             errorMsg = 'API timed out. Too busy fixing your ugly image.';
         }
         
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 ${errorMsg}\n╭───(  )───`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ ${errorMsg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

@@ -11,7 +11,7 @@ module.exports = {
 
         if (!text) {
             return client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 what am i, a mind reader? @${m.sender.split('@')[0]}! you forgot the text, genius. 🤦🏻\n々 example: ${prefix}brat i'm a dumbass\n╭───(  )───`,
+                text: `╭───(    TOXIC-MD    )───\n├───≫ BRAT ≪───\n├ \n├ What am i, a mind reader?\n├ @${m.sender.split('@')[0]}! you forgot the text, genius.\n├ Example: ${prefix}brat i'm a dumbass\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 mentions: [m.sender]
             }, { quoted: m });
         }
@@ -36,7 +36,7 @@ module.exports = {
 
             await client.sendMessage(m.chat, {
                 image: response.data,
-                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Bʀᴀᴛ Tᴇxᴛ ≪───\n々 "${text}"\n々 Stop being so needy.\n╭───(  )───`
+                caption: `╭───(    TOXIC-MD    )───\n├───≫ BRAT TEXT ≪───\n├ \n├ "${text}"\n├ Stop being so needy.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
 
         } catch (error) {
@@ -57,7 +57,7 @@ module.exports = {
             }
 
             await client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 Brat text generation failed.\n々 ${errorMessage}\n╭───(  )───`
+                text: `╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Brat text generation failed.\n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
         }
     }

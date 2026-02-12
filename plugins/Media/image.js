@@ -11,7 +11,8 @@ module.exports = {
     const query = m.body.replace(new RegExp(`^${prefix}(image|img|pic|searchimage)\\s*`, 'i'), '').trim();
     if (!query) {
       return client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, @${m.sender.split('@')[0]}! 😤 You forgot the search query!\n々 Example: ${prefix}image cute cats\n╭───( ✓ )───`,
+        text: `╭───(    TOXIC-MD    )───\n├ Yo, @${m.sender.split('@')[0]}! 😤 You forgot the search query!\n├ Example: ${prefix}image cute cats\n╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
         mentions: [m.sender]
       }, { quoted: m });
     }
@@ -26,7 +27,8 @@ module.exports = {
       if (!data.status || !data.result || data.result.length === 0) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return client.sendMessage(m.chat, {
-          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 No images found for "${query}"! 😢\n々 Try a different search term.\n╭───( ✓ )───`
+          text: `╭───(    TOXIC-MD    )───\n├ No images found for "${query}"! 😢\n├ Try a different search term.\n╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         }, { quoted: m });
       }
 
@@ -89,7 +91,8 @@ module.exports = {
       if (cards.length === 0) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return client.sendMessage(m.chat, {
-          text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Failed to load any images for "${query}"! 😢\n╭───( ✓ )───`
+          text: `╭───(    TOXIC-MD    )───\n├ Failed to load any images for "${query}"! 😢\n╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         }, { quoted: m });
       }
 
@@ -130,7 +133,8 @@ module.exports = {
       console.error('Image search error:', error);
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
       await client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Oops, @${m.sender.split('@')[0]}! 😤 Image search failed!\n々 Error: ${error.message}\n々 Try again later.\n╭───( ✓ )───`,
+        text: `╭───(    TOXIC-MD    )───\n├ Oops, @${m.sender.split('@')[0]}! 😤 Image search failed!\n├ Error: ${error.message}\n├ Try again later.\n╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
         mentions: [m.sender]
       }, { quoted: m });
     }

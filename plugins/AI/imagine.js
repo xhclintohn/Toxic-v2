@@ -7,38 +7,25 @@ module.exports = {
     run: async (context) => {
         const { client, m, prefix, botname } = context;
 
-        const formatStylishReply = (message) => {
-            return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
-        };
-
-        /**
-         * Extract prompt from message
-         */
         const prompt = m.body.replace(new RegExp(`^${prefix}(imagine|aiimage|dream|generate)\\s*`, 'i'), '').trim();
         
         if (!prompt) {
             return client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, @${m.sender.split('@')[0]}! 😤 You forgot the prompt!\n々 Example: ${prefix}imagine a cat playing football\n々 Or: ${prefix}dream a fantasy landscape\n╭───( ✓ )───`,
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo, @${m.sender.split('@')[0]}! You forgot the prompt!\n├ Example: ${prefix}imagine a cat playing football\n├ Or: ${prefix}dream a fantasy landscape\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 mentions: [m.sender]
             }, { quoted: m });
         }
 
         try {
-            /**
-             * Send loading message
-             */
             const loadingMsg = await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Generating AI image... 🎨\nPrompt: "${prompt}"\nThis may take a moment ⏳`)
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Gᴇɴᴇʀᴀᴛɪɴɢ ≪───\n├ \n├ Generating AI image...\n├ Prompt: "${prompt}"\n├ This may take a moment...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
 
-            /**
-             * Call the new AI image API
-             */
             const encodedPrompt = encodeURIComponent(prompt);
             const apiUrl = `https://anabot.my.id/api/ai/dreamImage?prompt=${encodedPrompt}&models=Fantasy&apikey=freeApikey`;
             
             const response = await fetch(apiUrl, { 
-                timeout: 60000 // 60 seconds for AI generation
+                timeout: 60000
             });
 
             if (!response.ok) {
@@ -47,28 +34,21 @@ module.exports = {
 
             const data = await response.json();
 
-            /**
-             * Validate API response
-             */
             if (!data.success || !data.data?.result) {
                 throw new Error('AI failed to generate image');
             }
 
             const imageUrl = data.data.result;
 
-            // Delete loading message
             await client.sendMessage(m.chat, { 
                 delete: loadingMsg.key 
             });
 
-            /**
-             * Send the generated image
-             */
             await client.sendMessage(
                 m.chat,
                 {
                     image: { url: imageUrl },
-                    caption: formatStylishReply(`AI Image Generated! ✨\nPrompt: ${prompt}\nPowered by ${botname}`)
+                    caption: `╭───(    TOXIC-MD    )───\n├───≫ Aɪ Iᴍᴀɢᴇ ≪───\n├ \n├ AI Image Generated!\n├ Prompt: ${prompt}\n├ Powered by ${botname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 },
                 { quoted: m }
             );
@@ -76,13 +56,11 @@ module.exports = {
         } catch (error) {
             console.error('Imagine command error:', error);
             
-            // Try to delete loading message
             try {
                 await client.sendMessage(m.chat, { 
                     delete: loadingMsg.key 
                 });
             } catch (e) {
-                // Ignore delete errors
             }
 
             let errorMessage = 'An unexpected error occurred';
@@ -100,7 +78,7 @@ module.exports = {
             }
 
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Image Generation Failed! 😤\nError: ${errorMessage}\n\nTips:\n• Use descriptive prompts\n• Avoid complex scenes\n• Try different keywords`)
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Image Generation Failed!\n├ Error: ${errorMessage}\n├\n├ Tips:\n├ Use descriptive prompts\n├ Avoid complex scenes\n├ Try different keywords\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
         }
     }

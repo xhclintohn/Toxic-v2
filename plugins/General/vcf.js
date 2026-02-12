@@ -4,7 +4,7 @@ module.exports = async (context) => {
     const { client, m, participants } = context;
 
     if (!m.isGroup) {
-        return m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Command meant for groups.\n╭───( ✓ )───');
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Command meant for groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     try {
@@ -18,10 +18,10 @@ module.exports = async (context) => {
 
         const cont = './contacts.vcf';
 
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ A moment, Toxic-MD is compiling ${gcdata.participants.length} contacts into a VCF...\n╭───( ✓ )───`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ VCF ≪───\n├ \n├ A moment, Toxic-MD is compiling\n├ ${gcdata.participants.length} contacts into a VCF...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
         await fs.promises.writeFile(cont, vcard);
-        await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Import this VCF in a separate email account to avoid messing with your contacts...\n╭───( ✓ )───');
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ VCF ≪───\n├ \n├ Import this VCF in a separate\n├ email account to avoid messing\n├ with your contacts...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
         await client.sendMessage(
             m.chat,
@@ -29,7 +29,7 @@ module.exports = async (context) => {
                 document: fs.readFileSync(cont),
                 mimetype: 'text/vcard',
                 fileName: 'Group contacts.vcf',
-                caption: `VCF for ${gcdata.subject}\n${gcdata.participants.length} contacts`
+                caption: `╭───(    TOXIC-MD    )───\n├───≫ VCF ≪───\n├ \n├ VCF for ${gcdata.subject}\n├ ${gcdata.participants.length} contacts\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             },
             { ephemeralExpiration: 86400, quoted: m }
         );
@@ -37,6 +37,6 @@ module.exports = async (context) => {
         await fs.promises.unlink(cont);
     } catch (error) {
         console.error(`VCF error: ${error.message}`);
-        await m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Failed to generate VCF. Try again later.\n╭───( ✓ )───');
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Failed to generate VCF.\n├ Try again later.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

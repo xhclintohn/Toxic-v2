@@ -2,7 +2,7 @@ module.exports = async (context) => {
     const { client, m, text } = context;
 
     if (!text) {
-        return m.reply("Prodide a query.");
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Provide a query, you walnut.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     try {
@@ -30,10 +30,10 @@ module.exports = async (context) => {
         const chatCompletion = await getGroqChatCompletion(text);
         const content = chatCompletion.choices[0]?.message?.content || "No response received.";
 
-        await client.sendMessage(m.chat, { text: content }, { quoted: m });
+        await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Gʀᴏǫ Rᴇsᴘᴏɴsᴇ ≪───\n├ \n├ ${content}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: m });
 
     } catch (error) {
         console.error("Error:", error);
-        m.reply("An error occurred.\n" + error);
+        m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ An error occurred.\n├ ${error}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

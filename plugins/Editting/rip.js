@@ -3,7 +3,7 @@ const canvacord = require("canvacord");
 module.exports = async (context) => {
         const { client, m, Tag, botname } = context;
 
-let cap = `Converted By ${botname}`;
+let cap = `╭───(    TOXIC-MD    )───\n├───≫ RIP ≪───\n├ \n├ Converted By ${botname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
 try {
 
@@ -28,7 +28,7 @@ try {
 
 } catch (e) {
 
-m.reply("Something wrong occured. 😞")  
+m.reply('╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Something wrong occured.\n├ Try again, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧')
 
 }
     }

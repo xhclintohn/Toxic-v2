@@ -11,7 +11,7 @@ module.exports = {
       const bName = botname || 'Toxic-MD';
 
       if (!m.quoted && (!m.mentionedJid || m.mentionedJid.length === 0)) {
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Usᴀɢᴇ ≪───\n々 Mention or quote a user.\n々 Example: ${prefix}promote @user\n々 Do I have to spell everything?\n╭───( ✓ )───`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ USAGE ≪───\n├ \n├ Mention or quote a user.\n├ Example: ${prefix}promote @user\n├ Do I have to spell everything?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       let users = m.mentionedJid ? m.mentionedJid[0] : null;
@@ -20,18 +20,18 @@ module.exports = {
       }
       
       if (!users) {
-        return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Iɴᴠᴀʟɪᴅ ≪───\n々 Invalid user specified.\n々 Tag someone properly, fool.\n╭───( ✓ )───`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ INVALID ≪───\n├ \n├ Invalid user specified.\n├ Tag someone properly, fool.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       const parts = users.split('@')[0];
 
       try {
         await client.groupParticipantsUpdate(m.chat, [users], 'promote');
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Pʀᴏᴍᴏᴛᴇᴅ ≪───\n々 @${parts} is now an admin.\n々 Don't let the power go to\n々 your empty head.\n╭───( ✓ )───`, {
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ PROMOTED ≪───\n├ \n├ @${parts} is now an admin.\n├ Don't let the power go to\n├ your empty head.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, {
           mentions: [users]
         });
       } catch (error) {
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Sᴜᴄᴄᴇss ≪───\n々 User promoted successfully.\n々 Now they can be useless\n々 with admin powers too.\n╭───( ✓ )───`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ SUCCESS ≪───\n├ \n├ User promoted successfully.\n├ Now they can be useless\n├ with admin powers too.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
     });
   }

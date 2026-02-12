@@ -4,10 +4,10 @@ const cheerio = require('cheerio');
 module.exports = async (context) => {
     const { m, text } = context;
 
-    if (!text) return m.reply("Provide a valid web link to fetch! The bot will crawl the website and fetch its HTML, CSS, JavaScript, and any media embedded in it.");
+    if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Provide a valid web link to inspect, dimwit.\n├ Bot will crawl HTML, CSS, JS, and media.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
     if (!/^https?:\/\//i.test(text)) {
-        return m.reply("Please provide a URL starting with http:// or https://");
+        return m.reply("╭───(    TOXIC-MD    )───\n├ URL must start with http:// or https://, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
     }
 
     try {
@@ -39,36 +39,36 @@ module.exports = async (context) => {
             }
         });
 
-        await m.reply(`**Full HTML Content**:\n\n${html}`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ HTML CONTENT ≪───\n├ \n${html}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
         if (cssFiles.length > 0) {
             for (const cssFile of cssFiles) {
                 const cssResponse = await fetch(new URL(cssFile, text));
                 const cssContent = await cssResponse.text();
-                await m.reply(`**CSS File Content**:\n\n${cssContent}`);
+                await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ CSS FILE ≪───\n├ \n${cssContent}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
             }
         } else {
-            await m.reply("No external CSS files found.");
+            await m.reply("╭───(    TOXIC-MD    )───\n├ No external CSS files found.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
         if (jsFiles.length > 0) {
             for (const jsFile of jsFiles) {
                 const jsResponse = await fetch(new URL(jsFile, text));
                 const jsContent = await jsResponse.text();
-                await m.reply(`**JavaScript File Content**:\n\n${jsContent}`);
+                await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ JS FILE ≪───\n├ \n${jsContent}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
             }
         } else {
-            await m.reply("No external JavaScript files found.");
+            await m.reply("╭───(    TOXIC-MD    )───\n├ No external JavaScript files found.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
         if (mediaFiles.length > 0) {
-            await m.reply(`**Media Files Found**:\n${mediaFiles.join('\n')}`);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ MEDIA FILES ≪───\n├ \n${mediaFiles.map(f => `├ ${f}`).join('\n')}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         } else {
-            await m.reply("No media files (images, videos, audios) found.");
+            await m.reply("╭───(    TOXIC-MD    )───\n├ No media files found. Empty site, empty soul.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
     } catch (error) {
         console.error(error);
-        return m.reply("An error occurred while fetching the website content.");
+        return m.reply("╭───(    TOXIC-MD    )───\n├ Error fetching website content. Site's probably trash.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
     }
 };

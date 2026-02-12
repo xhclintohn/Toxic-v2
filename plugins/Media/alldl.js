@@ -1,7 +1,7 @@
 module.exports = async (context) => {
     const { client, m, text, botname } = context;
 
-    if (!text) return m.reply("╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Please provide a link to download\n々 Example: FB, X, TikTok, Instagram\n╭───( ✓ )───");
+    if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Please provide a link to download\n├ Example: FB, X, TikTok, Instagram\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
     try {
         const encodedUrl = encodeURIComponent(text);
@@ -11,7 +11,7 @@ module.exports = async (context) => {
         const data = await response.json();
 
         if (!data.status || !data.results) {
-            return m.reply("╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Failed to download media\n々 Link might be invalid or unsupported\n╭───( ✓ )───");
+            return m.reply("╭───(    TOXIC-MD    )───\n├ Failed to download media\n├ Link might be invalid or unsupported\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
         const result = data.results;
@@ -30,19 +30,19 @@ module.exports = async (context) => {
         }
 
         if (!mediaUrl) {
-            return m.reply("╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 No downloadable media found\n々 Try another link\n╭───( ✓ )───");
+            return m.reply("╭───(    TOXIC-MD    )───\n├ No downloadable media found\n├ Try another link\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
         const title = result.title || "Media Download";
         const quality = result.quality || "HD";
         
-        const caption = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
-───≫ Downloader ≪───
-々 Platform : ${platform}
-々 Title : ${title}
-々 Quality : ${quality}
-々 Downloaded By : ${botname}
-╭───( ✓ )───`;
+        const caption = `╭───(    TOXIC-MD    )───
+├───≫ Downloader ≪───
+├ Platform : ${platform}
+├ Title : ${title}
+├ Quality : ${quality}
+├ Downloaded By : ${botname}
+╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
         if (isImage) {
             await client.sendMessage(m.chat, {
@@ -59,6 +59,6 @@ module.exports = async (context) => {
 
     } catch (error) {
         console.error('AllDL Error:', error);
-        m.reply("╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 An error occurred\n々 " + error.message + "\n╭───( ✓ )───");
+        m.reply("╭───(    TOXIC-MD    )───\n├ An error occurred\n├ " + error.message + "\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
     }
 };

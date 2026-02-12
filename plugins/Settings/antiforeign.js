@@ -8,18 +8,39 @@ module.exports = async (context) => {
     const jid = m.chat;
 
     if (!jid.endsWith('@g.us')) {
-      return await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, dumbass, this command’s for groups only. Get lost.`);
+      return await m.reply(
+        `╭───(    TOXIC-MD    )───\n` +
+        `├───≫ ANTIFOREIGN ≪───\n` +
+        `├ \n` +
+        `├ Yo, dumbass, this command's for groups only. Get lost.\n` +
+        `╰──────────────────☉\n` +
+        `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+      );
     }
 
     try {
       const settings = await getSettings();
       if (!settings) {
-        return await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Database is fucked, no settings found. Fix it, loser.`);
+        return await m.reply(
+          `╭───(    TOXIC-MD    )───\n` +
+          `├───≫ ANTIFOREIGN ≪───\n` +
+          `├ \n` +
+          `├ Database is fucked, no settings found. Fix it, loser.\n` +
+          `╰──────────────────☉\n` +
+          `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+        );
       }
 
       let groupSettings = await getGroupSetting(jid);
       if (!groupSettings) {
-        return await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 No group settings found. Database’s acting up, try again.`);
+        return await m.reply(
+          `╭───(    TOXIC-MD    )───\n` +
+          `├───≫ ANTIFOREIGN ≪───\n` +
+          `├ \n` +
+          `├ No group settings found. Database's acting up, try again.\n` +
+          `╰──────────────────☉\n` +
+          `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+        );
       }
 
       let isEnabled = groupSettings?.antiforeign === true;
@@ -31,23 +52,59 @@ module.exports = async (context) => {
 
       if (value === 'on' || value === 'off') {
         if (!isBotAdmin) {
-          return await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Make me an admin first, you clown. Can’t touch antiforeign without juice.`);
+          return await m.reply(
+            `╭───(    TOXIC-MD    )───\n` +
+            `├───≫ ANTIFOREIGN ≪───\n` +
+            `├ \n` +
+            `├ Make me an admin first, you clown. Can't touch antiforeign without juice.\n` +
+            `╰──────────────────☉\n` +
+            `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+          );
         }
 
         const action = value === 'on';
 
         if (isEnabled === action) {
-          return await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Antiforeign’s already ${value.toUpperCase()}, genius. Stop wasting my time.`);
+          return await m.reply(
+            `╭───(    TOXIC-MD    )───\n` +
+            `├───≫ ANTIFOREIGN ≪───\n` +
+            `├ \n` +
+            `├ Antiforeign's already ${value.toUpperCase()}, genius. Stop wasting my time.\n` +
+            `╰──────────────────☉\n` +
+            `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+          );
         }
 
         await updateGroupSetting(jid, 'antiforeign', action);
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Antiforeign’s now ${value.toUpperCase()}. Foreigners better watch out or get yeeted!`);
+        await m.reply(
+          `╭───(    TOXIC-MD    )───\n` +
+          `├───≫ ANTIFOREIGN ≪───\n` +
+          `├ \n` +
+          `├ Antiforeign's now ${value.toUpperCase()}. Foreigners better watch out or get yeeted!\n` +
+          `╰──────────────────☉\n` +
+          `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+        );
       } else {
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Antiforeign’s ${isEnabled ? 'ON' : 'OFF'} in this group, dipshit.\n\nUse ${prefix}antiforeign on or ${prefix}antiforeign off to change it.`);
+        await m.reply(
+          `╭───(    TOXIC-MD    )───\n` +
+          `├───≫ ANTIFOREIGN ≪───\n` +
+          `├ \n` +
+          `├ Antiforeign's ${isEnabled ? 'ON' : 'OFF'} in this group, dipshit.\n` +
+          `├ Use ${prefix}antiforeign on or ${prefix}antiforeign off to change it.\n` +
+          `╰──────────────────☉\n` +
+          `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+        );
       }
     } catch (error) {
       console.error('[Antiforeign] Error in command:', error);
-      await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Shit broke, couldn’t mess with antiforeign. Database or something’s fucked. Try later.`);
+      await m.reply(
+        `╭───(    TOXIC-MD    )───\n` +
+        `├───≫ ANTIFOREIGN ≪───\n` +
+        `├ \n` +
+        `├ Shit broke, couldn't mess with antiforeign. Database or something's fucked. Try later.\n` +
+        `╰──────────────────☉\n` +
+        `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+      );
     }
   });
 };

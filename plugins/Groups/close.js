@@ -5,6 +5,6 @@ module.exports = async (context) => {
         const { client, m } = context;
 
         await client.groupSettingUpdate(m.chat, 'announcement');
-                m.reply('╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Group closed.\n╭───( ✓ )───');
+                m.reply(`╭───(    TOXIC-MD    )───\n├───≫ CLOSED ≪───\n├ \n├ Group closed. Shut up now.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     });
 };

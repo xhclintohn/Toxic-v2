@@ -20,7 +20,7 @@ await ownerMiddleware(context, async () => {
     const trimmedText = text.trim();
 
     if (!trimmedText) {
-      return m.reply("No command provided for eval!");
+      return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ No command provided for eval!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
    
@@ -34,7 +34,7 @@ await ownerMiddleware(context, async () => {
     await m.reply(evaled);
 
   } catch (err) {
-    await m.reply("Error during eval execution:\n" + String(err));
+    await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ EVAL ERROR ≪───\n├ \n├ ${String(err)}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
                 })
 };

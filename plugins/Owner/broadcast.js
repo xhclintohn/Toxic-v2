@@ -4,8 +4,8 @@ module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, text, participants, pushname } = context;
 
-if (!text) return m.reply("Provide a broadcast message!");
-if (!m.isGroup) return m.reply("This command is meant for groups");
+if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Provide a broadcast message!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+if (!m.isGroup) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ This command is meant for groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
 let getGroups = await client.groupFetchAllParticipating() 
          let groups = Object.entries(getGroups) 
@@ -13,12 +13,12 @@ let getGroups = await client.groupFetchAllParticipating()
              .map(entry => entry[1]) 
          let res = groups.map(v => v.id) 
 
-await m.reply("sending broadcast message...")
+await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ BROADCAST ≪───\n├ \n├ Sending broadcast message...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`)
 
 for (let i of res) { 
 
 
-let txt = `BROADCAST MESSAGE (Toxic) \n\n🀄 Message: ${text}\n\nWritten by: ${pushname}` 
+let txt = `╭───(    TOXIC-MD    )───\n├───≫ BROADCAST ≪───\n├ \n├ Message: ${text}\n├ \n├ Written by: ${pushname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` 
 
 await client.sendMessage(i, { 
                  image: { 
@@ -27,7 +27,7 @@ await client.sendMessage(i, {
                  caption: `${txt}` 
              }) 
          } 
-await m.reply("Message sent across all groups");
+await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ DONE ≪───\n├ \n├ Message sent across all groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 })
 
 }

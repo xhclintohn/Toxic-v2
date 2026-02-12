@@ -53,18 +53,7 @@ module.exports = {
         .join('');
     };
 
-    let menuText = `╭─❒ 「 ${botname} Command Menu ⚠ 」\n`;
-    menuText += `│ Greetings, @${m.pushName}\n`;
-    menuText += `│\n`;
-    menuText += `│ 🤖 *Bσƚ*: ${botname}\n`;
-    menuText += `│ 📋 *Tσƚαʅ Cσɱɱαɳԃʝ*: ${totalCommands}\n`;
-    menuText += `│ 🕒 *Tιɱҽ*: ${getCurrentTimeInNairobi()}\n`;
-    menuText += `│ 🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'}\n`;
-    menuText += `│ 🌐 *Mσԃҽ*: ${mode}\n`;
-    menuText += `│ 📚 *LιႦɾαɾყ*: Baileys\n`;
-    menuText += `╰─────────────\n\n`;
-
-    menuText += `*COMMANDS REGISTRY ☑*\n\n`;
+    let menuText = `╭───(    TOXIC-MD    )───\n├───≫ Fᴜʟʟ Mᴇɴᴜ ≪───\n├ \n├ Greetings, @${m.pushName}\n├ \n├ Bot: ${botname}\n├ Total Commands: ${totalCommands}\n├ Time: ${getCurrentTimeInNairobi()}\n├ Prefix: ${effectivePrefix || 'None'}\n├ Mode: ${mode}\n├ Library: Baileys\n╰──────────────────☉\n\n`;
 
     let commandCount = 0;
     for (const category of categories) {
@@ -72,13 +61,13 @@ module.exports = {
 
       if (commandFiles.length === 0 && category.name !== '+18') continue;
 
-      menuText += `╭─❒ 「 ${category.display} ${category.emoji} 」\n`;
+      menuText += `╭───(    TOXIC-MD    )───\n├───≫ ${category.display} ≪───\n├ \n`;
 
       if (category.name === '+18') {
         const plus18Commands = ['xvideo'];
         for (const cmd of plus18Commands) {
           const fancyCommandName = toFancyFont(cmd);
-          menuText += `│ ✘ *${fancyCommandName}*\n`;
+          menuText += `├ *${fancyCommandName}*\n`;
           commandCount++;
         }
       }
@@ -86,14 +75,14 @@ module.exports = {
       for (const file of commandFiles) {
         const commandName = file.replace('.js', '');
         const fancyCommandName = toFancyFont(commandName);
-        menuText += `│ ✘ *${fancyCommandName}*\n`;
+        menuText += `├ *${fancyCommandName}*\n`;
         commandCount++;
       }
 
-      menuText += `╰─────────────\n\n`;
+      menuText += `╰──────────────────☉\n\n`;
     }
 
-    menuText += `> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-MD`;
+    menuText += `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
     await client.sendMessage(m.chat, {
       text: menuText,
@@ -101,7 +90,7 @@ module.exports = {
         externalAdReply: {
           showAdAttribution: false,
           title: `Toxic-MD WA bot`,
-          body: `Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-MD`,
+          body: `©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
           thumbnail: pict,
           sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
           mediaType: 1,

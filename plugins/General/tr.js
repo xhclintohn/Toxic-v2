@@ -7,15 +7,15 @@ module.exports = {
     run: async (context) => {
         const { client, m, prefix } = context;
 
-        const formatStylishReply = (message) => {
-            return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
+        const formatStylishReply = (title, message) => {
+            return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├ \n├ ${message.split('\n').join('\n├ ')}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
         };
 
         const fullText = m.body.replace(new RegExp(`^${prefix}(translate|tr|trans)\\s*`, 'i'), '').trim();
 
         if (!fullText && !m.quoted?.text) {
             return client.sendMessage(m.chat, {
-                text: formatStylishReply(`How to use:\n• ${prefix}tr id hello world\n• ${prefix}tr ja Hello how are you?\n• Reply to a message with: ${prefix}tr en`)
+                text: formatStylishReply('Tʀᴀɴsʟᴀᴛᴇ', `How to use:\n• ${prefix}tr id hello world\n• ${prefix}tr ja Hello how are you?\n• Reply to a message with: ${prefix}tr en`)
             }, { quoted: m });
         }
 
@@ -37,13 +37,11 @@ module.exports = {
 
         try {
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`Translating to ${lang.toUpperCase()}... 🔄`)
+                text: formatStylishReply('Tʀᴀɴsʟᴀᴛɪɴɢ', `Translating to ${lang.toUpperCase()}...`)
             }, { quoted: m });
 
-            // Perform translation
             const result = await translate(text, { to: lang });
             
-            // Language names for display
             const languageNames = {
                 'id': 'Indonesian', 'en': 'English', 'ja': 'Japanese', 'fr': 'French',
                 'es': 'Spanish', 'de': 'German', 'it': 'Italian', 'pt': 'Portuguese',
@@ -52,7 +50,6 @@ module.exports = {
                 'pl': 'Polish', 'th': 'Thai', 'vi': 'Vietnamese'
             };
 
-            // Safely get source language - handle different response structures
             let fromLang = 'Auto';
             if (result.from && result.from.language && result.from.language.iso) {
                 fromLang = languageNames[result.from.language.iso] || result.from.language.iso.toUpperCase();
@@ -62,9 +59,8 @@ module.exports = {
 
             const toLang = languageNames[lang] || lang.toUpperCase();
 
-            // Send result
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`🌐 Translation Result\n\n📥 From: ${fromLang}\n📤 To: ${toLang}\n\n📝 Original:\n${text}\n\n✅ Translated:\n${result.text}`)
+                text: formatStylishReply('Tʀᴀɴsʟᴀᴛɪᴏɴ', `From: ${fromLang}\nTo: ${toLang}\n\nOriginal:\n${text}\n\nTranslated:\n${result.text}`)
             }, { quoted: m });
 
         } catch (error) {
@@ -80,7 +76,7 @@ module.exports = {
             }
 
             await client.sendMessage(m.chat, {
-                text: formatStylishReply(`❌ ${errorMessage}\n\n💡 Usage:\n${prefix}tr id Hello world\n${prefix}tr ja How are you?\nReply to message with: ${prefix}tr en`)
+                text: formatStylishReply('Eʀʀᴏʀ', `${errorMessage}\n\nUsage:\n${prefix}tr id Hello world\n${prefix}tr ja How are you?\nReply to message with: ${prefix}tr en`)
             }, { quoted: m });
         }
     }

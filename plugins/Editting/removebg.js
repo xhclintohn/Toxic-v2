@@ -24,7 +24,6 @@ module.exports = {
     run: async (context) => {
         const { client, m, mime } = context;
         
-        // Send ⌛ reaction
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         const quoted = m.quoted ? m.quoted : m;
@@ -32,13 +31,13 @@ module.exports = {
         
         if (!/image/.test(quotedMime)) {
             return client.sendMessage(m.chat, {
-                text: `Do you have eyes? That's clearly not an image. Quote an actual image file, you incompetent fool.`,
+                text: `╭───(    TOXIC-MD    )───\n├───≫ REMOVE BG ≪───\n├ \n├ Do you have eyes? That's clearly\n├ not an image. Quote an actual image\n├ file, you incompetent fool.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 mentions: [m.sender]
             }, { quoted: m });
         }
 
         const loadingMsg = await client.sendMessage(m.chat, {
-            text: 'Removing background... This might take a moment.'
+            text: '╭───(    TOXIC-MD    )───\n├───≫ REMOVE BG ≪───\n├ \n├ Removing background...\n├ This might take a moment.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
         }, { quoted: m });
 
         try {
@@ -46,14 +45,14 @@ module.exports = {
             if (!media) {
                 await client.sendMessage(m.chat, { delete: loadingMsg.key });
                 return client.sendMessage(m.chat, {
-                    text: 'Failed to download the image. Your device is probably as defective as your judgment.'
+                    text: '╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Failed to download the image.\n├ Your device is probably as defective\n├ as your judgment.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
                 }, { quoted: m });
             }
 
             if (media.length > 10 * 1024 * 1024) {
                 await client.sendMessage(m.chat, { delete: loadingMsg.key });
                 return client.sendMessage(m.chat, {
-                    text: 'Image exceeds 10MB limit. Do you think I have infinite storage?'
+                    text: '╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Image exceeds 10MB limit.\n├ Do you think I have infinite storage?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
                 }, { quoted: m });
             }
 
@@ -81,17 +80,15 @@ module.exports = {
 
             const transparentImage = Buffer.from(transparentResponse.data);
 
-            // Delete loading message
             await client.sendMessage(m.chat, { delete: loadingMsg.key });
             
-            // Send ✅ reaction
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
             await client.sendMessage(
                 m.chat,
                 { 
                     image: transparentImage, 
-                    caption: 'Background successfully removed.\n\n—\n*Powered by Tσxιƈ-ɱԃȥ*'
+                    caption: '╭───(    TOXIC-MD    )───\n├───≫ REMOVE BG ≪───\n├ \n├ Background successfully removed.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
                 },
                 { quoted: m }
             );
@@ -103,7 +100,7 @@ module.exports = {
                         document: transparentImage,
                         mimetype: 'image/png',
                         fileName: `transparent_bg_${Date.now()}.png`,
-                        caption: 'PNG version for higher quality.\n\n—\n*Powered by Tσxιƈ-ɱԃȥ*'
+                        caption: '╭───(    TOXIC-MD    )───\n├───≫ PNG FILE ≪───\n├ \n├ PNG version for higher quality.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
                     },
                     { quoted: m }
                 );
@@ -112,7 +109,6 @@ module.exports = {
         } catch (err) {
             console.error('RemoveBG error:', err);
             
-            // Try to delete loading message
             try {
                 await client.sendMessage(m.chat, { delete: loadingMsg.key });
             } catch (e) {}
@@ -137,7 +133,7 @@ module.exports = {
             }
 
             await client.sendMessage(m.chat, {
-                text: `❌ Background removal failed.\n\n*Error:* ${errorMessage}\n\n*Suggestions:*\n• Use clear, high-contrast images\n• Ensure subject has defined edges\n• Try a simpler composition\n• Check your internet connection`
+                text: `╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Background removal failed.\n├ Error: ${errorMessage}\n├ \n├ Suggestions:\n├ Use clear, high-contrast images\n├ Ensure subject has defined edges\n├ Try a simpler composition\n├ Check your internet connection\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
         }
     }

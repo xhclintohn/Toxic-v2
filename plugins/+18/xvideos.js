@@ -3,8 +3,8 @@ const fetch = require("node-fetch");
 module.exports = async (context) => {
     const { client, m, text } = context;
 
-    if (!text) return m.reply("You dumb fuck, type something. I'm not psychic.");
-    if (text.length > 150) return m.reply("Your search is longer than your dick. Keep it under 150 chars, idiot.");
+    if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ You dumb fuck, type something.\n├ I'm not psychic.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+    if (text.length > 150) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Your search is longer than your dick.\n├ Keep it under 150 chars, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -15,7 +15,7 @@ module.exports = async (context) => {
 
         if (!searchData.success || !searchData.result || searchData.result.length === 0) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply(`Couldn't find shit for "${text}". Try better keywords, retard.`);
+            return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Couldn't find shit for "${text}".\n├ Try better keywords, retard.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
         const firstVideo = searchData.result[0];
@@ -30,13 +30,13 @@ module.exports = async (context) => {
 
         if (!downloadData.success || !downloadData.result || !downloadData.result.videos) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply("Found it but can't download. Site's being a bitch again. Deal with it.");
+            return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Found it but can't download.\n├ Site's being a bitch again.\n├ Deal with it.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
         let videoDownloadUrl = downloadData.result.videos.high || downloadData.result.videos.low;
         if (!videoDownloadUrl) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply("No proper MP4 link. Only shitty HLS. Cry about it.");
+            return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ No proper MP4 link.\n├ Only shitty HLS. Cry about it.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
@@ -45,11 +45,11 @@ module.exports = async (context) => {
             video: { url: videoDownloadUrl },
             mimetype: "video/mp4",
             fileName: `${cleanTitle}.mp4`,
-            caption: `*${videoTitle}*\n⏱ ${duration}\n\nGo jerk off somewhere else.`,
+            caption: `╭───(    TOXIC-MD    )───\n├───≫ XVIDEOS ≪───\n├ \n├ *${videoTitle}*\n├ Duration: ${duration}\n├ \n├ Go jerk off somewhere else.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
             contextInfo: {
                 externalAdReply: {
                     title: videoTitle.length > 80 ? videoTitle.substring(0, 77) + "..." : videoTitle,
-                    body: "Suck it up • Edu purposes my ass",
+                    body: "Suck it up",
                     thumbnailUrl: downloadData.result.thumb || firstVideo.cover,
                     sourceUrl: videoPageUrl,
                     mediaType: 2,
@@ -60,6 +60,6 @@ module.exports = async (context) => {
 
     } catch (error) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        m.reply(`Everything broke because you're cursed.\nFix your life.`);
+        m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Everything broke because\n├ you're cursed. Fix your life.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

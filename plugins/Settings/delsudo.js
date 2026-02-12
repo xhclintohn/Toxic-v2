@@ -16,23 +16,23 @@ module.exports = async (context) => {
         }
 
         if (!numberToRemove || !/^\d+$/.test(numberToRemove)) {
-            return await m.reply('❌ Please provide a valid number or quote a user.');
+            return await m.reply("╭───(    TOXIC-MD    )───\n├ Provide a valid number or quote a user, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
         const settings = await getSettings();
         if (!settings) {
-            return await m.reply('❌ Settings not found.');
+            return await m.reply("╭───(    TOXIC-MD    )───\n├ Settings not found. Something's seriously broken.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
         const sudoUsers = await getSudoUsers();
 
         if (!sudoUsers.includes(numberToRemove)) {
-            return await m.reply('⚠️ This number is not a sudo user.');
+            return await m.reply("╭───(    TOXIC-MD    )───\n├ This number isn't even a sudo user, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
       
         await removeSudoUser(numberToRemove);
 
-        await m.reply(`✅ ${numberToRemove} has been removed from Sudo Users.`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ DELSUDO ≪───\n├ \n├ ${numberToRemove} removed from Sudo Users.\n├ Power revoked. Sucks to be them.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     });
 };

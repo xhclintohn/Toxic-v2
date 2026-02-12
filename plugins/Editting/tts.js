@@ -4,7 +4,7 @@ const { client, m, text } = context;
 
 const googleTTS = require('google-tts-api');
 
-if (!text) return m.reply("Where is the text for conversion ?");
+if (!text) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TTS ≪───\n├ \n├ Where is the text for conversion?\n├ Can\'t you read instructions?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
 
  
 

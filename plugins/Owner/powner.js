@@ -26,7 +26,7 @@ module.exports = {
     const { client, m, isBotAdmin, isAdmin } = context;
 
     if (!m.isGroup) {
-      return m.reply(`This command only works in groups`);
+      return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ This command only works in groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     const normalizedAuteur = normalizeNumber(m.sender.split('@')[0]);
@@ -34,12 +34,12 @@ module.exports = {
     const isOwner = m.sender === OWNER_JID || normalizedAuteur === normalizedOwner;
 
     if (!isOwner) {
-      return m.reply(`Only the owner can use this command`);
+      return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Only the owner can use this command.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     if (!isBotAdmin) {
       await client.sendMessage(m.chat, {
-        text: `I need admin privileges to perform this action`
+        text: `╭───(    TOXIC-MD    )───\n├ \n├ I need admin privileges to\n├ perform this action.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       });
       return;
     }
@@ -51,7 +51,7 @@ module.exports = {
       );
 
       if (!ownerInGroup) {
-        return m.reply(`Owner is not in this group`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Owner is not in this group.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       const ownerMember = groupMetadata.participants.find(
@@ -59,15 +59,15 @@ module.exports = {
       );
       
       if (ownerMember?.admin) {
-        return m.reply(`Owner is already an admin`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Owner is already an admin.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       await retryPromote(client, m.chat, OWNER_JID);
-      return m.reply(`✅ Owner has been promoted to admin`);
+      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ PROMOTED ≪───\n├ \n├ Owner has been promoted to admin.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
     } catch (error) {
       console.error('Promotion error:', error);
-      return m.reply(`Failed to promote: ${error.message}`);
+      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Failed to promote: ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
   }
 };

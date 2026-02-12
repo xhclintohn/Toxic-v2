@@ -5,8 +5,8 @@ module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
 
-    const formatStylishReply = (message) => {
-      return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
+    const formatStylishReply = (title, message) => {
+      return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
     };
 
     try {
@@ -14,7 +14,7 @@ module.exports = async (context) => {
       if (!settings || Object.keys(settings).length === 0) {
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
+          { text: formatStylishReply("ANTIEDIT", "Database is fucked, no settings found. Fix it, loser.") },
           { quoted: m, ad: true }
         );
       }
@@ -26,7 +26,7 @@ module.exports = async (context) => {
         if (settings.antiedit === action) {
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`Antiedit's already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time.`) },
+            { text: formatStylishReply("ANTIEDIT", `Antiedit's already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time.`) },
             { quoted: m, ad: true }
           );
         }
@@ -34,7 +34,7 @@ module.exports = async (context) => {
         await updateSetting('antiedit', action);
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply(`Antiedit ${value.toUpperCase()} activated! ${action ? 'Every sneaky edit gets caught now. No hiding.' : 'Edits fly under the radar. Your loss.'}`) },
+          { text: formatStylishReply("ANTIEDIT", `Antiedit ${value.toUpperCase()} activated! ${action ? 'Every sneaky edit gets caught now. No hiding.' : 'Edits fly under the radar. Your loss.'}`) },
           { quoted: m, ad: true }
         );
       }
@@ -47,8 +47,8 @@ module.exports = async (context) => {
       await client.sendMessage(
         m.chat,
         {
-          text: formatStylishReply(`Antiedit's ${settings.antiedit ? 'ON' : 'OFF'}. Pick your poison.`),
-          footer: "> Powered by Toxic-MD",
+          text: formatStylishReply("ANTIEDIT", `Antiedit's ${settings.antiedit ? 'ON' : 'OFF'}. Pick your poison.`),
+          footer: "> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧",
           buttons,
           headerType: 1,
           viewOnce: true,
@@ -58,7 +58,7 @@ module.exports = async (context) => {
     } catch (error) {
       await client.sendMessage(
         m.chat,
-        { text: formatStylishReply("Shit broke, couldn't mess with antiedit. Try later.") },
+        { text: formatStylishReply("ANTIEDIT", "Shit broke, couldn't mess with antiedit. Try later.") },
         { quoted: m, ad: true }
       );
     }

@@ -10,7 +10,7 @@ module.exports = {
     const prompt = m.body.replace(new RegExp(`^${prefix}(sora|soraai|genvideo)\\s*`, 'i'), '').trim();
     if (!prompt) {
       return client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, @${m.sender.split('@')[0]}! 😤 You forgot the prompt!\n々 Example: ${prefix}sora a cat dancing in space\n╭───( ✓ )───`,
+        text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo, @${m.sender.split('@')[0]}! You forgot the prompt!\n├ Example: ${prefix}sora a cat dancing in space\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
         mentions: [m.sender]
       }, { quoted: m });
     }
@@ -18,7 +18,7 @@ module.exports = {
     try {
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
       const statusMsg = await client.sendMessage(m.chat, {
-        text: `🎬 *Generating Sora Video...*\n\n📝 *Prompt:* ${prompt}\n⏳ Status: Initializing...\n\nPlease wait 30-60 seconds...`
+        text: `╭───(    TOXIC-MD    )───\n├───≫ Sᴏʀᴀ Aɪ ≪───\n├ \n├ Generating Sora Video...\n├ Prompt: ${prompt}\n├ Status: Initializing...\n├ Please wait 30-60 seconds...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: m });
 
       const params = new URLSearchParams({
@@ -55,7 +55,7 @@ module.exports = {
 
           await client.sendMessage(m.chat, {
             edit: statusMsg.key,
-            text: `🎬 *Generating Sora Video...*\n\n📝 *Prompt:* ${prompt}\n⏳ Status: ${pollData.data?.status || 'Processing'}\n🔁 Attempt: ${attempts}/${maxAttempts}\n\nPlease wait...`
+            text: `╭───(    TOXIC-MD    )───\n├───≫ Sᴏʀᴀ Aɪ ≪───\n├ \n├ Generating Sora Video...\n├ Prompt: ${prompt}\n├ Status: ${pollData.data?.status || 'Processing'}\n├ Attempt: ${attempts}/${maxAttempts}\n├ Please wait...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
           });
 
           if (pollData.data?.status === 'Completed' && pollData.data?.result) {
@@ -78,7 +78,7 @@ module.exports = {
 
       await client.sendMessage(m.chat, {
         video: { url: videoUrl },
-        caption: `🎬 *Sora AI Video Generated*\n\n📝 *Prompt:* ${prompt}\n⏱️ *Generation time:* ${attempts * 3} seconds\n\n⚡ _Powered by Toxic-MD_`,
+        caption: `╭───(    TOXIC-MD    )───\n├───≫ Sᴏʀᴀ Vɪᴅᴇᴏ ≪───\n├ \n├ Sora AI Video Generated\n├ Prompt: ${prompt}\n├ Generation time: ${attempts * 3} seconds\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
         gifPlayback: false
       }, { quoted: m });
 
@@ -86,7 +86,7 @@ module.exports = {
       console.error('Sora error:', error);
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
       await client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Video generation failed!\n々 Error: ${error.message}\n々 Try a different prompt.\n╭───( ✓ )───`
+        text: `╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Video generation failed!\n├ Error: ${error.message}\n├ Try a different prompt.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: m });
     }
   }

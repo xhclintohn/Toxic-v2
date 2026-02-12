@@ -24,14 +24,14 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         if (!m.quoted) {
-            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 quote an image first\n╭───(  )───`);
+            return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Quote an image first, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
         const q = m.quoted || m;
         const mime = (q.msg || q).mimetype || "";
 
         if (!mime.startsWith("image/")) {
-            return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 that's not an image\n╭───(  )───`);
+            return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ That's not an image, you donkey.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
         const mediaBuffer = await q.download();
@@ -45,14 +45,14 @@ module.exports = async (context) => {
         }
 
         const originalText = result.data.result.original;
-        const promptText = text ? `Prompt: ${text}\n\n` : '';
+        const promptText = text ? `├ Prompt: ${text}\n├\n` : '';
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
         await client.sendMessage(
             m.chat,
             {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Iᴍᴀɢᴇ Aɴᴀʟʏsɪs ≪───\n${promptText}${originalText}\n╭───(  )───`,
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Iᴍᴀɢᴇ Aɴᴀʟʏsɪs ≪───\n├ \n${promptText}├ ${originalText}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
             },
             { quoted: m }
         );
@@ -66,6 +66,6 @@ module.exports = async (context) => {
         if (err.message.includes('upload failed')) errorMessage = 'upload failed';
         if (err.message.includes('invalid response')) errorMessage = 'api returned invalid response';
 
-        await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Fᴀɪʟᴇᴅ ≪───\n々 ${errorMessage}\n々 error: ${err.message}\n╭───(  )───`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ ${errorMessage}\n├ error: ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

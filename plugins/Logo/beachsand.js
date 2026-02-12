@@ -1,11 +1,10 @@
-// Beachsand.js
 const fetch = require("node-fetch");
 
 module.exports = async (context) => {
     const { client, m, text } = context;
 
-    if (!text) return m.reply("You stupid fuck, type some text.");
-    if (text.length > 50) return m.reply("Text too long, shorten it, idiot.");
+    if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ You stupid fuck, type some text already!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+    if (text.length > 50) return m.reply("╭───(    TOXIC-MD    )───\n├ Text too long, shorten it you brain-dead idiot!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -15,7 +14,7 @@ module.exports = async (context) => {
 
         if (!response.ok) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply("API fucked up. Try again later.");
+            return m.reply("╭───(    TOXIC-MD    )───\n├ API fucked up. Try again later, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
         const buffer = await response.buffer();
@@ -24,11 +23,11 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, {
             image: buffer,
-            caption: "Beach Sand text – enjoy, loser."
+            caption: "╭───(    TOXIC-MD    )───\n├───≫ BEACH SAND ≪───\n├ \n├ Beach Sand text, enjoy it you sandy loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧"
         }, { quoted: m });
 
     } catch (error) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        m.reply("Shit broke. Your fault.");
+        m.reply("╭───(    TOXIC-MD    )───\n├ Shit broke. Probably your fault.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
     }
 };

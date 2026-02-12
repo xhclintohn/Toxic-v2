@@ -6,7 +6,7 @@ module.exports = async (context) => {
     const { client, m, args, prefix } = context;
 
     const formatStylishReply = (message) => {
-      return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
+      return `╭───(    TOXIC-MD    )───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
     };
 
     try {
@@ -27,7 +27,7 @@ module.exports = async (context) => {
         if (currentMode === value) {
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`AntiStatusMention is already '${value.toUpperCase()}', dumbass. Stop wasting my time. 😈`) },
+            { text: formatStylishReply(`AntiStatusMention is already '${value.toUpperCase()}', dumbass. Stop wasting my time.`) },
             { quoted: m }
           );
         }
@@ -35,13 +35,13 @@ module.exports = async (context) => {
         await updateSetting('antistatusmention', value);
         
         let actionMessage = "";
-        if (value === "off") actionMessage = "No more policing status mentions, you anarchist! 😴";
-        if (value === "delete") actionMessage = "Status mentions will be deleted with warning! 🗑️";
-        if (value === "remove") actionMessage = "Status mentions = Instant removal! Say goodbye! 🚫";
+        if (value === "off") actionMessage = "No more policing status mentions, you anarchist!";
+        if (value === "delete") actionMessage = "Status mentions will be deleted with warning!";
+        if (value === "remove") actionMessage = "Status mentions = Instant removal! Say goodbye!";
         
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply(`AntiStatusMention set to '${value.toUpperCase()}'! 🔥 ${actionMessage}`) },
+          { text: formatStylishReply(`AntiStatusMention set to '${value.toUpperCase()}'! ${actionMessage}`) },
           { quoted: m }
         );
       }
@@ -49,15 +49,10 @@ module.exports = async (context) => {
       const currentStatus = String(settings.antistatusmention || "off").toLowerCase();
 
       const buttons = [
-        { buttonId: `${prefix}antistatusmention delete`, buttonText: { displayText: "DELETE 🗑️" }, type: 1 },
-        { buttonId: `${prefix}antistatusmention remove`, buttonText: { displayText: "REMOVE 🚫" }, type: 1 },
-        { buttonId: `${prefix}antistatusmention off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
+        { buttonId: `${prefix}antistatusmention delete`, buttonText: { displayText: "DELETE" }, type: 1 },
+        { buttonId: `${prefix}antistatusmention remove`, buttonText: { displayText: "REMOVE" }, type: 1 },
+        { buttonId: `${prefix}antistatusmention off`, buttonText: { displayText: "OFF" }, type: 1 },
       ];
-
-      const emoji =
-        currentStatus === "delete" ? "🗑️" :
-        currentStatus === "remove" ? "🚫" :
-        "😴";
 
       const statusText =
         currentStatus === "delete" ? "DELETE (Delete with warning)" :
@@ -67,8 +62,8 @@ module.exports = async (context) => {
       await client.sendMessage(
         m.chat,
         {
-          text: formatStylishReply(`AntiStatusMention: ${statusText} ${emoji}\n\nPick your vibe, noob! 😈`),
-          footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+          text: formatStylishReply(`AntiStatusMention: ${statusText}\n\nPick your vibe, noob!`),
+          footer: "> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧",
           buttons,
           headerType: 1,
           viewOnce: true,

@@ -4,7 +4,7 @@ module.exports = async (context) => {
     if (!m.isGroup) {
         return client.sendMessage(
             m.chat,
-            { text: '╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Command meant for groups.\n╭───( ✓ )───' },
+            { text: `╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Command meant for groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` },
             { quoted: m }
         );
     }
@@ -12,12 +12,14 @@ module.exports = async (context) => {
     try {
         const mentions = participants.map(a => a.id);
         const txt = [
-            `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`,
-            `❒ Hi You have been tagged here.`,
-            `  Message: ${text ? text : 'No Message!'}`,
-            '',
-            ...mentions.map(id => `📧 @${id.split('@')[0]}`),
-            `╭───( ✓ )───`
+            `╭───(    TOXIC-MD    )───`,
+            `├───≫ TAG ALL ≪───`,
+            `├ `,
+            `├ Message: ${text ? text : 'No Message!'}`,
+            `├ `,
+            ...mentions.map(id => `├ @${id.split('@')[0]}`),
+            `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+            `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         ].join('\n');
 
         await client.sendMessage(
@@ -29,7 +31,7 @@ module.exports = async (context) => {
         console.error(`Tagall error: ${error.message}`);
         await client.sendMessage(
             m.chat,
-            { text: '╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n❒ Failed to tag participants. Try again later.\n╭───( ✓ )───' },
+            { text: `╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Failed to tag participants.\n├ Try again later.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` },
             { quoted: m }
         );
     }

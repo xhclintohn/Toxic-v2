@@ -20,12 +20,12 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, {
             image: buffer,
-            caption: `Type: ${type}\n—\nTσxιƈ-ɱԃȥ`
+            caption: `╭───(    TOXIC-MD    )───\n├───≫ NSFW ≪───\n├ \n├ Type: ${type}\n├ Here you go, you degenerate.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         }, { quoted: m });
 
     } catch (error) {
         console.error('NSFW error:', error);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        await m.reply(`Failed to fetch NSFW content.\nError: ${error.message}\nTry again or stop being horny.`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Failed to fetch NSFW content.\n├ Error: ${error.message}\n├ Try again or stop being horny.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

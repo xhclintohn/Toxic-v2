@@ -5,8 +5,8 @@ module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
 
-    const formatStylishReply = (message) => {
-      return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
+    const formatStylishReply = (title, message) => {
+      return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
     };
 
     try {
@@ -14,7 +14,7 @@ module.exports = async (context) => {
       if (!settings || Object.keys(settings).length === 0) {
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
+          { text: formatStylishReply("AUTOBIO", "Database is fucked, no settings found. Fix it, loser.") },
           { quoted: m, ad: true }
         );
       }
@@ -26,7 +26,7 @@ module.exports = async (context) => {
         if (settings.autobio === action) {
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`Autobio’s already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time. 😈`) },
+            { text: formatStylishReply("AUTOBIO", `Autobio's already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time.`) },
             { quoted: m, ad: true }
           );
         }
@@ -34,21 +34,21 @@ module.exports = async (context) => {
         await updateSetting('autobio', action);
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply(`Autobio ${value.toUpperCase()} activated! 🔥 ${action ? 'Bot’s flexing status updates every 10 seconds, bow down! 🦁' : 'No more status flexing, you’re not worth it. 😴'}`) },
+          { text: formatStylishReply("AUTOBIO", `Autobio ${value.toUpperCase()} activated! ${action ? 'Bot\'s flexing status updates every 10 seconds, bow down!' : 'No more status flexing, you\'re not worth it.'}`) },
           { quoted: m, ad: true }
         );
       }
 
       const buttons = [
-        { buttonId: `${prefix}autobio on`, buttonText: { displayText: "ON 🦁" }, type: 1 },
-        { buttonId: `${prefix}autobio off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
+        { buttonId: `${prefix}autobio on`, buttonText: { displayText: "ON" }, type: 1 },
+        { buttonId: `${prefix}autobio off`, buttonText: { displayText: "OFF" }, type: 1 },
       ];
 
       await client.sendMessage(
         m.chat,
         {
-          text: formatStylishReply(`Autobio’s ${settings.autobio ? 'ON 🦁' : 'OFF 😴'}, dumbass. Pick a vibe, noob! 😈`),
-          footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+          text: formatStylishReply("AUTOBIO", `Autobio's ${settings.autobio ? 'ON' : 'OFF'}, dumbass. Pick a vibe, noob!`),
+          footer: "> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧",
           buttons,
           headerType: 1,
           viewOnce: true,
@@ -58,7 +58,7 @@ module.exports = async (context) => {
     } catch (error) {
       await client.sendMessage(
         m.chat,
-        { text: formatStylishReply("Shit broke, couldn’t mess with autobio. Database or something’s fucked. Try later.") },
+        { text: formatStylishReply("AUTOBIO", "Shit broke, couldn't mess with autobio. Database or something's fucked. Try later.") },
         { quoted: m, ad: true }
       );
     }

@@ -26,23 +26,17 @@ module.exports = {
         .join('');
     };
 
-    let menuText = `╭─❒ 「 ${botname} Command Menu ⚠ 」\n`;
-    menuText += `│ Editing Menu Only\n`;
-    menuText += `│\n`;
-    menuText += `│ 🔣 *Pɾҽϝιx*: ${effectivePrefix || 'None'}\n`;
-    menuText += `╰─────────────\n\n`;
-
-    menuText += `╭─❒ 「 EDITING ✂️ 」\n`;
+    let menuText = `╭───(    TOXIC-MD    )───\n├───≫ EDITING MENU ≪───\n├ \n├ Prefix: ${effectivePrefix || 'None'}\n├ \n`;
 
     let commandFiles = fs.readdirSync('./plugins/Editting').filter(file => file.endsWith('.js'));
     for (const file of commandFiles) {
       const commandName = file.replace('.js', '');
       const fancyCommandName = toFancyFont(commandName);
-      menuText += `│ ✘ *${fancyCommandName}*\n`;
+      menuText += `├ *${fancyCommandName}*\n`;
     }
 
-    menuText += `╰─────────────\n\n`;
-    menuText += `> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-MD`;
+    menuText += `╰──────────────────☉\n`;
+    menuText += `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
     await client.sendMessage(m.chat, {
       text: menuText,
@@ -50,7 +44,7 @@ module.exports = {
         externalAdReply: {
           showAdAttribution: false,
           title: `Toxic-MD WA bot`,
-          body: `Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-MD`,
+          body: `©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
           thumbnail: pict,
           sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
           mediaType: 1,

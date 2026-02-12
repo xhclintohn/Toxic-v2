@@ -50,15 +50,15 @@ module.exports = {
     const { client, m, text, prefix } = context;
 
     if (!text) {
-      let preview = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 *Fancy Text Generator*\n々 Usage: ${prefix}fancy <number> <your text>\n々 Example: \( {prefix}fancy 1 Toxic-MD\n│\n│ Available styles (1- \){Object.keys(fancyStyles).length}):\n`;
+      let preview = `╭───(    TOXIC-MD    )───\n├───≫ Fᴀɴᴄʏ Tᴇxᴛ ≪───\n├ \n├ Usage: ${prefix}fancy <number> <your text>\n├ Example: ${prefix}fancy 1 Toxic-MD\n├ \n├ Available styles (1-${Object.keys(fancyStyles).length}):\n`;
 
       const example = 'Toxic';
       for (let i = 1; i <= Object.keys(fancyStyles).length; i++) {
         const styled = applyStyle(example, i);
-        if (styled) preview += `│ ${i}. ${styled}\n`;
+        if (styled) preview += `├ ${i}. ${styled}\n`;
       }
 
-      preview += `╭───( ✓ )───\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
+      preview += `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
       return client.sendMessage(m.chat, { text: preview }, { quoted: m });
     }
@@ -68,14 +68,14 @@ module.exports = {
 
     if (isNaN(styleNum) || styleNum < 1 || styleNum > Object.keys(fancyStyles).length) {
       return client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Invalid style number!\n々 Use 1-${Object.keys(fancyStyles).length}\n々 Example: ${prefix}fancy 1 Toxic-MD\n╭───( ✓ )───`
+        text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Invalid style number!\n├ Use 1-${Object.keys(fancyStyles).length}\n├ Example: ${prefix}fancy 1 Toxic-MD\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: m });
     }
 
     const inputText = args.slice(1).join(' ');
     if (!inputText) {
       return client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 No text provided!\n々 ${prefix}fancy ${styleNum} Your Text Here\n╭───( ✓ )───`
+        text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ No text provided!\n├ ${prefix}fancy ${styleNum} Your Text Here\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: m });
     }
 
@@ -88,7 +88,7 @@ module.exports = {
 
     } catch (error) {
       await client.sendMessage(m.chat, {
-        text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Failed to apply fancy style.\n々 Try again or use a different number.\n╭───( ✓ )───`
+        text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Failed to apply fancy style.\n├ Try again or use a different number.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: m });
     }
   }

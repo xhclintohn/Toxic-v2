@@ -7,7 +7,7 @@ module.exports = async (context) => {
         if (!m?.chat) return;
 
         if (m.chat.endsWith('@broadcast') || m.chat.endsWith('@newsletter')) {
-            return m.reply('⚠️ Cannot archive this type of chat.');
+            return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Cannot archive this type of chat.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
         let lastMessages;
@@ -24,10 +24,10 @@ module.exports = async (context) => {
                 m.chat
             );
 
-            await m.reply(`✅ Chat archived.\n—\nTσxιƈ-ɱԃȥ`);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ARCHIVED ≪───\n├ \n├ Chat archived.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         } catch (err) {
             console.error('Archive chat failed:', err);
-            await m.reply('⚠️ Failed to archive chat.');
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Failed to archive chat.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     });
 };

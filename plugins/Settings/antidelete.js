@@ -5,8 +5,8 @@ module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
 
-    const formatStylishReply = (message) => {
-      return `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${message}\n╭───( ✓ )───`;
+    const formatStylishReply = (title, message) => {
+      return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
     };
 
     try {
@@ -14,7 +14,7 @@ module.exports = async (context) => {
       if (!settings || Object.keys(settings).length === 0) {
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
+          { text: formatStylishReply("ANTIDELETE", "Database is fucked, no settings found. Fix it, loser.") },
           { quoted: m, ad: true }
         );
       }
@@ -26,7 +26,7 @@ module.exports = async (context) => {
         if (settings.antidelete === action) {
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply(`Antidelete’s already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time. 😈`) },
+            { text: formatStylishReply("ANTIDELETE", `Antidelete's already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time.`) },
             { quoted: m, ad: true }
           );
         }
@@ -34,21 +34,21 @@ module.exports = async (context) => {
         await updateSetting('antidelete', action);
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply(`Antidelete ${value.toUpperCase()} activated! 🔥 ${action ? 'No one’s erasing shit on my watch, king! 🦁' : 'Deletions are free to slide, you’re not worth catching. 😴'}`) },
+          { text: formatStylishReply("ANTIDELETE", `Antidelete ${value.toUpperCase()} activated! ${action ? 'No one\'s erasing shit on my watch, king!' : 'Deletions are free to slide, you\'re not worth catching.'}`) },
           { quoted: m, ad: true }
         );
       }
 
       const buttons = [
-        { buttonId: `${prefix}antidelete on`, buttonText: { displayText: "ON 🦁" }, type: 1 },
-        { buttonId: `${prefix}antidelete off`, buttonText: { displayText: "OFF 😴" }, type: 1 },
+        { buttonId: `${prefix}antidelete on`, buttonText: { displayText: "ON" }, type: 1 },
+        { buttonId: `${prefix}antidelete off`, buttonText: { displayText: "OFF" }, type: 1 },
       ];
 
       await client.sendMessage(
         m.chat,
         {
-          text: formatStylishReply(`Antidelete’s ${settings.antidelete ? 'ON 🦁' : 'OFF 😴'}, dumbass. Pick a vibe, noob! 😈`),
-          footer: "> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ",
+          text: formatStylishReply("ANTIDELETE", `Antidelete's ${settings.antidelete ? 'ON' : 'OFF'}, dumbass. Pick a vibe, noob!`),
+          footer: "> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧",
           buttons,
           headerType: 1,
           viewOnce: true,
@@ -58,7 +58,7 @@ module.exports = async (context) => {
     } catch (error) {
       await client.sendMessage(
         m.chat,
-        { text: formatStylishReply("Shit broke, couldn’t mess with antidelete. Database or something’s fucked. Try later.") },
+        { text: formatStylishReply("ANTIDELETE", "Shit broke, couldn't mess with antidelete. Database or something's fucked. Try later.") },
         { quoted: m, ad: true }
       );
     }

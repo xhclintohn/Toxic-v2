@@ -12,7 +12,7 @@ module.exports = {
 
         if (!sessionId) {
             return client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, where's the session ID? You created the temp mail, right? 🤦🏻\n々 Usage: ${prefix}tempinbox YOUR_SESSION_ID\n々 Example: ${prefix}tempinbox U2Vzc2lvbjoc5LI1OhFHh4tv21skV965\n╭───( ✓ )───\nPσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Tᴇᴍᴘ Iɴʙᴏx ≪───\n├ \n├ Yo, where's the session ID?\n├ You created the temp mail, right?\n├ Usage: ${prefix}tempinbox YOUR_SESSION_ID\n├ Example: ${prefix}tempinbox U2Vzc2lvbjoc5LI1OhFHh4tv21skV965\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
         }
 
@@ -33,26 +33,26 @@ module.exports = {
 
             if (totalEmails === 0) {
                 return client.sendMessage(m.chat, {
-                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 📭 Inbox is empty, genius. No emails yet.\n々 Use your temp email somewhere and check back.\n々 Total Emails: 0\n╭───( ✓ )───\nPσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                    text: `╭───(    TOXIC-MD    )───\n├───≫ Tᴇᴍᴘ Iɴʙᴏx ≪───\n├ \n├ Inbox is empty, genius.\n├ No emails yet.\n├ Use your temp email somewhere\n├ and check back.\n├ Total Emails: 0\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 }, { quoted: m });
             }
 
-            let inboxText = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 📬 Inbox: ${totalEmails} email${totalEmails > 1 ? 's' : ''} found\n`;
+            let inboxText = `╭───(    TOXIC-MD    )───\n├───≫ Tᴇᴍᴘ Iɴʙᴏx ≪───\n├ \n├ Inbox: ${totalEmails} email${totalEmails > 1 ? 's' : ''} found\n`;
 
             emails.forEach((email, index) => {
-                inboxText += `│\n│ 📨 Email ${index + 1}:\n│ From: ${email.from || 'Unknown'}\n│ Subject: ${email.subject || 'No Subject'}\n`;
+                inboxText += `├ \n├ Email ${index + 1}:\n├ From: ${email.from || 'Unknown'}\n├ Subject: ${email.subject || 'No Subject'}\n`;
                 
                 if (email.text && email.text.trim()) {
                     const cleanText = email.text.replace(/\r\n/g, '\n').trim();
-                    inboxText += `│ Content: ${cleanText.substring(0, 50)}${cleanText.length > 50 ? '...' : ''}\n`;
+                    inboxText += `├ Content: ${cleanText.substring(0, 50)}${cleanText.length > 50 ? '...' : ''}\n`;
                 }
                 
                 if (email.downloadUrl) {
-                    inboxText += `│ 📎 Attachment URL available\n`;
+                    inboxText += `├ Attachment URL available\n`;
                 }
             });
 
-            inboxText += `╭───( ✓ )───\nPσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`;
+            inboxText += `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
             if (inboxText.length > 4000) {
                 const firstPart = inboxText.substring(0, 4000);
@@ -70,17 +70,17 @@ module.exports = {
 
             let errorMessage = `Failed to check inbox, your session ID is probably trash. `;
             if (error.message.includes('Invalid session') || error.message.includes('404') || error.message.includes('Not Found')) {
-                errorMessage += "Session expired or invalid. Create a new email. 🔄";
+                errorMessage += "Session expired or invalid. Create a new email.";
             } else if (error.message.includes('timeout')) {
-                errorMessage += "API timeout. Try again. ⏱️";
+                errorMessage += "API timeout. Try again.";
             } else if (error.message.includes('Network Error')) {
-                errorMessage += "Network issue. Check your connection. 📶";
+                errorMessage += "Network issue. Check your connection.";
             } else {
                 errorMessage += `Error: ${error.message}`;
             }
 
             await client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${errorMessage}\n╭───( ✓ )───\nPσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
         }
     },

@@ -3,7 +3,7 @@ module.exports = async (context) => {
 
   try {
     if (!text) {
-      return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Yo, genius, give me a city or town name! Don’t waste my time.`);
+      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo, genius, give me a city or\n├ town name! Don't waste my time.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     const response = await fetch(`http://api.openweathermap.org/data/2.5/weather?q=${text}&units=metric&appid=1ad47ec6172f19dfaf89eb3307f74785`);
@@ -12,7 +12,7 @@ module.exports = async (context) => {
     console.log(`✅ Fetched weather data for ${text}`);
 
     if (data.cod !== 200) {
-      return m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 What the hell? Can’t find ${text}. Pick a real place, idiot.`);
+      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ What the hell? Can't find ${text}.\n├ Pick a real place, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     const cityName = data.name;
@@ -28,29 +28,23 @@ module.exports = async (context) => {
     const sunrise = new Date(data.sys.sunrise * 1000);
     const sunset = new Date(data.sys.sunset * 1000);
 
-    await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───
-々 Weather in *${cityName}* 🌎
-├──────────────┤
-々 🌡️ Temp: ${temperature}°C
-├──────────────┤
-々 🥵 Feels Like: ${feelsLike}°C
-├──────────────┤
-々 📝 Conditions: ${description}
-├──────────────┤
-々 💧 Humidity: ${humidity}%
-├──────────────┤
-々 🌀 Wind: ${windSpeed} m/s
-├──────────────┤
-々 🌧️ Rain (1h): ${rainVolume} mm
-├──────────────┤
-々 ☁️ Clouds: ${cloudiness}%
-├──────────────┤
-々 🌄 Sunrise: ${sunrise.toLocaleTimeString()}
-├──────────────┤
-々 🌅 Sunset: ${sunset.toLocaleTimeString()}
-╭───( ✓ )───`);
+    await m.reply(`╭───(    TOXIC-MD    )───
+├───≫ Wᴇᴀᴛʜᴇʀ ≪───
+├ 
+├ Weather in *${cityName}*
+├ 🌡️ Temp: ${temperature}°C
+├ 🥵 Feels Like: ${feelsLike}°C
+├ 📝 Conditions: ${description}
+├ 💧 Humidity: ${humidity}%
+├ 🌀 Wind: ${windSpeed} m/s
+├ 🌧️ Rain (1h): ${rainVolume} mm
+├ ☁️ Clouds: ${cloudiness}%
+├ 🌄 Sunrise: ${sunrise.toLocaleTimeString()}
+├ 🌅 Sunset: ${sunset.toLocaleTimeString()}
+╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   } catch (e) {
     console.error(`❌ Error fetching weather for ${text}: ${e.message}`);
-    await m.reply(`╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Ugh, something broke, or ${text} ain’t a real place. Try again, moron.`);
+    await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Ugh, something broke, or ${text}\n├ ain't a real place. Try again, moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 };

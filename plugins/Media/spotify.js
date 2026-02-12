@@ -7,9 +7,9 @@ module.exports = {
 
     try {
       const query = m.text.trim();
-      if (!query) return m.reply("Give me a song name, you tone-deaf cretin.");
+      if (!query) return m.reply("╭───(    TOXIC-MD    )───\n├ Give me a song name, you tone-deaf cretin.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
-      if (query.length > 100) return m.reply("Your 'song title' is longer than my patience. 100 characters MAX.");
+      if (query.length > 100) return m.reply("╭───(    TOXIC-MD    )───\n├ Song title longer than my patience. 100 chars MAX!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
@@ -18,7 +18,7 @@ module.exports = {
 
       if (!data.status || !data.result?.download) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        return m.reply(`No song found for "${query}". Your music taste is as bad as your search skills.`);
+        return m.reply(`╭───(    TOXIC-MD    )───\n├ No song found for "${query}".\n├ Your music taste is as bad as your search skills.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       const song = data.result;
@@ -48,13 +48,13 @@ module.exports = {
         document: { url: audioUrl },
         mimetype: "audio/mpeg",
         fileName: `${filename.replace(/[<>:"/\\|?*]/g, '_')}.mp3`,
-        caption: `🥀 ${filename} - ${artist}\n—\nTσxιƈ-ɱԃȥ`
+        caption: `╭───(    TOXIC-MD    )───\n├───≫ SPOTIFY ≪───\n├ \n├ ${filename} - ${artist}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: m });
 
     } catch (error) {
       console.error('Spotify error:', error);
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-      await m.reply(`Spotify download failed. The universe rejects your music taste.\nError: ${error.message}`);
+      await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ SPOTIFY ERROR ≪───\n├ \n├ Download failed. Universe rejects your music taste.\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
   }
 };

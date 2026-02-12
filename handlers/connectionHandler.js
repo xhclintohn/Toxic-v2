@@ -73,9 +73,9 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
       if (settings.startmessage) {
         const firstMessage = isNewUser
           ? [
-              `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`,
-              `々 *${getGreeting()}*`,
-              `々 Welcome to *${botName}*! You're now connected.`,
+              `╭───(    TOXIC-MD    )───`,
+              `├  *${getGreeting()}*`,
+              `├  Welcome to *${botName}*! You're now connected.`,
               ``,
               `✨ *Bot Name*: ${botName}`,
               `🔧 *Mode*: ${settings.mode}`,
@@ -85,16 +85,17 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               `💾 *Database*: Postgres SQL`,
               `📚 *Library*: Baileys`,
               ``,
-              `々 *New User Alert*: You've been added to the sudo list.`,
+              `├  *New User Alert*: You've been added to the sudo list.`,
               ``,
-              `々 *Start Message*: Enabled by default. Use *${settings.prefix}startmessage off* to disable.`,
-              `々 *Credits*: xh_clinton`,
-              `╭───( ✓ )───`
+              `├  *Start Message*: Enabled by default. Use *${settings.prefix}startmessage off* to disable.`,
+              `├  *Credits*: xh_clinton`,
+              `╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             ].join("\n")
           : [
-              `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`,
-              `々 *${getGreeting()}*`,
-              `々 Welcome back to *${botName}*! Connection established.`,
+              `╭───(    TOXIC-MD    )───`,
+              `├  *${getGreeting()}*`,
+              `├  Welcome back to *${botName}*! Connection established.`,
               ``,
               `✨ *Bot Name*: ${botName}`,
               `🔧 *Mode*: ${settings.mode}`,
@@ -104,16 +105,18 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               `💾 *Database*: Postgres SQL`,
               `📚 *Library*: Baileys`,
               ``,
-              `々 Ready to proceed? Select an option below.`,
+              `├  Ready to proceed? Select an option below.`,
               ``,
-              `々 *Start Message*: Enabled by default. it is recommended to disable it...Use *${settings.prefix}startmessage off* to disable or click the button bellow. and prevent spam`,
-              `々 *Credits*: xh_clinton`,
-              `╭───( ✓ )───`
+              `├  *Start Message*: Enabled by default. it is recommended to disable it...Use *${settings.prefix}startmessage off* to disable or click the button bellow. and prevent spam`,
+              `├  *Credits*: xh_clinton`,
+              `╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             ].join("\n");
         const secondMessage = [
-          `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───`,
-          `々 Please select an option to continue:`,
-          `╭───( ✓ )───`
+          `╭───(    TOXIC-MD    )───`,
+          `├  Please select an option to continue:`,
+          `╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         ].join("\n");
         try {
           await socket.sendMessage(socket.user.id, {

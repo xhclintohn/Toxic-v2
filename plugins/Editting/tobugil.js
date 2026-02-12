@@ -27,7 +27,7 @@ module.exports = {
 
         if (!m.quoted) {
             return client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 Quote an image, you blind moron. 🤦🏻\n╭───( ✓ )───\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                text: '╭───(    TOXIC-MD    )───\n├───≫ TOBUGIL ≪───\n├ \n├ Quote an image, you blind moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
             }, { quoted: m });
         }
 
@@ -36,7 +36,7 @@ module.exports = {
 
         if (!mime.startsWith("image/")) {
             return client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 That's not an image, you illiterate fool. 🖼️\n╭───( ✓ )───\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                text: '╭───(    TOXIC-MD    )───\n├───≫ TOBUGIL ≪───\n├ \n├ That\'s not an image, you\n├ illiterate fool.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
             }, { quoted: m });
         }
 
@@ -50,7 +50,7 @@ module.exports = {
             const apiUrl = `https://api.baguss.xyz/api/edits/tobugil?image=${encodedImageUrl}`;
 
             const response = await axios.get(apiUrl, {
-                timeout: 120000, // 2 minutes timeout
+                timeout: 120000,
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                     'Accept': 'application/json'
@@ -69,7 +69,7 @@ module.exports = {
                 m.chat,
                 {
                     image: { url: resultUrl },
-                    caption: `Wkwk. 🤡\n> Pσɯҽɾԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                    caption: '╭───(    TOXIC-MD    )───\n├───≫ TOBUGIL ≪───\n├ \n├ Wkwk.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
                 },
                 { quoted: m }
             );
@@ -81,19 +81,19 @@ module.exports = {
             let errorMessage = "Failed to process image, API probably hates your ugly picture. ";
             
             if (error.message.includes('UPLOAD FAILED')) {
-                errorMessage += "Catbox upload failed. 📤";
+                errorMessage += "Catbox upload failed.";
             } else if (error.message.includes('timeout')) {
-                errorMessage += "Processing took too long, your image is trash. ⏱️";
+                errorMessage += "Processing took too long, your image is trash.";
             } else if (error.message.includes('Invalid response')) {
-                errorMessage += "API returned garbage. 🗑️";
+                errorMessage += "API returned garbage.";
             } else if (error.message.includes('Network Error')) {
-                errorMessage += "Network issue, check your connection. 🌐";
+                errorMessage += "Network issue, check your connection.";
             } else {
                 errorMessage += `Error: ${error.message}`;
             }
 
             await client.sendMessage(m.chat, {
-                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n々 ${errorMessage}\n╭───( ✓ )───\n> Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ`
+                text: `╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
         }
     },

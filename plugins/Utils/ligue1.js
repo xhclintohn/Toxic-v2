@@ -8,12 +8,12 @@ module.exports = async (context) => {
 
         const standings = data.data;
 
-        const message = `LIGUE-1 TABLE STANDINGS\n\n${standings}`;
+        const message = `╭───(    TOXIC-MD    )───\n├───≫ LIGUE 1 ≪───\n├ \n${standings}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
         await m.reply(message);
 
     } catch (error) {
-        m.reply('Something went wrong. Unable to fetch EPL standings.');
+        m.reply("╭───(    TOXIC-MD    )───\n├ Can't fetch Ligue 1 standings. Try again later.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
     }
 
 }

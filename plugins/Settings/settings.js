@@ -18,19 +18,19 @@ module.exports = {
       try { groupCount = Object.keys(await client.groupFetchAllParticipating()).length; } catch (e) {}
 
       const fmt = (name, desc, status, cmd, example) => {
-        return `々 *${name}*\n>     ${desc}\n>     Status: ${status}\n>     Change: \`${cmd}\`\n>     Example: \`${example}\`\n>\n`;
+        return `├ *${name}*\n>     ${desc}\n>     Status: ${status}\n>     Change: \`${cmd}\`\n>     Example: \`${example}\`\n>\n`;
       };
 
       const message =
         `*${bName} Sᴇᴛᴛɪɴɢs*\n\n` +
-        `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n` +
-        `───≫ Bᴏᴛ Iɴғᴏ ≪───\n` +
-        `々 Bot Name: ${bName}\n` +
-        `々 Sudo Users: ${sudoUsers.length}\n` +
-        `々 Banned Users: ${bannedUsers.length}\n` +
-        `々 Total Groups: ${groupCount}\n` +
+        `╭───(    TOXIC-MD    )───\n` +
+        `├───≫ Bᴏᴛ Iɴғᴏ ≪───\n` +
+        `├ Bot Name: ${bName}\n` +
+        `├ Sudo Users: ${sudoUsers.length}\n` +
+        `├ Banned Users: ${bannedUsers.length}\n` +
+        `├ Total Groups: ${groupCount}\n` +
         `>\n` +
-        `───≫ Aʟʟ Sᴇᴛᴛɪɴɢs ≪───\n>\n` +
+        `├───≫ Aʟʟ Sᴇᴛᴛɪɴɢs ≪───\n>\n` +
         fmt(
           'Auto-Like Status',
           'Automatically reacts to contacts status updates with an emoji.',
@@ -129,11 +129,12 @@ module.exports = {
           `${prefix}startmessage on/off`,
           `${prefix}startmessage off`
         ) +
-        `───≫ Tɪᴘs ≪───\n` +
-        `々 Only owner/sudo can change settings.\n` +
-        `々 Settings save instantly to database.\n` +
-        `々 Stop bothering me with dumb questions.\n` +
-        `╭───( ✓ )───`;
+        `├───≫ Tɪᴘs ≪───\n` +
+        `├ Only owner/sudo can change settings.\n` +
+        `├ Settings save instantly to database.\n` +
+        `├ Stop bothering me with dumb questions.\n` +
+        `╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
       await client.sendMessage(m.chat, { text: message }, { quoted: m });
     });
