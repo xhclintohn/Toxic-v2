@@ -102,11 +102,24 @@ function cleanupSessionFiles() {
 let cleanupInterval = null;
 let autobioInterval = null;
 let storeWriteInterval = null;
+let memoryCheckInterval = null;
 
 async function startToxic() {
   if (cleanupInterval) clearInterval(cleanupInterval);
+  if (memoryCheckInterval) clearInterval(memoryCheckInterval);
   cleanupInterval = setInterval(cleanupSessionFiles, 24 * 60 * 60 * 1000);
   cleanupSessionFiles();
+
+  memoryCheckInterval = setInterval(() => {
+    try {
+      const mem = process.memoryUsage();
+      const usedMB = Math.round(mem.rss / 1024 / 1024);
+      if (usedMB > 450) {
+        console.log(`⚠️ High memory usage: ${usedMB}MB - running garbage collection`);
+        if (global.gc) global.gc();
+      }
+    } catch (e) {}
+  }, 5 * 60 * 1000);
 
   let settingss = await getSettings();
   if (!settingss) {
@@ -126,10 +139,12 @@ async function startToxic() {
     printQRInTerminal: false,
     syncFullHistory: false,
     markOnlineOnConnect: true,
-    connectTimeoutMs: 60000,
+    connectTimeoutMs: 120000,
     defaultQueryTimeoutMs: 60000,
-    keepAliveIntervalMs: 30000,
+    keepAliveIntervalMs: 25000,
     generateHighQualityLinkPreview: true,
+    emitOwnEvents: true,
+    fireInitQueries: true,
     patchMessageBeforeSending: (message) => {
       const requiresPatch = !!(
         message.buttonsMessage ||
@@ -421,8 +436,8 @@ async function startToxic() {
   });
 
   let reconnectAttempts = 0;
-  const maxReconnectAttempts = 10;
-  const baseReconnectDelay = 3000;
+  const maxReconnectAttempts = 15;
+  const baseReconnectDelay = 2000;
 
   client.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect } = update;
@@ -442,16 +457,24 @@ async function startToxic() {
         return startToxic();
       }
 
+      if (reason === DisconnectReason.connectionClosed || reason === DisconnectReason.connectionLost || reason === DisconnectReason.timedOut || reason === 408 || reason === 503 || reason === 500) {
+        const delay = Math.min(baseReconnectDelay * Math.pow(1.5, reconnectAttempts), 30000);
+        reconnectAttempts++;
+        console.log(`⏳ Connection lost (${reason}). Reconnecting in ${(delay/1000).toFixed(1)}s (attempt ${reconnectAttempts})...`);
+        setTimeout(() => startToxic(), delay);
+        return;
+      }
+
       if (reconnectAttempts < maxReconnectAttempts) {
         const delay = Math.min(baseReconnectDelay * Math.pow(2, reconnectAttempts), 60000);
         reconnectAttempts++;
-        console.log(`⏳ Reconnecting in ${delay/1000}s (attempt ${reconnectAttempts}/${maxReconnectAttempts})...`);
+        console.log(`⏳ Reconnecting in ${(delay/1000).toFixed(1)}s (attempt ${reconnectAttempts}/${maxReconnectAttempts})...`);
         setTimeout(() => startToxic(), delay);
         return;
       } else {
-        console.log(`❌ Max reconnection attempts reached. Restarting in 60s...`);
+        console.log(`❌ Max reconnection attempts reached. Restarting in 30s...`);
         reconnectAttempts = 0;
-        setTimeout(() => startToxic(), 60000);
+        setTimeout(() => startToxic(), 30000);
         return;
       }
     }
@@ -466,6 +489,20 @@ async function startToxic() {
   client.downloadMediaMessage = async (message) => {
     let mime = (message.msg || message).mimetype || '';
     let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+    const validTypes = ['image', 'video', 'audio', 'sticker', 'document', 'ptv'];
+    if (!validTypes.includes(messageType)) {
+      if (mime.startsWith('application/') || mime.startsWith('text/')) {
+        messageType = 'document';
+      } else if (mime.startsWith('image/')) {
+        messageType = 'image';
+      } else if (mime.startsWith('video/')) {
+        messageType = 'video';
+      } else if (mime.startsWith('audio/')) {
+        messageType = 'audio';
+      } else {
+        messageType = 'document';
+      }
+    }
     const stream = await downloadContentFromMessage(message, messageType);
     let buffer = Buffer.from([]);
     for await (const chunk of stream) {
@@ -478,6 +515,14 @@ async function startToxic() {
     let quoted = message.msg ? message.msg : message;
     let mime = (message.msg || message).mimetype || '';
     let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+    const validSaveTypes = ['image', 'video', 'audio', 'sticker', 'document', 'ptv'];
+    if (!validSaveTypes.includes(messageType)) {
+      if (mime.startsWith('application/') || mime.startsWith('text/')) messageType = 'document';
+      else if (mime.startsWith('image/')) messageType = 'image';
+      else if (mime.startsWith('video/')) messageType = 'video';
+      else if (mime.startsWith('audio/')) messageType = 'audio';
+      else messageType = 'document';
+    }
     const stream = await downloadContentFromMessage(quoted, messageType);
     let buffer = Buffer.from([]);
     for await (const chunk of stream) {

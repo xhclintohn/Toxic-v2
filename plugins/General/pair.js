@@ -56,8 +56,22 @@ module.exports = {
             }, { quoted: m });
 
             const sessionId = makeid(8);
-            const tempPath = path.join(__dirname, '..', '..', 'features', 'toxicmd', 'temp', sessionId);
-            if (!fs.existsSync(tempPath)) fs.mkdirSync(tempPath, { recursive: true });
+            let tempPath;
+            try {
+                const basePath = path.join(__dirname, '..', '..', 'features', 'toxicmd', 'temp');
+                if (fs.existsSync(basePath) && !fs.statSync(basePath).isDirectory()) {
+                    fs.unlinkSync(basePath);
+                }
+                const toxicmdPath = path.join(__dirname, '..', '..', 'features', 'toxicmd');
+                if (fs.existsSync(toxicmdPath) && !fs.statSync(toxicmdPath).isDirectory()) {
+                    fs.unlinkSync(toxicmdPath);
+                }
+                tempPath = path.join(basePath, sessionId);
+                fs.mkdirSync(tempPath, { recursive: true });
+            } catch (dirErr) {
+                tempPath = path.join('/tmp', 'toxic-pair-' + sessionId);
+                fs.mkdirSync(tempPath, { recursive: true });
+            }
 
             const { version } = await fetchLatestBaileysVersion();
             const { state, saveCreds } = await useMultiFileAuthState(tempPath);

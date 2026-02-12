@@ -1,4 +1,4 @@
-const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType } = require("@whiskeysockets/baileys");
+const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType, downloadContentFromMessage } = require("@whiskeysockets/baileys");
 const fs = require("fs");
 const util = require("util");
 const chalk = require("chalk");
@@ -23,6 +23,70 @@ const ownerMiddleware = require('../utils/botUtil/Ownermiddleware');
 process.setMaxListeners(50);
 cleanupOldMessages();
 setInterval(() => cleanupOldMessages(), 12 * 60 * 60 * 1000);
+
+let _cachedSettings = null;
+let _cachedSettingsTime = 0;
+let _cachedSudo = null;
+let _cachedSudoTime = 0;
+let _cachedBanned = null;
+let _cachedBannedTime = 0;
+const _groupMetaCache = new Map();
+const FAST_CACHE_TTL = 15000;
+const GROUP_META_TTL = 120000;
+
+async function fastGetSettings() {
+    const now = Date.now();
+    if (_cachedSettings && (now - _cachedSettingsTime) < FAST_CACHE_TTL) return _cachedSettings;
+    _cachedSettings = await getSettings();
+    _cachedSettingsTime = now;
+    return _cachedSettings;
+}
+
+async function fastGetSudo() {
+    const now = Date.now();
+    if (_cachedSudo && (now - _cachedSudoTime) < FAST_CACHE_TTL) return _cachedSudo;
+    _cachedSudo = await getSudoUsers();
+    _cachedSudoTime = now;
+    return _cachedSudo;
+}
+
+async function fastGetBanned() {
+    const now = Date.now();
+    if (_cachedBanned && (now - _cachedBannedTime) < FAST_CACHE_TTL) return _cachedBanned;
+    _cachedBanned = await getBannedUsers();
+    _cachedBannedTime = now;
+    return _cachedBanned;
+}
+
+async function fastGroupMetadata(client, jid) {
+    const now = Date.now();
+    const cached = _groupMetaCache.get(jid);
+    if (cached && (now - cached.time) < GROUP_META_TTL) return cached.data;
+    try {
+        const meta = await client.groupMetadata(jid);
+        _groupMetaCache.set(jid, { data: meta, time: now });
+        if (_groupMetaCache.size > 200) {
+            const oldest = _groupMetaCache.keys().next().value;
+            _groupMetaCache.delete(oldest);
+        }
+        return meta;
+    } catch (e) {
+        return cached?.data || {};
+    }
+}
+
+async function downloadMedia(client, message, type) {
+    try {
+        const stream = await downloadContentFromMessage(message, type);
+        let buffer = Buffer.from([]);
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+        return buffer;
+    } catch (e) {
+        return await client.downloadMediaMessage(message);
+    }
+}
 
 function shouldStoreMessage(m) {
     const remoteJid = m.chat || m.key?.remoteJid;
@@ -85,9 +149,9 @@ function extractInnerMessage(message) {
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
     try {
-        const sudoUsers = await getSudoUsers();
-        const bannedUsers = await getBannedUsers();
-        let settings = await getSettings();
+        const sudoUsers = await fastGetSudo();
+        const bannedUsers = await fastGetBanned();
+        let settings = await fastGetSettings();
         if (!settings) {
             console.error("Toxic-MD: Settings not found!");
             return;
@@ -146,7 +210,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         try {
             m.isGroup = m.chat?.endsWith("g.us");
-            m.metadata = m.isGroup ? await client.groupMetadata(m.chat).catch(e => ({})) : {};
+            m.metadata = m.isGroup ? await fastGroupMetadata(client, m.chat) : {};
             const participants = m.metadata?.participants || [];
             
             let userAdminFound = false;
@@ -302,7 +366,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         }
 
         if (m.message?.protocolMessage?.type === 0) {
-            const currentSettings = await getSettings();
+            const currentSettings = await fastGetSettings();
             const isAntideleteEnabled = currentSettings?.antidelete === true;
             if (isAntideleteEnabled && store?.chats && store?.messageMap) {
                 const deletedKey = m.message.protocolMessage.key;
@@ -349,7 +413,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     let groupName = 'Private Chat';
                     if (chatJidToSearch.endsWith('@g.us')) {
                         try {
-                            const gMeta = await client.groupMetadata(chatJidToSearch);
+                            const gMeta = await fastGroupMetadata(client, chatJidToSearch);
                             groupName = gMeta?.subject || 'Unknown Group';
                         } catch (e) {
                             groupName = 'Unknown Group';
@@ -373,7 +437,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         }
                         else if (msg.imageMessage) {
                             const caption = msg.imageMessage.caption || '';
-                            const buf = await client.downloadMediaMessage(msg.imageMessage);
+                            const buf = await downloadMedia(client, msg.imageMessage, 'image');
                             await client.sendMessage(botJid, {
                                 image: buf,
                                 caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📸 *Deleted Image:*\n${caption}`,
@@ -382,7 +446,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         }
                         else if (msg.videoMessage) {
                             const caption = msg.videoMessage.caption || '';
-                            const buf = await client.downloadMediaMessage(msg.videoMessage);
+                            const buf = await downloadMedia(client, msg.videoMessage, 'video');
                             await client.sendMessage(botJid, {
                                 video: buf,
                                 caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n🎥 *Deleted Video:*\n${caption}`,
@@ -390,7 +454,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             });
                         }
                         else if (msg.audioMessage) {
-                            const buf = await client.downloadMediaMessage(msg.audioMessage);
+                            const buf = await downloadMedia(client, msg.audioMessage, 'audio');
                             await client.sendMessage(botJid, { 
                                 text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n🎵 *Deleted Audio*`,
                                 mentions: [sender] 
@@ -402,7 +466,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             });
                         }
                         else if (msg.stickerMessage) {
-                            const buf = await client.downloadMediaMessage(msg.stickerMessage);
+                            const buf = await downloadMedia(client, msg.stickerMessage, 'sticker');
                             await client.sendMessage(botJid, { 
                                 text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n😀 *Deleted Sticker*`,
                                 mentions: [sender] 
@@ -410,12 +474,12 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             await client.sendMessage(botJid, { sticker: buf });
                         }
                         else if (msg.documentMessage) {
-                            const buf = await client.downloadMediaMessage(msg.documentMessage);
+                            const buf = await downloadMedia(client, msg.documentMessage, 'document');
                             await client.sendMessage(botJid, {
                                 document: buf,
                                 mimetype: msg.documentMessage.mimetype || 'application/octet-stream',
                                 fileName: msg.documentMessage.fileName || 'document',
-                                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📄 *Deleted Document:*\n${msg.documentMessage.caption || ''}`,
+                                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📄 *Deleted Document:*\n${msg.documentMessage.fileName || ''}\n${msg.documentMessage.caption || ''}`,
                                 mentions: [sender]
                             });
                         }
@@ -484,7 +548,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         }
 
         if (m.message?.protocolMessage?.type === 14 || m.message?.editedMessage) {
-            const currentSettings = await getSettings();
+            const currentSettings = await fastGetSettings();
             const isAntieditEnabled = currentSettings?.antiedit === true;
             if (isAntieditEnabled && store?.chats && store?.messageMap) {
                 try {
@@ -518,7 +582,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             let groupName = 'Private Chat';
                             if (editedRemoteJid.endsWith('@g.us')) {
                                 try {
-                                    const gMeta = await client.groupMetadata(editedRemoteJid);
+                                    const gMeta = await fastGroupMetadata(client, editedRemoteJid);
                                     groupName = gMeta?.subject || 'Unknown Group';
                                 } catch (e) { groupName = 'Unknown Group'; }
                             }
