@@ -62,7 +62,7 @@ module.exports = {
                         hasMediaAttachment: true,
                     },
                     body: { text: menuText },
-                    footer: { text: `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` },
+                    footer: { text: `靛` },
                     nativeFlowMessage: {
                         buttons: [
                             {
