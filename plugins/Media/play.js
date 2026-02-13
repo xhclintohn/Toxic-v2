@@ -7,24 +7,43 @@ module.exports = {
 
     try {
       const query = m.text.trim();
-      if (!query) return m.reply("╭───(    TOXIC-MD    )───\n├ Give me a song name, you tone-deaf cretin.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
-
-      if (query.length > 100) return m.reply("╭───(    TOXIC-MD    )───\n├ Song title longer than my patience. 100 chars MAX!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+      if (!query) return m.reply("╭───(    TOXIC-MD    )───\n├ Give me a song name OR YouTube link, you tone-deaf cretin.\n├ Example: .play harlem shake\n├ Or: .play https://youtu.be/dQw4w9WgXcQ\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-      const response = await fetch(`https://apiziaul.vercel.app/api/downloader/ytplaymp3?query=${encodeURIComponent(query)}`);
-      const data = await response.json();
+      const isYoutubeLink = /(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?[a-zA-Z0-9_-]{11})/gi.test(query);
 
-      if (!data.status || !data.result?.downloadUrl) {
-        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        return m.reply(`╭───(    TOXIC-MD    )───\n├ No song found for "${query}".\n├ Your music taste is as bad as your search skills.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+      let audioUrl, filename, thumbnail, videoUrl;
+
+      if (isYoutubeLink) {
+        const response = await fetch(`https://api.danzy.web.id/api/download/ytmp3?url=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (!data.status || !data.data?.downloadUrl) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+          return m.reply(`╭───(    TOXIC-MD    )───\n├ Can't download that YouTube link.\n├ Your link is probably broken or private.\n├ Even I have limits, unlike your stupidity.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
+
+        audioUrl = data.data.downloadUrl;
+        filename = data.data.title || "Unknown YouTube Song";
+        thumbnail = "";
+        videoUrl = query;
+      } else {
+        if (query.length > 100) return m.reply("╭───(    TOXIC-MD    )───\n├ Song title longer than my patience. 100 chars MAX!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+
+        const response = await fetch(`https://apiziaul.vercel.app/api/downloader/ytplaymp3?query=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (!data.status || !data.result?.downloadUrl) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+          return m.reply(`╭───(    TOXIC-MD    )───\n├ No song found for "${query}".\n├ Your music taste is as bad as your search skills.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
+
+        audioUrl = data.result.downloadUrl;
+        filename = data.result.title || "Unknown Song";
+        thumbnail = data.result.thumbnail || "";
+        videoUrl = data.result.videoUrl || "";
       }
-
-      const song = data.result;
-      const audioUrl = song.downloadUrl;
-      const filename = song.title || "Unknown Song";
-      const artist = "Unknown Artist";
 
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
@@ -32,16 +51,16 @@ module.exports = {
         audio: { url: audioUrl },
         mimetype: "audio/mpeg",
         fileName: `${filename}.mp3`,
-        contextInfo: {
+        contextInfo: thumbnail ? {
           externalAdReply: {
             title: filename.substring(0, 30),
-            body: artist.substring(0, 30),
-            thumbnailUrl: song.thumbnail || "",
-            sourceUrl: song.videoUrl || "",
+            body: "Toxic-MD",
+            thumbnailUrl: thumbnail,
+            sourceUrl: videoUrl,
             mediaType: 1,
             renderLargerThumbnail: true,
           },
-        },
+        } : undefined,
       }, { quoted: m });
 
       await client.sendMessage(m.chat, {
@@ -52,7 +71,7 @@ module.exports = {
       }, { quoted: m });
 
     } catch (error) {
-      console.error('Spotify error:', error);
+      console.error('Play error:', error);
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
       await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ PLAY ERROR ≪───\n├ \n├ Play failed. The universe rejects your music taste.\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
