@@ -1,35 +1,39 @@
 module.exports = {
   name: 'play',
   aliases: ['ply', 'playy', 'pl'],
-  description: 'Downloads songs from Spotify and sends audio',
+  description: 'Downloads songs from YouTube and sends audio',
   run: async (context) => {
     const { client, m } = context;
 
     try {
       const query = m.text.trim();
-      if (!query) return m.reply("╭───(    TOXIC-MD    )───\n├ Give me a song name OR YouTube link, you tone-deaf cretin.\n├ Example: .play harlem shake\n├ Or: .play https://youtu.be/dQw4w9WgXcQ\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+      
+      if (!query) {
+        return m.reply(`╭───(    TOXIC-MD    )───\n├ You forgot to type something, genius.\n├ Give me a song name OR a YouTube link.\n├ Example: .play harlem shake\n├ Or: .play https://youtu.be/dQw4w9WgXcQ\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+      }
 
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
       const isYoutubeLink = /(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?[a-zA-Z0-9_-]{11})/gi.test(query);
 
-      let audioUrl, filename, thumbnail, videoUrl;
+      let audioUrl, filename, thumbnail;
 
       if (isYoutubeLink) {
-        const response = await fetch(`https://api.danzy.web.id/api/download/ytmp3?url=${encodeURIComponent(query)}`);
+        const response = await fetch(`https://api.deline.web.id/downloader/ytmp3?url=${encodeURIComponent(query)}`);
         const data = await response.json();
 
-        if (!data.status || !data.data?.downloadUrl) {
+        if (!data.status || !data.result?.dlink) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
           return m.reply(`╭───(    TOXIC-MD    )───\n├ Can't download that YouTube link.\n├ Your link is probably broken or private.\n├ Even I have limits, unlike your stupidity.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
-        audioUrl = data.data.downloadUrl;
-        filename = data.data.title || "Unknown YouTube Song";
-        thumbnail = "";
-        videoUrl = query;
+        audioUrl = data.result.dlink;
+        filename = data.result.youtube.title || "Unknown YouTube Song";
+        thumbnail = data.result.youtube.thumbnail || "";
       } else {
-        if (query.length > 100) return m.reply("╭───(    TOXIC-MD    )───\n├ Song title longer than my patience. 100 chars MAX!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+        if (query.length > 100) {
+          return m.reply("╭───(    TOXIC-MD    )───\n├ Song title longer than my patience. 100 chars MAX!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+        }
 
         const response = await fetch(`https://apiziaul.vercel.app/api/downloader/ytplaymp3?query=${encodeURIComponent(query)}`);
         const data = await response.json();
@@ -42,7 +46,6 @@ module.exports = {
         audioUrl = data.result.downloadUrl;
         filename = data.result.title || "Unknown Song";
         thumbnail = data.result.thumbnail || "";
-        videoUrl = data.result.videoUrl || "";
       }
 
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
@@ -56,7 +59,7 @@ module.exports = {
             title: filename.substring(0, 30),
             body: "Toxic-MD",
             thumbnailUrl: thumbnail,
-            sourceUrl: videoUrl,
+            sourceUrl: isYoutubeLink ? query : (data.result?.videoUrl || ""),
             mediaType: 1,
             renderLargerThumbnail: true,
           },
