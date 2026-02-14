@@ -5,7 +5,7 @@ module.exports = async (context) => {
     const { client, m, text, botname } = context;
 
     if (!botname) return m.reply("╭───(    TOXIC-MD    )───\n├ Bot is nameless and broken. Blame the dev.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
-    
+
     if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ You forgot the YouTube link, ${m.pushName}.\n├ Can you even follow simple instructions?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
     const urls = text.match(/(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?[a-zA-Z0-9_-]{11})/gi);
@@ -13,7 +13,7 @@ module.exports = async (context) => {
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-        
+
         const encodedUrl = encodeURIComponent(text);
         const response = await fetch(`https://api.deline.web.id/downloader/ytmp3?url=${encodedUrl}`, { 
             headers: { 
@@ -21,19 +21,19 @@ module.exports = async (context) => {
                 "Accept": "application/json" 
             } 
         });
-        
+
         const data = await response.json();
-        
+
         if (!data.status || !data.result || !data.result.dlink) {
             throw new Error('API returned no valid audio data.');
         }
-        
+
         const title = data.result.youtube.title || "Untitled";
         const audioUrl = data.result.dlink;
         const thumbnail = data.result.youtube.thumbnail || "";
-        
+
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-        
+
         await client.sendMessage(m.chat, { 
             audio: { url: audioUrl }, 
             mimetype: "audio/mpeg",
@@ -49,24 +49,31 @@ module.exports = async (context) => {
                 },
             },
         }, { quoted: m });
-        
+
+        await client.sendMessage(m.chat, {
+            document: { url: audioUrl },
+            mimetype: "audio/mpeg",
+            fileName: `${title.replace(/[<>:"/\\|?*]/g, '_')}.mp3`,
+            caption: `╭───(    TOXIC-MD    )───\n├───≫ YTMP3 ≪───\n├ \n├ ${title}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+        }, { quoted: m });
+
     } catch (error) {
         console.error(`ytmp3 error:`, error);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        
+
         try {
             const info = await ytdl.getInfo(text);
             const format = ytdl.chooseFormat(info.formats, { filter: "audioonly", quality: "highestaudio" });
             const audioUrl = format.url;
             const title = info.videoDetails.title;
-            
+
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
             await client.sendMessage(m.chat, { 
                 audio: { url: audioUrl }, 
                 mimetype: "audio/mpeg",
                 fileName: `${title}.mp3`
             }, { quoted: m });
-            
+
         } catch (fallbackError) {
             console.error(`Fallback error: ${fallbackError.message}`);
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ YTMP3 ERROR ≪───\n├ \n├ Both download methods failed.\n├ The universe rejects your request.\n├ ${fallbackError.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
