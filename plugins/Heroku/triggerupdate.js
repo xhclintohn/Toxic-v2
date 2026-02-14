@@ -12,7 +12,7 @@ module.exports = async (context) => {
             `├ ${message}\n` +
             `╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧\n` +
-            `Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ 😈`
+            `xD`
         );
     };
 
@@ -65,7 +65,7 @@ module.exports = async (context) => {
                 {
                     text: formatStylishReply(
                         "🚀 Update triggered.\n" +
-                        "Sit tight while Toxic-MD resurrects with fresh upgrades. 💀"
+                        "Sit tight while Toxic-MD resurrects with fresh upgrades. 🔥"
                     ),
                 },
                 { quoted: m }
