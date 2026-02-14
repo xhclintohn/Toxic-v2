@@ -3,10 +3,10 @@ module.exports = {
   aliases: ['ply', 'playy', 'pl'],
   description: 'Downloads songs from YouTube and sends audio',
   run: async (context) => {
-    const { client, m } = context;
+    const { client, m, text } = context;
 
     try {
-      const query = m.text.trim();
+      const query = text ? text.trim() : '';
 
       if (!query) {
         return m.reply(`╭───(    TOXIC-MD    )───\n├ You forgot to type something, genius.\n├ Give me a song name OR a YouTube link.\n├ Example: .play harlem shake\n├ Or: .play https://youtu.be/dQw4w9WgXcQ\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
@@ -19,17 +19,17 @@ module.exports = {
       let audioUrl, filename, thumbnail, sourceUrl;
 
       if (isYoutubeLink) {
-        const response = await fetch(`https://api.deline.web.id/downloader/ytmp3?url=${encodeURIComponent(query)}`);
+        const response = await fetch(`https://api.sidycoders.xyz/api/ytdl?url=${encodeURIComponent(query)}&format=mp3&apikey=memberdycoders`);
         const data = await response.json();
 
-        if (!data.status || !data.result?.dlink) {
+        if (!data.status || !data.cdn) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
           return m.reply(`╭───(    TOXIC-MD    )───\n├ Can't download that YouTube link.\n├ Your link is probably broken or private.\n├ Even I have limits, unlike your stupidity.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
-        audioUrl = data.result.dlink;
-        filename = data.result.youtube.title || "Unknown YouTube Song";
-        thumbnail = data.result.youtube.thumbnail || "";
+        audioUrl = data.cdn;
+        filename = data.title || "Unknown YouTube Song";
+        thumbnail = "";
         sourceUrl = query;
       } else {
         if (query.length > 100) {
