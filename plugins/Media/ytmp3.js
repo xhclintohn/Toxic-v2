@@ -15,7 +15,7 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         const encodedUrl = encodeURIComponent(text);
-        const response = await fetch(`https://api.deline.web.id/downloader/ytmp3?url=${encodedUrl}`, { 
+        const response = await fetch(`https://api.sidycoders.xyz/api/ytdl?url=${encodedUrl}&format=mp3&apikey=memberdycoders`, { 
             headers: { 
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", 
                 "Accept": "application/json" 
@@ -24,13 +24,12 @@ module.exports = async (context) => {
 
         const data = await response.json();
 
-        if (!data.status || !data.result || !data.result.dlink) {
+        if (!data.status || !data.cdn) {
             throw new Error('API returned no valid audio data.');
         }
 
-        const title = data.result.youtube.title || "Untitled";
-        const audioUrl = data.result.dlink;
-        const thumbnail = data.result.youtube.thumbnail || "";
+        const title = data.title || "Untitled";
+        const audioUrl = data.cdn;
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
@@ -42,10 +41,10 @@ module.exports = async (context) => {
                 externalAdReply: {
                     title: title.substring(0, 30),
                     body: "Toxic-MD",
-                    thumbnailUrl: thumbnail,
+                    thumbnailUrl: "",
                     sourceUrl: text,
                     mediaType: 1,
-                    renderLargerThumbnail: true,
+                    renderLargerThumbnail: false,
                 },
             },
         }, { quoted: m });
