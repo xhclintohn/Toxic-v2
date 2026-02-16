@@ -47,7 +47,7 @@ const replyText = `╭───(    TOXIC-MD    )───
 ├ Last Update : ${lastUpdateDate}
 ├ Owner : ${repoInfo.owner}
 ╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+> xD`;
 
 await client.sendMessage(m.chat, {  
   text: replyText,  
