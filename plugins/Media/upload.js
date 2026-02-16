@@ -43,7 +43,7 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, {
             interactiveMessage: {
                 header: "╭───(    TOXIC-MD    )───\n├───≫ UPLOAD DONE ≪───",
-                title: `├ \n├ Link: ${link}\n├ Size: ${fileSizeMB} MB\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                title: `├ \n├ Link: ${link}\n├ Size: ${fileSizeMB} MB\n╰──────────────────☉\n> xD`,
                 footer: "> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧",
                 buttons: [
                     {
