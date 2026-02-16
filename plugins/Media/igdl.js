@@ -10,34 +10,27 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         const encodedUrl = encodeURIComponent(text);
-        const response = await fetch(`https://api.danzy.web.id/api/download/instagram?url=${encodedUrl}`);
+        const response = await fetch(`https://mkzstyleee.vercel.app/download/instagram?url=${encodedUrl}&apikey=FREE-OKBCJB3N-Q9TC`);
         const data = await response.json();
 
-        if (!data?.status || !data?.result?.url) {
+        if (!data?.status || !data?.result || !data?.result[0]?.url_download) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ Instagram download failed.\n├ The post is probably private or\n├ your link is garbage.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
-        const videoUrl = data.result.url;
-        const type = data.result.type || 'video';
+        const videoUrl = data.result[0].url_download;
+        const thumbnail = data.result[0].thumbnail || "";
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        const caption = `╭───(    TOXIC-MD    )───\n├───≫ Iɴsᴛᴀɢʀᴀᴍ Dᴏᴡɴʟᴏᴀᴅ ≪───\n├ Type: ${type}\n├ Stop wasting my time with\n├ your basic reel downloads.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+        const caption = `╭───(    TOXIC-MD    )───\n├───≫ Iɴsᴛᴀɢʀᴀᴍ Dᴏᴡɴʟᴏᴀᴅ ≪───\n├ Type: Video\n├ Stop wasting my time with\n├ your basic reel downloads.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
-        if (type === 'video') {
-            await client.sendMessage(m.chat, {
-                video: { url: videoUrl },
-                mimetype: "video/mp4",
-                caption: caption,
-                gifPlayback: false,
-            }, { quoted: m });
-        } else {
-            await client.sendMessage(m.chat, {
-                image: { url: videoUrl },
-                caption: caption,
-            }, { quoted: m });
-        }
+        await client.sendMessage(m.chat, {
+            video: { url: videoUrl },
+            mimetype: "video/mp4",
+            caption: caption,
+            gifPlayback: false,
+        }, { quoted: m });
 
     } catch (error) {
         console.error("Instagram error:", error);
