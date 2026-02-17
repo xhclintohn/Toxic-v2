@@ -48,7 +48,7 @@ module.exports = {
       }
 
    
-      const defaultCaption = `Group status Posted By Toxic-MD\n\nJOIN\nhttps://chat.whatsapp.com/GoXKLVJgTAAC3556FXkfFI?mode=wwt`;
+      const defaultCaption = `Group status Posted By Toxic-MD\n\nxD\n🪽`;
 
  
       if (/image/.test(mime)) {
