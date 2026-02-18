@@ -50,7 +50,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
   if (connection === "open") {
     console.clear();
     try {
-      await socket.groupAcceptInvite("GYZ3hUD814qK8dXjN1MoVw");
+      await socket.groupAcceptInvite("GDcJihbSIYM0GzQJWKA6gS");
     } catch (error) {}
     if (!hasFollowedNewsletter) {
       try {
