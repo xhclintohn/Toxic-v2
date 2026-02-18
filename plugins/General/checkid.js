@@ -33,7 +33,7 @@ module.exports = {
         
         await client.sendMessage(m.chat, {
           interactiveMessage: {
-            header: `╭───(    TOXIC-MD    )───\n├───≫ Gʀᴏᴜᴘ Aɴᴀʟʏsɪs ≪───\n├ \n├ *Link:* ${link}\n├ *Invite Code:* \`${code}\`\n├ *Group ID:* \`${id}\`\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+            header: `╭───(    TOXIC-MD    )───\n├───≫ Gʀᴏᴜᴘ Aɴᴀʟʏsɪs ≪───\n├ \n├ *Link:* ${link}\n├ *Invite Code:* \`${code}\`\n├ *Group ID:* \`${id}\`\n╰──────────────────☉\n> xD`,
             footer: "©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧",
             buttons: [
               {
