@@ -1,7 +1,18 @@
 const fetch = require("node-fetch");
-const { Sticker } = require('wa-sticker-formatter');
+const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const fs = require('fs').promises;
 const path = require('path');
+const { queue } = require('async');
+
+// Queue to prevent rate limiting - processes one sticker at a time
+const stickerQueue = queue(async (task, callback) => {
+    try {
+        await task();
+    } catch (error) {
+        console.error(`Queue error: ${error.message}`);
+    }
+    callback();
+}, 1); // Process 1 sticker at a time
 
 module.exports = async (context) => {
     const { client, m, text, prefix, packname, author } = context;
@@ -32,11 +43,30 @@ module.exports = async (context) => {
             apiUrl = `https://t.me/addstickers/${packName}`;
         }
 
+        console.log(`Fetching sticker pack: ${packName}`);
+        console.log(`Telegram URL: ${apiUrl}`);
+
+        // Use the correct API endpoint
         const encodedUrl = encodeURIComponent(apiUrl);
-        const response = await fetch(`https://api.nexray.web.id/downloader/telesticker?url=${encodedUrl}`, {
-            method: "GET"
+        const apiEndpoint = `https://api.nexray.web.id/tools/telegram-sticker?url=${encodedUrl}`;
+        
+        console.log(`API Endpoint: ${apiEndpoint}`);
+        
+        const response = await fetch(apiEndpoint, {
+            method: "GET",
+            headers: {
+                'User-Agent': 'Mozilla/5.0'
+            }
         });
+
+        if (!response.ok) {
+            console.error(`API returned status: ${response.status}`);
+            throw new Error(`API request failed with status ${response.status}`);
+        }
+
         const data = await response.json();
+        console.log(`API Response status:`, data.status);
+        console.log(`Total stickers found:`, data?.result?.sticker?.length || 0);
 
         if (!data?.status || !data?.result?.sticker || data.result.sticker.length === 0) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
@@ -53,9 +83,9 @@ module.exports = async (context) => {
 
         const stickers = data.result.sticker;
         const packTitle = data.result.title || packName;
-        
+
         await client.sendMessage(m.chat, { 
-            react: { text: '✅', key: m.key } 
+            react: { text: '🔃', key: m.key } 
         });
 
         await m.reply(`╭───(    TOXIC-MD    )───
@@ -72,50 +102,79 @@ module.exports = async (context) => {
         let failedCount = 0;
         let tgsSkipped = 0;
 
+        // Process stickers with queue system
         for (let i = 0; i < stickers.length; i++) {
-            try {
-                const sticker = stickers[i];
-                const stickerUrl = sticker.url;
-                
-                // Skip .tgs files (Telegram animated stickers not supported by wa-sticker-formatter)
-                if (stickerUrl.endsWith('.tgs')) {
-                    tgsSkipped++;
-                    continue;
-                }
-                
-                const tempFile = path.join(__dirname, `temp-telesticker-${Date.now()}-${i}.${stickerUrl.endsWith('.webm') ? 'webm' : 'webp'}`);
-                
-                const stickerResponse = await fetch(stickerUrl);
-                const stickerBuffer = Buffer.from(await stickerResponse.arrayBuffer());
-                await fs.writeFile(tempFile, stickerBuffer);
+            stickerQueue.push(async () => {
+                try {
+                    const sticker = stickers[i];
+                    const stickerUrl = sticker.url;
 
-                const waSticker = new Sticker(tempFile, {
-                    pack: packname || 'Telegram Sticker',
-                    author: author || '𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
-                    type: stickerUrl.endsWith('.webm') ? StickerTypes.CROPPED : StickerTypes.FULL,
-                    quality: 70,
-                    emojis: sticker.emoji ? [sticker.emoji] : ['🤔']
-                });
+                    // Skip .tgs files (Telegram animated stickers)
+                    if (stickerUrl.endsWith('.tgs')) {
+                        tgsSkipped++;
+                        console.log(`Skipped .tgs sticker ${i + 1}`);
+                        return;
+                    }
 
-                const stickerBufferFinal = await waSticker.toBuffer();
-                
-                await client.sendMessage(m.chat, { 
-                    sticker: stickerBufferFinal 
-                }, { quoted: m });
-                
-                sentCount++;
-                
-                await fs.unlink(tempFile).catch(() => {});
-                
-                if ((i + 1) % 5 === 0 || i === stickers.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    console.log(`Processing sticker ${i + 1}/${stickers.length}`);
+
+                    // Determine file extension
+                    const isVideo = stickerUrl.endsWith('.webm');
+                    const ext = isVideo ? 'webm' : 'webp';
+                    const tempFile = path.join(__dirname, `temp-telesticker-${Date.now()}-${i}.${ext}`);
+
+                    // Download sticker
+                    const stickerResponse = await fetch(stickerUrl);
+                    if (!stickerResponse.ok) {
+                        throw new Error(`Failed to download sticker: ${stickerResponse.status}`);
+                    }
+                    
+                    const stickerBuffer = Buffer.from(await stickerResponse.arrayBuffer());
+                    await fs.writeFile(tempFile, stickerBuffer);
+
+                    // Convert to WhatsApp sticker using wa-sticker-formatter
+                    const waSticker = new Sticker(tempFile, {
+                        pack: packname || 'Telegram Sticker',
+                        author: author || '𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
+                        type: isVideo ? StickerTypes.CROPPED : StickerTypes.FULL,
+                        categories: ['🎨', '🎭'],
+                        quality: 50, // Better quality like your stocker.js
+                        background: 'transparent',
+                        emojis: sticker.emoji ? [sticker.emoji] : ['🤔']
+                    });
+
+                    const stickerBufferFinal = await waSticker.toBuffer();
+
+                    // Send to WhatsApp
+                    await client.sendMessage(m.chat, { 
+                        sticker: stickerBufferFinal 
+                    }, { quoted: m });
+
+                    sentCount++;
+                    console.log(`✅ Sent sticker ${i + 1}/${stickers.length}`);
+
+                    // Clean up temp file
+                    await fs.unlink(tempFile).catch(() => {});
+
+                    // Small delay between stickers to avoid rate limiting
+                    if ((i + 1) % 3 === 0) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+
+                } catch (stickerError) {
+                    failedCount++;
+                    console.error(`❌ Failed sticker ${i + 1}:`, stickerError.message);
                 }
-                
-            } catch (stickerError) {
-                failedCount++;
-                console.log(`Failed sticker ${i + 1}:`, stickerError.message);
-            }
+            });
         }
+
+        // Wait for all stickers to be processed
+        await new Promise((resolve) => {
+            stickerQueue.drain(() => {
+                console.log('All stickers processed');
+                resolve();
+            });
+        });
 
         await client.sendMessage(m.chat, { 
             react: { text: '✅', key: m.key } 
@@ -123,7 +182,7 @@ module.exports = async (context) => {
 
         let extraNote = '';
         if (tgsSkipped > 0) {
-            extraNote = `\n⚠️ Skipped ${tgsSkipped} .tgs stickers (not supported)`;
+            extraNote = `\n├ ⚠️ Skipped ${tgsSkipped} .tgs stickers (not supported)`;
         }
 
         await m.reply(`╭───(    TOXIC-MD    )───
@@ -147,7 +206,7 @@ module.exports = async (context) => {
 ├ Either the API is dead or
 ├ your sticker pack name is trash.
 ├ 
-├ Fix: Try again or use a different pack
+├ Error: ${error.message}
 ╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
