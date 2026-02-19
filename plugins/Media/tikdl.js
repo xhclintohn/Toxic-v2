@@ -10,23 +10,20 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         const encodedUrl = encodeURIComponent(text);
-        const response = await fetch(`https://api.gimita.id/api/downloader/tiktok?url=${encodedUrl}`, {
-            method: "GET",
-            headers: {
-                "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo4LCJ1c2VybmFtZSI6InhoX2NsaW50b24iLCJyb2xlIjoidXNlciIsInN1YnNjcmlwdGlvbl90aWVyIjoiZnJlZSIsImlzcyI6ImdpbWl0YS1hcGkiLCJleHAiOjE3Njk2ODY2NTIsImlhdCI6MTc2OTY4NTc1Mn0.OgVHy66TFuGO_sh3UlKBXAg_NegR-_w3_0rWrJ275Cw"
-            }
+        const response = await fetch(`https://api.nexray.web.id/downloader/tiktok?url=${encodedUrl}`, {
+            method: "GET"
         });
         const data = await response.json();
 
-        if (!data?.success || !data?.data?.video) {
+        if (!data?.status || !data?.result?.data) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply("failed to download that garbage tiktok! either the link is dead or your taste in content is so bad even the api rejected it.");
         }
 
-        const videoUrl = data.data.video.hd || data.data.video.sd;
-        const musicUrl = data.data.audio?.url;
-        const username = data.data.author?.name || "unknown";
-        const stats = data.data.stats || {};
+        const videoUrl = data.result.data;
+        const musicUrl = data.result.music_info?.url;
+        const username = data.result.author?.nickname || "unknown";
+        const stats = data.result.stats || {};
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
@@ -38,7 +35,7 @@ module.exports = async (context) => {
 ├ Author : ${username}
 ├ Views : ${stats.views || "0"}
 ├ Likes : ${stats.likes || "0"}
-├ Comments : ${stats.comments || "0"}
+├ Comments : ${stats.comment || "0"}
 ╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
