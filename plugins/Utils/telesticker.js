@@ -20,12 +20,20 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         let packName = text;
+        let apiUrl;
+
         if (text.includes("t.me/addstickers/")) {
-            packName = text.split("t.me/addstickers/")[1].split(" ")[0].split("?")[0];
+            // Extract pack name from link
+            const match = text.match(/t\.me\/addstickers\/([a-zA-Z0-9_]+)/);
+            if (match) packName = match[1];
+            apiUrl = text; // Use full link
+        } else {
+            // Assume it's a pack name, build Telegram link
+            apiUrl = `https://t.me/addstickers/${packName}`;
         }
 
-        const encodedPack = encodeURIComponent(packName);
-        const response = await fetch(`https://api.nexray.web.id/downloader/telesticker?url=${encodedPack}`, {
+        const encodedUrl = encodeURIComponent(apiUrl);
+        const response = await fetch(`https://api.nexray.web.id/downloader/telesticker?url=${encodedUrl}`, {
             method: "GET"
         });
         const data = await response.json();
@@ -62,11 +70,18 @@ module.exports = async (context) => {
 
         let sentCount = 0;
         let failedCount = 0;
+        let tgsSkipped = 0;
 
         for (let i = 0; i < stickers.length; i++) {
             try {
                 const sticker = stickers[i];
                 const stickerUrl = sticker.url;
+                
+                // Skip .tgs files (Telegram animated stickers not supported by wa-sticker-formatter)
+                if (stickerUrl.endsWith('.tgs')) {
+                    tgsSkipped++;
+                    continue;
+                }
                 
                 const tempFile = path.join(__dirname, `temp-telesticker-${Date.now()}-${i}.${stickerUrl.endsWith('.webm') ? 'webm' : 'webp'}`);
                 
@@ -106,11 +121,16 @@ module.exports = async (context) => {
             react: { text: '✅', key: m.key } 
         });
 
+        let extraNote = '';
+        if (tgsSkipped > 0) {
+            extraNote = `\n⚠️ Skipped ${tgsSkipped} .tgs stickers (not supported)`;
+        }
+
         await m.reply(`╭───(    TOXIC-MD    )───
 ├───≫ Tᴇʟᴇɢʀᴀᴍ Sᴛɪᴄᴋᴇʀ ≪───
 ├ 
 ├ ✅ Success: ${sentCount} stickers
-├ ❌ Failed: ${failedCount} stickers
+├ ❌ Failed: ${failedCount} stickers${extraNote}
 ├ 📦 Pack: ${packTitle}
 ├ 
 ├ Now go annoy someone with these.
