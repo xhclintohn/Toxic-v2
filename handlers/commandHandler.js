@@ -54,6 +54,7 @@ const aliases = {
     delete: "del",
     evl: "eval",
     k: "remove",
+    ts: "telesticker",
     setprefix: "prefix",
     reactemoji: "reaction",
     autoviewstatus: "autoview",
