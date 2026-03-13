@@ -101,21 +101,21 @@ let autobioInterval = null;
 let storeWriteInterval = null;
 let memoryCheckInterval = null;
 let processedCallsInterval = null;
-let currentClient = null;
-let isStarting = false;
-let reconnectTimer = null;
-let shuttingDownClient = false;
+if (global._toxicCurrentClient  === undefined) global._toxicCurrentClient  = null;
+if (global._toxicIsStarting     === undefined) global._toxicIsStarting     = false;
+if (global._toxicReconnectTimer === undefined) global._toxicReconnectTimer = null;
+if (global._toxicShuttingDown   === undefined) global._toxicShuttingDown   = false;
 
 async function startToxic() {
-  if (isStarting) return;
-  isStarting = true;
+  if (global._toxicIsStarting) return;
+  global._toxicIsStarting = true;
 
   try {
     await authenticationn();
 
-    if (reconnectTimer) {
-      clearTimeout(reconnectTimer);
-      reconnectTimer = null;
+    if (global._toxicReconnectTimer) {
+      clearTimeout(global._toxicReconnectTimer);
+      global._toxicReconnectTimer = null;
     }
 
     if (cleanupInterval) clearInterval(cleanupInterval);
@@ -140,33 +140,33 @@ async function startToxic() {
       }
     }, 5 * 60 * 1000);
 
-    if (currentClient) {
+    if (global._toxicCurrentClient) {
       try {
-        shuttingDownClient = true;
-        currentClient.ev.removeAllListeners();
-        currentClient.ws.removeAllListeners();
+        global._toxicShuttingDown = true;
+        global._toxicCurrentClient.ev.removeAllListeners();
+        global._toxicCurrentClient.ws.removeAllListeners();
         try {
-          currentClient.end(new Error("Restarting client"));
+          global._toxicCurrentClient.end(new Error("Restarting client"));
         } catch (e) {
           console.error(e);
         }
         try {
-          currentClient.ws.close();
+          global._toxicCurrentClient.ws.close();
         } catch (e) {
           console.error(e);
         }
       } catch (e) {
         console.error(e);
       } finally {
-        currentClient = null;
-        shuttingDownClient = false;
+        global._toxicCurrentClient = null;
+        global._toxicShuttingDown = false;
       }
     }
 
     let settingss = await getSettings();
     if (!settingss) {
       console.log(`❌ TOXIC-MD FAILED TO CONNECT - Settings not found`);
-      isStarting = false;
+      global._toxicIsStarting = false;
       return;
     }
 
@@ -234,7 +234,7 @@ async function startToxic() {
       }
     });
 
-    currentClient = client;
+    global._toxicCurrentClient = client;
     store.bind(client.ev);
 
     storeWriteInterval = setInterval(() => {
@@ -537,9 +537,9 @@ async function startToxic() {
       }
 
       if (connection === "close") {
-        if (shuttingDownClient) return;
+        if (global._toxicShuttingDown) return;
 
-        currentClient = null;
+        global._toxicCurrentClient = null;
 
         if (reason === DisconnectReason.loggedOut || reason === 401) {
           try {
@@ -548,9 +548,9 @@ async function startToxic() {
             console.error(e);
           }
           invalidateSettingsCache();
-          if (!reconnectTimer) {
-            reconnectTimer = setTimeout(() => {
-              reconnectTimer = null;
+          if (!global._toxicReconnectTimer) {
+            global._toxicReconnectTimer = setTimeout(() => {
+              global._toxicReconnectTimer = null;
               startToxic();
             }, 2000);
           }
@@ -560,9 +560,9 @@ async function startToxic() {
         if (reason === DisconnectReason.connectionClosed || reason === DisconnectReason.connectionLost || reason === DisconnectReason.timedOut || reason === 408 || reason === 503 || reason === 500) {
           const delay = Math.min(baseReconnectDelay * Math.pow(1.5, reconnectAttempts), 30000);
           reconnectAttempts++;
-          if (!reconnectTimer) {
-            reconnectTimer = setTimeout(() => {
-              reconnectTimer = null;
+          if (!global._toxicReconnectTimer) {
+            global._toxicReconnectTimer = setTimeout(() => {
+              global._toxicReconnectTimer = null;
               startToxic();
             }, delay);
           }
@@ -572,18 +572,18 @@ async function startToxic() {
         if (reconnectAttempts < maxReconnectAttempts) {
           const delay = Math.min(baseReconnectDelay * Math.pow(2, reconnectAttempts), 60000);
           reconnectAttempts++;
-          if (!reconnectTimer) {
-            reconnectTimer = setTimeout(() => {
-              reconnectTimer = null;
+          if (!global._toxicReconnectTimer) {
+            global._toxicReconnectTimer = setTimeout(() => {
+              global._toxicReconnectTimer = null;
               startToxic();
             }, delay);
           }
           return;
         } else {
           reconnectAttempts = 0;
-          if (!reconnectTimer) {
-            reconnectTimer = setTimeout(() => {
-              reconnectTimer = null;
+          if (!global._toxicReconnectTimer) {
+            global._toxicReconnectTimer = setTimeout(() => {
+              global._toxicReconnectTimer = null;
               startToxic();
             }, 30000);
           }
@@ -677,14 +677,14 @@ async function startToxic() {
       return trueFileName;
     };
 
-    isStarting = false;
+    global._toxicIsStarting = false;
   } catch (error) {
     console.error('❌ [START TOXIC ERROR]:', error);
-    currentClient = null;
-    isStarting = false;
-    if (!reconnectTimer) {
-      reconnectTimer = setTimeout(() => {
-        reconnectTimer = null;
+    global._toxicCurrentClient = null;
+    global._toxicIsStarting = false;
+    if (!global._toxicReconnectTimer) {
+      global._toxicReconnectTimer = setTimeout(() => {
+        global._toxicReconnectTimer = null;
         startToxic();
       }, 5000);
     }
@@ -706,7 +706,6 @@ module.exports = { startToxic, invalidateSettingsCache };
 let file = require.resolve(__filename);
 fs.watchFile(file, () => {
   fs.unwatchFile(file);
-  console.log(chalk.redBright(`Update ${__filename}`));
-  delete require.cache[file];
-  require(file);
+  console.log(chalk.redBright(`Update ${__filename} — restarting cleanly...`));
+  process.exit(0);
 });
