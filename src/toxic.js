@@ -1,5 +1,6 @@
 const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType, downloadContentFromMessage } = require("@whiskeysockets/baileys");
 const fs = require("fs");
+const path = require("path");
 const util = require("util");
 const chalk = require("chalk");
 const speed = require("performance-now");
@@ -21,6 +22,13 @@ const ownerMiddleware = require('../utils/botUtil/Ownermiddleware');
 
 process.setMaxListeners(50);
 cleanupOldMessages();
+
+let _toxicPict = Buffer.alloc(0);
+try {
+    _toxicPict = fs.readFileSync(path.resolve(__dirname, '../toxic.jpg'));
+} catch (e) {
+    _toxicPict = Buffer.alloc(0);
+}
 setInterval(() => cleanupOldMessages(), 12 * 60 * 60 * 1000);
 
 let _cachedSettings = null;
@@ -195,8 +203,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         const timestamp = speed();
         const toxicspeed = speed() - timestamp;
-        const filePath = require('path').resolve(__dirname, '../toxic.jpg');
-        const pict = fs.readFileSync(filePath);
+        const pict = _toxicPict;
 
         const ALL_PREFIXES = ['.','!','#','/','$','?','+','-','*','~','@','%','&','^','=','|'];
         let commandName = null;
@@ -453,284 +460,3 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     const sender = client.decodeJid(deletedMessage.key.participant || deletedMessage.key.remoteJid);
                     const deleter = m.key.participant ? m.key.participant.split('@')[0] : 'Unknown';
                     let groupName = 'Private Chat';
-
-                    if (chatJidToSearch.endsWith('@g.us')) {
-                        try {
-                            const gMeta = await fastGroupMetadata(client, chatJidToSearch);
-                            groupName = gMeta?.subject || 'Unknown Group';
-                        } catch (e) {
-                            groupName = 'Unknown Group';
-                        }
-                    }
-
-                    const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
-                    const messageType = getMessageType(deletedMessage.message);
-
-                    try {
-                        const msg = extractInnerMessage(deletedMessage.message);
-
-                        if (msg.conversation) {
-                            await client.sendMessage(botJid, {
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📝 *Deleted Content:*\n${msg.conversation}`,
-                                mentions: [sender]
-                            });
-                        } else if (msg.extendedTextMessage?.text) {
-                            await client.sendMessage(botJid, {
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰───────☉\n\n📝 *Deleted Content:*\n${msg.extendedTextMessage.text}`,
-                                mentions: [sender]
-                            });
-                        } else if (msg.imageMessage) {
-                            const caption = msg.imageMessage.caption || '';
-                            const buf = await downloadMedia(client, msg.imageMessage, 'image');
-                            await client.sendMessage(botJid, {
-                                image: buf,
-                                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📸 *Deleted Image:*\n${caption}`,
-                                mentions: [sender]
-                            });
-                        } else if (msg.videoMessage) {
-                            const caption = msg.videoMessage.caption || '';
-                            const buf = await downloadMedia(client, msg.videoMessage, 'video');
-                            await client.sendMessage(botJid, {
-                                video: buf,
-                                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰────────☉\n\n🎥 *Deleted Video:*\n${caption}`,
-                                mentions: [sender]
-                            });
-                        } else if (msg.audioMessage) {
-                            const buf = await downloadMedia(client, msg.audioMessage, 'audio');
-                            await client.sendMessage(botJid, {
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰─────────☉\n\n🎵 *Deleted Audio*`,
-                                mentions: [sender]
-                            });
-                            await client.sendMessage(botJid, {
-                                audio: buf,
-                                ptt: msg.audioMessage.ptt || false,
-                                mimetype: 'audio/mpeg'
-                            });
-                        } else if (msg.stickerMessage) {
-                            const buf = await downloadMedia(client, msg.stickerMessage, 'sticker');
-                            await client.sendMessage(botJid, {
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰───────☉\n\n😀 *Deleted Sticker*`,
-                                mentions: [sender]
-                            });
-                            await client.sendMessage(botJid, { sticker: buf });
-                        } else if (msg.documentMessage) {
-                            const buf = await downloadMedia(client, msg.documentMessage, 'document');
-                            await client.sendMessage(botJid, {
-                                document: buf,
-                                mimetype: msg.documentMessage.mimetype || 'application/octet-stream',
-                                fileName: msg.documentMessage.fileName || 'document',
-                                caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰─────────☉\n\n📄 *Deleted Document:*\n${msg.documentMessage.fileName || ''}\n${msg.documentMessage.caption || ''}`,
-                                mentions: [sender]
-                            });
-                        } else if (msg.contactMessage) {
-                            const vcard = msg.contactMessage.vcard;
-                            const displayName = msg.contactMessage.displayName || 'Contact';
-                            await client.sendMessage(botJid, {
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰───────────────☉\n\n👤 *Deleted Contact:*\n${displayName}`,
-                                mentions: [sender]
-                            });
-                            await client.sendMessage(botJid, {
-                                contacts: { displayName, contacts: [{ vcard }] }
-                            });
-                        } else if (msg.contactsArrayMessage) {
-                            const contacts = msg.contactsArrayMessage.contacts || [];
-                            const displayName = msg.contactsArrayMessage.displayName || 'Contacts';
-                            await client.sendMessage(botJid, {
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰─────────☉\n\n👥 *Deleted Contacts (${contacts.length}):*\n${displayName}`,
-                                mentions: [sender]
-                            });
-                            for (const c of contacts) {
-                                await client.sendMessage(botJid, {
-                                    contacts: { displayName: c.displayName, contacts: [{ vcard: c.vcard }] }
-                                });
-                            }
-                        } else if (msg.locationMessage) {
-                            await client.sendMessage(botJid, {
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📍 *Deleted Location*`,
-                                mentions: [sender]
-                            });
-                            await client.sendMessage(botJid, {
-                                location: {
-                                    degreesLatitude: msg.locationMessage.degreesLatitude,
-                                    degreesLongitude: msg.locationMessage.degreesLongitude,
-                                    name: msg.locationMessage.name || '',
-                                    address: msg.locationMessage.address || ''
-                                }
-                            });
-                        } else if (msg.liveLocationMessage) {
-                            await client.sendMessage(botJid, {
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📍 *Deleted Live Location*\nLat: ${msg.liveLocationMessage.degreesLatitude}\nLng: ${msg.liveLocationMessage.degreesLongitude}`,
-                                mentions: [sender]
-                            });
-                        } else if (msg.pollCreationMessage || msg.pollCreationMessageV3) {
-                            const poll = msg.pollCreationMessage || msg.pollCreationMessageV3;
-                            const pollName = poll.name || 'Poll';
-                            const options = (poll.options || []).map(o => o.optionName).join('\n々 ');
-                            await client.sendMessage(botJid, {
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📊 *Deleted Poll:*\n${pollName}\n々 ${options}`,
-                                mentions: [sender]
-                            });
-                        } else {
-                            await client.sendMessage(botJid, {
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n⚠️ *Deleted content could not be recovered*`,
-                                mentions: [sender]
-                            });
-                        }
-                    } catch (error) {
-                        console.error('❌ [ANTIDELETE ERROR]:', error);
-                    }
-                }
-            }
-        }
-
-        if (m.message?.protocolMessage?.type === 14 || m.message?.editedMessage) {
-            const currentSettings = await fastGetSettings();
-            const isAntieditEnabled = currentSettings?.antiedit === true;
-
-            if (isAntieditEnabled && store?.chats && store?.messageMap) {
-                try {
-                    const editedProto = m.message.protocolMessage || {};
-                    const editKey = editedProto.key || m.message.editedMessage?.message?.protocolMessage?.key;
-                    const newMessage = editedProto.editedMessage?.message || m.message.editedMessage?.message;
-
-                    if (editKey && newMessage) {
-                        const editedMessageId = editKey.id;
-                        const editedRemoteJid = editKey.remoteJid || m.chat;
-                        const normalizedEditJid = normalizeJidForStorage(editedRemoteJid);
-
-                        if (editedRemoteJid !== 'status@broadcast' && !editedRemoteJid.includes('@broadcast') && !editedRemoteJid.includes('@newsletter')) {
-                            let originalMessage = null;
-                            let chatJid = null;
-
-                            if (store.messageMap[editedMessageId]) {
-                                chatJid = store.messageMap[editedMessageId].normalizedJid;
-                            } else {
-                                chatJid = normalizedEditJid;
-                            }
-
-                            if (store.chats[chatJid]) {
-                                originalMessage = store.chats[chatJid].find(msg => msg.key.id === editedMessageId);
-                            }
-
-                            if (!originalMessage) {
-                                for (const [jid, messages] of Object.entries(store.chats)) {
-                                    if (['key', 'idGetter', 'dict', 'array'].includes(jid)) continue;
-                                    const found = messages.find(msg => msg.key.id === editedMessageId);
-                                    if (found) {
-                                        originalMessage = found;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            const botJid = client.decodeJid(client.user.id);
-                            const editor = m.key.participant ? m.key.participant.split('@')[0] : m.sender?.split('@')[0] || 'Unknown';
-                            let groupName = 'Private Chat';
-
-                            if (editedRemoteJid.endsWith('@g.us')) {
-                                try {
-                                    const gMeta = await fastGroupMetadata(client, editedRemoteJid);
-                                    groupName = gMeta?.subject || 'Unknown Group';
-                                } catch (e) {
-                                    groupName = 'Unknown Group';
-                                }
-                            }
-
-                            const editTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
-                            let originalText = '';
-
-                            if (originalMessage?.message) {
-                                const origMsg = extractInnerMessage(originalMessage.message);
-                                originalText = origMsg.conversation || origMsg.extendedTextMessage?.text || origMsg.imageMessage?.caption || origMsg.videoMessage?.caption || '';
-                            }
-
-                            const newInner = extractInnerMessage(newMessage);
-                            const newText = newInner.conversation || newInner.extendedTextMessage?.text || newInner.imageMessage?.caption || newInner.videoMessage?.caption || '';
-
-                            if (originalText || newText) {
-                                const notification = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Eᴅɪᴛᴇᴅ Msɢ ≪───\n々 Time: ${editTime}\n々 Chat: ${groupName}\n々 Edited by: @${editor}\n╰──────────☉`;
-                                let fullMsg = notification;
-                                if (originalText) fullMsg += `\n\nOriginal:\n${originalText}`;
-                                if (newText) fullMsg += `\n\nEdited to:\n${newText}`;
-                                await client.sendMessage(botJid, {
-                                    text: fullMsg,
-                                    mentions: [m.key.participant || m.sender]
-                                });
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error('❌ [ANTIEDIT ERROR]:', error);
-                }
-            }
-        }
-
-        const isStealthOn = stealth === 'true' || stealth === true;
-
-        if (isStealthOn) {
-            if (commandName === 'stealth' && typeof cmd === 'function') {
-                await cmd(context);
-            }
-            return;
-        }
-
-        try {
-            await antilink(client, m, store);
-        } catch (error) {
-            console.error('❌ [ANTILINK ERROR]:', error);
-        }
-
-        try {
-            await chatbotpm(client, m, store, chatbotpmSetting);
-        } catch (error) {
-            console.error('❌ [CHATBOTPM ERROR]:', error);
-        }
-
-        try {
-            await status_saver(client, m, Owner, prefix);
-        } catch (error) {
-            console.error('❌ [STATUS_SAVER ERROR]:', error);
-        }
-
-        try {
-            await gcPresence(client, m);
-        } catch (error) {
-            console.error('❌ [GCPRESENCE ERROR]:', error);
-        }
-
-        try {
-            await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
-        } catch (error) {
-            console.error('❌ [ANTITAGGC ERROR]:', error);
-        }
-
-        try {
-            await antistatusmention(client, m);
-        } catch (error) {
-            console.error('❌ [ANTISTATUSMENTION ERROR]:', error);
-        }
-
-        if (cmd && typeof cmd === 'function') {
-            try {
-                await cmd(context);
-            } catch (error) {
-                console.error(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
-            }
-        }
-
-    } catch (err) {
-        console.error('❌ [TOXIC] Error:', err);
-    }
-};
-
-process.on('uncaughtException', function (err) {
-    let e = String(err);
-    if (e.includes("conflict")) return;
-    if (e.includes("not-authorized")) return;
-    if (e.includes("Socket connection timeout")) return;
-    if (e.includes("rate-overlimit")) return;
-    if (e.includes("Connection Closed")) return;
-    if (e.includes("Timed Out")) return;
-    if (e.includes("Value not found")) return;
-    console.error('❌ [UNCAUGHT EXCEPTION]:', err);
-});
