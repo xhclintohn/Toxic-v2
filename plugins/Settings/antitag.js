@@ -52,6 +52,7 @@ module.exports = async (context) => {
             }
 
             await updateGroupSetting(jid, 'antitag', action ? 'true' : 'false');
+            await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
             await m.reply(
                 `╭───(    TOXIC-MD    )───\n` +
                 `├───≫ ANTITAG ≪───\n` +

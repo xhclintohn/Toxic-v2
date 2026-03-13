@@ -32,7 +32,7 @@ if (!text.includes('mediafire.com')) {
     }
 
 
-await m.reply("╭───(    TOXIC-MD    )───\n├ Hold on, fetching your file...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
 try {
 
@@ -48,6 +48,8 @@ if (!fileInfo || !fileInfo.length) {
 
 
 
+
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
         await client.sendMessage(
             m.chat,
@@ -66,7 +68,7 @@ if (!fileInfo || !fileInfo.length) {
 
 } catch (error) {
 
-
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         m.reply(`╭───(    TOXIC-MD    )───\n├───≫ MEDIAFIRE ERROR ≪───\n├ \n├ Download failed, not my fault.\n├ ${error}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 

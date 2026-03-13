@@ -50,7 +50,7 @@ module.exports = {
             return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO ANIME ≪───\n├ \n├ The replied message is *not an image*!\n├ Please reply to a *photo*, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
-        const processing = await m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO ANIME ≪───\n├ \n├ Converting to anime...\n├ Please wait!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         try {
             const media = await quoted.download();
@@ -73,16 +73,17 @@ module.exports = {
 
             const animeBuffer = Buffer.from(apiResponse.data);
 
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
             await client.sendMessage(m.chat, {
                 image: animeBuffer,
                 caption: `╭───(    TOXIC-MD    )───\n├───≫ ANIME TRANSFORMATION ≪───\n├ \n├ ANIME TRANSFORMATION COMPLETE!\n├ Look at this weeb result.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 mentions: [m.sender]
             }, { quoted: m });
 
-            await client.sendMessage(m.chat, { delete: processing.key });
-
         } catch (err) {
             console.error('ToAnime Error:', err.message);
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
 
             const errorMsg = err.response
                 ? `API Error: ${err.response.status}`

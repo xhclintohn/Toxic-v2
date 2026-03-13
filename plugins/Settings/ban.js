@@ -73,6 +73,7 @@ module.exports = async (context) => {
         }
 
         await banUser(numberToBan);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
         await m.reply(
             `╭───(    TOXIC-MD    )───\n` +
             `├───≫ BAN ≪───\n` +

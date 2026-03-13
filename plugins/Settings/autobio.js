@@ -32,6 +32,7 @@ module.exports = async (context) => {
         }
 
         await updateSetting('autobio', action);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("AUTOBIO", `Autobio ${value.toUpperCase()} activated! ${action ? 'Bot\'s flexing status updates every 10 seconds, bow down!' : 'No more status flexing, you\'re not worth it.'}`) },

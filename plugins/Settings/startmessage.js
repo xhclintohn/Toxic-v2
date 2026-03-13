@@ -33,6 +33,7 @@ module.exports = async (context) => {
         }
 
         await updateSetting('startmessage', action);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply(`Start message ${value.toUpperCase()} activated! 🔥 ${action ? 'Welcome messages will be sent on connection! 🎉' : 'No more annoying welcome messages, you antisocial prick! 🚫'}`) },

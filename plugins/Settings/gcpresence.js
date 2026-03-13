@@ -32,6 +32,7 @@ module.exports = async (context) => {
             
             if (jid.endsWith('@g.us')) {
                 await updateGroupSetting(jid, 'gcpresence', action);
+                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
                 await m.reply(formatStylishReply(`Group: ${value.toUpperCase()}`));
             } else {
                 await m.reply(formatStylishReply(`DMs: Always ON`));

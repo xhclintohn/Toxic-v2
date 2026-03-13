@@ -26,6 +26,7 @@ module.exports = async (context) => {
         }
 
         await updateSetting('autolike', newValue);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
 
         await m.reply(
           `╭───(    TOXIC-MD    )───\n` +

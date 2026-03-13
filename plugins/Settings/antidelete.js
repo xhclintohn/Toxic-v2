@@ -32,6 +32,7 @@ module.exports = async (context) => {
         }
 
         await updateSetting('antidelete', action);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("ANTIDELETE", `Antidelete ${value.toUpperCase()} activated! ${action ? 'No one\'s erasing shit on my watch, king!' : 'Deletions are free to slide, you\'re not worth catching.'}`) },

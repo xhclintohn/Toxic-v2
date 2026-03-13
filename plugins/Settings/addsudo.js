@@ -41,6 +41,7 @@ module.exports = async (context) => {
     }
 
     await addSudoUser(numberToAdd);
+    await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
     await m.reply(
       `╭───(    TOXIC-MD    )───\n` +
       `├───≫ ADD SUDO ≪───\n` +

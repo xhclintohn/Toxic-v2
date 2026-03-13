@@ -41,6 +41,7 @@ module.exports = async (context) => {
       }
 
       await updateGroupSetting(jid, 'antidemote', action ? 'true' : 'false');
+      await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
       await m.reply(
         `╭───(    TOXIC-MD    )───\n` +
         `├───≫ ANTIDEMOTE ≪───\n` +

@@ -32,6 +32,7 @@ module.exports = async (context) => {
 
       
         await removeSudoUser(numberToRemove);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
 
         await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ DELSUDO ≪───\n├ \n├ ${numberToRemove} removed from Sudo Users.\n├ Power revoked. Sucks to be them.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     });

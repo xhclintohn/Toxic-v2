@@ -15,12 +15,14 @@ module.exports = async (context) => {
             if (value === 'on') {
                 if (isEnabled) return await client.sendMessage(m.chat, { text: fmt('Stealth is already ON, dummy. 😒 Bot is already ghosting.') }, { quoted: m });
                 await updateSetting('stealth', 'true');
+                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
                 return await client.sendMessage(m.chat, { text: fmt('👻 Stealth ON! Commands and replies auto-delete after 8s. Ghost mode activated. 😈') }, { quoted: m });
             }
 
             if (value === 'off') {
                 if (!isEnabled) return await client.sendMessage(m.chat, { text: fmt('Stealth is already OFF, clown. 🙄 Nothing to disable.') }, { quoted: m });
                 await updateSetting('stealth', 'false');
+                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
                 return await client.sendMessage(m.chat, { text: fmt('💡 Stealth OFF. Replies stay visible now. Boring choice but alright.') }, { quoted: m });
             }
 

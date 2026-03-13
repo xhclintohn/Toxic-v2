@@ -18,6 +18,7 @@ module.exports = async (context) => {
             return;
           }
           await updateSetting('autolikeemoji', 'random');
+          await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
           await m.reply("╭───(    TOXIC-MD    )───\n├ Reaction emoji set to random! Happy now?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         } else {
           if (currentEmoji === newEmoji) {
@@ -25,6 +26,7 @@ module.exports = async (context) => {
             return;
           }
           await updateSetting('autolikeemoji', newEmoji);
+          await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
           await m.reply(`╭───(    TOXIC-MD    )───\n├ Reaction emoji set to ${newEmoji}!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
         return;

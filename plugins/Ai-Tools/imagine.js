@@ -17,9 +17,7 @@ module.exports = {
         }
 
         try {
-            const loadingMsg = await client.sendMessage(m.chat, {
-                text: `╭───(    TOXIC-MD    )───\n├───≫ Gᴇɴᴇʀᴀᴛɪɴɢ ≪───\n├ \n├ Generating AI image...\n├ Prompt: "${prompt}"\n├ This may take a moment...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
             const encodedPrompt = encodeURIComponent(prompt);
             const apiUrl = `https://anabot.my.id/api/ai/dreamImage?prompt=${encodedPrompt}&models=Fantasy&apikey=freeApikey`;
@@ -40,9 +38,7 @@ module.exports = {
 
             const imageUrl = data.data.result;
 
-            await client.sendMessage(m.chat, { 
-                delete: loadingMsg.key 
-            });
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
             await client.sendMessage(
                 m.chat,
@@ -56,12 +52,7 @@ module.exports = {
         } catch (error) {
             console.error('Imagine command error:', error);
             
-            try {
-                await client.sendMessage(m.chat, { 
-                    delete: loadingMsg.key 
-                });
-            } catch (e) {
-            }
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
 
             let errorMessage = 'An unexpected error occurred';
             

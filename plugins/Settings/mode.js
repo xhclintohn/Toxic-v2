@@ -33,6 +33,7 @@ module.exports = async (context) => {
         }
 
         await updateSetting('mode', value);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply(`Bot mode set to ${value.toUpperCase()}! 🔥 Bow to the king, I rule now! 😈`) },

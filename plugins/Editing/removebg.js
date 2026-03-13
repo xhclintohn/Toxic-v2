@@ -36,21 +36,17 @@ module.exports = {
             }, { quoted: m });
         }
 
-        const loadingMsg = await client.sendMessage(m.chat, {
-            text: '╭───(    TOXIC-MD    )───\n├───≫ REMOVE BG ≪───\n├ \n├ Removing background...\n├ This might take a moment.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
-        }, { quoted: m });
-
         try {
             const media = await quoted.download();
             if (!media) {
-                await client.sendMessage(m.chat, { delete: loadingMsg.key });
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                 return client.sendMessage(m.chat, {
                     text: '╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Failed to download the image.\n├ Your device is probably as defective\n├ as your judgment.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
                 }, { quoted: m });
             }
 
             if (media.length > 10 * 1024 * 1024) {
-                await client.sendMessage(m.chat, { delete: loadingMsg.key });
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                 return client.sendMessage(m.chat, {
                     text: '╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Image exceeds 10MB limit.\n├ Do you think I have infinite storage?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
                 }, { quoted: m });
@@ -80,8 +76,6 @@ module.exports = {
 
             const transparentImage = Buffer.from(transparentResponse.data);
 
-            await client.sendMessage(m.chat, { delete: loadingMsg.key });
-            
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
             await client.sendMessage(
@@ -109,11 +103,6 @@ module.exports = {
         } catch (err) {
             console.error('RemoveBG error:', err);
             
-            try {
-                await client.sendMessage(m.chat, { delete: loadingMsg.key });
-            } catch (e) {}
-            
-           
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
 
             let errorMessage = 'An unexpected error occurred';

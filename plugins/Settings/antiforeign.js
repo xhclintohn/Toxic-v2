@@ -76,6 +76,7 @@ module.exports = async (context) => {
         }
 
         await updateGroupSetting(jid, 'antiforeign', action);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
         await m.reply(
           `╭───(    TOXIC-MD    )───\n` +
           `├───≫ ANTIFOREIGN ≪───\n` +

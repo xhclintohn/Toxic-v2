@@ -29,6 +29,7 @@ module.exports = async (context) => {
         }
 
         await unbanUser(numberToUnban);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
         await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ UNBAN ≪───\n├ \n├ ${numberToUnban} has been unbanned.\n├ They better not mess up again.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     });
 };

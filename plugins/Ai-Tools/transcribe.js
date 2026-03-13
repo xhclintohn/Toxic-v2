@@ -11,7 +11,7 @@ module.exports = async (context) => {
     return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Send or reply to an audio/video file with the caption _transcribe_ idiot\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 
-  m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Tʀᴀɴsᴄʀɪʙɪɴɢ ≪───\n├ \n├ Processing, please wait...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+  await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
   try {
     const buffer = await m.quoted.download();
@@ -26,9 +26,11 @@ module.exports = async (context) => {
       return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Failed to extract text. Please try again later.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
+    await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Tʀᴀɴsᴄʀɪᴘᴛɪᴏɴ ≪───\n├ \n├ ${result.text}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   } catch (error) {
     console.error(error);
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
     m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ An error occurred while processing the file.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 };

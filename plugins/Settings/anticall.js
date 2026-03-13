@@ -33,6 +33,7 @@ module.exports = async (context) => {
         }
 
         await updateSetting('anticall', action);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("ANTICALL", `Anticall ${value.toUpperCase()}! Callers will get wrecked!`) },

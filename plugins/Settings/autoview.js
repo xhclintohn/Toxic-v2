@@ -33,6 +33,7 @@ module.exports = async (context) => {
         }
 
         await updateSetting('autoview', newState);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply('AUTOVIEW', `Autoview Status ${value.toUpperCase()}! ${newState ? 'I\'ll view every status like a king!' : 'I\'m done with your boring statuses.'}`) },

@@ -170,7 +170,11 @@ const aliases = {
     mysettings: "settings",
     botconfig: "settings",
     pong: "ping",
-    response: "ping"
+    response: "ping",
+    wc: "warncount",
+    rw: "resetwarn",
+    warns: "warncount",
+    clearwarn: "resetwarn"
 };
 
 commandFiles.forEach((file) => {

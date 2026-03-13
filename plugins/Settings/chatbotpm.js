@@ -51,6 +51,7 @@ module.exports = async (context) => {
       }
 
       await updateSetting('chatbotpm', newState);
+      await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
       return await client.sendMessage(
         m.chat,
         { text: formatStylishReply(`Chatbot PM ${newState ? 'ENABLED' : 'DISABLED'}! ${newState ? 'Now I’ll chat like a pro! 🤖' : 'Back to normal, boring mode. 😴'}`) },

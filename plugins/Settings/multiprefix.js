@@ -15,12 +15,14 @@ module.exports = async (context) => {
             if (value === 'on' || value === 'all') {
                 if (isEnabled) return await client.sendMessage(m.chat, { text: fmt('Multi-prefix is already ON, genius. 😒 All symbols already work.') }, { quoted: m });
                 await updateSetting('multiprefix', 'true');
+                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
                 return await client.sendMessage(m.chat, { text: fmt('🔥 Multi-prefix ON! Bot now responds to . ! # / $ ? + - * ~ @ % and even null prefix. Pure chaos. 😈') }, { quoted: m });
             }
 
             if (value === 'off') {
                 if (!isEnabled) return await client.sendMessage(m.chat, { text: fmt(`Multi-prefix already OFF, clown. 🙄 Single prefix: *${settings.prefix || '.'}*`) }, { quoted: m });
                 await updateSetting('multiprefix', 'false');
+                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
                 return await client.sendMessage(m.chat, { text: fmt(`🧊 Multi-prefix OFF. Back to single prefix: *${settings.prefix || '.'}*`) }, { quoted: m });
             }
 

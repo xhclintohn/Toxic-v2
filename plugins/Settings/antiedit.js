@@ -32,6 +32,7 @@ module.exports = async (context) => {
         }
 
         await updateSetting('antiedit', action);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("ANTIEDIT", `Antiedit ${value.toUpperCase()} activated! ${action ? 'Every sneaky edit gets caught now. No hiding.' : 'Edits fly under the radar. Your loss.'}`) },

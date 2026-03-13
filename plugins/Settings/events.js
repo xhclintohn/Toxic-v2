@@ -49,6 +49,7 @@ module.exports = async (context) => {
         }
 
         await updateGroupSetting(jid, 'events', action);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
         return await client.sendMessage(
           m.chat,
           {

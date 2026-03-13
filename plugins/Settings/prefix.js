@@ -19,6 +19,7 @@ module.exports = async (context) => {
         );
       }
       await updateSetting('prefix', '');
+      await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
       await m.reply(
         `╭───(    TOXIC-MD    )───\n` +
         `├ Prefix obliterated! 🔥\n` +
@@ -37,6 +38,7 @@ module.exports = async (context) => {
         );
       }
       await updateSetting('prefix', newPrefix);
+      await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
       await m.reply(
         `╭───(    TOXIC-MD    )───\n` +
         `├ New prefix set to ${newPrefix}! 🔥\n` +

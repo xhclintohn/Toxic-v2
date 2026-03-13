@@ -33,6 +33,7 @@ module.exports = async (context) => {
         }
 
         await updateSetting('presence', value);
+        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply(`Presence set to ${value.toUpperCase()}. Bot’s flexing that status now!`) },

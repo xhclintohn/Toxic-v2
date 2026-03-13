@@ -38,8 +38,8 @@ let _cachedSudoTime = 0;
 let _cachedBanned = null;
 let _cachedBannedTime = 0;
 const _groupMetaCache = new Map();
-const FAST_CACHE_TTL = 15000;
-const GROUP_META_TTL = 120000;
+const FAST_CACHE_TTL = 300000;
+const GROUP_META_TTL = 300000;
 
 async function fastGetSettings() {
     const now = Date.now();
@@ -80,6 +80,12 @@ async function fastGroupMetadata(client, jid) {
     } catch (e) {
         return cached?.data || {};
     }
+}
+
+async function prewarmCache() {
+    try {
+        await Promise.all([fastGetSettings(), fastGetSudo(), fastGetBanned()]);
+    } catch (e) {}
 }
 
 async function downloadMedia(client, message, type) {
@@ -156,11 +162,14 @@ function extractInnerMessage(message) {
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
     try {
-        const rawSudoUsers = await fastGetSudo();
-        const rawBannedUsers = await fastGetBanned();
+        const [rawSudoUsers, rawBannedUsers, fetchedSettings] = await Promise.all([
+            fastGetSudo(),
+            fastGetBanned(),
+            fastGetSettings()
+        ]);
         const sudoUsers = Array.isArray(rawSudoUsers) ? rawSudoUsers : [];
         const bannedUsers = Array.isArray(rawBannedUsers) ? rawBannedUsers : [];
-        let settings = await fastGetSettings();
+        let settings = fetchedSettings;
 
         if (!settings) {
             console.error("Toxic-MD: Settings not found!");
@@ -728,6 +737,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         console.error('❌ [TOXIC] Error:', err);
     }
 };
+
+module.exports.prewarmCache = prewarmCache;
 
 process.on('uncaughtException', function (err) {
     let e = String(err);
