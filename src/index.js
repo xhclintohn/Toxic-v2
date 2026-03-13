@@ -43,7 +43,6 @@ const sessionName = path.join(__dirname, '..', 'Session');
 
 const groupEvents = require("../handlers/eventHandler");
 const connectionHandler = require('../handlers/connectionHandler');
-const antiedit = require("../features/antiedit");
 
 
 let cachedSettings = null;
@@ -394,12 +393,6 @@ async function startToxic() {
               await client.readMessages([update.key]);
             } catch (error) {}
           }
-        }
-
-        if (update.key && update.key.remoteJid?.endsWith('@g.us') && update.update?.message) {
-          try {
-            await antiedit(client, update);
-          } catch (e) {}
         }
       } catch (e) {}
     }
