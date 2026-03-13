@@ -1,13 +1,12 @@
-const { getSettings, getSudoUsers } = require("../database/config");
 const fetch = require('node-fetch');
 
-module.exports = async (client, m, store, chatbotpmSetting) => {
+module.exports = async (client, m, store, chatbotpmSetting, prefix, sudoUsers) => {
     try {
         if (!m || !m.key || !m.message || !m.key.remoteJid.endsWith("@s.whatsapp.net") || m.key.fromMe) {
             return;
         }
 
-        if (!chatbotpmSetting) {
+        if (!(chatbotpmSetting === true || chatbotpmSetting === 'true')) {
             return;
         }
 
@@ -19,8 +18,8 @@ module.exports = async (client, m, store, chatbotpmSetting) => {
             return;
         }
 
-        const sudoUsers = await getSudoUsers();
-        if (sudoUsers.includes(senderNumber) || sender === botNumber) {
+        const sudoList = Array.isArray(sudoUsers) ? sudoUsers.map(v => String(v).replace(/[^0-9]/g, '')).filter(Boolean) : [];
+        if (sudoList.includes(senderNumber) || sender === botNumber) {
             return;
         }
 
@@ -32,8 +31,8 @@ module.exports = async (client, m, store, chatbotpmSetting) => {
             ""
         ).trim();
 
-        const { prefix } = await getSettings();
-        if (messageContent.startsWith(prefix)) {
+        const effectivePrefix = (typeof prefix === 'string' && prefix.length) ? prefix : '.';
+        if (messageContent.startsWith(effectivePrefix)) {
             return;
         }
 
@@ -46,7 +45,14 @@ module.exports = async (client, m, store, chatbotpmSetting) => {
             const prompt = encodeURIComponent("You are ToxicAI you must always reply in a toxic tone and you were created by xhclinton");
             const apiUrl = `https://api.deline.web.id/ai/openai?text=${encodedText}&prompt=${prompt}`;
 
-            const response = await fetch(apiUrl);
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10000);
+            let response;
+            try {
+                response = await fetch(apiUrl, { signal: controller.signal });
+            } finally {
+                clearTimeout(timeout);
+            }
 
             if (!response.ok) {
                 throw new Error(`API request failed with status ${response.status}`);
