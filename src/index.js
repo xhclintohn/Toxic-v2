@@ -35,7 +35,6 @@ const { getSettings, getBannedUsers, banUser } = require("../database/config");
 const { botname } = require('../config/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('../handlers/commandHandler');
-authenticationn();
 
 const path = require('path');
 
@@ -43,7 +42,6 @@ const sessionName = path.join(__dirname, '..', 'Session');
 
 const groupEvents = require("../handlers/eventHandler");
 const connectionHandler = require('../handlers/connectionHandler');
-
 
 let cachedSettings = null;
 let settingsCacheTime = 0;
@@ -90,10 +88,11 @@ function cleanupSessionFiles() {
                     }
                 }
             } catch (fileError) {
+                console.error(fileError);
             }
         });
     } catch (error) {
-        console.error('❌ Session cleanup error:', error.message);
+        console.error('❌ Session cleanup error:', error);
     }
 }
 
@@ -101,473 +100,593 @@ let cleanupInterval = null;
 let autobioInterval = null;
 let storeWriteInterval = null;
 let memoryCheckInterval = null;
+let processedCallsInterval = null;
+let currentClient = null;
+let isStarting = false;
+let reconnectTimer = null;
+let shuttingDownClient = false;
 
 async function startToxic() {
-  if (cleanupInterval) clearInterval(cleanupInterval);
-  if (memoryCheckInterval) clearInterval(memoryCheckInterval);
-  cleanupInterval = setInterval(cleanupSessionFiles, 24 * 60 * 60 * 1000);
-  cleanupSessionFiles();
+  if (isStarting) return;
+  isStarting = true;
 
-  memoryCheckInterval = setInterval(() => {
-    try {
-      const mem = process.memoryUsage();
-      const usedMB = Math.round(mem.rss / 1024 / 1024);
-      if (usedMB > 450) {
-        console.log(`⚠️ High memory usage: ${usedMB}MB - running garbage collection`);
-        if (global.gc) global.gc();
+  try {
+    await authenticationn();
+
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+
+    if (cleanupInterval) clearInterval(cleanupInterval);
+    if (memoryCheckInterval) clearInterval(memoryCheckInterval);
+    if (autobioInterval) clearInterval(autobioInterval);
+    if (storeWriteInterval) clearInterval(storeWriteInterval);
+    if (processedCallsInterval) clearInterval(processedCallsInterval);
+
+    cleanupInterval = setInterval(cleanupSessionFiles, 24 * 60 * 60 * 1000);
+    cleanupSessionFiles();
+
+    memoryCheckInterval = setInterval(() => {
+      try {
+        const mem = process.memoryUsage();
+        const usedMB = Math.round(mem.rss / 1024 / 1024);
+        if (usedMB > 450) {
+          console.log(`⚠️ High memory usage: ${usedMB}MB - running garbage collection`);
+          if (global.gc) global.gc();
+        }
+      } catch (e) {
+        console.error(e);
       }
-    } catch (e) {}
-  }, 5 * 60 * 1000);
+    }, 5 * 60 * 1000);
 
-  let settingss = await getSettings();
-  if (!settingss) {
-    console.log(`❌ TOXIC-MD FAILED TO CONNECT - Settings not found`);
-    return;
-  }
+    if (currentClient) {
+      try {
+        shuttingDownClient = true;
+        currentClient.ev.removeAllListeners();
+        currentClient.ws.removeAllListeners();
+        try {
+          currentClient.end(new Error("Restarting client"));
+        } catch (e) {
+          console.error(e);
+        }
+        try {
+          currentClient.ws.close();
+        } catch (e) {
+          console.error(e);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        currentClient = null;
+        shuttingDownClient = false;
+      }
+    }
 
-  cachedSettings = settingss;
-  settingsCacheTime = Date.now();
+    let settingss = await getSettings();
+    if (!settingss) {
+      console.log(`❌ TOXIC-MD FAILED TO CONNECT - Settings not found`);
+      isStarting = false;
+      return;
+    }
 
-  const { autobio, mode, anticall } = settingss;
-  const version = (await (await fetch('https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Defaults/baileys-version.json')).json()).version;
+    cachedSettings = settingss;
+    settingsCacheTime = Date.now();
 
-  const { saveCreds, state } = await useMultiFileAuthState(sessionName);
+    const { autobio, mode, anticall } = settingss;
+    const version = (await (await fetch('https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Defaults/baileys-version.json')).json()).version;
 
-  const client = toxicConnect({
-    printQRInTerminal: false,
-    syncFullHistory: false,
-    markOnlineOnConnect: !(settingss.presence === 'offline' || settingss.presence === 'unavailable'),
-    connectTimeoutMs: 120000,
-    defaultQueryTimeoutMs: 60000,
-    keepAliveIntervalMs: 30000,
-    generateHighQualityLinkPreview: true,
-    emitOwnEvents: true,
-    fireInitQueries: true,
-    retryRequestDelayMs: 10000,
-    getMessage: async (key) => {
-        const msg = store.loadMessage(key.remoteJid, key.id);
-        return msg?.message || undefined;
-    },
-    transactionOpts: {
-      maxCommitRetries: 10,
-      delayBetweenTriesMs: 3000
-    },
-    patchMessageBeforeSending: (message) => {
-      const requiresPatch = !!(
-        message.buttonsMessage ||
-        message.templateMessage ||
-        message.listMessage
-      );
-      if (requiresPatch) {
-        message = {
-          viewOnceMessage: {
-            message: {
-              messageContextInfo: {
-                deviceListMetadataVersion: 2,
-                deviceListMetadata: {},
+    const { saveCreds, state } = await useMultiFileAuthState(sessionName);
+
+    const client = toxicConnect({
+      printQRInTerminal: false,
+      syncFullHistory: false,
+      markOnlineOnConnect: !(settingss.presence === 'offline' || settingss.presence === 'unavailable'),
+      connectTimeoutMs: 120000,
+      defaultQueryTimeoutMs: 60000,
+      keepAliveIntervalMs: 30000,
+      generateHighQualityLinkPreview: true,
+      emitOwnEvents: true,
+      fireInitQueries: true,
+      retryRequestDelayMs: 10000,
+      getMessage: async (key) => {
+          const msg = store.loadMessage(key.remoteJid, key.id);
+          return msg?.message || undefined;
+      },
+      transactionOpts: {
+        maxCommitRetries: 10,
+        delayBetweenTriesMs: 3000
+      },
+      patchMessageBeforeSending: (message) => {
+        try {
+          if (!message || typeof message !== 'object') return message;
+
+          const hasLegacyInteractive =
+            !!message.buttonsMessage ||
+            !!message.templateMessage ||
+            !!message.listMessage;
+
+          if (!hasLegacyInteractive) return message;
+          if (message.viewOnceMessage || message.ephemeralMessage) return message;
+
+          return {
+            viewOnceMessage: {
+              message: {
+                messageContextInfo: {
+                  deviceListMetadataVersion: 2,
+                  deviceListMetadata: {},
+                },
+                ...message,
               },
-              ...message,
             },
-          },
-        };
-      }
-      return message;
-    },
-    version,
-    browser: Browsers.macOS("Chrome"),
-    logger: pino({ level: 'silent' }),
-    auth: {
-      creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: "silent", stream: 'store' }))
-    }
-  });
-  store.bind(client.ev);
-
-  if (storeWriteInterval) clearInterval(storeWriteInterval);
-  storeWriteInterval = setInterval(() => {
-    try {
-      store.writeToFile("store.json");
-    } catch (e) {}
-  }, 300000);
-
-  if (autobioInterval) clearInterval(autobioInterval);
-  if (autobio) {
-    autobioInterval = setInterval(() => {
-      try {
-        const date = new Date();
-        client.updateProfileStatus(
-          `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi' })}.`
-        );
-      } catch (e) {}
-    }, 60 * 1000);
-  }
-
-  const processedCalls = new Set();
-
-  setInterval(() => {
-    processedCalls.clear();
-  }, 10 * 60 * 1000);
-
-  client.ws.on('CB:call', async (json) => {
-    try {
-      const settingszs = await getCachedSettings();
-      if (!settingszs?.anticall) return;
-
-      const callId = json.content?.[0]?.attrs?.['call-id'];
-      const callerJid = json.content?.[0]?.attrs?.['call-creator'];
-      if (!callId || !callerJid) return;
-
-      const isGroupCall = callerJid.endsWith('@g.us');
-      if (isGroupCall) return;
-
-      const callerNumber = callerJid.replace(/[@.a-z]/g, "");
-
-      if (processedCalls.has(callId)) {
-        return;
-      }
-      processedCalls.add(callId);
-
-      const fakeQuoted = {
-        key: {
-          participant: '0@s.whatsapp.net',
-          remoteJid: '0@s.whatsapp.net',
-          id: callId
-        },
-        message: {
-          conversation: "Verified"
-        },
-        contextInfo: {
-          mentionedJid: [callerJid],
-          forwardingScore: 999,
-          isForwarded: true
-        }
-      };
-
-      await client.rejectCall(callId, callerJid);
-      await client.sendMessage(callerJid, {
-        text: "> Calling without permission is highly prohibited ⚠️!"
-      }, { quoted: fakeQuoted });
-
-      const bannedUsers = await getBannedUsers();
-      if (!bannedUsers.includes(callerNumber)) {
-        await banUser(callerNumber);
-      }
-    } catch (callError) {
-      console.error('❌ [CALL HANDLER] Error:', callError.message);
-    }
-  });
-
-  client.ev.on("messages.upsert", async ({ messages, type }) => {
-    if (type !== "notify") return;
-
-    let settings = await getCachedSettings();
-    if (!settings) return;
-
-    const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
-    const isStealthOn = stealth === 'true' || stealth === true;
-
-    for (const mek of messages) {
-      if (!mek || !mek.key) continue;
-
-      const remoteJid = mek.key.remoteJid;
-
-      if (remoteJid === "status@broadcast") {
-        if (autolike && mek.key) {
-          try {
-            let reactEmoji = autolikeemoji || 'random';
-
-            if (reactEmoji === 'random') {
-              const emojis = ['❤️', '🩶', '🔥', '🤍', '♦️', '🎉', '💚', '💯', '✨', '☢️'];
-              reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-            }
-
-            const nickk = client.decodeJid(client.user.id);
-
-            await client.sendMessage(mek.key.remoteJid, {
-              react: {
-                text: reactEmoji,
-                key: mek.key
-              }
-            }, { statusJidList: [mek.key.participant, nickk] });
-          } catch (sendError) {
-            try {
-              let reactEmoji = autolikeemoji || '❤️';
-              await client.sendMessage(mek.key.remoteJid, {
-                react: {
-                  text: reactEmoji,
-                  key: mek.key
-                }
-              });
-            } catch (error2) {
-            }
-          }
-        }
-
-        if (autoview) {
-          try {
-            await client.readMessages([mek.key]);
-          } catch (error) {
-          }
-        }
-
-        continue;
-      }
-
-      if (!mek.message) continue;
-
-      mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
-
-      if (!mek.message) continue;
-
-      if (isStealthOn) {
-        continue;
-      }
-
-      if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-        try {
-          await client.readMessages([mek.key]);
-        } catch (error) {}
-      }
-
-      if (remoteJid.endsWith('@s.whatsapp.net')) {
-        const Chat = remoteJid;
-        try {
-          if (presence === 'offline' || presence === 'unavailable') {
-          } else if (presence === 'online') {
-            await client.sendPresenceUpdate("available", Chat);
-          } else if (presence === 'typing') {
-            await client.sendPresenceUpdate("composing", Chat);
-          } else if (presence === 'recording') {
-            await client.sendPresenceUpdate("recording", Chat);
-          }
-        } catch (error) {}
-      }
-
-      if (!client.public && !mek.key.fromMe) continue;
-
-      if (mek.message?.listResponseMessage) {
-        const selectedCmd = mek.message.listResponseMessage.singleSelectReply?.selectedRowId;
-        if (selectedCmd) {
-          const effectivePrefix = settings?.prefix || '.';
-          let command = selectedCmd.startsWith(effectivePrefix)
-            ? selectedCmd.slice(effectivePrefix.length).toLowerCase()
-            : selectedCmd.toLowerCase();
-
-          const listM = {
-            ...mek,
-            body: selectedCmd,
-            text: selectedCmd,
-            command: command,
-            prefix: effectivePrefix,
-            sender: mek.key.remoteJid,
-            from: mek.key.remoteJid,
-            chat: mek.key.remoteJid,
-            isGroup: mek.key.remoteJid.endsWith('@g.us')
           };
+        } catch (error) {
+          console.error('❌ [PATCH MESSAGE ERROR]:', error);
+          return message;
+        }
+      },
+      version,
+      browser: Browsers.macOS("Chrome"),
+      logger: pino({ level: 'silent' }),
+      auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: "silent", stream: 'store' }))
+      }
+    });
+
+    currentClient = client;
+    store.bind(client.ev);
+
+    storeWriteInterval = setInterval(() => {
+      try {
+        store.writeToFile("store.json");
+      } catch (e) {
+        console.error(e);
+      }
+    }, 300000);
+
+    if (autobio) {
+      autobioInterval = setInterval(() => {
+        try {
+          const date = new Date();
+          client.updateProfileStatus(
+            `${botname} 𝐢𝐬 𝐚𝐜𝐭𝐢𝐯𝐞 𝟐𝟒/𝟕\n\n${date.toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })} 𝐈𝐭'𝐬 𝐚 ${date.toLocaleString('en-US', { weekday: 'long', timeZone: 'Africa/Nairobi' })}.`
+          );
+        } catch (e) {
+          console.error(e);
+        }
+      }, 60 * 1000);
+    }
+
+    const processedCalls = new Set();
+
+    processedCallsInterval = setInterval(() => {
+      processedCalls.clear();
+    }, 10 * 60 * 1000);
+
+    client.ws.on('CB:call', async (json) => {
+      try {
+        const settingszs = await getCachedSettings();
+        if (!settingszs?.anticall) return;
+
+        const callId = json.content?.[0]?.attrs?.['call-id'];
+        const callerJid = json.content?.[0]?.attrs?.['call-creator'];
+        if (!callId || !callerJid) return;
+
+        const isGroupCall = callerJid.endsWith('@g.us');
+        if (isGroupCall) return;
+
+        const callerNumber = callerJid.replace(/[@.a-z]/g, "");
+
+        if (processedCalls.has(callId)) {
+          return;
+        }
+        processedCalls.add(callId);
+
+        const fakeQuoted = {
+          key: {
+            participant: '0@s.whatsapp.net',
+            remoteJid: '0@s.whatsapp.net',
+            id: callId
+          },
+          message: {
+            conversation: "Verified"
+          },
+          contextInfo: {
+            mentionedJid: [callerJid],
+            forwardingScore: 999,
+            isForwarded: true
+          }
+        };
+
+        await client.rejectCall(callId, callerJid);
+        await client.sendMessage(callerJid, {
+          text: "> Calling without permission is highly prohibited ⚠️!"
+        }, { quoted: fakeQuoted });
+
+        const bannedUsers = await getBannedUsers();
+        if (!bannedUsers.includes(callerNumber)) {
+          await banUser(callerNumber);
+        }
+      } catch (callError) {
+        console.error('❌ [CALL HANDLER] Error:', callError);
+      }
+    });
+
+    client.ev.on("messages.upsert", async ({ messages, type }) => {
+      if (type !== "notify") return;
+
+      let settings = await getCachedSettings();
+      if (!settings) return;
+
+      const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
+      const isStealthOn = stealth === 'true' || stealth === true;
+
+      for (const mek of messages) {
+        try {
+          if (!mek || !mek.key) continue;
+
+          const remoteJid = mek.key.remoteJid;
+
+          if (remoteJid === "status@broadcast") {
+            if (autolike && mek.key) {
+              try {
+                let reactEmoji = autolikeemoji || 'random';
+
+                if (reactEmoji === 'random') {
+                  const emojis = ['❤️', '🩶', '🔥', '🤍', '♦️', '🎉', '💚', '💯', '✨', '☢️'];
+                  reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                }
+
+                const nickk = client.decodeJid(client.user.id);
+
+                await client.sendMessage(mek.key.remoteJid, {
+                  react: {
+                    text: reactEmoji,
+                    key: mek.key
+                  }
+                }, { statusJidList: [mek.key.participant, nickk] });
+              } catch (sendError) {
+                console.error(sendError);
+                try {
+                  let reactEmoji = autolikeemoji || '❤️';
+                  await client.sendMessage(mek.key.remoteJid, {
+                    react: {
+                      text: reactEmoji,
+                      key: mek.key
+                    }
+                  });
+                } catch (error2) {
+                  console.error(error2);
+                }
+              }
+            }
+
+            if (autoview) {
+              try {
+                await client.readMessages([mek.key]);
+              } catch (error) {
+                console.error(error);
+              }
+            }
+
+            continue;
+          }
+
+          if (!mek.message) continue;
+
+          mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
+
+          if (!mek.message) continue;
+
+          if (isStealthOn) {
+            continue;
+          }
+
+          if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+            try {
+              await client.readMessages([mek.key]);
+            } catch (error) {
+              console.error(error);
+            }
+          }
+
+          if (remoteJid.endsWith('@s.whatsapp.net')) {
+            const Chat = remoteJid;
+            try {
+              if (presence === 'offline' || presence === 'unavailable') {
+              } else if (presence === 'online') {
+                await client.sendPresenceUpdate("available", Chat);
+              } else if (presence === 'typing') {
+                await client.sendPresenceUpdate("composing", Chat);
+              } else if (presence === 'recording') {
+                await client.sendPresenceUpdate("recording", Chat);
+              }
+            } catch (error) {
+              console.error(error);
+            }
+          }
+
+          if (!client.public && !mek.key.fromMe) continue;
+
+          if (mek.message?.listResponseMessage) {
+            const selectedCmd = mek.message.listResponseMessage.singleSelectReply?.selectedRowId;
+            if (selectedCmd) {
+              const effectivePrefix = settings?.prefix || '.';
+              let command = selectedCmd.startsWith(effectivePrefix)
+                ? selectedCmd.slice(effectivePrefix.length).toLowerCase()
+                : selectedCmd.toLowerCase();
+
+              const listM = {
+                ...mek,
+                body: selectedCmd,
+                text: selectedCmd,
+                command: command,
+                prefix: effectivePrefix,
+                sender: mek.key.remoteJid,
+                from: mek.key.remoteJid,
+                chat: mek.key.remoteJid,
+                isGroup: mek.key.remoteJid.endsWith('@g.us')
+              };
+
+              try {
+                require("./toxic")(client, listM, { type: "notify" }, store);
+              } catch (error) {
+                console.error('❌ [LIST SELECTION] Error:', error);
+              }
+              continue;
+            }
+          }
 
           try {
-            require("./toxic")(client, listM, { type: "notify" }, store);
+            const m = smsg(client, mek, store);
+            require("./toxic")(client, m, { type: "notify" }, store);
           } catch (error) {
-            console.error('❌ [LIST SELECTION] Error:', error.message);
+            console.error('❌ [MESSAGE HANDLER] Error:', error);
           }
-          continue;
+        } catch (loopError) {
+          console.error('❌ [MESSAGE LOOP] Error:', loopError);
         }
       }
+    });
 
-      try {
-        const m = smsg(client, mek, store);
-        require("./toxic")(client, m, { type: "notify" }, store);
-      } catch (error) {
-        console.error('❌ [MESSAGE HANDLER] Error:', error.message);
-      }
-    }
-  });
-
-  client.ev.on("messages.update", async (updates) => {
-    for (const update of updates) {
-      try {
-        if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
-          const settings = await getCachedSettings();
-          if (settings?.autoview) {
-            try {
-              await client.readMessages([update.key]);
-            } catch (error) {}
-          }
-        }
-      } catch (e) {}
-    }
-  });
-
-  process.on("unhandledRejection", (reason, promise) => {
-    console.error('❌ [UNHANDLED ERROR] Unhandled Rejection:', reason?.message?.substring(0, 200) || reason);
-  });
-
-  process.on("uncaughtException", (error) => {
-    console.error('❌ [UNCAUGHT ERROR]:', error?.message?.substring(0, 200) || error);
-  });
-
-  client.decodeJid = (jid) => {
-    if (!jid) return jid;
-    if (/:\d+@/gi.test(jid)) {
-      let decode = jidDecode(jid) || {};
-      return (decode.user && decode.server && decode.user + "@" + decode.server) || jid;
-    } else return jid;
-  };
-
-  client.getName = (jid, withoutContact = false) => {
-    const id = client.decodeJid(jid);
-    withoutContact = client.withoutContact || withoutContact;
-    let v;
-    if (id.endsWith("@g.us"))
-      return new Promise(async (resolve) => {
-        v = store.contacts[id] || {};
-        if (!(v.name || v.subject)) v = client.groupMetadata(id) || {};
-        resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
-      });
-    else
-      v = id === "0@s.whatsapp.net"
-        ? { id, name: "WhatsApp" }
-        : id === client.decodeJid(client.user.id)
-          ? client.user
-          : store.contacts[id] || {};
-    return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
-  };
-
-  client.public = true;
-
-  client.serializeM = (m) => smsg(client, m, store);
-
-  client.ev.on("group-participants.update", async (m) => {
-    try {
-      groupEvents(client, m, null);
-    } catch (error) {
-      console.error('❌ [GROUP EVENT] Error:', error.message);
-    }
-  });
-
-  let reconnectAttempts = 0;
-  const maxReconnectAttempts = 15;
-  const baseReconnectDelay = 2000;
-
-  client.ev.on("connection.update", async (update) => {
-    const { connection, lastDisconnect } = update;
-    const reason = lastDisconnect?.error ? new Boom(lastDisconnect.error).output.statusCode : null;
-
-    if (connection === "open") {
-      reconnectAttempts = 0;
-
-      console.log(chalk.green(`\n╭───(    `) + chalk.bold.cyan(`𝐓𝐨𝐱𝐢𝐜-𝐌D`) + chalk.green(`    )───`));
-      console.log(chalk.green(`> ───≫ `) + chalk.yellow(`🚀 Started Successfully`) + chalk.green(`<<───`));
-      console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐒𝐭𝐚𝐭𝐮𝐬 : `) + chalk.green(`Started Successfully`));
-      console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
-      console.log(chalk.green(`╰──────────────────☉\n`));
-    }
-
-    if (connection === "close") {
-      if (reason === DisconnectReason.loggedOut || reason === 401) {
+    client.ev.on("messages.update", async (updates) => {
+      for (const update of updates) {
         try {
-          fs.rmSync(sessionName, { recursive: true, force: true });
-        } catch (e) {}
-        invalidateSettingsCache();
-        return startToxic();
-      }
-
-      if (reason === DisconnectReason.connectionClosed || reason === DisconnectReason.connectionLost || reason === DisconnectReason.timedOut || reason === 408 || reason === 503 || reason === 500) {
-        const delay = Math.min(baseReconnectDelay * Math.pow(1.5, reconnectAttempts), 30000);
-        reconnectAttempts++;
-        setTimeout(() => startToxic(), delay);
-        return;
-      }
-
-      if (reconnectAttempts < maxReconnectAttempts) {
-        const delay = Math.min(baseReconnectDelay * Math.pow(2, reconnectAttempts), 60000);
-        reconnectAttempts++;
-        setTimeout(() => startToxic(), delay);
-        return;
-      } else {
-        reconnectAttempts = 0;
-        setTimeout(() => startToxic(), 30000);
-        return;
-      }
-    }
-
-    await connectionHandler(client, update, startToxic);
-  });
-
-  client.ev.on("creds.update", saveCreds);
-
-  const CHANNEL_JID = '120363322461279856@newsletter';
-  const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '✨', '🌚', '🗿', '😮'];
-
-  client.ev.on('messages.upsert', async ({ messages: newsletterMessages }) => {
-    try {
-      const message = newsletterMessages[0];
-      if (!message?.key) return;
-      const jid = message.key.remoteJid;
-      if (jid !== CHANNEL_JID) return;
-      const messageId = message.newsletterServerId || message.key.id;
-      if (!messageId || !client?.user?.id) return;
-      const emoji = CHANNEL_EMOJIS[Math.floor(Math.random() * CHANNEL_EMOJIS.length)];
-      await new Promise(r => setTimeout(r, 3000 + Math.floor(Math.random() * 7000)));
-      try {
-        if (typeof client.newsletterReactMessage === 'function') {
-          await client.newsletterReactMessage(jid, messageId.toString(), emoji).catch(() => {});
-        } else {
-          await client.sendMessage(jid, { react: { text: emoji, key: message.key } }).catch(() => {});
+          if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
+            const settings = await getCachedSettings();
+            if (settings?.autoview) {
+              try {
+                await client.readMessages([update.key]);
+              } catch (error) {
+                console.error(error);
+              }
+            }
+          }
+        } catch (e) {
+          console.error(e);
         }
-      } catch {}
-    } catch {}
-  });
-
-  client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text: text, ...options }, { quoted });
-
-  client.downloadMediaMessage = async (message) => {
-    let mime = (message.msg || message).mimetype || '';
-    let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
-    const validTypes = ['image', 'video', 'audio', 'sticker', 'document', 'ptv'];
-    if (!validTypes.includes(messageType)) {
-      if (mime.startsWith('application/') || mime.startsWith('text/')) {
-        messageType = 'document';
-      } else if (mime.startsWith('image/')) {
-        messageType = 'image';
-      } else if (mime.startsWith('video/')) {
-        messageType = 'video';
-      } else if (mime.startsWith('audio/')) {
-        messageType = 'audio';
-      } else {
-        messageType = 'document';
       }
-    }
-    const stream = await downloadContentFromMessage(message, messageType);
-    let buffer = Buffer.from([]);
-    for await (const chunk of stream) {
-      buffer = Buffer.concat([buffer, chunk]);
-    }
-    return buffer;
-  };
+    });
 
-  client.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
-    let quoted = message.msg ? message.msg : message;
-    let mime = (message.msg || message).mimetype || '';
-    let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
-    const validSaveTypes = ['image', 'video', 'audio', 'sticker', 'document', 'ptv'];
-    if (!validSaveTypes.includes(messageType)) {
-      if (mime.startsWith('application/') || mime.startsWith('text/')) messageType = 'document';
-      else if (mime.startsWith('image/')) messageType = 'image';
-      else if (mime.startsWith('video/')) messageType = 'video';
-      else if (mime.startsWith('audio/')) messageType = 'audio';
-      else messageType = 'document';
+    process.on("unhandledRejection", (reason, promise) => {
+      console.error('❌ [UNHANDLED ERROR] Unhandled Rejection:', reason);
+    });
+
+    process.on("uncaughtException", (error) => {
+      console.error('❌ [UNCAUGHT ERROR]:', error);
+    });
+
+    client.decodeJid = (jid) => {
+      if (!jid) return jid;
+      if (/:\d+@/gi.test(jid)) {
+        let decode = jidDecode(jid) || {};
+        return (decode.user && decode.server && decode.user + "@" + decode.server) || jid;
+      } else return jid;
+    };
+
+    client.getName = (jid, withoutContact = false) => {
+      const id = client.decodeJid(jid);
+      withoutContact = client.withoutContact || withoutContact;
+      let v;
+      if (id.endsWith("@g.us"))
+        return new Promise(async (resolve) => {
+          v = store.contacts[id] || {};
+          if (!(v.name || v.subject)) v = client.groupMetadata(id) || {};
+          resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
+        });
+      else
+        v = id === "0@s.whatsapp.net"
+          ? { id, name: "WhatsApp" }
+          : id === client.decodeJid(client.user.id)
+            ? client.user
+            : store.contacts[id] || {};
+      return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
+    };
+
+    client.public = true;
+
+    client.serializeM = (m) => smsg(client, m, store);
+
+    client.ev.on("group-participants.update", async (m) => {
+      try {
+        groupEvents(client, m, null);
+      } catch (error) {
+        console.error('❌ [GROUP EVENT] Error:', error);
+      }
+    });
+
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 15;
+    const baseReconnectDelay = 2000;
+
+    client.ev.on("connection.update", async (update) => {
+      const { connection, lastDisconnect } = update;
+      const reason = lastDisconnect?.error ? new Boom(lastDisconnect.error).output.statusCode : null;
+
+      if (connection === "open") {
+        reconnectAttempts = 0;
+
+        console.log(chalk.green(`\n╭───(    `) + chalk.bold.cyan(`𝐓𝐨𝐱𝐢𝐜-𝐌D`) + chalk.green(`    )───`));
+        console.log(chalk.green(`> ───≫ `) + chalk.yellow(`🚀 Started Successfully`) + chalk.green(`<<───`));
+        console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐒𝐭𝐚𝐭𝐮𝐬 : `) + chalk.green(`Started Successfully`));
+        console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
+        console.log(chalk.green(`╰──────────────────☉\n`));
+      }
+
+      if (connection === "close") {
+        if (shuttingDownClient) return;
+
+        currentClient = null;
+
+        if (reason === DisconnectReason.loggedOut || reason === 401) {
+          try {
+            fs.rmSync(sessionName, { recursive: true, force: true });
+          } catch (e) {
+            console.error(e);
+          }
+          invalidateSettingsCache();
+          if (!reconnectTimer) {
+            reconnectTimer = setTimeout(() => {
+              reconnectTimer = null;
+              startToxic();
+            }, 2000);
+          }
+          return;
+        }
+
+        if (reason === DisconnectReason.connectionClosed || reason === DisconnectReason.connectionLost || reason === DisconnectReason.timedOut || reason === 408 || reason === 503 || reason === 500) {
+          const delay = Math.min(baseReconnectDelay * Math.pow(1.5, reconnectAttempts), 30000);
+          reconnectAttempts++;
+          if (!reconnectTimer) {
+            reconnectTimer = setTimeout(() => {
+              reconnectTimer = null;
+              startToxic();
+            }, delay);
+          }
+          return;
+        }
+
+        if (reconnectAttempts < maxReconnectAttempts) {
+          const delay = Math.min(baseReconnectDelay * Math.pow(2, reconnectAttempts), 60000);
+          reconnectAttempts++;
+          if (!reconnectTimer) {
+            reconnectTimer = setTimeout(() => {
+              reconnectTimer = null;
+              startToxic();
+            }, delay);
+          }
+          return;
+        } else {
+          reconnectAttempts = 0;
+          if (!reconnectTimer) {
+            reconnectTimer = setTimeout(() => {
+              reconnectTimer = null;
+              startToxic();
+            }, 30000);
+          }
+          return;
+        }
+      }
+
+      try {
+        await connectionHandler(client, update, startToxic);
+      } catch (error) {
+        console.error('❌ [CONNECTION HANDLER] Error:', error);
+      }
+    });
+
+    client.ev.on("creds.update", saveCreds);
+
+    const CHANNEL_JID = '120363322461279856@newsletter';
+    const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '✨', '🌚', '🗿', '😮'];
+
+    client.ev.on('messages.upsert', async ({ messages: newsletterMessages }) => {
+      try {
+        const message = newsletterMessages[0];
+        if (!message?.key) return;
+        const jid = message.key.remoteJid;
+        if (jid !== CHANNEL_JID) return;
+        const messageId = message.newsletterServerId || message.key.id;
+        if (!messageId || !client?.user?.id) return;
+        const emoji = CHANNEL_EMOJIS[Math.floor(Math.random() * CHANNEL_EMOJIS.length)];
+        await new Promise(r => setTimeout(r, 3000 + Math.floor(Math.random() * 7000)));
+        try {
+          if (typeof client.newsletterReactMessage === 'function') {
+            await client.newsletterReactMessage(jid, messageId.toString(), emoji).catch((e) => console.error(e));
+          } else {
+            await client.sendMessage(jid, { react: { text: emoji, key: message.key } }).catch((e) => console.error(e));
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    });
+
+    client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text: text, ...options }, { quoted });
+
+    client.downloadMediaMessage = async (message) => {
+      let mime = (message.msg || message).mimetype || '';
+      let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+      const validTypes = ['image', 'video', 'audio', 'sticker', 'document', 'ptv'];
+      if (!validTypes.includes(messageType)) {
+        if (mime.startsWith('application/') || mime.startsWith('text/')) {
+          messageType = 'document';
+        } else if (mime.startsWith('image/')) {
+          messageType = 'image';
+        } else if (mime.startsWith('video/')) {
+          messageType = 'video';
+        } else if (mime.startsWith('audio/')) {
+          messageType = 'audio';
+        } else {
+          messageType = 'document';
+        }
+      }
+      const stream = await downloadContentFromMessage(message, messageType);
+      let buffer = Buffer.from([]);
+      for await (const chunk of stream) {
+        buffer = Buffer.concat([buffer, chunk]);
+      }
+      return buffer;
+    };
+
+    client.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
+      let quoted = message.msg ? message.msg : message;
+      let mime = (message.msg || message).mimetype || '';
+      let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+      const validSaveTypes = ['image', 'video', 'audio', 'sticker', 'document', 'ptv'];
+      if (!validSaveTypes.includes(messageType)) {
+        if (mime.startsWith('application/') || mime.startsWith('text/')) messageType = 'document';
+        else if (mime.startsWith('image/')) messageType = 'image';
+        else if (mime.startsWith('video/')) messageType = 'video';
+        else if (mime.startsWith('audio/')) messageType = 'audio';
+        else messageType = 'document';
+      }
+      const stream = await downloadContentFromMessage(quoted, messageType);
+      let buffer = Buffer.from([]);
+      for await (const chunk of stream) {
+        buffer = Buffer.concat([buffer, chunk]);
+      }
+      let type = await FileType.fromBuffer(buffer);
+      const trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
+      await fs.writeFileSync(trueFileName, buffer);
+      return trueFileName;
+    };
+
+    isStarting = false;
+  } catch (error) {
+    console.error('❌ [START TOXIC ERROR]:', error);
+    currentClient = null;
+    isStarting = false;
+    if (!reconnectTimer) {
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        startToxic();
+      }, 5000);
     }
-    const stream = await downloadContentFromMessage(quoted, messageType);
-    let buffer = Buffer.from([]);
-    for await (const chunk of stream) {
-      buffer = Buffer.concat([buffer, chunk]);
-    }
-    let type = await FileType.fromBuffer(buffer);
-    const trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
-    await fs.writeFileSync(trueFileName, buffer);
-    return trueFileName;
-  };
+  }
 }
 
 app.use(express.static('public'));
