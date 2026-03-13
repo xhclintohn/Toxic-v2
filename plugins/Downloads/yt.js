@@ -34,11 +34,7 @@ module.exports = async (context) => {
 
     const thumbnailUrl = `https://i.ytimg.com/vi/${text.match(/[?&]v=([^&]+)/)?.[1]}/hqdefault.jpg` || "https://via.placeholder.com/120x90";
 
-    await client.sendMessage(
-      m.chat,
-      { text: formatStylishReply("Grabbin’ the audio for ya, fam! Crank it up! 🔥🎶") },
-      { quoted: m, ad: true }
-    );
+    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
     const apiUrl = `https://ytdownloader-aie4qa.fly.dev/download/audio?song=${encodeURIComponent(text)}&quality=128K&cb=${timestamp}`;
     const response = await axios({
@@ -59,6 +55,8 @@ module.exports = async (context) => {
     if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
       throw new Error("Audio download failed or file is empty");
     }
+
+    await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
     await client.sendMessage(
       m.chat,
@@ -84,6 +82,7 @@ module.exports = async (context) => {
       fs.unlinkSync(filePath);
     }
   } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
     await client.sendMessage(
       m.chat,
       { text: formatStylishReply(`Yo, we hit a snag: ${error.message}. Check the URL and try again! 😎`) },

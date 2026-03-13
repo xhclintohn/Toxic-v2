@@ -3,7 +3,7 @@ const { getBannedUsers, unbanUser } = require('../../database/config');
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
-        const { m, args } = context;
+        const { client, m, args } = context;
 
         let numberToUnban;
 

@@ -17,9 +17,6 @@ module.exports = {
 
     try {
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-      const statusMsg = await client.sendMessage(m.chat, {
-        text: `╭───(    TOXIC-MD    )───\n├───≫ Sᴏʀᴀ Aɪ ≪───\n├ \n├ Generating Sora Video...\n├ Prompt: ${prompt}\n├ Status: Initializing...\n├ Please wait 30-60 seconds...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      }, { quoted: m });
 
       const params = new URLSearchParams({
         apikey: 'fgsiapi-2dcdfa06-6d',
@@ -53,11 +50,6 @@ module.exports = {
           });
           const pollData = await pollResponse.json();
 
-          await client.sendMessage(m.chat, {
-            edit: statusMsg.key,
-            text: `╭───(    TOXIC-MD    )───\n├───≫ Sᴏʀᴀ Aɪ ≪───\n├ \n├ Generating Sora Video...\n├ Prompt: ${prompt}\n├ Status: ${pollData.data?.status || 'Processing'}\n├ Attempt: ${attempts}/${maxAttempts}\n├ Please wait...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-          });
-
           if (pollData.data?.status === 'Completed' && pollData.data?.result) {
             videoUrl = pollData.data.result;
             break;
@@ -73,7 +65,6 @@ module.exports = {
         throw new Error('Video generation timed out after 3 minutes');
       }
 
-      await client.sendMessage(m.chat, { delete: statusMsg.key });
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
       await client.sendMessage(m.chat, {

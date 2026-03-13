@@ -7,7 +7,7 @@ module.exports = async (context) => {
         const buffer = await m.quoted.download();
         const base64Image = buffer.toString('base64');
 
-        await m.reply('╭───(    TOXIC-MD    )───\n├───≫ NEGRO ≪───\n├ \n├ Hold on a moment, applying the\n├ black filter to your image...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
         try {
             const response = await axios.post("https://negro.consulting/api/process-image", {
@@ -20,6 +20,8 @@ module.exports = async (context) => {
                 "base64"
             );
 
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
             await client.sendMessage(m.chat, {
                 image: resultBuffer,
                 caption: `╭───(    TOXIC-MD    )───\n├───≫ NEGRO FILTER ≪───\n├ \n├ Done! Your image now has the\n├ *black* filter applied.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
@@ -30,7 +32,8 @@ module.exports = async (context) => {
                 ? errorMessage.substring(0, 200) + '...'
                 : errorMessage;
 
-            console.error("Error while processing image:", error);
+            console.error('Error while processing image:', error);
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ ${replyMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     } else {

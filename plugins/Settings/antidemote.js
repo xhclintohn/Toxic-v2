@@ -3,7 +3,7 @@ const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
-    const { m, args } = context;
+    const { client, m, args } = context;
     const value = args[0]?.toLowerCase();
     const jid = m.chat;
 

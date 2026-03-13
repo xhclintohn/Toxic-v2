@@ -3,7 +3,7 @@ const { getSettings, banUser, getBannedUsers, getSudoUsers } = require('../../da
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
-        const { m, args } = context;
+        const { client, m, args } = context;
 
         let settings = await getSettings();
         if (!settings) {

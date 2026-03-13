@@ -1,15 +1,11 @@
 const { getWarnCount } = require('../../database/config');
-const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const middleware = require('../../utils/botUtil/middleware');
 
 module.exports = async (context) => {
-    await ownerMiddleware(context, async () => {
+    await middleware(context, async () => {
         const { client, m, args } = context;
 
         const fmt = (msg) => `╭───(    TOXIC-MD    )───\n├───≫ WARN COUNT ≪───\n├ \n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
-
-        if (!m.isGroup) {
-            return await client.sendMessage(m.chat, { text: fmt('Groups only, genius. Take your curiosity elsewhere. 😤') }, { quoted: m });
-        }
 
         let target = null;
 

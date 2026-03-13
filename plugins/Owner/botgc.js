@@ -12,7 +12,7 @@ module.exports = async (context) => {
           .map((entry) => entry[1]);
       let anaa = groupzs.map((v) => v.id);
       let jackhuh = `╭───(    TOXIC-MD    )───\n├───≫ BOT GROUPS ≪───\n├ \n`
-      await m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Bot is in ${anaa.length} groups,\n├ fetching and sending their jids!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`)
+      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
       const promises = anaa.map((i) => {
         return new Promise((resolve) => {
           client.groupMetadata(i).then((metadat) => {
@@ -27,9 +27,11 @@ module.exports = async (context) => {
       })
       await Promise.all(promises)
       jackhuh += `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
       m.reply(jackhuh);
 
   } catch (e) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
     m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Error occured while accessing\n├ bot groups.\n├ ${e}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`)
   }
 
