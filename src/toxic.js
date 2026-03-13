@@ -17,7 +17,6 @@ const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings, updateSetti
 const { botname, mycode } = require('../config/settings');
 const { cleanupOldMessages } = require('../lib/Store');
 const antistatusmention = require('../features/antistatusmention');
-
 const ownerMiddleware = require('../utils/botUtil/Ownermiddleware');
 
 process.setMaxListeners(50);
@@ -149,9 +148,12 @@ function extractInnerMessage(message) {
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
     try {
-        const sudoUsers = await fastGetSudo();
-        const bannedUsers = await fastGetBanned();
+        const rawSudoUsers = await fastGetSudo();
+        const rawBannedUsers = await fastGetBanned();
+        const sudoUsers = Array.isArray(rawSudoUsers) ? rawSudoUsers : [];
+        const bannedUsers = Array.isArray(rawBannedUsers) ? rawBannedUsers : [];
         let settings = await fastGetSettings();
+
         if (!settings) {
             console.error("Toxic-MD: Settings not found!");
             return;
@@ -178,7 +180,9 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             try {
                 const params = JSON.parse(m.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson);
                 body = params.id || body;
-            } catch (e) {}
+            } catch (e) {
+                console.error('❌ [INTERACTIVE PARAMS ERROR]:', e);
+            }
         }
 
         if (m.message?.templateButtonReplyMessage?.selectedId) {
@@ -196,6 +200,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         const ALL_PREFIXES = ['.','!','#','/','$','?','+','-','*','~','@','%','&','^','=','|'];
         let commandName = null;
+
         if (body) {
             if (multiprefix === 'true' || multiprefix === true) {
                 const mp = ALL_PREFIXES.find(p => body.startsWith(p));
@@ -205,11 +210,14 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     commandName = body.trim().split(/\s+/)[0].toLowerCase();
                 }
             } else {
-                if ((prefix && body.startsWith(prefix)) || body.startsWith('/')) {
-                    commandName = body.slice(prefix ? prefix.length : 1).trim().split(/\s+/)[0].toLowerCase();
+                if (prefix && body.startsWith(prefix)) {
+                    commandName = body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase();
+                } else if (!prefix && body.startsWith('/')) {
+                    commandName = body.slice(1).trim().split(/\s+/)[0].toLowerCase();
                 }
             }
         }
+
         const resolvedCommandName = aliases[commandName] || commandName;
         const cmd = commands[resolvedCommandName];
 
@@ -225,26 +233,26 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             m.isGroup = m.chat?.endsWith("g.us");
             m.metadata = m.isGroup ? await fastGroupMetadata(client, m.chat) : {};
             const participants = m.metadata?.participants || [];
-            
+
             let userAdminFound = false;
             let botAdminFound = false;
-            
+
             for (const p of participants) {
                 const participantJid = p.jid || p.id;
-                
+
                 if (participantJid === m.sender) {
                     userAdminFound = p.admin !== null;
                 }
-                
+
                 if (participantJid === botNumber) {
                     botAdminFound = p.admin !== null;
                 }
             }
-            
+
             m.isAdmin = userAdminFound;
             m.isBotAdmin = botAdminFound;
-            
         } catch (error) {
+            console.error('❌ [GROUP METADATA ERROR]:', error);
             m.metadata = {};
             m.isAdmin = false;
             m.isBotAdmin = false;
@@ -252,6 +260,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         let clint = m.quoted || m;
         let quoted = m;
+
         if (clint && typeof clint === 'object') {
             if (clint.mtype === 'buttonsMessage') {
                 quoted = clint[Object.keys(clint)[1]];
@@ -266,7 +275,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         const mime = quoted?.msg ? quoted.msg.mimetype : quoted?.mimetype || "";
         const qmsg = quoted?.msg ? quoted.msg : quoted;
-        const DevToxic = Array.isArray(sudoUsers) ? sudoUsers : [];
+        const DevToxic = sudoUsers;
         const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
 
         const groupMetadata = m.isGroup ? m.metadata : {};
@@ -296,6 +305,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         ];
 
         const trimmedBody = body.trim();
+
         if ((trimmedBody.startsWith('>') || trimmedBody.startsWith('$')) && Owner) {
             const evalText = trimmedBody.slice(1).trim();
             if (bannedMessages.some(msg => evalText.includes(msg))) {
@@ -313,7 +323,10 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     }
                 });
                 return;
-            } catch (e) {}
+            } catch (e) {
+                console.error('❌ [OWNER MIDDLEWARE ERROR]:', e);
+                return;
+            }
         }
 
         if (cmd) {
@@ -331,18 +344,23 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         if (store && shouldStoreMessage(m)) {
             const remoteJid = m.chat || m.key?.remoteJid;
             const normalizedJid = normalizeJidForStorage(remoteJid);
+
             if (normalizedJid) {
                 if (!store.chats) store.chats = Object.create(null);
                 if (!store.messageMap) store.messageMap = Object.create(null);
+
                 if (!store.chats[normalizedJid]) {
                     store.chats[normalizedJid] = [];
                 }
+
                 const messageId = m.key.id;
                 let storedMessage = m.message || {};
                 const viewOnceWrapper = storedMessage.viewOnceMessage || storedMessage.viewOnceMessageV2 || storedMessage.viewOnceMessageV2Extension;
+
                 if (viewOnceWrapper?.message) {
                     storedMessage = { ...storedMessage, ...viewOnceWrapper.message };
                 }
+
                 const messageWithTimestamp = {
                     ...m,
                     message: storedMessage,
@@ -350,18 +368,21 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     originalRemoteJid: remoteJid,
                     normalizedRemoteJid: normalizedJid
                 };
+
                 store.chats[normalizedJid].push(messageWithTimestamp);
                 store.messageMap[messageId] = {
                     normalizedJid: normalizedJid,
                     originalJid: remoteJid,
                     timestamp: Date.now()
                 };
+
                 if (store.chats[normalizedJid].length > 20) {
                     const removedMsg = store.chats[normalizedJid].shift();
                     if (removedMsg?.key?.id) {
                         delete store.messageMap[removedMsg.key.id];
                     }
                 }
+
                 const totalMapped = Object.keys(store.messageMap).length;
                 if (totalMapped > 2000) {
                     const chatKeys = Object.keys(store.chats);
@@ -381,6 +402,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         if (m.message?.protocolMessage?.type === 0) {
             const currentSettings = await fastGetSettings();
             const isAntideleteEnabled = currentSettings?.antidelete === true;
+
             if (isAntideleteEnabled && store?.chats && store?.messageMap) {
                 const deletedKey = m.message.protocolMessage.key;
                 const deletedMessageId = deletedKey.id;
@@ -388,26 +410,32 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 const normalizedDeletedJid = normalizeJidForStorage(deletedRemoteJid);
                 const isDeletedFromStatus = deletedRemoteJid === 'status@broadcast' || deletedRemoteJid.includes('@broadcast');
                 const isDeletedFromNewsletter = deletedRemoteJid.includes('@newsletter');
+
                 if (isDeletedFromStatus || isDeletedFromNewsletter) {
                     return;
                 }
+
                 let deletedMessage = null;
                 let chatJidToSearch = null;
+
                 if (store.messageMap[deletedMessageId]) {
                     chatJidToSearch = store.messageMap[deletedMessageId].normalizedJid;
                 } else {
                     chatJidToSearch = normalizedDeletedJid;
                 }
+
                 if (store.chats[chatJidToSearch]) {
                     const chatMessages = store.chats[chatJidToSearch];
                     deletedMessage = chatMessages.find((msg) => msg.key.id === deletedMessageId);
                 }
+
                 if (!deletedMessage && normalizedDeletedJid !== chatJidToSearch) {
                     if (store.chats[deletedRemoteJid]) {
                         const chatMessages = store.chats[deletedRemoteJid];
                         deletedMessage = chatMessages.find((msg) => msg.key.id === deletedMessageId);
                     }
                 }
+
                 if (!deletedMessage) {
                     for (const [jid, messages] of Object.entries(store.chats)) {
                         if (['key', 'idGetter', 'dict', 'array'].includes(jid)) continue;
@@ -419,11 +447,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                         }
                     }
                 }
+
                 if (deletedMessage) {
                     const botJid = client.decodeJid(client.user.id);
                     const sender = client.decodeJid(deletedMessage.key.participant || deletedMessage.key.remoteJid);
                     const deleter = m.key.participant ? m.key.participant.split('@')[0] : 'Unknown';
                     let groupName = 'Private Chat';
+
                     if (chatJidToSearch.endsWith('@g.us')) {
                         try {
                             const gMeta = await fastGroupMetadata(client, chatJidToSearch);
@@ -432,23 +462,24 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             groupName = 'Unknown Group';
                         }
                     }
+
                     const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
                     const messageType = getMessageType(deletedMessage.message);
+
                     try {
                         const msg = extractInnerMessage(deletedMessage.message);
+
                         if (msg.conversation) {
                             await client.sendMessage(botJid, {
                                 text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📝 *Deleted Content:*\n${msg.conversation}`,
                                 mentions: [sender]
                             });
-                        }
-                        else if (msg.extendedTextMessage?.text) {
+                        } else if (msg.extendedTextMessage?.text) {
                             await client.sendMessage(botJid, {
                                 text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰───────☉\n\n📝 *Deleted Content:*\n${msg.extendedTextMessage.text}`,
                                 mentions: [sender]
                             });
-                        }
-                        else if (msg.imageMessage) {
+                        } else if (msg.imageMessage) {
                             const caption = msg.imageMessage.caption || '';
                             const buf = await downloadMedia(client, msg.imageMessage, 'image');
                             await client.sendMessage(botJid, {
@@ -456,8 +487,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                                 caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📸 *Deleted Image:*\n${caption}`,
                                 mentions: [sender]
                             });
-                        }
-                        else if (msg.videoMessage) {
+                        } else if (msg.videoMessage) {
                             const caption = msg.videoMessage.caption || '';
                             const buf = await downloadMedia(client, msg.videoMessage, 'video');
                             await client.sendMessage(botJid, {
@@ -465,28 +495,25 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                                 caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰────────☉\n\n🎥 *Deleted Video:*\n${caption}`,
                                 mentions: [sender]
                             });
-                        }
-                        else if (msg.audioMessage) {
+                        } else if (msg.audioMessage) {
                             const buf = await downloadMedia(client, msg.audioMessage, 'audio');
-                            await client.sendMessage(botJid, { 
+                            await client.sendMessage(botJid, {
                                 text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰─────────☉\n\n🎵 *Deleted Audio*`,
-                                mentions: [sender] 
+                                mentions: [sender]
                             });
                             await client.sendMessage(botJid, {
                                 audio: buf,
                                 ptt: msg.audioMessage.ptt || false,
                                 mimetype: 'audio/mpeg'
                             });
-                        }
-                        else if (msg.stickerMessage) {
+                        } else if (msg.stickerMessage) {
                             const buf = await downloadMedia(client, msg.stickerMessage, 'sticker');
-                            await client.sendMessage(botJid, { 
+                            await client.sendMessage(botJid, {
                                 text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰───────☉\n\n😀 *Deleted Sticker*`,
-                                mentions: [sender] 
+                                mentions: [sender]
                             });
                             await client.sendMessage(botJid, { sticker: buf });
-                        }
-                        else if (msg.documentMessage) {
+                        } else if (msg.documentMessage) {
                             const buf = await downloadMedia(client, msg.documentMessage, 'document');
                             await client.sendMessage(botJid, {
                                 document: buf,
@@ -495,35 +522,32 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                                 caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰─────────☉\n\n📄 *Deleted Document:*\n${msg.documentMessage.fileName || ''}\n${msg.documentMessage.caption || ''}`,
                                 mentions: [sender]
                             });
-                        }
-                        else if (msg.contactMessage) {
+                        } else if (msg.contactMessage) {
                             const vcard = msg.contactMessage.vcard;
                             const displayName = msg.contactMessage.displayName || 'Contact';
-                            await client.sendMessage(botJid, { 
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰───────────────☉\n\n👤 *Deleted Contact:*\n${displayName}`, 
-                                mentions: [sender] 
+                            await client.sendMessage(botJid, {
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰───────────────☉\n\n👤 *Deleted Contact:*\n${displayName}`,
+                                mentions: [sender]
                             });
                             await client.sendMessage(botJid, {
                                 contacts: { displayName, contacts: [{ vcard }] }
                             });
-                        }
-                        else if (msg.contactsArrayMessage) {
+                        } else if (msg.contactsArrayMessage) {
                             const contacts = msg.contactsArrayMessage.contacts || [];
                             const displayName = msg.contactsArrayMessage.displayName || 'Contacts';
-                            await client.sendMessage(botJid, { 
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰─────────☉\n\n👥 *Deleted Contacts (${contacts.length}):*\n${displayName}`, 
-                                mentions: [sender] 
+                            await client.sendMessage(botJid, {
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰─────────☉\n\n👥 *Deleted Contacts (${contacts.length}):*\n${displayName}`,
+                                mentions: [sender]
                             });
                             for (const c of contacts) {
                                 await client.sendMessage(botJid, {
                                     contacts: { displayName: c.displayName, contacts: [{ vcard: c.vcard }] }
                                 });
                             }
-                        }
-                        else if (msg.locationMessage) {
-                            await client.sendMessage(botJid, { 
-                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📍 *Deleted Location*`, 
-                                mentions: [sender] 
+                        } else if (msg.locationMessage) {
+                            await client.sendMessage(botJid, {
+                                text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📍 *Deleted Location*`,
+                                mentions: [sender]
                             });
                             await client.sendMessage(botJid, {
                                 location: {
@@ -533,14 +557,12 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                                     address: msg.locationMessage.address || ''
                                 }
                             });
-                        }
-                        else if (msg.liveLocationMessage) {
+                        } else if (msg.liveLocationMessage) {
                             await client.sendMessage(botJid, {
                                 text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📍 *Deleted Live Location*\nLat: ${msg.liveLocationMessage.degreesLatitude}\nLng: ${msg.liveLocationMessage.degreesLongitude}`,
                                 mentions: [sender]
                             });
-                        }
-                        else if (msg.pollCreationMessage || msg.pollCreationMessageV3) {
+                        } else if (msg.pollCreationMessage || msg.pollCreationMessageV3) {
                             const poll = msg.pollCreationMessage || msg.pollCreationMessageV3;
                             const pollName = poll.name || 'Poll';
                             const options = (poll.options || []).map(o => o.optionName).join('\n々 ');
@@ -548,14 +570,15 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                                 text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📊 *Deleted Poll:*\n${pollName}\n々 ${options}`,
                                 mentions: [sender]
                             });
-                        }
-                        else {
+                        } else {
                             await client.sendMessage(botJid, {
                                 text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n⚠️ *Deleted content could not be recovered*`,
                                 mentions: [sender]
                             });
                         }
-                    } catch (error) {}
+                    } catch (error) {
+                        console.error('❌ [ANTIDELETE ERROR]:', error);
+                    }
                 }
             }
         }
@@ -563,50 +586,67 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         if (m.message?.protocolMessage?.type === 14 || m.message?.editedMessage) {
             const currentSettings = await fastGetSettings();
             const isAntieditEnabled = currentSettings?.antiedit === true;
+
             if (isAntieditEnabled && store?.chats && store?.messageMap) {
                 try {
                     const editedProto = m.message.protocolMessage || {};
                     const editKey = editedProto.key || m.message.editedMessage?.message?.protocolMessage?.key;
                     const newMessage = editedProto.editedMessage?.message || m.message.editedMessage?.message;
+
                     if (editKey && newMessage) {
                         const editedMessageId = editKey.id;
                         const editedRemoteJid = editKey.remoteJid || m.chat;
                         const normalizedEditJid = normalizeJidForStorage(editedRemoteJid);
+
                         if (editedRemoteJid !== 'status@broadcast' && !editedRemoteJid.includes('@broadcast') && !editedRemoteJid.includes('@newsletter')) {
                             let originalMessage = null;
                             let chatJid = null;
+
                             if (store.messageMap[editedMessageId]) {
                                 chatJid = store.messageMap[editedMessageId].normalizedJid;
                             } else {
                                 chatJid = normalizedEditJid;
                             }
+
                             if (store.chats[chatJid]) {
                                 originalMessage = store.chats[chatJid].find(msg => msg.key.id === editedMessageId);
                             }
+
                             if (!originalMessage) {
                                 for (const [jid, messages] of Object.entries(store.chats)) {
                                     if (['key', 'idGetter', 'dict', 'array'].includes(jid)) continue;
                                     const found = messages.find(msg => msg.key.id === editedMessageId);
-                                    if (found) { originalMessage = found; break; }
+                                    if (found) {
+                                        originalMessage = found;
+                                        break;
+                                    }
                                 }
                             }
+
                             const botJid = client.decodeJid(client.user.id);
                             const editor = m.key.participant ? m.key.participant.split('@')[0] : m.sender?.split('@')[0] || 'Unknown';
                             let groupName = 'Private Chat';
+
                             if (editedRemoteJid.endsWith('@g.us')) {
                                 try {
                                     const gMeta = await fastGroupMetadata(client, editedRemoteJid);
                                     groupName = gMeta?.subject || 'Unknown Group';
-                                } catch (e) { groupName = 'Unknown Group'; }
+                                } catch (e) {
+                                    groupName = 'Unknown Group';
+                                }
                             }
+
                             const editTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
                             let originalText = '';
+
                             if (originalMessage?.message) {
                                 const origMsg = extractInnerMessage(originalMessage.message);
                                 originalText = origMsg.conversation || origMsg.extendedTextMessage?.text || origMsg.imageMessage?.caption || origMsg.videoMessage?.caption || '';
                             }
+
                             const newInner = extractInnerMessage(newMessage);
                             const newText = newInner.conversation || newInner.extendedTextMessage?.text || newInner.imageMessage?.caption || newInner.videoMessage?.caption || '';
+
                             if (originalText || newText) {
                                 const notification = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Eᴅɪᴛᴇᴅ Msɢ ≪───\n々 Time: ${editTime}\n々 Chat: ${groupName}\n々 Edited by: @${editor}\n╰──────────☉`;
                                 let fullMsg = notification;
@@ -619,33 +659,67 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             }
                         }
                     }
-                } catch (error) {}
+                } catch (error) {
+                    console.error('❌ [ANTIEDIT ERROR]:', error);
+                }
             }
         }
 
         const isStealthOn = stealth === 'true' || stealth === true;
 
         if (isStealthOn) {
-            if (commandName === 'stealth') {
-                await commands[resolvedCommandName](context);
+            if (commandName === 'stealth' && typeof cmd === 'function') {
+                await cmd(context);
             }
             return;
         }
 
-        await antilink(client, m, store);
-        await chatbotpm(client, m, store, chatbotpmSetting);
-        await status_saver(client, m, Owner, prefix);
-        await gcPresence(client, m);
-        await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
+        try {
+            await antilink(client, m, store);
+        } catch (error) {
+            console.error('❌ [ANTILINK ERROR]:', error);
+        }
 
-        await antistatusmention(client, m);
+        try {
+            await chatbotpm(client, m, store, chatbotpmSetting);
+        } catch (error) {
+            console.error('❌ [CHATBOTPM ERROR]:', error);
+        }
 
-        if (cmd) {
-            await commands[resolvedCommandName](context);
+        try {
+            await status_saver(client, m, Owner, prefix);
+        } catch (error) {
+            console.error('❌ [STATUS_SAVER ERROR]:', error);
+        }
+
+        try {
+            await gcPresence(client, m);
+        } catch (error) {
+            console.error('❌ [GCPRESENCE ERROR]:', error);
+        }
+
+        try {
+            await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body);
+        } catch (error) {
+            console.error('❌ [ANTITAGGC ERROR]:', error);
+        }
+
+        try {
+            await antistatusmention(client, m);
+        } catch (error) {
+            console.error('❌ [ANTISTATUSMENTION ERROR]:', error);
+        }
+
+        if (cmd && typeof cmd === 'function') {
+            try {
+                await cmd(context);
+            } catch (error) {
+                console.error(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
+            }
         }
 
     } catch (err) {
-        console.error('❌ [TOXIC] Error:', err.message);
+        console.error('❌ [TOXIC] Error:', err);
     }
 };
 
@@ -658,4 +732,5 @@ process.on('uncaughtException', function (err) {
     if (e.includes("Connection Closed")) return;
     if (e.includes("Timed Out")) return;
     if (e.includes("Value not found")) return;
+    console.error('❌ [UNCAUGHT EXCEPTION]:', err);
 });
