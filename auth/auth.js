@@ -11,12 +11,14 @@ async function authenticationn() {
             fs.mkdirSync(sessionDir, { recursive: true });
         }
 
+        const decoded = Buffer.from(session, 'base64').toString('utf8');
+
         if (!fs.existsSync(credsPath)) {
             console.log("🟢🤖...");
-            fs.writeFileSync(credsPath, atob(session), "utf8");
+            fs.writeFileSync(credsPath, decoded, 'utf8');
         }
-        else if (fs.existsSync(credsPath) && session != "zokk") {
-            fs.writeFileSync(credsPath, atob(session), "utf8");
+        else if (session !== "zokk") {
+            fs.writeFileSync(credsPath, decoded, 'utf8');
         }
     }
     catch (e) {
