@@ -4,7 +4,7 @@ module.exports = async (context) => {
     try {
         if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Provide an app name, you brainless creature!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
-        await client.sendMessage(m.chat, { react: { text: "⏳", key: m.key } });
+        await client.sendMessage(m.chat, { react: { text: "⌛", key: m.key } });
 
         const data = await fetchJson(`https://ws75.aptoide.com/api/7/apps/search/query=${encodeURIComponent(text)}`);
 
