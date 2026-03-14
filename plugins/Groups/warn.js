@@ -3,8 +3,9 @@ const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 
 const normalizeJid = (jid) => {
     if (!jid) return '';
-    const stripped = jid.includes(':') ? jid.split(':')[0] + '@s.whatsapp.net' : jid;
-    return stripped.replace('@lid', '@s.whatsapp.net');
+    let stripped = jid.includes(':') ? jid.split(':')[0] + '@s.whatsapp.net' : jid;
+    stripped = stripped.replace('@lid', '@s.whatsapp.net');
+    return stripped;
 };
 
 module.exports = async (context) => {
@@ -24,9 +25,9 @@ module.exports = async (context) => {
         let target = null;
 
         if (m.quoted && m.quoted.sender) {
-            target = m.quoted.sender;
+            target = normalizeJid(m.quoted.sender);
         } else if (m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
-            target = m.message.extendedTextMessage.contextInfo.mentionedJid[0];
+            target = normalizeJid(m.message.extendedTextMessage.contextInfo.mentionedJid[0]);
         } else if (args[0]) {
             target = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
         }
