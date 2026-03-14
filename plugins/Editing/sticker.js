@@ -23,15 +23,16 @@ module.exports = async (context) => {
             try {
                 let mediaMessage = null;
 
-                if (m.message && (m.message.imageMessage || m.message.videoMessage)) {
-                    mediaMessage = m.message.imageMessage || m.message.videoMessage;
+                if (m.message && (m.message.imageMessage || m.message.videoMessage || m.message.ptvMessage)) {
+                    mediaMessage = m.message.imageMessage || m.message.videoMessage || m.message.ptvMessage;
                 } else if (m.quoted && m.quoted.message) {
                     mediaMessage = m.quoted.message.imageMessage || 
                                   m.quoted.message.videoMessage ||
+                                  m.quoted.message.ptvMessage ||
                                   m.quoted.message.stickerMessage;
                 } else if (m.message?.extendedTextMessage?.contextInfo?.quotedMessage) {
                     const quotedMsg = m.message.extendedTextMessage.contextInfo.quotedMessage;
-                    mediaMessage = quotedMsg.imageMessage || quotedMsg.videoMessage || quotedMsg.stickerMessage;
+                    mediaMessage = quotedMsg.imageMessage || quotedMsg.videoMessage || quotedMsg.ptvMessage || quotedMsg.stickerMessage;
                 }
 
                 if (!mediaMessage) {
@@ -39,14 +40,15 @@ module.exports = async (context) => {
                     return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STICKER ≪───\n├ \n├ Where\'s the fvcking image or\n├ short video, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
                 }
 
-                const isVideo = !!mediaMessage.videoMessage;
-                if (isVideo && mediaMessage.videoMessage.seconds > 30) {
+                const isVideo = !!(mediaMessage.videoMessage || mediaMessage.ptvMessage);
+                const videoSeconds = mediaMessage.videoMessage?.seconds || mediaMessage.ptvMessage?.seconds || 0;
+                if (isVideo && videoSeconds > 30) {
                     await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                     return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STICKER ≪───\n├ \n├ Videos must be 30 seconds or shorter.\n├ Learn to read, moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
                 }
 
                 let mediaToDownload = null;
-                if (m.message && (m.message.imageMessage || m.message.videoMessage)) {
+                if (m.message && (m.message.imageMessage || m.message.videoMessage || m.message.ptvMessage)) {
                     mediaToDownload = m;
                 } else if (m.quoted) {
                     mediaToDownload = m.quoted;
