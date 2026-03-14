@@ -80,6 +80,9 @@ function smsg(conn, m, store) {
 
       if (typeof m.quoted === "string") m.quoted = { text: m.quoted };
 
+      if (!m.quoted || typeof m.quoted !== "object") {
+        m.quoted = null;
+      } else {
       m.quoted.mtype = type;
       m.quoted.id = m.msg?.contextInfo?.stanzaId;
       m.quoted.chat = m.msg?.contextInfo?.remoteJid || m.chat;
@@ -120,6 +123,7 @@ function smsg(conn, m, store) {
       m.quoted.copyNForward = (jid, forceForward = false, options = {}) =>
         conn.copyNForward(jid, vM, forceForward, options);
       m.quoted.download = () => conn.downloadMediaMessage(m.quoted);
+      }
     }
   }
 
