@@ -1,6 +1,12 @@
 const { getWarnCount, incrementWarn, resetWarn } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 
+const normalizeJid = (jid) => {
+    if (!jid) return '';
+    const stripped = jid.includes(':') ? jid.split(':')[0] + '@s.whatsapp.net' : jid;
+    return stripped.replace('@lid', '@s.whatsapp.net');
+};
+
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, args } = context;
@@ -30,7 +36,7 @@ module.exports = async (context) => {
         }
 
         const groupMetadata = await client.groupMetadata(m.chat);
-        const targetInGroup = groupMetadata.participants.find(p => p.id === target);
+        const targetInGroup = groupMetadata.participants.find(p => normalizeJid(p.id) === normalizeJid(target));
 
         if (!targetInGroup) {
             return await client.sendMessage(m.chat, { text: fmt("That person isn't even in this group. Are you hallucinating? 🙄") }, { quoted: m });
