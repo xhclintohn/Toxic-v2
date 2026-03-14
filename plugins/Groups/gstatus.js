@@ -1,14 +1,12 @@
 const { getSettings } = require('../../database/config');
 
-
 module.exports = {
   name: 'gstatus',
   aliases: ['groupstatus', 'gs'],
   description: 'Posts a group status with text, image, video, or audio.',
   run: async (context) => {
-    const { client, m, prefix, isBotAdmin, IsGroup, botname } = context;
+    const { client, m, prefix, IsGroup, botname } = context;
 
-   
     const formatMsg = (text) => `╭───(    TOXIC-MD    )───\n├ \n├ ${text}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
     try {
@@ -22,10 +20,6 @@ module.exports = {
 
       if (!IsGroup) {
         return client.sendText(m.chat, formatMsg(`This command can only be used in group chats.`), m);
-      }
-
-      if (!isBotAdmin) {
-        return client.sendText(m.chat, formatMsg(`I need to be *admin* to post a group status. Make me admin first.`), m);
       }
 
       const settings = await getSettings();
@@ -47,10 +41,8 @@ module.exports = {
         );
       }
 
-   
       const defaultCaption = `Group status Posted By Toxic-MD\n\nxD\n🪽`;
 
- 
       if (/image/.test(mime)) {
         const buffer = await client.downloadMediaMessage(quoted);
         await client.sendMessage(m.chat, {
