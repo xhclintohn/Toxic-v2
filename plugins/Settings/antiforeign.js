@@ -7,40 +7,23 @@ module.exports = async (context) => {
     const value = args[0]?.toLowerCase();
     const jid = m.chat;
 
+    const formatStylishReply = (title, message) => {
+      return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+    };
+
     if (!jid.endsWith('@g.us')) {
-      return await m.reply(
-        `╭───(    TOXIC-MD    )───\n` +
-        `├───≫ ANTIFOREIGN ≪───\n` +
-        `├ \n` +
-        `├ Yo, dumbass, this command's for groups only. Get lost.\n` +
-        `╰──────────────────☉\n` +
-        `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      );
+      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Yo, dumbass, this command's for groups only. Get lost.") }, { quoted: m });
     }
 
     try {
       const settings = await getSettings();
       if (!settings) {
-        return await m.reply(
-          `╭───(    TOXIC-MD    )───\n` +
-          `├───≫ ANTIFOREIGN ≪───\n` +
-          `├ \n` +
-          `├ Database is fucked, no settings found. Fix it, loser.\n` +
-          `╰──────────────────☉\n` +
-          `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        );
+        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Database is fucked, no settings found. Fix it, loser.") }, { quoted: m });
       }
 
       let groupSettings = await getGroupSettings(jid);
       if (!groupSettings) {
-        return await m.reply(
-          `╭───(    TOXIC-MD    )───\n` +
-          `├───≫ ANTIFOREIGN ≪───\n` +
-          `├ \n` +
-          `├ No group settings found. Database's acting up, try again.\n` +
-          `╰──────────────────☉\n` +
-          `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        );
+        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "No group settings found. Database's acting up, try again.") }, { quoted: m });
       }
 
       let isEnabled = groupSettings?.antiforeign === true;
@@ -52,60 +35,34 @@ module.exports = async (context) => {
 
       if (value === 'on' || value === 'off') {
         if (!isBotAdmin) {
-          return await m.reply(
-            `╭───(    TOXIC-MD    )───\n` +
-            `├───≫ ANTIFOREIGN ≪───\n` +
-            `├ \n` +
-            `├ Make me an admin first, you clown. Can't touch antiforeign without juice.\n` +
-            `╰──────────────────☉\n` +
-            `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-          );
+          return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Make me an admin first, you clown. Can't touch antiforeign without juice.") }, { quoted: m });
         }
 
         const action = value === 'on';
 
         if (isEnabled === action) {
-          return await m.reply(
-            `╭───(    TOXIC-MD    )───\n` +
-            `├───≫ ANTIFOREIGN ≪───\n` +
-            `├ \n` +
-            `├ Antiforeign's already ${value.toUpperCase()}, genius. Stop wasting my time.\n` +
-            `╰──────────────────☉\n` +
-            `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-          );
+          return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's already ${value.toUpperCase()}, genius. Stop wasting my time.`) }, { quoted: m });
         }
 
         await updateGroupSetting(jid, 'antiforeign', action);
         await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
-        await m.reply(
-          `╭───(    TOXIC-MD    )───\n` +
-          `├───≫ ANTIFOREIGN ≪───\n` +
-          `├ \n` +
-          `├ Antiforeign's now ${value.toUpperCase()}. Foreigners better watch out or get yeeted!\n` +
-          `╰──────────────────☉\n` +
-          `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        );
-      } else {
-        await m.reply(
-          `╭───(    TOXIC-MD    )───\n` +
-          `├───≫ ANTIFOREIGN ≪───\n` +
-          `├ \n` +
-          `├ Antiforeign's ${isEnabled ? 'ON' : 'OFF'} in this group, dipshit.\n` +
-          `├ Use ${prefix}antiforeign on or ${prefix}antiforeign off to change it.\n` +
-          `╰──────────────────☉\n` +
-          `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        );
+        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's now ${value.toUpperCase()}. Foreigners better watch out or get yeeted!`) }, { quoted: m });
       }
+
+      const buttons = [
+        { buttonId: `${prefix}antiforeign on`, buttonText: { displayText: "ON" }, type: 1 },
+        { buttonId: `${prefix}antiforeign off`, buttonText: { displayText: "OFF" }, type: 1 },
+      ];
+
+      await client.sendMessage(m.chat, {
+        text: formatStylishReply("ANTIFOREIGN", `Antiforeign's ${isEnabled ? 'ON' : 'OFF'} in this group, dipshit. Pick a vibe!`),
+        buttons,
+        headerType: 1,
+        viewOnce: true,
+      }, { quoted: m });
     } catch (error) {
       console.error('[Antiforeign] Error in command:', error);
-      await m.reply(
-        `╭───(    TOXIC-MD    )───\n` +
-        `├───≫ ANTIFOREIGN ≪───\n` +
-        `├ \n` +
-        `├ Shit broke, couldn't mess with antiforeign. Database or something's fucked. Try later.\n` +
-        `╰──────────────────☉\n` +
-        `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      );
+      await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Shit broke, couldn't mess with antiforeign. Database or something's fucked. Try later.") }, { quoted: m });
     }
   });
 };

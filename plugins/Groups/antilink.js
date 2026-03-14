@@ -21,7 +21,8 @@ module.exports = async (context) => {
 
   try {
     const groupSettings = await getGroupSettings(m.chat);
-    const value = args.join(" ").toLowerCase();
+    const rawValue = args.join(" ").toLowerCase();
+    const value = rawValue === 'on' ? 'delete' : rawValue;
     const validModes = ["off", "delete", "remove"];
 
     if (validModes.includes(value)) {
