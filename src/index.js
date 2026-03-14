@@ -43,6 +43,14 @@ const sessionName = path.join(__dirname, '..', 'Session');
 const groupEvents = require("../handlers/eventHandler");
 const connectionHandler = require('../handlers/connectionHandler');
 
+process.on("unhandledRejection", (reason, promise) => {
+  console.error('❌ [UNHANDLED ERROR] Unhandled Rejection:', reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error('❌ [UNCAUGHT ERROR]:', error);
+});
+
 let cachedSettings = null;
 let settingsCacheTime = 0;
 const SETTINGS_CACHE_TTL = 30000;
@@ -467,14 +475,6 @@ async function startToxic() {
           console.error(e);
         }
       }
-    });
-
-    process.on("unhandledRejection", (reason, promise) => {
-      console.error('❌ [UNHANDLED ERROR] Unhandled Rejection:', reason);
-    });
-
-    process.on("uncaughtException", (error) => {
-      console.error('❌ [UNCAUGHT ERROR]:', error);
     });
 
     client.decodeJid = (jid) => {

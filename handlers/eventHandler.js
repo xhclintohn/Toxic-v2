@@ -1,7 +1,13 @@
 const { getGroupSettings, getSudoUsers } = require("../database/config");
 
+const normalizeJid = (jid) => {
+    if (!jid) return '';
+    const stripped = jid.includes(':') ? jid.split(':')[0] + '@s.whatsapp.net' : jid;
+    return stripped.replace('@lid', '@s.whatsapp.net');
+};
+
 const Events = async (client, event, pict) => {
-    const botJid = await client.decodeJid(client.user.id);
+    const botJid = normalizeJid(await client.decodeJid(client.user.id));
 
     try {
         const metadata = await client.groupMetadata(event.id);
@@ -16,7 +22,7 @@ const Events = async (client, event, pict) => {
 
         const sudoUsers = await getSudoUsers();
         const currentDevs = Array.isArray(sudoUsers)
-            ? sudoUsers.map(v => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net")
+            ? sudoUsers.map(v => normalizeJid(v.replace(/[^0-9]/g, "") + "@s.whatsapp.net"))
             : [];
 
         const dpUrls = await Promise.all(
@@ -83,12 +89,14 @@ const Events = async (client, event, pict) => {
         if (event.action === "demote" && antidemote) {
             try {
                 const participant = participants[0];
+                const nAuthor = normalizeJid(event.author);
+                const nParticipant = normalizeJid(participant);
                 if (
-                    event.author === metadata.owner ||
-                    event.author === botJid ||
-                    event.author === participant ||
-                    currentDevs.includes(event.author) ||
-                    currentDevs.includes(participant)
+                    nAuthor === normalizeJid(metadata.owner) ||
+                    nAuthor === botJid ||
+                    nAuthor === nParticipant ||
+                    currentDevs.includes(nAuthor) ||
+                    currentDevs.includes(nParticipant)
                 ) {
                     await client.sendMessage(event.id, {
                         text:
@@ -127,12 +135,14 @@ const Events = async (client, event, pict) => {
         } else if (event.action === "promote" && antipromote) {
             try {
                 const participant = participants[0];
+                const nAuthor = normalizeJid(event.author);
+                const nParticipant = normalizeJid(participant);
                 if (
-                    event.author === metadata.owner ||
-                    event.author === botJid ||
-                    event.author === participant ||
-                    currentDevs.includes(event.author) ||
-                    currentDevs.includes(participant)
+                    nAuthor === normalizeJid(metadata.owner) ||
+                    nAuthor === botJid ||
+                    nAuthor === nParticipant ||
+                    currentDevs.includes(nAuthor) ||
+                    currentDevs.includes(nParticipant)
                 ) {
                     await client.sendMessage(event.id, {
                         text:
