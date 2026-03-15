@@ -174,7 +174,10 @@ const aliases = {
     wc: "warncount",
     rw: "resetwarn",
     warns: "warncount",
-    clearwarn: "resetwarn"
+    clearwarn: "resetwarn",
+    swc: "setwarncount",
+    setwarn: "setwarncount",
+    warnlimit: "setwarncount"
 };
 
 commandFiles.forEach((file) => {
