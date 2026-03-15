@@ -8,16 +8,22 @@ const getMentionedJid = (m) => {
     return null;
 };
 
-const resolveBlockJid = async (rawJid, client) => {
+const resolveBlockJid = async (rawJid, client, m) => {
     if (!rawJid) return null;
-    const server = rawJid.split('@')[1] || '';
+    const server = (rawJid.split('@')[1] || '').toLowerCase();
     const user = rawJid.split('@')[0].split(':')[0].replace(/\D/g, '');
     if (!user) return null;
 
-    if (server === 'lid') {
+    if (server === 'lid' && m.isGroup) {
         try {
-            const decoded = client.decodeJid(rawJid);
-            if (decoded && !decoded.includes('@lid')) return decoded.split(':')[0].split('@')[0].replace(/\D/g, '') + '@s.whatsapp.net';
+            const meta = await client.groupMetadata(m.chat);
+            const match = meta.participants.find(p => {
+                const lid = (p.id || '').split('@')[0].split(':')[0].replace(/\D/g, '');
+                return lid === user;
+            });
+            if (match) {
+                return (match.jid || match.id).split(':')[0].split('@')[0].replace(/\D/g, '') + '@s.whatsapp.net';
+            }
         } catch (e) {}
         return null;
     }
@@ -30,13 +36,13 @@ module.exports = async (context) => {
         const { client, m, text } = context;
 
         const mentioned = getMentionedJid(m);
-        const rawJid = mentioned || (m.quoted?.sender) || (text?.replace(/[^0-9]/g, '') ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : null);
+        const rawJid = mentioned || m.quoted?.sender || (text?.replace(/[^0-9]/g, '') ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : null);
 
         if (!rawJid) {
             return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Tag or reply to a user to block.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
-        const users = await resolveBlockJid(rawJid, client);
+        const users = await resolveBlockJid(rawJid, client, m);
 
         if (!users) {
             return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Couldn't resolve that user's JID.\n├ Try replying to their message instead. 😤\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
