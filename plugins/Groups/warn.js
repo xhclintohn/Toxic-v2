@@ -1,4 +1,4 @@
-const { getWarnCount, incrementWarn, resetWarn } = require('../../database/config');
+const { getWarnCount, incrementWarn, resetWarn, getWarnLimit } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 
 const normalizeJid = (jid) => {
@@ -39,9 +39,7 @@ module.exports = async (context) => {
         }
 
         const groupMetadata = await client.groupMetadata(m.chat);
-        const targetInGroup = groupMetadata.participants.find(p => {
-            return normalizeJid(p.id) === target || normalizeJid(p.jid) === target;
-        });
+        const targetInGroup = groupMetadata.participants.find(p => normalizeJid(p.id) === target || normalizeJid(p.jid) === target);
 
         if (!targetInGroup) {
             return await client.sendMessage(m.chat, { text: fmt("That person isn't even in this group. Are you hallucinating? 🙄") }, { quoted: m });
@@ -51,15 +49,15 @@ module.exports = async (context) => {
             return await client.sendMessage(m.chat, { text: fmt("Can't warn admins, idiot. Warn regular members like you. 😏") }, { quoted: m });
         }
 
+        const MAX_WARNS = await getWarnLimit(m.chat);
         const newCount = await incrementWarn(m.chat, target);
         const username = target.split('@')[0];
-        const MAX_WARNS = 3;
 
         if (newCount >= MAX_WARNS) {
             await resetWarn(m.chat, target);
             await client.groupParticipantsUpdate(m.chat, [target], 'remove');
             return await client.sendMessage(m.chat, {
-                text: `╭───(    TOXIC-MD    )───\n├───≫ KICKED ≪───\n├ \n├ 🚨 @${username} got warn #${newCount}/${MAX_WARNS}\n├ That's 3 strikes. KICKED. Bye bye. 😈\n├ Warn count reset. Slate wiped clean.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                text: `╭───(    TOXIC-MD    )───\n├───≫ KICKED ≪───\n├ \n├ 🚨 @${username} got warn #${newCount}/${MAX_WARNS}\n├ That's ${MAX_WARNS} strikes. KICKED. Bye bye. 😈\n├ Warn count reset. Slate wiped clean.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 mentions: [target]
             }, { quoted: m });
         }
