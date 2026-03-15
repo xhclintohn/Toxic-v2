@@ -256,12 +256,15 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
             for (const p of participants) {
                 const participantJid = p.jid || p.id;
+                const normalizedP = participantJid ? participantJid.split('@')[0].split(':')[0] + '@s.whatsapp.net' : '';
+                const normalizedSender = m.sender ? m.sender.split('@')[0].split(':')[0] + '@s.whatsapp.net' : '';
+                const normalizedBot = botNumber ? botNumber.split('@')[0].split(':')[0] + '@s.whatsapp.net' : '';
 
-                if (participantJid === m.sender) {
+                if (normalizedP === normalizedSender) {
                     userAdminFound = p.admin !== null;
                 }
 
-                if (participantJid === botNumber) {
+                if (normalizedP === normalizedBot) {
                     botAdminFound = p.admin !== null;
                 }
             }
@@ -362,17 +365,20 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             const remoteJid = m.chat || m.key?.remoteJid;
             const normalizedJid = normalizeJidForStorage(remoteJid);
             if (normalizedJid && m.key?.id) {
-                const messageId = m.key.id;
-                const sender = m.key.participant || m.key.remoteJid || '';
-                const storedPayload = {
-                    key: m.key,
-                    message: m.message || {},
-                    pushName: m.pushName || ''
-                };
                 const msgKeys = Object.keys(m.message || {});
-                const isVO = !!(m.message?.viewOnceMessage || m.message?.viewOnceMessageV2 || m.message?.viewOnceMessageV2Extension);
-                console.log(`[STORE] id=${messageId} jid=${normalizedJid} keys=${JSON.stringify(msgKeys)} isViewOnce=${isVO}`);
-                msgStore.saveMessage(messageId, normalizedJid, sender, storedPayload);
+                const isUseless = msgKeys.length === 0 ||
+                    (msgKeys.length === 1 && (msgKeys[0] === 'protocolMessage' || msgKeys[0] === 'senderKeyDistributionMessage')) ||
+                    (msgKeys.length === 2 && msgKeys.includes('senderKeyDistributionMessage') && msgKeys.includes('messageContextInfo'));
+                if (!isUseless) {
+                    const messageId = m.key.id;
+                    const sender = m.key.participant || m.key.remoteJid || '';
+                    const storedPayload = {
+                        key: m.key,
+                        message: m.message || {},
+                        pushName: m.pushName || ''
+                    };
+                    msgStore.saveMessage(messageId, normalizedJid, sender, storedPayload);
+                }
             }
         }
 
@@ -450,10 +456,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 let chatJidToSearch = normalizedDeletedJid;
 
                 const sqlRow = msgStore.getMessage(deletedMessageId);
-                console.log(`[ANTIDELETE] delete event id=${deletedMessageId} jid=${deletedRemoteJid}`);
-                console.log(`[ANTIDELETE] sqlRow found=${!!sqlRow}`);
                 if (sqlRow) {
-                    console.log(`[ANTIDELETE] sqlRow message keys=${JSON.stringify(Object.keys(sqlRow.message?.message || {}))}`);
                     deletedMessage = {
                         key: sqlRow.message.key || { id: deletedMessageId, remoteJid: sqlRow.jid, participant: sqlRow.sender },
                         message: sqlRow.message.message || {},
@@ -504,8 +507,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     const rawMessage = deletedMessage.message || {};
                     const messageType = getMessageType(rawMessage);
                     const isViewOnce = !!(rawMessage.viewOnceMessage || rawMessage.viewOnceMessageV2 || rawMessage.viewOnceMessageV2Extension);
-                    console.log(`[ANTIDELETE] rawMessage keys=${JSON.stringify(Object.keys(rawMessage))}`);
-                    console.log(`[ANTIDELETE] messageType=${messageType} isViewOnce=${isViewOnce}`);
 
                     try {
                         if (isViewOnce) {
@@ -513,9 +514,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             const voInner = voWrapper?.message || voWrapper || {};
                             const voImage = voInner.imageMessage;
                             const voVideo = voInner.videoMessage;
-                            console.log(`[ANTIDELETE] voWrapper keys=${JSON.stringify(Object.keys(voWrapper || {}))}`);
-                            console.log(`[ANTIDELETE] voInner keys=${JSON.stringify(Object.keys(voInner || {}))}`);
-                            console.log(`[ANTIDELETE] voImage=${!!voImage} voVideo=${!!voVideo}`);
 
                             if (voImage) {
                                 const buf = await downloadMedia(client, voImage, 'image');
