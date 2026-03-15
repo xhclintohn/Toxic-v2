@@ -386,12 +386,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 }
 
                 const messageId = m.key.id;
-                let storedMessage = m.message || {};
-                const viewOnceWrapper = storedMessage.viewOnceMessage || storedMessage.viewOnceMessageV2 || storedMessage.viewOnceMessageV2Extension;
-
-                if (viewOnceWrapper?.message) {
-                    storedMessage = { ...storedMessage, ...viewOnceWrapper.message };
-                }
+                const storedMessage = m.message || {};
 
                 const messageWithTimestamp = {
                     ...m,
