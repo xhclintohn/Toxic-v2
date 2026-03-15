@@ -9,6 +9,9 @@
   "engines": {
     "node": "20.x"
   },
+  "overrides": {
+    "integer": "npm:big-integer@1.6.51"
+  },
   "dependencies": {
     "better-sqlite3": "^5.1.7",
     "@hapi/boom": "^10.0.1",
