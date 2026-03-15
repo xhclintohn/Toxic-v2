@@ -1,10 +1,13 @@
-const { getWarnCount } = require('../../database/config');
+const { getWarnCount, getWarnLimit } = require('../../database/config');
 const middleware = require('../../utils/botUtil/middleware');
 
 const normalizeJid = (jid) => {
     if (!jid) return '';
-    const stripped = jid.includes(':') ? jid.split(':')[0] + '@s.whatsapp.net' : jid;
-    return stripped.replace('@lid', '@s.whatsapp.net');
+    const decoded = jid.split('@');
+    const user = decoded[0].split(':')[0];
+    const server = decoded[1] || '';
+    if (server === 'lid') return user + '@s.whatsapp.net';
+    return user + '@' + server;
 };
 
 module.exports = async (context) => {
@@ -16,19 +19,19 @@ module.exports = async (context) => {
         let target = null;
 
         if (m.quoted && m.quoted.sender) {
-            target = m.quoted.sender;
+            target = normalizeJid(m.quoted.sender);
         } else if (m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
-            target = m.message.extendedTextMessage.contextInfo.mentionedJid[0];
+            target = normalizeJid(m.message.extendedTextMessage.contextInfo.mentionedJid[0]);
         } else if (args[0]) {
             target = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
         }
 
         if (!target) {
-            return await client.sendMessage(m.chat, { text: fmt('Tag someone or reply to their message. I can\'t read minds, fool. 😒') }, { quoted: m });
+            return await client.sendMessage(m.chat, { text: fmt("Tag someone or reply to their message. I can't read minds, fool. 😒") }, { quoted: m });
         }
 
         const groupMetadata = await client.groupMetadata(m.chat);
-        const targetInGroup = groupMetadata.participants.find(p => normalizeJid(p.id) === normalizeJid(target));
+        const targetInGroup = groupMetadata.participants.find(p => normalizeJid(p.id) === target || normalizeJid(p.jid) === target);
 
         if (!targetInGroup) {
             return await client.sendMessage(m.chat, { text: fmt("That person isn't even in this group. Are you seeing ghosts? 👻") }, { quoted: m });
@@ -36,9 +39,11 @@ module.exports = async (context) => {
 
         const username = target.split('@')[0];
         const count = await getWarnCount(m.chat, target);
+        const limit = await getWarnLimit(m.chat);
+        const remaining = limit - count;
 
         await client.sendMessage(m.chat, {
-            text: `╭───(    TOXIC-MD    )───\n├───≫ WARN COUNT ≪───\n├ \n├ 📊 @${username} has *${count}/3* warnings.\n├ ${count === 0 ? 'Clean record. For now. 😏' : count >= 2 ? 'One more and they\'re OUT. 💀' : 'Walking on thin ice. ⚠️'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+            text: `╭───(    TOXIC-MD    )───\n├───≫ WARN COUNT ≪───\n├ \n├ 📊 @${username}\n├ Warns: *${count}/${limit}*\n├ Remaining: *${remaining}*\n├ ${count === 0 ? 'Clean record. For now. 😏' : remaining <= 1 ? "One more and they're OUT. 💀" : 'Walking on thin ice. ⚠️'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
             mentions: [target]
         }, { quoted: m });
     });
