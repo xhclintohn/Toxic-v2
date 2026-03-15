@@ -1,4 +1,13 @@
-const { getGroupSettings } = require("../database/config");
+const { getGroupSettings, getWarnCount, incrementWarn, resetWarn, getWarnLimit } = require("../database/config");
+
+const normalizeJid = (jid) => {
+    if (!jid) return '';
+    const decoded = jid.split('@');
+    const user = decoded[0].split(':')[0];
+    const server = decoded[1] || '';
+    if (server === 'lid') return user + '@s.whatsapp.net';
+    return user + '@' + server;
+};
 
 module.exports = async (client, m) => {
     try {
@@ -60,19 +69,27 @@ module.exports = async (client, m) => {
             }
         });
 
-        const reason = isChannelForward ? '📡 Channel forward not allowed!' : '🔗 No links allowed!';
-        await client.sendMessage(m.chat, {
-            text: `╭───( *Toxic-MD Antilink* )───\n` +
-                  `│ 😒 @${m.sender.split("@")[0]}, ${reason}\n` +
-                  `│ 🧹 Message deleted.\n` +
-                  (antilinkMode === "remove" ? `│ 🚪 Get ready to leave...\n` : `│ ⚠️ Final warning.\n`) +
-                  `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-            mentions: [m.sender]
-        });
+        const sender = normalizeJid(m.sender);
+        const reason = isChannelForward ? '📡 Channel forward' : '🔗 Link detected';
+        const MAX_WARNS = await getWarnLimit(m.chat);
+        const newCount = await incrementWarn(m.chat, sender);
+        const username = sender.split('@')[0];
+        const remaining = MAX_WARNS - newCount;
 
-        if (antilinkMode === "remove") {
-            await client.groupParticipantsUpdate(m.chat, [m.sender], "remove");
+        if (newCount >= MAX_WARNS) {
+            await resetWarn(m.chat, sender);
+            await client.groupParticipantsUpdate(m.chat, [sender], "remove");
+            await client.sendMessage(m.chat, {
+                text: `╭───( *Toxic-MD Antilink* )───\n├ 🚨 @${username} KICKED!\n├ Reason: ${reason}\n├ Warns: ${newCount}/${MAX_WARNS}\n├ That's it. Get out. 😈\n├ Warn count wiped clean.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                mentions: [sender]
+            });
+            return;
         }
+
+        await client.sendMessage(m.chat, {
+            text: `╭───( *Toxic-MD Antilink* )───\n├ ⚠️ @${username}, warned!\n├ Reason: ${reason}\n├ Message deleted.\n├ Warns: ${newCount}/${MAX_WARNS}\n├ ${remaining} more and you're GONE. 😈\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+            mentions: [sender]
+        });
 
     } catch (err) {
         console.error("Antilink Error:", err);
