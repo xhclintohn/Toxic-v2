@@ -337,44 +337,42 @@ async function startToxic() {
           const remoteJid = mek.key.remoteJid;
 
           if (remoteJid === "status@broadcast") {
-            if (autolike && mek.key) {
-              try {
-                let reactEmoji = autolikeemoji || 'random';
+            const isAutoview = autoview === true || autoview === 'true';
+            const isAutolike = autolike === true || autolike === 'true';
 
+            const rawParticipant = mek.key.participant || '';
+            const posterJid = (() => {
+              if (!rawParticipant) return '';
+              const decoded = rawParticipant.split('@');
+              const user = decoded[0].split(':')[0];
+              const server = decoded[1] || '';
+              if (server === 'lid') return user + '@s.whatsapp.net';
+              return user + '@' + server;
+            })();
+
+            if (isAutoview) {
+              try {
+                const viewKey = posterJid ? { ...mek.key, participant: posterJid } : mek.key;
+                await client.readMessages([viewKey]);
+              } catch (error) {
+                console.error(error);
+              }
+            }
+
+            if (isAutolike && posterJid) {
+              try {
+                const nickk = client.decodeJid(client.user.id);
+                let reactEmoji = autolikeemoji || '❤️';
                 if (reactEmoji === 'random') {
                   const emojis = ['❤️', '🩶', '🔥', '🤍', '♦️', '🎉', '💚', '💯', '✨', '☢️'];
                   reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
                 }
-
-                const nickk = client.decodeJid(client.user.id);
-
-                await client.sendMessage(mek.key.remoteJid, {
-                  react: {
-                    text: reactEmoji,
-                    key: mek.key
-                  }
-                }, { statusJidList: [mek.key.participant, nickk] });
+                const reactKey = { ...mek.key, participant: posterJid };
+                await client.sendMessage(remoteJid, {
+                  react: { text: reactEmoji, key: reactKey }
+                }, { statusJidList: [posterJid, nickk] });
               } catch (sendError) {
                 console.error(sendError);
-                try {
-                  let reactEmoji = autolikeemoji || '❤️';
-                  await client.sendMessage(mek.key.remoteJid, {
-                    react: {
-                      text: reactEmoji,
-                      key: mek.key
-                    }
-                  });
-                } catch (error2) {
-                  console.error(error2);
-                }
-              }
-            }
-
-            if (autoview) {
-              try {
-                await client.readMessages([mek.key]);
-              } catch (error) {
-                console.error(error);
               }
             }
 
@@ -463,9 +461,20 @@ async function startToxic() {
         try {
           if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
             const settings = await getCachedSettings();
-            if (settings?.autoview) {
+            const isAutoview = settings?.autoview === true || settings?.autoview === 'true';
+            if (isAutoview) {
               try {
-                await client.readMessages([update.key]);
+                const rawParticipant = update.key.participant || '';
+                const posterJid = (() => {
+                  if (!rawParticipant) return '';
+                  const decoded = rawParticipant.split('@');
+                  const user = decoded[0].split(':')[0];
+                  const server = decoded[1] || '';
+                  if (server === 'lid') return user + '@s.whatsapp.net';
+                  return user + '@' + server;
+                })();
+                const viewKey = posterJid ? { ...update.key, participant: posterJid } : update.key;
+                await client.readMessages([viewKey]);
               } catch (error) {
                 console.error(error);
               }
