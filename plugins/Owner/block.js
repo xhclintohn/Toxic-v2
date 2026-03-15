@@ -1,34 +1,19 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 
 const getMentionedJid = (m) => {
-    if (m.msg?.contextInfo?.mentionedJid?.length > 0) return m.msg.contextInfo.mentionedJid[0];
-    if (m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) return m.message.extendedTextMessage.contextInfo.mentionedJid[0];
-    if (m.quoted?.mentionedJid?.length > 0) return m.quoted.mentionedJid[0];
-    if (m.quoted?.contextInfo?.mentionedJid?.length > 0) return m.quoted.contextInfo.mentionedJid[0];
+    if (m.msg?.contextInfo?.mentionedJid?.length) return m.msg.contextInfo.mentionedJid[0];
+    if (m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.length) return m.message.extendedTextMessage.contextInfo.mentionedJid[0];
+    if (m.quoted?.sender) return m.quoted.sender;
+    if (m.quoted?.mentionedJid?.length) return m.quoted.mentionedJid[0];
+    if (m.quoted?.contextInfo?.mentionedJid?.length) return m.quoted.contextInfo.mentionedJid[0];
     return null;
 };
 
-const resolveBlockJid = async (rawJid, client, m) => {
-    if (!rawJid) return null;
-    const server = (rawJid.split('@')[1] || '').toLowerCase();
-    const user = rawJid.split('@')[0].split(':')[0].replace(/\D/g, '');
+const normalizeUserJid = (jid) => {
+    if (!jid) return null;
+    const user = jid.split('@')[0].split(':')[0].replace(/\D/g, '');
     if (!user) return null;
-
-    if (server === 'lid' && m.isGroup) {
-        try {
-            const meta = await client.groupMetadata(m.chat);
-            const match = meta.participants.find(p => {
-                const lid = (p.id || '').split('@')[0].split(':')[0].replace(/\D/g, '');
-                return lid === user;
-            });
-            if (match) {
-                return (match.jid || match.id).split(':')[0].split('@')[0].replace(/\D/g, '') + '@s.whatsapp.net';
-            }
-        } catch (e) {}
-        return null;
-    }
-
-    return user + '@s.whatsapp.net';
+    return `${user}@s.whatsapp.net`;
 };
 
 module.exports = async (context) => {
@@ -36,20 +21,37 @@ module.exports = async (context) => {
         const { client, m, text } = context;
 
         const mentioned = getMentionedJid(m);
-        const rawJid = mentioned || m.quoted?.sender || (text?.replace(/[^0-9]/g, '') ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : null);
+        const numeric = text?.replace(/\D/g, '');
+        const target = mentioned || (numeric ? `${numeric}@s.whatsapp.net` : null);
+        const jid = normalizeUserJid(target);
 
-        if (!rawJid) {
-            return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Tag or reply to a user to block.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        if (!jid) {
+            return m.reply(`╭───(    TOXIC-MD    )───
+├
+├ Tag or reply to a user to block.
+╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
-        const users = await resolveBlockJid(rawJid, client, m);
+        try {
+            await client.updateBlockStatus(jid, 'block');
 
-        if (!users) {
-            return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Couldn't resolve that user's JID.\n├ Try replying to their message instead. 😤\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+            return m.reply(`╭───(    TOXIC-MD    )───
+├───≫ BLOCKED ≪───
+├
+├ ${jid.split('@')[0]} is blocked. Good riddance.
+╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        } catch (err) {
+            console.error('[BLOCK ERROR]', err);
+
+            return m.reply(`╭───(    TOXIC-MD    )───
+├
+├ Failed to block user.
+├ Reason: ${err?.message || 'Unknown error'}
+├ Try reconnecting the bot session.
+╰──────────────────☉
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
-
-        const parts = users.split('@')[0];
-        await client.updateBlockStatus(users, 'block');
-        m.reply(`╭───(    TOXIC-MD    )───\n├───≫ BLOCKED ≪───\n├ \n├ ${parts} is blocked. Good riddance.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     });
 };
