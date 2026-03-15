@@ -1,0 +1,34 @@
+const { setWarnLimit, getWarnLimit } = require('../../database/config');
+const middleware = require('../../utils/botUtil/middleware');
+
+module.exports = async (context) => {
+    await middleware(context, async () => {
+        const { client, m, args } = context;
+
+        const fmt = (msg) => `╭───(    TOXIC-MD    )───\n├───≫ SET WARN LIMIT ≪───\n├ \n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+
+        const current = await getWarnLimit(m.chat);
+
+        if (!args[0]) {
+            return await client.sendMessage(m.chat, {
+                text: fmt(`Current warn limit for this group: *${current}*\n├ \n├ Usage: .setwarncount <number>\n├ Example: .setwarncount 5\n├ \n├ When a user hits the limit\n├ they get kicked automatically. 😈\n├ Min: 1 — Max: 10`)
+            }, { quoted: m });
+        }
+
+        const num = parseInt(args[0]);
+
+        if (isNaN(num) || num < 1 || num > 10) {
+            return await client.sendMessage(m.chat, { text: fmt('Give me a number between 1 and 10. Is that too hard? 🙄') }, { quoted: m });
+        }
+
+        if (num === current) {
+            return await client.sendMessage(m.chat, { text: fmt(`Warn limit is already *${current}*. Pay attention. 😒`) }, { quoted: m });
+        }
+
+        await setWarnLimit(m.chat, num);
+
+        await client.sendMessage(m.chat, {
+            text: fmt(`✅ Warn limit updated to *${num}*.\n├ Members now get kicked after ${num} warns. 😈`)
+        }, { quoted: m });
+    });
+};
