@@ -276,7 +276,7 @@ async function getGroupSettings(jid) {
                 antistatusmention: r.antistatusmention || 'off',
                 welcome: r.welcome === true || r.welcome === 1,
                 goodbye: r.goodbye === true || r.goodbye === 1,
-                warn_limit: r.warn_limit || 3
+                warn_limit: parseInt(r.warn_limit) || 3
             };
         } else {
             result = {
@@ -528,12 +528,41 @@ async function resetWarn(jid, participant) {
 }
 
 async function getWarnLimit(jid) {
-    const settings = await getGroupSettings(jid);
-    return settings.warn_limit || 3;
+    await waitForDb();
+    try {
+        if (usePostgres) {
+            const res = await pool.query('SELECT warn_limit FROM group_settings WHERE jid = $1', [jid]);
+            return parseInt(res.rows[0]?.warn_limit) || 3;
+        } else {
+            const row = db.prepare('SELECT warn_limit FROM group_settings WHERE jid = ?').get(jid);
+            return parseInt(row?.warn_limit) || 3;
+        }
+    } catch (e) {
+        return 3;
+    }
 }
 
 async function setWarnLimit(jid, limit) {
-    await updateGroupSetting(jid, 'warn_limit', limit);
+    await waitForDb();
+    try {
+        if (usePostgres) {
+            await pool.query(
+                `INSERT INTO group_settings (jid, warn_limit) VALUES ($1, $2)
+                 ON CONFLICT (jid) DO UPDATE SET warn_limit = EXCLUDED.warn_limit`,
+                [jid, limit]
+            );
+        } else {
+            const existing = db.prepare('SELECT jid FROM group_settings WHERE jid = ?').get(jid);
+            if (existing) {
+                db.prepare('UPDATE group_settings SET warn_limit = ? WHERE jid = ?').run(limit, jid);
+            } else {
+                db.prepare('INSERT INTO group_settings (jid, warn_limit) VALUES (?, ?)').run(jid, limit);
+            }
+        }
+        cache.groupSettings.delete(jid);
+    } catch (e) {
+        console.error(`❌ Error setting warn limit for ${jid}:`, e);
+    }
 }
 
 initializeDatabase().catch(err => console.error(`❌ Database initialization failed: ${err}`));
