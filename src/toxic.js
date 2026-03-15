@@ -129,6 +129,8 @@ function getMessageType(message) {
         if (inner.audioMessage) return '👁️ View Once Audio';
         return '👁️ View Once';
     }
+    if (message.imageMessage?.viewOnce) return '👁️ View Once Image';
+    if (message.videoMessage?.viewOnce) return '👁️ View Once Video';
     if (message.conversation) return '📝 Text';
     if (message.imageMessage) return '🖼️ Image';
     if (message.videoMessage) return '🎥 Video';
@@ -151,14 +153,34 @@ function getMessageType(message) {
 
 function extractInnerMessage(message) {
     if (!message) return message;
-    if (message.ephemeralMessage?.message) {
-        return extractInnerMessage(message.ephemeralMessage.message);
-    }
+    if (message.ephemeralMessage?.message) return extractInnerMessage(message.ephemeralMessage.message);
     if (message.viewOnceMessage?.message) return extractInnerMessage(message.viewOnceMessage.message);
     if (message.viewOnceMessageV2?.message) return extractInnerMessage(message.viewOnceMessageV2.message);
     if (message.viewOnceMessageV2Extension?.message) return extractInnerMessage(message.viewOnceMessageV2Extension.message);
     if (message.documentWithCaptionMessage?.message) return message.documentWithCaptionMessage.message;
     return message;
+}
+
+function isViewOnceMessage(rawMessage) {
+    if (!rawMessage) return false;
+    if (rawMessage.viewOnceMessage || rawMessage.viewOnceMessageV2 || rawMessage.viewOnceMessageV2Extension) return true;
+    const inner = extractInnerMessage(rawMessage);
+    if (inner?.imageMessage?.viewOnce === true) return true;
+    if (inner?.videoMessage?.viewOnce === true) return true;
+    return false;
+}
+
+function getViewOnceMedia(rawMessage) {
+    const voWrapper = rawMessage.viewOnceMessage || rawMessage.viewOnceMessageV2 || rawMessage.viewOnceMessageV2Extension;
+    if (voWrapper) {
+        const inner = voWrapper.message || voWrapper;
+        return { image: inner.imageMessage || null, video: inner.videoMessage || null };
+    }
+    const inner = extractInnerMessage(rawMessage);
+    return {
+        image: inner?.imageMessage?.viewOnce ? inner.imageMessage : null,
+        video: inner?.videoMessage?.viewOnce ? inner.videoMessage : null
+    };
 }
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
@@ -263,7 +285,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 if (normalizedP === normalizedSender) {
                     userAdminFound = p.admin !== null;
                 }
-
                 if (normalizedP === normalizedBot) {
                     botAdminFound = p.admin !== null;
                 }
@@ -451,7 +472,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 }
 
                 const normalizedDeletedJid = normalizeJidForStorage(deletedRemoteJid);
-
                 let deletedMessage = null;
                 let chatJidToSearch = normalizedDeletedJid;
 
@@ -506,68 +526,63 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
                     const rawMessage = deletedMessage.message || {};
                     const messageType = getMessageType(rawMessage);
-                    const isViewOnce = !!(rawMessage.viewOnceMessage || rawMessage.viewOnceMessageV2 || rawMessage.viewOnceMessageV2Extension);
+                    const voMedia = isViewOnceMessage(rawMessage) ? getViewOnceMedia(rawMessage) : null;
 
                     try {
-                        if (isViewOnce) {
-                            const voWrapper = rawMessage.viewOnceMessage || rawMessage.viewOnceMessageV2 || rawMessage.viewOnceMessageV2Extension;
-                            const voInner = voWrapper?.message || voWrapper || {};
-                            const voImage = voInner.imageMessage;
-                            const voVideo = voInner.videoMessage;
-
-                            if (voImage) {
-                                const buf = await downloadMedia(client, voImage, 'image');
+                        if (voMedia) {
+                            const hdr = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉`;
+                            if (voMedia.image) {
+                                const buf = await downloadMedia(client, voMedia.image, 'image');
                                 await client.sendMessage(botJid, {
                                     image: buf,
-                                    caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n👁️ *Deleted View Once Image*`,
+                                    caption: hdr + '\n\n👁️ *Deleted View Once Image*',
                                     mentions: [sender]
                                 });
-                            } else if (voVideo) {
-                                const buf = await downloadMedia(client, voVideo, 'video');
+                            } else if (voMedia.video) {
+                                const buf = await downloadMedia(client, voMedia.video, 'video');
                                 await client.sendMessage(botJid, {
                                     video: buf,
-                                    caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n👁️ *Deleted View Once Video*`,
+                                    caption: hdr + '\n\n👁️ *Deleted View Once Video*',
                                     mentions: [sender]
                                 });
                             } else {
                                 await client.sendMessage(botJid, {
-                                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n👁️ *Deleted View Once (media unavailable)*`,
+                                    text: hdr + '\n\n👁️ *Deleted View Once (media unavailable)*',
                                     mentions: [sender]
                                 });
                             }
                         } else {
                             const msg = extractInnerMessage(rawMessage);
+                            const hdr = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}`;
 
                             if (msg.conversation) {
                                 await client.sendMessage(botJid, {
-                                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╭───( ✓ )───\n\n📝 *Deleted Content:*\n${msg.conversation}`,
+                                    text: hdr + `\n╭───( ✓ )───\n\n📝 *Deleted Content:*\n${msg.conversation}`,
                                     mentions: [sender]
                                 });
                             } else if (msg.extendedTextMessage?.text) {
                                 await client.sendMessage(botJid, {
-                                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰───────☉\n\n📝 *Deleted Content:*\n${msg.extendedTextMessage.text}`,
+                                    text: hdr + `\n╰───────☉\n\n📝 *Deleted Content:*\n${msg.extendedTextMessage.text}`,
                                     mentions: [sender]
                                 });
                             } else if (msg.imageMessage) {
-                                const caption = msg.imageMessage.caption || '';
                                 const buf = await downloadMedia(client, msg.imageMessage, 'image');
                                 await client.sendMessage(botJid, {
                                     image: buf,
-                                    caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📸 *Deleted Image:*\n${caption}`,
+                                    caption: hdr + `\n╰──────────☉\n\n📸 *Deleted Image:*\n${msg.imageMessage.caption || ''}`,
                                     mentions: [sender]
                                 });
                             } else if (msg.videoMessage) {
-                                const caption = msg.videoMessage.caption || '';
                                 const buf = await downloadMedia(client, msg.videoMessage, 'video');
                                 await client.sendMessage(botJid, {
                                     video: buf,
-                                    caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰────────☉\n\n🎥 *Deleted Video:*\n${caption}`,
+                                    caption: hdr + `\n╰────────☉\n\n🎥 *Deleted Video:*\n${msg.videoMessage.caption || ''}`,
                                     mentions: [sender]
                                 });
                             } else if (msg.audioMessage) {
                                 const buf = await downloadMedia(client, msg.audioMessage, 'audio');
                                 await client.sendMessage(botJid, {
-                                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰─────────☉\n\n🎵 *Deleted Audio*`,
+                                    text: hdr + `\n╰─────────☉\n\n🎵 *Deleted Audio*`,
                                     mentions: [sender]
                                 });
                                 await client.sendMessage(botJid, {
@@ -578,7 +593,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             } else if (msg.stickerMessage) {
                                 const buf = await downloadMedia(client, msg.stickerMessage, 'sticker');
                                 await client.sendMessage(botJid, {
-                                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰───────☉\n\n😀 *Deleted Sticker*`,
+                                    text: hdr + `\n╰───────☉\n\n😀 *Deleted Sticker*`,
                                     mentions: [sender]
                                 });
                                 await client.sendMessage(botJid, { sticker: buf });
@@ -588,14 +603,14 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                                     document: buf,
                                     mimetype: msg.documentMessage.mimetype || 'application/octet-stream',
                                     fileName: msg.documentMessage.fileName || 'document',
-                                    caption: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰─────────☉\n\n📄 *Deleted Document:*\n${msg.documentMessage.fileName || ''}\n${msg.documentMessage.caption || ''}`,
+                                    caption: hdr + `\n╰─────────☉\n\n📄 *Deleted Document:*\n${msg.documentMessage.fileName || ''}\n${msg.documentMessage.caption || ''}`,
                                     mentions: [sender]
                                 });
                             } else if (msg.contactMessage) {
                                 const vcard = msg.contactMessage.vcard;
                                 const displayName = msg.contactMessage.displayName || 'Contact';
                                 await client.sendMessage(botJid, {
-                                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰───────────────☉\n\n👤 *Deleted Contact:*\n${displayName}`,
+                                    text: hdr + `\n╰───────────────☉\n\n👤 *Deleted Contact:*\n${displayName}`,
                                     mentions: [sender]
                                 });
                                 await client.sendMessage(botJid, {
@@ -605,7 +620,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                                 const contacts = msg.contactsArrayMessage.contacts || [];
                                 const displayName = msg.contactsArrayMessage.displayName || 'Contacts';
                                 await client.sendMessage(botJid, {
-                                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰─────────☉\n\n👥 *Deleted Contacts (${contacts.length}):*\n${displayName}`,
+                                    text: hdr + `\n╰─────────☉\n\n👥 *Deleted Contacts (${contacts.length}):*\n${displayName}`,
                                     mentions: [sender]
                                 });
                                 for (const c of contacts) {
@@ -615,7 +630,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                                 }
                             } else if (msg.locationMessage) {
                                 await client.sendMessage(botJid, {
-                                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📍 *Deleted Location*`,
+                                    text: hdr + `\n╰──────────☉\n\n📍 *Deleted Location*`,
                                     mentions: [sender]
                                 });
                                 await client.sendMessage(botJid, {
@@ -628,7 +643,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                                 });
                             } else if (msg.liveLocationMessage) {
                                 await client.sendMessage(botJid, {
-                                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📍 *Deleted Live Location*\nLat: ${msg.liveLocationMessage.degreesLatitude}\nLng: ${msg.liveLocationMessage.degreesLongitude}`,
+                                    text: hdr + `\n╰──────────☉\n\n📍 *Deleted Live Location*\nLat: ${msg.liveLocationMessage.degreesLatitude}\nLng: ${msg.liveLocationMessage.degreesLongitude}`,
                                     mentions: [sender]
                                 });
                             } else if (msg.pollCreationMessage || msg.pollCreationMessageV3) {
@@ -636,12 +651,12 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                                 const pollName = poll.name || 'Poll';
                                 const options = (poll.options || []).map(o => o.optionName).join('\n々 ');
                                 await client.sendMessage(botJid, {
-                                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n📊 *Deleted Poll:*\n${pollName}\n々 ${options}`,
+                                    text: hdr + `\n╰──────────☉\n\n📊 *Deleted Poll:*\n${pollName}\n々 ${options}`,
                                     mentions: [sender]
                                 });
                             } else {
                                 await client.sendMessage(botJid, {
-                                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉\n\n⚠️ *Deleted content could not be recovered*`,
+                                    text: hdr + `\n╰──────────☉\n\n⚠️ *Deleted content could not be recovered*`,
                                     mentions: [sender]
                                 });
                             }
