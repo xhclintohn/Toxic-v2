@@ -3,9 +3,11 @@ const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 
 const normalizeJid = (jid) => {
     if (!jid) return '';
-    let stripped = jid.includes(':') ? jid.split(':')[0] + '@s.whatsapp.net' : jid;
-    stripped = stripped.replace('@lid', '@s.whatsapp.net');
-    return stripped;
+    const decoded = jid.split('@');
+    const user = decoded[0].split(':')[0];
+    const server = decoded[1] || '';
+    if (server === 'lid') return user + '@s.whatsapp.net';
+    return user + '@' + server;
 };
 
 module.exports = async (context) => {
@@ -37,7 +39,9 @@ module.exports = async (context) => {
         }
 
         const groupMetadata = await client.groupMetadata(m.chat);
-        const targetInGroup = groupMetadata.participants.find(p => normalizeJid(p.id) === normalizeJid(target));
+        const targetInGroup = groupMetadata.participants.find(p => {
+            return normalizeJid(p.id) === target || normalizeJid(p.jid) === target;
+        });
 
         if (!targetInGroup) {
             return await client.sendMessage(m.chat, { text: fmt("That person isn't even in this group. Are you hallucinating? 🙄") }, { quoted: m });
