@@ -369,6 +369,9 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     message: m.message || {},
                     pushName: m.pushName || ''
                 };
+                const msgKeys = Object.keys(m.message || {});
+                const isVO = !!(m.message?.viewOnceMessage || m.message?.viewOnceMessageV2 || m.message?.viewOnceMessageV2Extension);
+                console.log(`[STORE] id=${messageId} jid=${normalizedJid} keys=${JSON.stringify(msgKeys)} isViewOnce=${isVO}`);
                 msgStore.saveMessage(messageId, normalizedJid, sender, storedPayload);
             }
         }
@@ -447,7 +450,10 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 let chatJidToSearch = normalizedDeletedJid;
 
                 const sqlRow = msgStore.getMessage(deletedMessageId);
+                console.log(`[ANTIDELETE] delete event id=${deletedMessageId} jid=${deletedRemoteJid}`);
+                console.log(`[ANTIDELETE] sqlRow found=${!!sqlRow}`);
                 if (sqlRow) {
+                    console.log(`[ANTIDELETE] sqlRow message keys=${JSON.stringify(Object.keys(sqlRow.message?.message || {}))}`);
                     deletedMessage = {
                         key: sqlRow.message.key || { id: deletedMessageId, remoteJid: sqlRow.jid, participant: sqlRow.sender },
                         message: sqlRow.message.message || {},
@@ -498,6 +504,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     const rawMessage = deletedMessage.message || {};
                     const messageType = getMessageType(rawMessage);
                     const isViewOnce = !!(rawMessage.viewOnceMessage || rawMessage.viewOnceMessageV2 || rawMessage.viewOnceMessageV2Extension);
+                    console.log(`[ANTIDELETE] rawMessage keys=${JSON.stringify(Object.keys(rawMessage))}`);
+                    console.log(`[ANTIDELETE] messageType=${messageType} isViewOnce=${isViewOnce}`);
 
                     try {
                         if (isViewOnce) {
@@ -505,6 +513,9 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             const voInner = voWrapper?.message || voWrapper || {};
                             const voImage = voInner.imageMessage;
                             const voVideo = voInner.videoMessage;
+                            console.log(`[ANTIDELETE] voWrapper keys=${JSON.stringify(Object.keys(voWrapper || {}))}`);
+                            console.log(`[ANTIDELETE] voInner keys=${JSON.stringify(Object.keys(voInner || {}))}`);
+                            console.log(`[ANTIDELETE] voImage=${!!voImage} voVideo=${!!voVideo}`);
 
                             if (voImage) {
                                 const buf = await downloadMedia(client, voImage, 'image');
