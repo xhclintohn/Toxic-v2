@@ -1,4 +1,4 @@
-const { getGroupSettings, getSudoUsers } = require("../database/config");
+const { getGroupSettings, getSudoUsers, resetWarn } = require("../database/config");
 
 const normalizeJid = (jid) => {
     if (!jid) return '';
@@ -59,6 +59,15 @@ const Events = async (client, event, pict) => {
                     });
                 }
             } catch {}
+        }
+
+        if (event.action === "remove") {
+            for (const participant of participants) {
+                try {
+                    const normalized = normalizeJid(participant);
+                    await resetWarn(event.id, normalized);
+                } catch {}
+            }
         }
 
         if (goodbyeEnabled && event.action === "remove") {
