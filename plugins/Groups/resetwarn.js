@@ -3,14 +3,36 @@ const middleware = require('../../utils/botUtil/middleware');
 
 const resolveTarget = (jid, participants) => {
     if (!jid) return null;
+    const server = jid.split('@')[1] || '';
     const user = jid.split('@')[0].split(':')[0].replace(/\D/g, '');
     if (!user) return null;
+
+    if (server === 'lid') {
+        const match = participants.find(p => {
+            const lid = (p.id || '').split('@')[0].split(':')[0].replace(/\D/g, '');
+            return lid === user;
+        });
+        if (match) {
+            const phoneJid = match.jid || match.id;
+            return phoneJid.split(':')[0].split('@')[0].replace(/\D/g, '') + '@s.whatsapp.net';
+        }
+        return null;
+    }
+
     const match = participants.find(p => {
         const pid = (p.jid || p.id || '').split('@')[0].split(':')[0].replace(/\D/g, '');
         return pid === user || pid.endsWith(user) || user.endsWith(pid);
     });
-    if (match) return (match.jid || match.id).split(':')[0].split('@')[0] + '@s.whatsapp.net';
+    if (match) return (match.jid || match.id).split(':')[0].split('@')[0].replace(/\D/g, '') + '@s.whatsapp.net';
     return user + '@s.whatsapp.net';
+};
+
+const getMentionedJid = (m) => {
+    if (m.msg?.contextInfo?.mentionedJid?.length > 0) return m.msg.contextInfo.mentionedJid[0];
+    if (m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) return m.message.extendedTextMessage.contextInfo.mentionedJid[0];
+    if (m.quoted?.mentionedJid?.length > 0) return m.quoted.mentionedJid[0];
+    if (m.quoted?.contextInfo?.mentionedJid?.length > 0) return m.quoted.contextInfo.mentionedJid[0];
+    return null;
 };
 
 module.exports = async (context) => {
@@ -26,9 +48,12 @@ module.exports = async (context) => {
 
         if (m.quoted && m.quoted.sender) {
             rawJid = m.quoted.sender;
-        } else if (m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
-            rawJid = m.message.extendedTextMessage.contextInfo.mentionedJid[0];
-        } else if (args[0]) {
+        } else {
+            const mentioned = getMentionedJid(m);
+            if (mentioned) rawJid = mentioned;
+        }
+
+        if (!rawJid && args[0]) {
             rawJid = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
         }
 
@@ -39,13 +64,12 @@ module.exports = async (context) => {
         const target = resolveTarget(rawJid, participants);
 
         if (!target) {
-            return await client.sendMessage(m.chat, { text: fmt("Couldn't resolve that user. 🙄") }, { quoted: m });
+            return await client.sendMessage(m.chat, { text: fmt("Couldn't find that person in this group. 🙄") }, { quoted: m });
         }
 
         const targetInGroup = participants.find(p => {
-            const pid = (p.jid || p.id || '').split(':')[0].split('@')[0];
-            const tid = target.split('@')[0];
-            return pid === tid;
+            const pid = (p.jid || p.id || '').split(':')[0].split('@')[0].replace(/\D/g, '');
+            return pid === target.split('@')[0];
         });
 
         if (!targetInGroup) {
