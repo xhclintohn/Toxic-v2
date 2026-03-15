@@ -1,57 +1,48 @@
-const { getGroupSettings, updateGroupSetting } = require('../../database/config');
+const { getGroupSettings, updateGroupSetting, getWarnLimit } = require('../../database/config');
 
 module.exports = async (context) => {
-  const { client, m, args, prefix, isBotAdmin, isAdmin } = context;
+    const { client, m, args, isAdmin, isBotAdmin } = context;
 
-  const formatStylishReply = (title, message) => {
-    return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
-  };
+    const fmt = (msg) => `╭───(    TOXIC-MD    )───\n├───≫ ANTILINK ≪───\n├ \n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
-  if (!m.isGroup) {
-    return await client.sendMessage(m.chat, { text: formatStylishReply("ANTILINK", "This command only works in groups.") }, { quoted: m });
-  }
-
-  if (!isAdmin) {
-    return await client.sendMessage(m.chat, { text: formatStylishReply("ANTILINK", "Only group admins can change antilink settings.\n├ You're not special.") }, { quoted: m });
-  }
-
-  if (!isBotAdmin) {
-    return await client.sendMessage(m.chat, { text: formatStylishReply("ANTILINK", "I need to be an admin first.\n├ Make me admin or watch me ignore links.") }, { quoted: m });
-  }
-
-  try {
-    const groupSettings = await getGroupSettings(m.chat);
-    const rawValue = args.join(" ").toLowerCase();
-    const value = rawValue === 'on' ? 'delete' : rawValue;
-    const validModes = ["off", "delete", "remove"];
-
-    if (validModes.includes(value)) {
-      const currentMode = String(groupSettings.antilink || "off").toLowerCase();
-      if (currentMode === value) {
-        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTILINK", `Antilink is already set to '${value.toUpperCase()}' in this group.`) }, { quoted: m });
-      }
-      await updateGroupSetting(m.chat, 'antilink', value);
-      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTILINK", `Antilink mode updated to '${value.toUpperCase()}' for this group.`) }, { quoted: m });
+    if (!m.isGroup) {
+        return await client.sendMessage(m.chat, { text: fmt('Groups only, genius. 😤') }, { quoted: m });
     }
 
-    const currentStatus = String(groupSettings.antilink || "off").toUpperCase();
-    const buttons = [
-      { buttonId: `${prefix}antilink delete`, buttonText: { displayText: "DELETE" }, type: 1 },
-      { buttonId: `${prefix}antilink remove`, buttonText: { displayText: "REMOVE" }, type: 1 },
-      { buttonId: `${prefix}antilink off`, buttonText: { displayText: "OFF" }, type: 1 },
-    ];
+    if (!isAdmin) {
+        return await client.sendMessage(m.chat, { text: fmt("Admins only. You're not special enough. 😒") }, { quoted: m });
+    }
 
-    await client.sendMessage(m.chat,
-      {
-        text: formatStylishReply("ANTILINK", `Antilink Mode: ${currentStatus}\n├ Pick your poison.`),
-        buttons,
-        headerType: 1,
-        viewOnce: true,
-      },
-      { quoted: m }
-    );
-  } catch (error) {
-    console.error("Error in Antilink command:", error);
-    await client.sendMessage(m.chat, { text: formatStylishReply("ANTILINK", "Something broke. Try again later.") }, { quoted: m });
-  }
+    if (!isBotAdmin) {
+        return await client.sendMessage(m.chat, { text: fmt("Make me admin first. I can't enforce rules without power. 🙄") }, { quoted: m });
+    }
+
+    try {
+        const groupSettings = await getGroupSettings(m.chat);
+        const value = args.join(" ").toLowerCase();
+        const validModes = ["off", "warn", "kick"];
+
+        if (validModes.includes(value)) {
+            const currentMode = String(groupSettings.antilink || "off").toLowerCase();
+            if (currentMode === value) {
+                return await client.sendMessage(m.chat, { text: fmt(`Antilink is already set to *${value.toUpperCase()}*. Pay attention. 😒`) }, { quoted: m });
+            }
+            await updateGroupSetting(m.chat, 'antilink', value);
+            const desc =
+                value === 'off' ? 'Links are now allowed. Hope you know what you\'re doing. 🙄' :
+                value === 'warn' ? `Links will be deleted and sender warned.\nAt the warn limit they\'re KICKED. 😈` :
+                'Links = Instant kick. No second chances. 😈';
+            return await client.sendMessage(m.chat, { text: fmt(`✅ Antilink set to *${value.toUpperCase()}*.\n├ ${desc}`) }, { quoted: m });
+        }
+
+        const currentMode = String(groupSettings.antilink || "off").toUpperCase();
+        const warnLimit = await getWarnLimit(m.chat);
+
+        await client.sendMessage(m.chat, {
+            text: fmt(`Current mode: *${currentMode}*\n├ Warn limit: *${warnLimit}* (set with .setwarncount)\n├ \n├ 📖 *How to use:*\n├ .antilink off — Allow links\n├ .antilink warn — Delete + warn user\n├ .antilink kick — Delete + instant kick\n├ \n├ In warn mode, hitting the limit\n├ = auto kick. 😈`)
+        }, { quoted: m });
+    } catch (error) {
+        console.error("Antilink command error:", error);
+        await client.sendMessage(m.chat, { text: fmt('Something broke. Try again. 😤') }, { quoted: m });
+    }
 };
