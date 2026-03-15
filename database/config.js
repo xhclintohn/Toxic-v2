@@ -120,7 +120,7 @@ async function initializeDatabase() {
                     );
                 `);
 
-                for (const [col, def] of [['antilink', "TEXT DEFAULT 'off'"], ['antistatusmention', "TEXT DEFAULT 'off'"], ['antitag', 'BOOLEAN DEFAULT false'], ['welcome', 'BOOLEAN DEFAULT false'], ['goodbye', 'BOOLEAN DEFAULT false']]) {
+                for (const [col, def] of [['antilink', "TEXT DEFAULT 'off'"], ['antistatusmention', "TEXT DEFAULT 'off'"], ['antitag', 'BOOLEAN DEFAULT false'], ['welcome', 'BOOLEAN DEFAULT false'], ['goodbye', 'BOOLEAN DEFAULT false'], ['warn_limit', 'INTEGER DEFAULT 3']]) {
                     try { await client.query(`ALTER TABLE group_settings ADD COLUMN IF NOT EXISTS ${col} ${def}`); } catch (e) {}
                 }
 
@@ -180,7 +180,7 @@ async function initializeDatabase() {
                 );
             `);
 
-            for (const [col, def] of [["antilink", "TEXT DEFAULT 'off'"], ["antistatusmention", "TEXT DEFAULT 'off'"], ["antitag", "INTEGER DEFAULT 0"], ["welcome", "INTEGER DEFAULT 0"], ["goodbye", "INTEGER DEFAULT 0"]]) {
+            for (const [col, def] of [["antilink", "TEXT DEFAULT 'off'"], ["antistatusmention", "TEXT DEFAULT 'off'"], ["antitag", "INTEGER DEFAULT 0"], ["welcome", "INTEGER DEFAULT 0"], ["goodbye", "INTEGER DEFAULT 0"], ["warn_limit", "INTEGER DEFAULT 3"]]) {
                 try { db.exec(`ALTER TABLE group_settings ADD COLUMN ${col} ${def}`); } catch (e) {}
             }
 
@@ -275,7 +275,8 @@ async function getGroupSettings(jid) {
                 antilink: r.antilink || 'off',
                 antistatusmention: r.antistatusmention || 'off',
                 welcome: r.welcome === true || r.welcome === 1,
-                goodbye: r.goodbye === true || r.goodbye === 1
+                goodbye: r.goodbye === true || r.goodbye === 1,
+                warn_limit: r.warn_limit || 3
             };
         } else {
             result = {
@@ -288,7 +289,8 @@ async function getGroupSettings(jid) {
                 antilink: 'off',
                 antistatusmention: 'off',
                 welcome: false,
-                goodbye: false
+                goodbye: false,
+                warn_limit: 3
             };
         }
         cache.groupSettings.set(jid, { data: result, time: Date.now() });
@@ -299,7 +301,7 @@ async function getGroupSettings(jid) {
         return result;
     } catch (error) {
         console.error(`❌ Error fetching group settings for ${jid}: ${error}`);
-        return { antidelete: true, gcpresence: false, events: false, antidemote: false, antipromote: false, antitag: false, antilink: 'off', antistatusmention: 'off', welcome: false, goodbye: false };
+        return { antidelete: true, gcpresence: false, events: false, antidemote: false, antipromote: false, antitag: false, antilink: 'off', antistatusmention: 'off', welcome: false, goodbye: false, warn_limit: 3 };
     }
 }
 
@@ -525,6 +527,15 @@ async function resetWarn(jid, participant) {
     } catch (e) {}
 }
 
+async function getWarnLimit(jid) {
+    const settings = await getGroupSettings(jid);
+    return settings.warn_limit || 3;
+}
+
+async function setWarnLimit(jid, limit) {
+    await updateGroupSetting(jid, 'warn_limit', limit);
+}
+
 initializeDatabase().catch(err => console.error(`❌ Database initialization failed: ${err}`));
 
 module.exports = {
@@ -543,5 +554,7 @@ module.exports = {
     updateGroupSetting,
     getWarnCount,
     incrementWarn,
-    resetWarn
+    resetWarn,
+    getWarnLimit,
+    setWarnLimit
 };
