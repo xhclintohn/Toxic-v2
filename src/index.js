@@ -190,13 +190,13 @@ async function startToxic() {
       printQRInTerminal: false,
       syncFullHistory: false,
       markOnlineOnConnect: !(settingss.presence === 'offline' || settingss.presence === 'unavailable'),
-      connectTimeoutMs: 120000,
-      defaultQueryTimeoutMs: 60000,
-      keepAliveIntervalMs: 30000,
+      connectTimeoutMs: 60000,
+      defaultQueryTimeoutMs: 30000,
+      keepAliveIntervalMs: 25000,
       generateHighQualityLinkPreview: true,
       emitOwnEvents: true,
       fireInitQueries: true,
-      retryRequestDelayMs: 10000,
+      retryRequestDelayMs: 3000,
       getMessage: async (key) => {
           const msg = store.loadMessage(key.remoteJid, key.id);
           return msg?.message || undefined;
