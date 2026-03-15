@@ -3,19 +3,21 @@ const middleware = require('../../utils/botUtil/middleware');
 
 module.exports = async (context) => {
     await middleware(context, async () => {
-        const { client, m, args } = context;
+        const { client, m, body } = context;
 
         const fmt = (msg) => `╭───(    TOXIC-MD    )───\n├───≫ SET WARN LIMIT ≪───\n├ \n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
         const current = await getWarnLimit(m.chat);
 
-        if (!args[0]) {
+        const rawInput = body.trim().split(/\s+/).slice(1).join('').replace(/[^0-9]/g, '');
+
+        if (!rawInput) {
             return await client.sendMessage(m.chat, {
                 text: fmt(`Current warn limit for this group: *${current}*\n├ \n├ Usage: .setwarncount <number>\n├ Example: .setwarncount 5\n├ \n├ When a user hits the limit\n├ they get kicked automatically. 😈\n├ Min: 1 — Max: 10`)
             }, { quoted: m });
         }
 
-        const num = parseInt(args[0]);
+        const num = parseInt(rawInput, 10);
 
         if (isNaN(num) || num < 1 || num > 10) {
             return await client.sendMessage(m.chat, { text: fmt('Give me a number between 1 and 10. Is that too hard? 🙄') }, { quoted: m });
