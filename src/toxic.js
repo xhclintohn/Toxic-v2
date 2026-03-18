@@ -119,6 +119,11 @@ function normalizeJidForStorage(jid) {
     return jid;
 }
 
+function normalizeNumber(jid) {
+    if (!jid) return '';
+    return jid.split('@')[0].split(':')[0].replace(/\D/g, '') + '@s.whatsapp.net';
+}
+
 function getMessageType(message) {
     if (!message) return '❓ Unknown';
     const viewOnce = message.viewOnceMessage || message.viewOnceMessageV2 || message.viewOnceMessageV2Extension;
@@ -317,7 +322,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const mime = quoted?.msg ? quoted.msg.mimetype : quoted?.mimetype || "";
         const qmsg = quoted?.msg ? quoted.msg : quoted;
         const DevToxic = sudoUsers;
-        const Owner = DevToxic.map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender);
+        const normalizedSenderForOwner = normalizeNumber(m.sender);
+        const Owner = DevToxic.some((v) => normalizeNumber(v) === normalizedSenderForOwner);
 
         const groupMetadata = m.isGroup ? m.metadata : {};
         const participants = m.isGroup && groupMetadata ? groupMetadata.participants || [] : [];
@@ -380,7 +386,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             }
         }
 
-        if (cmd && mode === 'private' && !itsMe && !Owner && !sudoUsers.includes(m.sender)) return;
+        if (cmd && mode === 'private' && !itsMe && !Owner && !sudoUsers.some(v => normalizeNumber(v) === normalizedSenderForOwner)) return;
 
         if (shouldStoreMessage(m)) {
             const remoteJid = m.chat || m.key?.remoteJid;
