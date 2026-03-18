@@ -15,13 +15,11 @@ async function authenticationn() {
         }
 
         const decoded = Buffer.from(session, 'base64').toString('utf8');
-        let parsed;
+        let parsed = null;
 
         try {
             parsed = JSON.parse(decoded);
-        } catch {
-            parsed = null;
-        }
+        } catch {}
 
         if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
             for (const [fileName, base64Data] of Object.entries(parsed)) {
@@ -29,21 +27,20 @@ async function authenticationn() {
                 const filePath = path.join(sessionDir, fileName);
                 fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
             }
-            console.log("🟢 Multi-file session restored");
+            console.log('🟢 Multi-file session restored');
             return;
         }
 
         const credsPath = path.join(sessionDir, 'creds.json');
 
         if (!fs.existsSync(credsPath)) {
+            console.log('🟢🤖...');
             fs.writeFileSync(credsPath, decoded, 'utf8');
-            console.log("🟢 Single-file session restored");
-        } else if (session !== "zokk") {
+        } else if (session !== 'zokk') {
             fs.writeFileSync(credsPath, decoded, 'utf8');
-            console.log("🟢 Single-file session updated");
         }
     } catch (e) {
-        console.log("Session is invalid: " + e);
+        console.log('Session is invalid: ' + e);
         return;
     }
 }
