@@ -10,7 +10,8 @@ const {
   makeCacheableSignalKeyStore,
   Browsers,
   generateWAMessageContent,
-  generateWAMessageFromContent
+  generateWAMessageFromContent,
+  fetchLatestBaileysVersion
 } = require("@whiskeysockets/baileys");
 
 const pino = require("pino");
@@ -31,19 +32,21 @@ const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream
 const authenticationn = require('../auth/auth.js');
 const { smsg } = require('../handlers/smsg');
 const { getSettings, getBannedUsers, banUser } = require("../database/config");
-
 const { botname } = require('../config/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('../handlers/commandHandler');
-
 const path = require('path');
 
 const sessionName = path.join(__dirname, '..', 'Session');
 
+if (!fs.existsSync(sessionName)) {
+  fs.mkdirSync(sessionName, { recursive: true });
+}
+
 const groupEvents = require("../handlers/eventHandler");
 const connectionHandler = require('../handlers/connectionHandler');
 
-process.on("unhandledRejection", (reason, promise) => {
+process.on("unhandledRejection", (reason) => {
   console.error('❌ [UNHANDLED ERROR] Unhandled Rejection:', reason);
 });
 
@@ -56,52 +59,82 @@ let settingsCacheTime = 0;
 const SETTINGS_CACHE_TTL = 30000;
 
 async function getCachedSettings() {
-    const now = Date.now();
-    if (cachedSettings && (now - settingsCacheTime) < SETTINGS_CACHE_TTL) {
-        return cachedSettings;
-    }
-    cachedSettings = await getSettings();
-    settingsCacheTime = now;
+  const now = Date.now();
+  if (cachedSettings && (now - settingsCacheTime) < SETTINGS_CACHE_TTL) {
     return cachedSettings;
+  }
+  cachedSettings = await getSettings();
+  settingsCacheTime = now;
+  return cachedSettings;
 }
 
 function invalidateSettingsCache() {
-    cachedSettings = null;
-    settingsCacheTime = 0;
+  cachedSettings = null;
+  settingsCacheTime = 0;
 }
 
 function cleanupSessionFiles() {
-    try {
-        if (!fs.existsSync(sessionName)) return;
+  try {
+    if (!fs.existsSync(sessionName)) return;
 
-        const files = fs.readdirSync(sessionName);
-        const keepFiles = ['creds.json', 'app-state-sync-version.json', 'pre-key-', 'session-', 'sender-key-', 'app-state-sync-key-'];
+    const files = fs.readdirSync(sessionName);
+    const keepFiles = ['creds.json', 'app-state-sync-version.json', 'pre-key-', 'session-', 'sender-key-', 'app-state-sync-key-'];
 
-        files.forEach(file => {
-            const filePath = path.join(sessionName, file);
-            try {
-                const stats = fs.statSync(filePath);
+    files.forEach(file => {
+      const filePath = path.join(sessionName, file);
+      try {
+        const stats = fs.statSync(filePath);
 
-                const shouldKeep = keepFiles.some(pattern => {
-                    if (pattern.endsWith('-')) return file.startsWith(pattern);
-                    return file === pattern;
-                });
-
-                if (!shouldKeep) {
-                    const fileAge = Date.now() - stats.mtimeMs;
-                    const hoursOld = fileAge / (1000 * 60 * 60);
-
-                    if (hoursOld > 24) {
-                        fs.unlinkSync(filePath);
-                    }
-                }
-            } catch (fileError) {
-                console.error(fileError);
-            }
+        const shouldKeep = keepFiles.some(pattern => {
+          if (pattern.endsWith('-')) return file.startsWith(pattern);
+          return file === pattern;
         });
-    } catch (error) {
-        console.error('❌ Session cleanup error:', error);
-    }
+
+        if (!shouldKeep) {
+          const fileAge = Date.now() - stats.mtimeMs;
+          const hoursOld = fileAge / (1000 * 60 * 60);
+
+          if (hoursOld > 24) {
+            fs.unlinkSync(filePath);
+          }
+        }
+      } catch (fileError) {
+        console.error(fileError);
+      }
+    });
+  } catch (error) {
+    console.error('❌ Session cleanup error:', error);
+  }
+}
+
+async function handleAutoViewStatus(sock, m) {
+  if (!sock?.sessionConfig?.autoViewStatus) return;
+  if (!m?.key) return;
+  if (m.key.remoteJid !== 'status@broadcast') return;
+
+  const isLid = m.key.addressingMode === 'lid';
+  const resolvedKey = isLid
+    ? { ...m.key, participant: m.key.remoteJidAlt || m.key.participant }
+    : m.key;
+
+  try {
+    await sock.readMessages([resolvedKey]);
+  } catch (err) {
+    console.error('[AUTO-VIEW] Error viewing status:', err);
+  }
+}
+
+function resolveStatusPosterJid(key = {}) {
+  const rawParticipant = key.remoteJidAlt || key.participant || '';
+  if (!rawParticipant) return '';
+
+  const decoded = rawParticipant.split('@');
+  const user = (decoded[0] || '').split(':')[0];
+  const server = decoded[1] || '';
+
+  if (!user) return '';
+  if (server === 'lid') return user + '@s.whatsapp.net';
+  return user + '@' + server;
 }
 
 let cleanupInterval = null;
@@ -109,16 +142,21 @@ let autobioInterval = null;
 let storeWriteInterval = null;
 let memoryCheckInterval = null;
 let processedCallsInterval = null;
-if (global._toxicCurrentClient  === undefined) global._toxicCurrentClient  = null;
-if (global._toxicIsStarting     === undefined) global._toxicIsStarting     = false;
+
+if (global._toxicCurrentClient === undefined) global._toxicCurrentClient = null;
+if (global._toxicIsStarting === undefined) global._toxicIsStarting = false;
 if (global._toxicReconnectTimer === undefined) global._toxicReconnectTimer = null;
-if (global._toxicShuttingDown   === undefined) global._toxicShuttingDown   = false;
+if (global._toxicShuttingDown === undefined) global._toxicShuttingDown = false;
 
 async function startToxic() {
   if (global._toxicIsStarting) return;
   global._toxicIsStarting = true;
 
   try {
+    if (!fs.existsSync(sessionName)) {
+      fs.mkdirSync(sessionName, { recursive: true });
+    }
+
     await authenticationn();
 
     if (global._toxicReconnectTimer) {
@@ -181,9 +219,8 @@ async function startToxic() {
     cachedSettings = settingss;
     settingsCacheTime = Date.now();
 
-    const { autobio, mode, anticall } = settingss;
-    const version = (await (await fetch('https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Defaults/baileys-version.json')).json()).version;
-
+    const { autobio } = settingss;
+    const { version } = await fetchLatestBaileysVersion();
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
     const client = toxicConnect({
@@ -198,8 +235,8 @@ async function startToxic() {
       fireInitQueries: true,
       retryRequestDelayMs: 3000,
       getMessage: async (key) => {
-          const msg = store.loadMessage(key.remoteJid, key.id);
-          return msg?.message || undefined;
+        const msg = store.loadMessage(key.remoteJid, key.id);
+        return msg?.message || undefined;
       },
       transactionOpts: {
         maxCommitRetries: 10,
@@ -234,7 +271,7 @@ async function startToxic() {
         }
       },
       version,
-      browser: Browsers.macOS("Chrome"),
+      browser: Browsers.ubuntu("Chrome"),
       logger: pino({ level: 'silent' }),
       auth: {
         creds: state.creds,
@@ -242,8 +279,14 @@ async function startToxic() {
       }
     });
 
+    client.sessionConfig = {
+      autoViewStatus: settingss?.autoview === true || settingss?.autoview === 'true'
+    };
+
     global._toxicCurrentClient = client;
     store.bind(client.ev);
+
+    client.ev.on("creds.update", saveCreds);
 
     storeWriteInterval = setInterval(() => {
       try {
@@ -286,9 +329,7 @@ async function startToxic() {
 
         const callerNumber = callerJid.replace(/[@.a-z]/g, "");
 
-        if (processedCalls.has(callId)) {
-          return;
-        }
+        if (processedCalls.has(callId)) return;
         processedCalls.add(callId);
 
         const fakeQuoted = {
@@ -327,6 +368,8 @@ async function startToxic() {
       let settings = await getCachedSettings();
       if (!settings) return;
 
+      client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
+
       const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
       const isStealthOn = stealth === 'true' || stealth === true;
 
@@ -337,27 +380,11 @@ async function startToxic() {
           const remoteJid = mek.key.remoteJid;
 
           if (remoteJid === "status@broadcast") {
-            const isAutoview = autoview === true || autoview === 'true';
             const isAutolike = autolike === true || autolike === 'true';
 
-            const rawParticipant = mek.key.participant || '';
-            const posterJid = (() => {
-              if (!rawParticipant) return '';
-              const decoded = rawParticipant.split('@');
-              const user = decoded[0].split(':')[0];
-              const server = decoded[1] || '';
-              if (server === 'lid') return user + '@s.whatsapp.net';
-              return user + '@' + server;
-            })();
+            await handleAutoViewStatus(client, mek);
 
-            if (isAutoview) {
-              try {
-                const viewKey = posterJid ? { ...mek.key, participant: posterJid } : mek.key;
-                await client.readMessages([viewKey]);
-              } catch (error) {
-                console.error(error);
-              }
-            }
+            const posterJid = resolveStatusPosterJid(mek.key);
 
             if (isAutolike && posterJid) {
               try {
@@ -381,13 +408,13 @@ async function startToxic() {
 
           if (!mek.message) continue;
 
-          mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
+          mek.message = Object.keys(mek.message)[0] === "ephemeralMessage"
+            ? mek.message.ephemeralMessage.message
+            : mek.message;
 
           if (!mek.message) continue;
 
-          if (isStealthOn) {
-            continue;
-          }
+          if (isStealthOn) continue;
 
           if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
             try {
@@ -461,24 +488,8 @@ async function startToxic() {
         try {
           if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
             const settings = await getCachedSettings();
-            const isAutoview = settings?.autoview === true || settings?.autoview === 'true';
-            if (isAutoview) {
-              try {
-                const rawParticipant = update.key.participant || '';
-                const posterJid = (() => {
-                  if (!rawParticipant) return '';
-                  const decoded = rawParticipant.split('@');
-                  const user = decoded[0].split(':')[0];
-                  const server = decoded[1] || '';
-                  if (server === 'lid') return user + '@s.whatsapp.net';
-                  return user + '@' + server;
-                })();
-                const viewKey = posterJid ? { ...update.key, participant: posterJid } : update.key;
-                await client.readMessages([viewKey]);
-              } catch (error) {
-                console.error(error);
-              }
-            }
+            client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
+            await handleAutoViewStatus(client, { key: update.key });
           }
         } catch (e) {
           console.error(e);
@@ -498,23 +509,25 @@ async function startToxic() {
       const id = client.decodeJid(jid);
       withoutContact = client.withoutContact || withoutContact;
       let v;
-      if (id.endsWith("@g.us"))
+
+      if (id.endsWith("@g.us")) {
         return new Promise(async (resolve) => {
           v = store.contacts[id] || {};
-          if (!(v.name || v.subject)) v = client.groupMetadata(id) || {};
+          if (!(v.name || v.subject)) v = await client.groupMetadata(id);
           resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
         });
-      else
+      } else {
         v = id === "0@s.whatsapp.net"
           ? { id, name: "WhatsApp" }
           : id === client.decodeJid(client.user.id)
             ? client.user
             : store.contacts[id] || {};
+      }
+
       return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
     };
 
     client.public = true;
-
     client.serializeM = (m) => smsg(client, m, store);
 
     client.ev.on("group-participants.update", async (m) => {
@@ -535,7 +548,6 @@ async function startToxic() {
 
       if (connection === "open") {
         reconnectAttempts = 0;
-
         try { require("./toxic").prewarmCache(); } catch (e) {}
 
         console.log(chalk.green(`\n╭───(    `) + chalk.bold.cyan(`𝐓𝐨𝐱𝐢𝐜-𝐌D`) + chalk.green(`    )───`));
@@ -566,7 +578,15 @@ async function startToxic() {
           return;
         }
 
-        if (reason === DisconnectReason.connectionClosed || reason === DisconnectReason.connectionLost || reason === DisconnectReason.timedOut || reason === 408 || reason === 503 || reason === 500) {
+        if (
+          reason === DisconnectReason.connectionClosed ||
+          reason === DisconnectReason.connectionLost ||
+          reason === DisconnectReason.timedOut ||
+          reason === 408 ||
+          reason === 503 ||
+          reason === 500 ||
+          reason === 515
+        ) {
           const delay = Math.min(baseReconnectDelay * Math.pow(1.5, reconnectAttempts), 30000);
           reconnectAttempts++;
           if (!global._toxicReconnectTimer) {
@@ -607,8 +627,6 @@ async function startToxic() {
       }
     });
 
-    client.ev.on("creds.update", saveCreds);
-
     const CHANNEL_JID = '120363322461279856@newsletter';
     const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '✨', '🌚', '🗿', '😮'];
 
@@ -642,19 +660,15 @@ async function startToxic() {
       let mime = (message.msg || message).mimetype || '';
       let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
       const validTypes = ['image', 'video', 'audio', 'sticker', 'document', 'ptv'];
+
       if (!validTypes.includes(messageType)) {
-        if (mime.startsWith('application/') || mime.startsWith('text/')) {
-          messageType = 'document';
-        } else if (mime.startsWith('image/')) {
-          messageType = 'image';
-        } else if (mime.startsWith('video/')) {
-          messageType = 'video';
-        } else if (mime.startsWith('audio/')) {
-          messageType = 'audio';
-        } else {
-          messageType = 'document';
-        }
+        if (mime.startsWith('application/') || mime.startsWith('text/')) messageType = 'document';
+        else if (mime.startsWith('image/')) messageType = 'image';
+        else if (mime.startsWith('video/')) messageType = 'video';
+        else if (mime.startsWith('audio/')) messageType = 'audio';
+        else messageType = 'document';
       }
+
       const stream = await downloadContentFromMessage(message, messageType);
       let buffer = Buffer.from([]);
       for await (const chunk of stream) {
@@ -668,6 +682,7 @@ async function startToxic() {
       let mime = (message.msg || message).mimetype || '';
       let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
       const validSaveTypes = ['image', 'video', 'audio', 'sticker', 'document', 'ptv'];
+
       if (!validSaveTypes.includes(messageType)) {
         if (mime.startsWith('application/') || mime.startsWith('text/')) messageType = 'document';
         else if (mime.startsWith('image/')) messageType = 'image';
@@ -675,14 +690,16 @@ async function startToxic() {
         else if (mime.startsWith('audio/')) messageType = 'audio';
         else messageType = 'document';
       }
+
       const stream = await downloadContentFromMessage(quoted, messageType);
       let buffer = Buffer.from([]);
       for await (const chunk of stream) {
         buffer = Buffer.concat([buffer, chunk]);
       }
+
       let type = await FileType.fromBuffer(buffer);
-      const trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
-      await fs.writeFileSync(trueFileName, buffer);
+      const trueFileName = attachExtension && type?.ext ? (filename + '.' + type.ext) : filename;
+      fs.writeFileSync(trueFileName, buffer);
       return trueFileName;
     };
 
