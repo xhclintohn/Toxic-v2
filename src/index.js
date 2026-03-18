@@ -11,7 +11,7 @@ const {
   Browsers,
   generateWAMessageContent,
   generateWAMessageFromContent,
-  fetchLatestBaileysVersion
+
 } = require("@whiskeysockets/baileys");
 
 const pino = require("pino");
@@ -220,7 +220,7 @@ async function startToxic() {
     settingsCacheTime = Date.now();
 
     const { autobio } = settingss;
-    const { version } = await fetchLatestBaileysVersion();
+    const version = (await (await fetch('https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Defaults/baileys-version.json')).json()).version;
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
     const client = toxicConnect({
@@ -271,7 +271,7 @@ async function startToxic() {
         }
       },
       version,
-      browser: Browsers.ubuntu("Chrome"),
+      browser: Browsers.macOS("Chrome"),
       logger: pino({ level: 'silent' }),
       auth: {
         creds: state.creds,
