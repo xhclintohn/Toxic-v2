@@ -13,10 +13,10 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
 
   function getGreeting() {
     const hour = DateTime.now().setZone("Africa/Nairobi").hour;
-    if (hour >= 5 && hour < 12) return "Hey there! Ready to kick off the day? 🚀";
-    if (hour >= 12 && hour < 18) return "What's up? Time to make things happen! ⚡";
-    if (hour >= 18 && hour < 22) return "Evening vibes! Let's get to it! 🌟";
-    return "Late night? Let's see what's cooking! 🌙";
+    if (hour >= 5 && hour < 12) return "Ugh, morning already? Fine. Let's get this over with. 😒";
+    if (hour >= 12 && hour < 18) return "Back online. Try not to break anything this time. 😤";
+    if (hour >= 18 && hour < 22) return "Evening. The bot's up. You're welcome. 🙄";
+    return "It's the middle of the night and you're doing THIS? Whatever. 🌙";
   }
 
   function getCurrentTime() {
@@ -82,7 +82,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
           ? [
               `╭───(    TOXIC-MD    )───`,
               `├  *${getGreeting()}*`,
-              `├  Welcome to *${botName}*! You're now connected.`,
+              `├  Oh great, a new user. *${botName}* is online now. Don't make it weird.`,
               ``,
               `✨ *Bot Name*: ${botName}`,
               `🔧 *Mode*: ${settings.mode}`,
@@ -92,17 +92,21 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               `💾 *Database*: Postgres SQL`,
               `📚 *Library*: Baileys`,
               ``,
-              `├  *New User Alert*: You've been added to the sudo list.`,
+              `├  *New User*: You've been dumped into the sudo list. Lucky you.`,
               ``,
-              `├  *Start Message*: Enabled by default. Use *${settings.prefix}startmessage off* to disable.`,
+              `├  ⚠️ *Heads up* — the bot just started. It needs a moment to`,
+              `├  load everything properly. If commands aren't responding`,
+              `├  right away, sit tight and try again in 10–20 seconds.`,
+              `├  Spamming commands won't speed it up — it'll just annoy me. 😒`,
+              ``,
+              `├  *Start Message*: On by default. Use *${settings.prefix}startmessage off* to shut me up.`,
               `├  *Credits*: xh_clinton`,
-              `╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+              `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             ].join("\n")
           : [
               `╭───(    TOXIC-MD    )───`,
               `├  *${getGreeting()}*`,
-              `├  Welcome back to *${botName}*! Connection established.`,
+              `├  *${botName}* is back. Try not to act so surprised.`,
               ``,
               `✨ *Bot Name*: ${botName}`,
               `🔧 *Mode*: ${settings.mode}`,
@@ -112,19 +116,19 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               `💾 *Database*: Postgres SQL`,
               `📚 *Library*: Baileys`,
               ``,
-              `├  Ready to proceed? Select an option below.`,
+              `├  ⚠️ *Give it a second* — the bot needs a moment to warm up`,
+              `├  after connecting. Commands won't respond instantly.`,
+              `├  Wait 10–20 seconds before trying anything. I mean it. 😑`,
               ``,
-              `├  *Start Message*: Enabled by default. Use *${settings.prefix}startmessage off* to disable.`,
+              `├  *Start Message*: On by default. Use *${settings.prefix}startmessage off* to shut me up.`,
               `├  *Credits*: xh_clinton`,
-              `╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+              `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             ].join("\n");
 
         const secondMessage = [
           `╭───(    TOXIC-MD    )───`,
-          `├  Please select an option to continue:`,
-          `╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+          `├  Pick something. Or don't. I don't care. 🙄`,
+          `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         ].join("\n");
 
         try {
@@ -136,7 +140,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               externalAdReply: {
                 showAdAttribution: false,
                 title: botName,
-                body: `Bot initialized successfully.`,
+                body: `Online. Finally.`,
                 sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
                 mediaType: 1,
                 renderLargerThumbnail: true
@@ -170,7 +174,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               externalAdReply: {
                 showAdAttribution: false,
                 title: botName,
-                body: `Select an option to proceed.`,
+                body: `Pick one. Or stare at it. Whatever.`,
                 sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
                 mediaType: 1,
                 renderLargerThumbnail: true
