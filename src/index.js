@@ -289,19 +289,22 @@ async function startToxic() {
 
     if (!client.pinMessage) {
       client.pinMessage = async (jid, messageKey, type) => {
-        const { jidNormalizedUser } = require('@whiskeysockets/baileys');
+        const { jidNormalizedUser, generateMessageTag } = require('@whiskeysockets/baileys');
         const pinType = type === undefined ? 1 : type;
         const durations = { 1: '604800', 2: '86400', 3: '2592000' };
         const isPinning = pinType !== 0;
         const duration = durations[pinType] || '604800';
         const tag = isPinning ? 'add' : 'remove';
-        const itemAttrs = { id: messageKey.id || messageKey };
+        const msgId = (typeof messageKey === 'string') ? messageKey : (messageKey.id || '');
+        const itemAttrs = { id: msgId };
         if (isPinning) {
-          const senderJid = messageKey.participant || messageKey.remoteJid || jid;
-          itemAttrs.sender = jidNormalizedUser(senderJid);
+          const rawSender = (typeof messageKey === 'object')
+            ? (messageKey.participant || (messageKey.fromMe ? (client.user?.id || jid) : messageKey.remoteJid))
+            : jid;
+          itemAttrs.sender = jidNormalizedUser(rawSender || jid);
           itemAttrs.type = duration;
         }
-        await client.query({ tag: 'iq', attrs: { to: jid, xmlns: 'w:g:2', type: 'set' }, content: [{ tag: 'pin', attrs: { v: '2' }, content: [{ tag, attrs: itemAttrs }] }] });
+        await client.query({ tag: 'iq', attrs: { id: generateMessageTag(), to: jid, xmlns: 'w:g:2', type: 'set' }, content: [{ tag: 'pin', attrs: { v: '2' }, content: [{ tag, attrs: itemAttrs }] }] });
       };
     }
     if (!client.clearChatMessages) {
