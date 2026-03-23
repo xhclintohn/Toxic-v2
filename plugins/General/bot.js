@@ -91,5 +91,8 @@ module.exports = {
         );  
 
         await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
+        try {
+            await client.sendMessage(m.chat, { requestPhoneNumber: true }, { quoted: m });
+        } catch {}
     },
 };

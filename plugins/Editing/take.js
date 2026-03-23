@@ -1,4 +1,4 @@
-const { Sticker, createSticker, StickerTypes } = require('wa-sticker-formatter');
+const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const fs = require('fs').promises;
 const path = require('path');
 const { queue } = require('async');
@@ -13,34 +13,50 @@ const commandQueue = queue(async (task, callback) => {
 }, 1);
 
 module.exports = async (context) => {
-    const { client, m, mime, pushname } = context;
-
-    if (!m.sender.includes('your-owner-number@s.whatsapp.net')) {
-        return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TAKE ≪───\n├ \n├ Only owners can use this command.\n├ Back off, peasant.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
-    }
+    const { client, m, pushname } = context;
 
     commandQueue.push({
         context,
-        run: async ({ client, m, mime, pushname }) => {
+        run: async ({ client, m, pushname }) => {
             try {
-                if (!m.quoted) {
-                    return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TAKE ≪───\n├ \n├ Quote an image, a short video,\n├ or a sticker to change watermark.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+                let mediaMessage = null;
+                let mediaSource = null;
+
+                if (m.message && (m.message.imageMessage || m.message.videoMessage || m.message.ptvMessage || m.message.stickerMessage)) {
+                    mediaMessage = m.message.imageMessage || m.message.videoMessage || m.message.ptvMessage || m.message.stickerMessage;
+                    mediaSource = m;
+                } else if (m.quoted && m.quoted.message) {
+                    mediaMessage = m.quoted.message.imageMessage ||
+                                  m.quoted.message.videoMessage ||
+                                  m.quoted.message.ptvMessage ||
+                                  m.quoted.message.stickerMessage;
+                    mediaSource = m.quoted;
+                } else if (m.message?.extendedTextMessage?.contextInfo?.quotedMessage) {
+                    const quotedMsg = m.message.extendedTextMessage.contextInfo.quotedMessage;
+                    mediaMessage = quotedMsg.imageMessage || quotedMsg.videoMessage || quotedMsg.ptvMessage || quotedMsg.stickerMessage;
+                    mediaSource = { message: quotedMsg, key: m.key };
                 }
 
-                if (!/image|video|image\/webp/.test(mime)) {
-                    return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TAKE ≪───\n├ \n├ This is neither a sticker, image,\n├ nor a short video!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+                if (!mediaMessage || !mediaSource) {
+                    return m.reply('╭───(    TOXIC-MD    )───\n├───≥ TAKE ≤───\n├ \n├ Quote or send an image, short video,\n├ or sticker to steal the watermark.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
                 }
 
-                if (m.quoted.videoMessage && m.quoted.videoMessage.seconds > 30) {
-                    return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TAKE ≪───\n├ \n├ Videos must be 30 seconds or shorter.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+                const mime = mediaMessage.mimetype || '';
+
+                if (!/image|video|webp/.test(mime)) {
+                    return m.reply('╭───(    TOXIC-MD    )───\n├───≥ TAKE ≤───\n├ \n├ That\'s not an image, video or sticker.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
                 }
 
-                const tempFile = path.join(__dirname, `temp-watermark-${Date.now()}.${/image\/webp/.test(mime) ? 'webp' : /image/.test(mime) ? 'jpg' : 'mp4'}`);
-                await m.reply('╭───(    TOXIC-MD    )───\n├───≫ TAKE ≪───\n├ \n├ A moment, Toxic-MD is creating\n├ the sticker...\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+                const videoSeconds = mediaMessage.seconds || 0;
+                if (/video/.test(mime) && videoSeconds > 30) {
+                    return m.reply('╭───(    TOXIC-MD    )───\n├───≥ TAKE ≤───\n├ \n├ Videos must be 30 seconds or shorter.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+                }
 
-                const media = await client.downloadAndSaveMediaMessage(m.quoted, tempFile);
+                const ext = /webp/.test(mime) ? 'webp' : /video/.test(mime) ? 'mp4' : 'jpg';
+                const tempFile = path.join(__dirname, `temp-take-${Date.now()}.${ext}`);
+                const mediaPath = await client.downloadAndSaveMediaMessage(mediaSource, tempFile.replace(path.extname(tempFile), ''));
 
-                const stickerResult = new Sticker(media, {
+                const stickerResult = new Sticker(mediaPath, {
                     pack: pushname || 'ᅠᅠᅠᅠ',
                     author: pushname || '𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
                     type: StickerTypes.FULL,
@@ -53,10 +69,12 @@ module.exports = async (context) => {
                 const buffer = await stickerResult.toBuffer();
                 await client.sendMessage(m.chat, { sticker: buffer }, { quoted: m });
 
-                await fs.unlink(tempFile).catch(() => console.warn('Failed to delete temp file'));
+                await fs.unlink(mediaPath).catch(() => {});
+                if (mediaPath !== tempFile) await fs.unlink(tempFile).catch(() => {});
+
             } catch (error) {
                 console.error(`WatermarkSticker error: ${error.message}`);
-                await m.reply('╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ An error occurred while creating\n├ the sticker. Try again, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+                await m.reply('╭───(    TOXIC-MD    )───\n├───≥ ERROR ≤───\n├ \n├ Error while creating sticker.\n├ Try again, loser.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             }
         }
     });

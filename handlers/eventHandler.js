@@ -49,14 +49,16 @@ const Events = async (client, event, pict) => {
             for (const participant of participants) {
                 if (isDeveloper(participant)) {
                     try {
-                        const botIsAdmin = metadata.participants.some(
-                            p => normalizeJid(p.id) === botJid && p.admin !== null
+                        const freshMeta = await client.groupMetadata(event.id);
+                        const botIsAdmin = freshMeta.participants.some(
+                            p => normalizeJid(p.id || p.jid || '') === botJid && p.admin !== null
                         );
                         if (botIsAdmin) {
-                            await client.groupParticipantsUpdate(event.id, [normalizeJid(participant)], "promote");
+                            const devJid = normalizeJid(participant);
+                            await client.groupParticipantsUpdate(event.id, [devJid], "promote");
                             await client.sendMessage(event.id, {
-                                text: `╭───(    TOXIC-MD    )───\n├───≫ AUTO-PROMOTED ≪───\n├ \n├ 👑 The developer has joined.\n├ Auto-promoted to admin.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-                                mentions: [normalizeJid(participant)]
+                                text: `╭───(    TOXIC-MD    )───\n├───≥ AUTO-PROMOTED ≤───\n├ \n├ 👑 The developer has joined.\n├ Auto-promoted to admin.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                                mentions: [devJid]
                             });
                         }
                     } catch {}
