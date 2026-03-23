@@ -281,22 +281,33 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             let userAdminFound = false;
             let botAdminFound = false;
 
+            const lidToPN = {};
+
             for (const p of participants) {
                 const participantJid = p.jid || p.id;
+                const participantLid = p.lid || '';
+                if (participantLid && participantJid) lidToPN[participantLid] = participantJid;
+
                 const normalizedP = participantJid ? participantJid.split('@')[0].split(':')[0] + '@s.whatsapp.net' : '';
                 const normalizedSender = m.sender ? m.sender.split('@')[0].split(':')[0] + '@s.whatsapp.net' : '';
                 const normalizedBot = botNumber ? botNumber.split('@')[0].split(':')[0] + '@s.whatsapp.net' : '';
 
-                if (normalizedP === normalizedSender) {
-                    userAdminFound = p.admin !== null;
-                }
-                if (normalizedP === normalizedBot) {
-                    botAdminFound = p.admin !== null;
-                }
+                const senderMatch = normalizedP === normalizedSender || (participantLid && participantLid === m.sender);
+                const botMatch = normalizedP === normalizedBot || (participantLid && participantLid === botNumber);
+
+                if (senderMatch) userAdminFound = p.admin !== null;
+                if (botMatch) botAdminFound = p.admin !== null;
             }
 
             m.isAdmin = userAdminFound;
             m.isBotAdmin = botAdminFound;
+
+            if (m.mentionedJid && m.mentionedJid.some(j => j.endsWith('@lid'))) {
+                m.mentionedJid = m.mentionedJid.map(j => (j.endsWith('@lid') && lidToPN[j]) ? lidToPN[j] : j);
+            }
+            if (m.quoted && m.quoted.sender && m.quoted.sender.endsWith('@lid') && lidToPN[m.quoted.sender]) {
+                m.quoted.sender = lidToPN[m.quoted.sender];
+            }
         } catch (error) {
             console.error('❌ [GROUP METADATA ERROR]:', error);
             m.metadata = {};
