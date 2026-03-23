@@ -23,7 +23,7 @@ function sanitizeOutput(text) {
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
-        const { client, m, text, isAdmin, isBotAdmin, IsGroup: isGroup, participants, args, store, Owner, pict } = context;
+        const { client, m, text } = context;
 
         try {
             const trimmedText = text.trim();
