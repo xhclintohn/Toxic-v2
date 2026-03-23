@@ -20,9 +20,13 @@ module.exports = async (context) => {
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
+        if (typeof users === 'string' && users.endsWith('@lid')) {
+            return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Can't resolve that user's number.\n├ Quote their message instead.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
+        const blockJid = (users || '').includes('@') ? users.split(':')[0].split('@')[0] + '@s.whatsapp.net' : users + '@s.whatsapp.net';
         try {
-            await client.updateBlockStatus(users, 'block');
-            const parts = users.split('@')[0];
+            await client.updateBlockStatus(blockJid, 'block');
+            const parts = blockJid.split('@')[0];
 
             return m.reply(`╭───(    TOXIC-MD    )───
 ├───≫ BLOCKED ≪───
