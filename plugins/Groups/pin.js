@@ -24,7 +24,14 @@ module.exports = {
                 await client.pinMessage(m.chat, messageKey, isUnpin ? 0 : 1);
                 await m.reply(`╭───(    TOXIC-MD    )───\n├───≥ ${isUnpin ? 'UNPINNED' : 'PINNED'} ≤───\n├ \n├ Message ${isUnpin ? 'unpinned' : 'pinned'} successfully.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
             } catch (error) {
-                await m.reply('╭───(    TOXIC-MD    )───\n├───≥ ERROR ≤───\n├ \n├ Failed to pin. Make sure I\'m admin.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+                console.error('[PIN ERROR]', error?.message || error);
+                const msg = error?.message || String(error);
+                const isAuth = msg.includes('forbidden') || msg.includes('not-authorized') || msg.includes('403');
+                if (isAuth) {
+                    await m.reply('╭───(    TOXIC-MD    )───\n├───≥ ERROR ≤───\n├ \n├ Failed to pin. Make sure I\'m admin.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+                } else {
+                    await m.reply('╭───(    TOXIC-MD    )───\n├───≥ ERROR ≤───\n├ \n├ Pin failed: ' + msg.slice(0, 80) + '\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+                }
             }
         });
     }
