@@ -287,6 +287,51 @@ async function startToxic() {
     global._toxicCurrentClient = client;
     store.bind(client.ev);
 
+    if (!client.pinMessage) {
+      client.pinMessage = async (jid, messageKey, type) => {
+        const { jidNormalizedUser } = require('@whiskeysockets/baileys');
+        const pinType = type === undefined ? 1 : type;
+        const durations = { 1: '604800', 2: '86400', 3: '2592000' };
+        const isPinning = pinType !== 0;
+        const duration = durations[pinType] || '604800';
+        const tag = isPinning ? 'add' : 'remove';
+        const itemAttrs = { id: messageKey.id || messageKey };
+        if (isPinning) {
+          const senderJid = messageKey.participant || messageKey.remoteJid || jid;
+          itemAttrs.sender = jidNormalizedUser(senderJid);
+          itemAttrs.type = duration;
+        }
+        await client.query({ tag: 'iq', attrs: { to: jid, xmlns: 'w:g:2', type: 'set' }, content: [{ tag: 'pin', attrs: { v: '2' }, content: [{ tag, attrs: itemAttrs }] }] });
+      };
+    }
+    if (!client.clearChatMessages) {
+      client.clearChatMessages = (jid, lastMsg) => client.chatModify({ clearChat: { lastMsg: lastMsg || {} } }, jid);
+    }
+    if (!client.updateCallPrivacy) {
+      client.updateCallPrivacy = async (value) => {
+        const { S_WHATSAPP_NET } = require('@whiskeysockets/baileys');
+        await client.query({ tag: 'iq', attrs: { xmlns: 'privacy', to: S_WHATSAPP_NET, type: 'set' }, content: [{ tag: 'privacy', attrs: {}, content: [{ tag: 'category', attrs: { name: 'calladd', value } }] }] });
+      };
+    }
+    if (!client.updateMessagesPrivacy) {
+      client.updateMessagesPrivacy = async (value) => {
+        const { S_WHATSAPP_NET } = require('@whiskeysockets/baileys');
+        await client.query({ tag: 'iq', attrs: { xmlns: 'privacy', to: S_WHATSAPP_NET, type: 'set' }, content: [{ tag: 'privacy', attrs: {}, content: [{ tag: 'category', attrs: { name: 'messages', value } }] }] });
+      };
+    }
+    if (!client.updateDisableLinkPreviewsPrivacy) {
+      client.updateDisableLinkPreviewsPrivacy = (isPreviewsDisabled) => client.chatModify({ disableLinkPreviews: { isPreviewsDisabled } }, '');
+    }
+    if (!client.addOrEditContact) {
+      client.addOrEditContact = (jid, contact) => client.chatModify({ contact }, jid);
+    }
+    if (!client.removeContact) {
+      client.removeContact = (jid) => client.chatModify({ contact: null }, jid);
+    }
+    if (!client.addLabel) {
+      client.addLabel = (jid, labels) => client.chatModify({ addLabel: { ...labels } }, jid);
+    }
+
     client.ev.on("creds.update", saveCreds);
 
     storeWriteInterval = setInterval(() => {
@@ -628,32 +673,7 @@ async function startToxic() {
       }
     });
 
-    const CHANNEL_JID = '120363322461279856@newsletter';
-    const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '✨', '🌚', '🗿', '😮'];
 
-    client.ev.on('messages.upsert', async ({ messages: newsletterMessages }) => {
-      try {
-        const message = newsletterMessages[0];
-        if (!message?.key) return;
-        const jid = message.key.remoteJid;
-        if (jid !== CHANNEL_JID) return;
-        const messageId = message.newsletterServerId || message.key.id;
-        if (!messageId || !client?.user?.id) return;
-        const emoji = CHANNEL_EMOJIS[Math.floor(Math.random() * CHANNEL_EMOJIS.length)];
-        await new Promise(r => setTimeout(r, 3000 + Math.floor(Math.random() * 7000)));
-        try {
-          if (typeof client.newsletterReactMessage === 'function') {
-            await client.newsletterReactMessage(jid, messageId.toString(), emoji).catch((e) => console.error(e));
-          } else {
-            await client.sendMessage(jid, { react: { text: emoji, key: message.key } }).catch((e) => console.error(e));
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    });
 
     client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text: text, ...options }, { quoted });
 
