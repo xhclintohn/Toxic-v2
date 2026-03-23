@@ -9,7 +9,11 @@ const {
   proto,
   getContentType,
 } = require("@whiskeysockets/baileys");
+const { readFileSync } = require("fs");
 const path = require("path");
+
+const filePath = path.resolve(__dirname, "../toxic.jpg");
+const kali = readFileSync(filePath);
 
 function smsg(conn, m, store) {
   if (!m) return {};
@@ -130,12 +134,18 @@ function smsg(conn, m, store) {
   m.reply = (text, chatId = m.chat, options = {}) => {
     const fakeQuoted = {
       key: {
-        participant: m.key?.participant || m.sender,
-        remoteJid: m.chat,
-        id: m.key?.id || m.id,
-        fromMe: false,
+        participant: "0@s.whatsapp.net",
+        remoteJid: "0@s.whatsapp.net",
+        id: m.id,
       },
-      message: m.message || { conversation: "" },
+      message: {
+        conversation: "Toxic",
+      },
+      contextInfo: {
+        mentionedJid: [m.sender],
+        forwardingScore: 999,
+        isForwarded: true,
+      },
     };
 
     return conn.sendMessage(
@@ -144,10 +154,12 @@ function smsg(conn, m, store) {
         text: text,
         contextInfo: {
           externalAdReply: {
-            title: "Toxic-MD",
+            title: `Toxic-MD`,
             body: m.pushName,
+            previewType: "PHOTO",
+            thumbnailUrl: "https://github.com/xhclintohn/Toxic-MD",
+            thumbnail: kali,
             sourceUrl: "https://github.com/xhclintohn/Toxic-MD",
-            mediaType: 1,
           },
         },
       },
