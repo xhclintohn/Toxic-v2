@@ -22,7 +22,7 @@ module.exports = {
       if (!user && m.quoted) {
         user = m.quoted.sender;
       }
-      
+
       if (!user) {
         return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ INVALID ≪───\n├ \n├ Invalid user specified.\n├ Tag someone properly.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
@@ -32,24 +32,21 @@ module.exports = {
       try {
         const groupMetadata = await client.groupMetadata(m.chat);
         const members = groupMetadata.participants || [];
-        
+
         const targetAdmin = members.find(p => {
           const pJid = p.jid || p.id;
           return pJid === user && p.admin !== null;
         });
-        
+
         if (!targetAdmin) {
-          return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ NOT ADMIN ≪───\n├ \n├ @${userNumber} isn't even admin.\n├ Can't demote a peasant.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, {
-            mentions: [user]
-          });
+          return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ NOT ADMIN ≪───\n├ \n├ @${userNumber} isn't even admin.\n├ Can't demote a peasant.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, m.chat, { mentions: [user] });
         }
 
         await client.groupParticipantsUpdate(m.chat, [user], 'demote');
-        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ DEMOTED ≪───\n├ \n├ @${userNumber} got stripped of admin.\n├ Back to being a nobody.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, m.chat, m.chat, {
-          mentions: [user]
-        });
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ DEMOTED ≪───\n├ \n├ @${userNumber} got stripped of admin.\n├ Back to being a nobody.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, m.chat, { mentions: [user] });
       } catch (error) {
-        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ SUCCESS ≪───\n├ \n├ User demoted successfully.\n├ Enjoy being powerless again.\n├ Serves you right.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        console.error('[DEMOTE ERROR]', error?.message || error);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Demote failed: ${(error?.message || String(error)).slice(0, 80)}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
     });
   },
