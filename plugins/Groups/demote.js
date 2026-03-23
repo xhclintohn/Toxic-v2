@@ -45,7 +45,7 @@ module.exports = {
         }
 
         await client.groupParticipantsUpdate(m.chat, [user], 'demote');
-        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ DEMOTED ≪───\n├ \n├ @${userNumber} got stripped of admin.\n├ Back to being a nobody.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, {
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ DEMOTED ≪───\n├ \n├ @${userNumber} got stripped of admin.\n├ Back to being a nobody.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, m.chat, {
           mentions: [user]
         });
       } catch (error) {
