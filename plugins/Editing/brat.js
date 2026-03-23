@@ -19,8 +19,8 @@ module.exports = {
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-            const apiUrl = `https://api.nekolabs.web.id/canvas/brat?text=${encodeURIComponent(text)}`;
-            
+            const apiUrl = `https://api.azbry.xyz/api/maker/brat?text=${encodeURIComponent(text)}`;
+
             const response = await axios.get(apiUrl, {
                 responseType: 'arraybuffer',
                 headers: {
@@ -35,7 +35,7 @@ module.exports = {
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
             await client.sendMessage(m.chat, {
-                image: response.data,
+                sticker: response.data,
                 caption: `╭───(    TOXIC-MD    )───\n├───≫ BRAT TEXT ≪───\n├ \n├ "${text}"\n├ Stop being so needy.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
 
