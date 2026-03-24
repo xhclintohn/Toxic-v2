@@ -33,21 +33,23 @@ module.exports = {
     run: async (context) => {
         const { client, m } = context;
 
-        if (!m.quoted) {
-            return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO ANIME ≪───\n├ \n├ You must *reply* to an image!\n├ Example: Reply image → .toanime\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
-        }
+        const quoted = m.message?.imageMessage ? m : m.quoted ? m.quoted : null;
 
-        const quoted = m.quoted;
+        if (!quoted) {
+            return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO ANIME ≪───\n├ \n├ Send or reply to an image!\n├ Example: Send image → .toanime\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+        }
 
         let quotedMime = '';
         if (quoted.mtype === 'imageMessage' && quoted.msg?.mimetype) {
             quotedMime = quoted.msg.mimetype;
         } else if (quoted.mimetype) {
             quotedMime = quoted.mimetype;
+        } else if (quoted.msg?.mimetype) {
+            quotedMime = quoted.msg.mimetype;
         }
 
         if (!quotedMime || !quotedMime.startsWith('image/')) {
-            return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO ANIME ≪───\n├ \n├ The replied message is *not an image*!\n├ Please reply to a *photo*, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+            return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO ANIME ≪───\n├ \n├ The replied message is *not an image*!\n├ Please send or reply to a *photo*.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
