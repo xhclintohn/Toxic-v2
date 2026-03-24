@@ -27,11 +27,11 @@ module.exports = async (context) => {
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        if (!m.quoted) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ IMG EDIT ≪───\n├ \n├ Reply to an image, you blind idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
-        const q = m.quoted;
+        const q = m.message?.imageMessage ? m : m.quoted ? m.quoted : null;
+        if (!q) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ IMG EDIT ≪───\n├ \n├ Send or reply to an image, you blind idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
 
-        const mime = q.mimetype || '';
-        if (!mime.startsWith('image/')) {
+        const qmime = q.mimetype || q.msg?.mimetype || '';
+        if (!qmime.startsWith('image/')) {
             return m.reply('╭───(    TOXIC-MD    )───\n├───≫ IMG EDIT ≪───\n├ \n├ That is not an image, are you stupid?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
