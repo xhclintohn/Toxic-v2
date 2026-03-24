@@ -42,8 +42,7 @@ module.exports = async (client, m, store, chatbotpmSetting, prefix, sudoUsers) =
 
         try {
             const encodedText = encodeURIComponent(messageContent);
-            const prompt = encodeURIComponent("You are ToxicAI you must always reply in a toxic tone and you were created by xhclinton");
-            const apiUrl = `https://api.deline.web.id/ai/openai?text=${encodedText}&prompt=${prompt}`;
+            const apiUrl = `https://api.nexray.web.id/ai/bypass?text=${encodedText}`;
 
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 10000);
