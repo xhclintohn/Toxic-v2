@@ -1,43 +1,60 @@
 const axios = require('axios');
+const { Sticker, StickerTypes } = require('wa-sticker-formatter');
+const fs = require('fs').promises;
+const path = require('path');
 
 module.exports = {
     name: 'brat',
     aliases: ['bratsticker', 'brattext'],
     description: 'Makes brat stickers for your attention-seeking ass',
     run: async (context) => {
-        const { client, m, prefix } = context;
+        const { client, m, prefix, packname, author } = context;
 
         const text = m.body.replace(new RegExp(`^${prefix}(brat|bratsticker|brattext)\\s*`, 'i'), '').trim();
 
         if (!text) {
-            return client.sendMessage(m.chat, {
-                text: `╭───(    TOXIC-MD    )───\n├───≫ BRAT ≪───\n├ \n├ What am i, a mind reader?\n├ @${m.sender.split('@')[0]}! you forgot the text, genius.\n├ Example: ${prefix}brat i'm a dumbass\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-                mentions: [m.sender]
-            }, { quoted: m });
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+            return m.reply('╭───(    TOXIC-MD    )───\n├───≫ BRAT ≪───\n├ \n├ What am i, a mind reader?\n├ @' + m.sender.split('@')[0] + '! you forgot the text, genius.\n├ Example: ' + prefix + 'brat i\'m a dumbass\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧', { mentions: [m.sender] });
         }
 
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-            const apiUrl = `https://api.azbry.xyz/api/maker/brat?text=${encodeURIComponent(text)}`;
-
-            const response = await axios.get(apiUrl, {
+            const apiUrl = `https://api.nexray.web.id/maker/brat?text=${encodeURIComponent(text)}`;
+            
+            const imageResponse = await axios.get(apiUrl, {
                 responseType: 'arraybuffer',
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': 'image/webp,image/png,image/*,*/*',
+                    'Referer': 'https://api.nexray.web.id/',
+                    'Origin': 'https://api.nexray.web.id'
                 }
             });
 
-            if (!response.data || response.data.length < 1000) {
+            if (!imageResponse.data || imageResponse.data.length < 1000) {
                 throw new Error('API returned empty image');
             }
 
-            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+            const tempFile = path.join(__dirname, `temp-brat-${Date.now()}.png`);
+            await fs.writeFile(tempFile, imageResponse.data);
 
-            await client.sendMessage(m.chat, {
-                sticker: response.data,
-                caption: `╭───(    TOXIC-MD    )───\n├───≫ BRAT TEXT ≪───\n├ \n├ "${text}"\n├ Stop being so needy.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            const sticker = new Sticker(tempFile, {
+                pack: packname || 'p',
+                author: author || '𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 [dev]',
+                type: StickerTypes.FULL,
+                categories: ['🤩', '🎉'],
+                id: '12345',
+                quality: 50,
+                background: 'transparent'
+            });
+
+            const stickerBuffer = await sticker.toBuffer();
+
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+            await client.sendMessage(m.chat, { sticker: stickerBuffer }, { quoted: m });
+
+            await fs.unlink(tempFile).catch(() => {});
 
         } catch (error) {
             console.error('Brat command error:', error);
@@ -56,9 +73,7 @@ module.exports = {
                 errorMessage = `Even the error is embarrassed: ${error.message}`;
             }
 
-            await client.sendMessage(m.chat, {
-                text: `╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Brat text generation failed.\n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Brat text generation failed.\n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     }
 };
