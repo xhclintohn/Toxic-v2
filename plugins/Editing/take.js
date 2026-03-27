@@ -15,6 +15,8 @@ const commandQueue = queue(async (task, callback) => {
 module.exports = async (context) => {
     const { client, m, pushname } = context;
 
+    await client.sendMessage(m.chat, { react: { text: '🔃', key: m.key } });
+
     commandQueue.push({
         context,
         run: async ({ client, m, pushname }) => {
@@ -38,23 +40,34 @@ module.exports = async (context) => {
                 }
 
                 if (!mediaMessage || !mediaSource) {
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                     return m.reply('╭───(    TOXIC-MD    )───\n├───≥ TAKE ≤───\n├ \n├ Quote or send an image, short video,\n├ or sticker to steal the watermark.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
                 }
 
                 const mime = mediaMessage.mimetype || '';
 
                 if (!/image|video|webp/.test(mime)) {
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                     return m.reply('╭───(    TOXIC-MD    )───\n├───≥ TAKE ≤───\n├ \n├ That\'s not an image, video or sticker.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
                 }
 
                 const videoSeconds = mediaMessage.seconds || 0;
                 if (/video/.test(mime) && videoSeconds > 30) {
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                     return m.reply('╭───(    TOXIC-MD    )───\n├───≥ TAKE ≤───\n├ \n├ Videos must be 30 seconds or shorter.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
                 }
 
                 const ext = /webp/.test(mime) ? 'webp' : /video/.test(mime) ? 'mp4' : 'jpg';
                 const tempFile = path.join(__dirname, `temp-take-${Date.now()}.${ext}`);
-                const mediaPath = await client.downloadAndSaveMediaMessage(mediaSource, tempFile.replace(path.extname(tempFile), ''));
+                
+                let mediaPath;
+                try {
+                    mediaPath = await client.downloadAndSaveMediaMessage(mediaSource, tempFile.replace(path.extname(tempFile), ''));
+                } catch (downloadError) {
+                    console.error('Download error:', downloadError);
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+                    return m.reply('╭───(    TOXIC-MD    )───\n├───≥ ERROR ≤───\n├ \n├ Failed to download media.\n├ Media may have expired.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+                }
 
                 const stickerResult = new Sticker(mediaPath, {
                     pack: pushname || 'ᅠᅠᅠᅠ',
@@ -67,13 +80,15 @@ module.exports = async (context) => {
                 });
 
                 const buffer = await stickerResult.toBuffer();
+                await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
                 await client.sendMessage(m.chat, { sticker: buffer }, { quoted: m });
 
                 await fs.unlink(mediaPath).catch(() => {});
                 if (mediaPath !== tempFile) await fs.unlink(tempFile).catch(() => {});
 
             } catch (error) {
-                console.error(`WatermarkSticker error: ${error.message}`);
+                console.error(`WatermarkSticker error:`, error);
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                 await m.reply('╭───(    TOXIC-MD    )───\n├───≥ ERROR ≤───\n├ \n├ Error while creating sticker.\n├ Try again, loser.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             }
         }
