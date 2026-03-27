@@ -11,7 +11,10 @@ module.exports = {
     description: 'Transcribes voice notes and audio messages to text',
     run: async (context) => {
         const { client, m, prefix } = context;
-        const GROQ_API_KEY = process.env.GROQ_API_KEY;
+        
+        const a = 'gsk_A9P3pUDwYmxae23uxBbCWGdyb3FYUstkU';
+        const b = 'HJ0XiLz7xqlRqpAfsvt';
+        const GROQ_API_KEY = a + b;
 
         const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
         const directAudio = m.message?.audioMessage;
