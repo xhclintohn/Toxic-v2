@@ -102,6 +102,7 @@ const aliases = {
     left: "leavegc",
     join: "joingc",
     git: "github",
+    togroupstatus: "gstatus",
     ss: "screenshot",
     getpp: "profile",
     allvars: "allvar",
