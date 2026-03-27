@@ -1,7 +1,6 @@
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const fs = require('fs').promises;
 const path = require('path');
-const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 
 module.exports = async (context) => {
     const { client, m, pushname } = context;
@@ -9,66 +8,54 @@ module.exports = async (context) => {
     await client.sendMessage(m.chat, { react: { text: '🔃', key: m.key } });
 
     try {
-        let mediaMessage = null;
-        let mediaKey = null;
+        let mediaMsg = null;
 
         if (m.message?.imageMessage) {
-            mediaMessage = m.message.imageMessage;
-            mediaKey = m.key;
+            mediaMsg = m.message.imageMessage;
         } else if (m.message?.videoMessage) {
-            mediaMessage = m.message.videoMessage;
-            mediaKey = m.key;
+            mediaMsg = m.message.videoMessage;
         } else if (m.message?.stickerMessage) {
-            mediaMessage = m.message.stickerMessage;
-            mediaKey = m.key;
-        } else if (m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage) {
-            mediaMessage = m.message.extendedTextMessage.contextInfo.quotedMessage.imageMessage;
-            mediaKey = m.key;
-        } else if (m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage) {
-            mediaMessage = m.message.extendedTextMessage.contextInfo.quotedMessage.videoMessage;
-            mediaKey = m.key;
-        } else if (m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.stickerMessage) {
-            mediaMessage = m.message.extendedTextMessage.contextInfo.quotedMessage.stickerMessage;
-            mediaKey = m.key;
+            mediaMsg = m.message.stickerMessage;
         } else if (m.quoted?.message?.imageMessage) {
-            mediaMessage = m.quoted.message.imageMessage;
-            mediaKey = m.quoted.key;
+            mediaMsg = m.quoted.message.imageMessage;
         } else if (m.quoted?.message?.videoMessage) {
-            mediaMessage = m.quoted.message.videoMessage;
-            mediaKey = m.quoted.key;
+            mediaMsg = m.quoted.message.videoMessage;
         } else if (m.quoted?.message?.stickerMessage) {
-            mediaMessage = m.quoted.message.stickerMessage;
-            mediaKey = m.quoted.key;
+            mediaMsg = m.quoted.message.stickerMessage;
+        } else if (m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage) {
+            mediaMsg = m.message.extendedTextMessage.contextInfo.quotedMessage.imageMessage;
+        } else if (m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage) {
+            mediaMsg = m.message.extendedTextMessage.contextInfo.quotedMessage.videoMessage;
+        } else if (m.message?.extendedTextMessage?.contextInfo?.quotedMessage?.stickerMessage) {
+            mediaMsg = m.message.extendedTextMessage.contextInfo.quotedMessage.stickerMessage;
         }
 
-        if (!mediaMessage || !mediaKey) {
+        if (!mediaMsg) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply('╭───(    TOXIC-MD    )───\n├───≥ TAKE ≤───\n├ \n├ Quote or send an image, short video,\n├ or sticker to steal the watermark.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
-        const mime = mediaMessage.mimetype || '';
+        const mime = mediaMsg.mimetype || '';
 
         if (!/image|video|webp/.test(mime)) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply('╭───(    TOXIC-MD    )───\n├───≥ TAKE ≤───\n├ \n├ That\'s not an image, video or sticker.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
-        const videoSeconds = mediaMessage.seconds || 0;
+        const videoSeconds = mediaMsg.seconds || 0;
         if (/video/.test(mime) && videoSeconds > 30) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply('╭───(    TOXIC-MD    )───\n├───≥ TAKE ≤───\n├ \n├ Videos must be 30 seconds or shorter.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
-        const buffer = await downloadMediaMessage(mediaMessage, 'buffer', {}, {
-            logger: console,
-            reuploadRequest: client.updateMediaMessage
-        });
+        const buffer = await client.downloadMediaMessage(mediaMsg);
 
         if (!buffer || buffer.length === 0) {
             throw new Error('Failed to download media');
         }
 
-        const tempFile = path.join(__dirname, `temp-take-${Date.now()}.${/webp/.test(mime) ? 'webp' : /video/.test(mime) ? 'mp4' : 'jpg'}`);
+        const ext = /webp/.test(mime) ? 'webp' : /video/.test(mime) ? 'mp4' : 'jpg';
+        const tempFile = path.join(__dirname, `temp-take-${Date.now()}.${ext}`);
         await fs.writeFile(tempFile, buffer);
 
         const stickerResult = new Sticker(tempFile, {
