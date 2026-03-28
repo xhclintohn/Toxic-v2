@@ -14,7 +14,6 @@ module.exports = async (context) => {
 
         const groupMetadata = await client.groupMetadata(m.chat);
         const participants = groupMetadata.participants;
-
         const botJid = normalizeJid(client.user.id);
         const senderJid = normalizeJid(m.sender);
 

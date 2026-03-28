@@ -1,5 +1,4 @@
 const middleware = require('../../utils/botUtil/middleware');
-const { botname } = require('../../config/settings');
 
 module.exports = {
   name: 'demote',
@@ -9,34 +8,33 @@ module.exports = {
     await middleware(context, async () => {
       const { client, m, prefix, isBotAdmin } = context;
 
-      if (!isBotAdmin) {
-        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ NOT ADMIN ≪───\n├ \n├ I'm not admin here, fool.\n├ Make me admin first, then\n├ come crawling back.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-      }
+      const normalizeJid = (jid) => {
+        if (!jid) return '';
+        return jid.split('@')[0].split(':')[0].replace(/\D/g, '') + '@s.whatsapp.net';
+      };
 
-      if (!m.quoted && (!m.mentionedJid || m.mentionedJid.length === 0)) {
-        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ USAGE ≪───\n├ \n├ Mention or quote a user.\n├ Example: ${prefix}demote @user\n├ Don't waste my time.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-      }
+      if (!isBotAdmin) return m.reply(`╭───(    TOXIC-MD    )───\n├ I'm not admin here.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
-      let user = m.mentionedJid ? m.mentionedJid[0] : null;
-      if (!user && m.quoted) user = m.quoted.sender;
+      let user = null;
+      if (m.mentionedJid && m.mentionedJid.length > 0) user = m.mentionedJid[0];
+      if (!user && m.quoted?.sender) user = m.quoted.sender;
 
-      if (!user) {
-        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ INVALID ≪───\n├ \n├ Invalid user specified.\n├ Tag someone properly.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-      }
+      if (!user) return m.reply(`╭───(    TOXIC-MD    )───\n├ Mention or quote a user. ${prefix}demote @user\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
-      const userNumber = user.split('@')[0];
+      const groupMetadata = await client.groupMetadata(m.chat);
+      const participants = groupMetadata.participants;
+      const targetJid = normalizeJid(user);
+      const realMember = participants.find(p => normalizeJid(p.jid || p.id) === targetJid);
+      const actualJid = realMember ? normalizeJid(realMember.jid || realMember.id) : targetJid;
 
       try {
-        await client.groupParticipantsUpdate(m.chat, [user], 'demote');
-        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ DEMOTED ≪───\n├ \n├ @${userNumber} got stripped of admin.\n├ Back to being a nobody.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, m.chat, { mentions: [user] });
+        await client.groupParticipantsUpdate(m.chat, [actualJid], 'demote');
+        await client.sendMessage(m.chat, {
+          text: `╭───(    TOXIC-MD    )───\n├───≫ DEMOTED ≪───\n├ \n├ @${actualJid.split('@')[0]} got stripped of admin.\n├ Back to being a nobody.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+          mentions: [actualJid]
+        }, { quoted: m });
       } catch (error) {
-        console.error('[DEMOTE ERROR]', error?.message || error);
-        const msg = error?.message || String(error);
-        const isNotAdmin = msg.includes('not-authorized') || msg.includes('forbidden') || msg.includes('403');
-        if (isNotAdmin) {
-          return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ NOT ADMIN ≪───\n├ \n├ @${userNumber} isn't admin.\n├ Can't demote a peasant.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, m.chat, { mentions: [user] });
-        }
-        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Demote failed: ${msg.slice(0, 80)}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├ Demote failed: ${error.message?.slice(0,60)}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
     });
   },

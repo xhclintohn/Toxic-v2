@@ -1,16 +1,16 @@
 module.exports = async (context) => {
-    const { client, m, participants, text } = context;
+    const { client, m, groupMetadata, text } = context;
 
-    if (!m.isGroup) {
-        return client.sendMessage(
-            m.chat,
-            { text: `╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Command meant for groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` },
-            { quoted: m }
-        );
-    }
+    if (!m.isGroup) return client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├ Command meant for groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: m });
+
+    const normalizeJid = (jid) => {
+        if (!jid) return '';
+        return jid.split('@')[0].split(':')[0].replace(/\D/g, '') + '@s.whatsapp.net';
+    };
 
     try {
-        const mentions = participants.map(a => a.id);
+        const participants = (groupMetadata?.participants || []);
+        const mentions = participants.map(p => normalizeJid(p.jid || p.id)).filter(Boolean);
         const txt = [
             `╭───(    TOXIC-MD    )───`,
             `├───≫ TAG ALL ≪───`,
@@ -18,21 +18,10 @@ module.exports = async (context) => {
             `├ Message: ${text ? text : 'No Message!'}`,
             `├ `,
             ...mentions.map(id => `├ @${id.split('@')[0]}`),
-            `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-            `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         ].join('\n');
-
-        await client.sendMessage(
-            m.chat,
-            { text: txt, mentions },
-            { quoted: m }
-        );
+        await client.sendMessage(m.chat, { text: txt, mentions }, { quoted: m });
     } catch (error) {
-        console.error(`Tagall error: ${error.message}`);
-        await client.sendMessage(
-            m.chat,
-            { text: `╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Failed to tag participants.\n├ Try again later.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` },
-            { quoted: m }
-        );
+        await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├ Failed to tag participants.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: m });
     }
 };

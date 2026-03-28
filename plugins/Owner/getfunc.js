@@ -15,16 +15,13 @@ module.exports = async (context) => {
 
     if (normalizeNumber(m.sender) !== DEVELOPER) {
         return await client.sendMessage(m.chat, {
-            text: `╭───(    TOXIC-MD    )───\n├───≫ ACCESS DENIED ≪───\n├ \n├ This command is restricted to the bot developer.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            text: `╭───(    TOXIC-MD    )───\n├───≫ ACCESS DENIED ≪───\n├ \n├ This command is restricted to the bot owner.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         }, { quoted: m });
     }
 
     if (!text) {
         let files = [];
-        try {
-            const entries = await fs.readdir(FEATURES_DIR);
-            files = entries.filter(f => f.endsWith('.js'));
-        } catch {}
+        try { const entries = await fs.readdir(FEATURES_DIR); files = entries.filter(f => f.endsWith('.js')); } catch {}
         const fileList = files.map(f => `├ • ${f.replace('.js', '')}`).join('\n');
         return await client.sendMessage(m.chat, {
             text: `╭───(    TOXIC-MD    )───\n├───≫ GETFUNC ≪───\n├ \n├ Usage: ${prefix}getfunc <name>\n├ \n├ Available features:\n${fileList || '├ (none found)'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
@@ -54,10 +51,7 @@ module.exports = async (context) => {
     } catch (err) {
         if (err.code === 'ENOENT') {
             let files = [];
-            try {
-                const entries = await fs.readdir(FEATURES_DIR);
-                files = entries.filter(f => f.endsWith('.js'));
-            } catch {}
+            try { const entries = await fs.readdir(FEATURES_DIR); files = entries.filter(f => f.endsWith('.js')); } catch {}
             const fileList = files.map(f => `├ • ${f.replace('.js', '')}`).join('\n');
             return await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ NOT FOUND ≪───\n├ \n├ "${funcName}" not found in features/.\n├ \n├ Available:\n${fileList || '├ (none found)'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
