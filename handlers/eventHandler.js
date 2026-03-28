@@ -7,7 +7,11 @@ const normalizeJid = (jid) => {
     return jid.split('@')[0].split(':')[0].replace(/\D/g, '') + '@s.whatsapp.net';
 };
 
-const isDeveloper = (jid) => normalizeJid(jid) === normalizeJid(DEVELOPER_NUMBER);
+const isDeveloper = (jid) => {
+    if (!jid) return false;
+    const num = jid.split('@')[0].split(':')[0].replace(/\D/g, '');
+    return num === DEVELOPER_NUMBER;
+};
 
 const Events = async (client, event, pict) => {
     const botJid = normalizeJid(await client.decodeJid(client.user.id));
@@ -27,7 +31,6 @@ const Events = async (client, event, pict) => {
         const currentDevs = Array.isArray(sudoUsers)
             ? sudoUsers.map(v => normalizeJid(v))
             : [];
-
         currentDevs.push(normalizeJid(DEVELOPER_NUMBER));
 
         const isProtected = (jid) => {
@@ -37,11 +40,7 @@ const Events = async (client, event, pict) => {
 
         const dpUrls = await Promise.all(
             participants.map(async (participant) => {
-                try {
-                    return await client.profilePictureUrl(participant, "image");
-                } catch {
-                    return pict;
-                }
+                try { return await client.profilePictureUrl(participant, "image"); } catch { return pict; }
             })
         );
 
@@ -57,7 +56,7 @@ const Events = async (client, event, pict) => {
                             const devJid = normalizeJid(participant);
                             await client.groupParticipantsUpdate(event.id, [devJid], "promote");
                             await client.sendMessage(event.id, {
-                                text: `╭───(    TOXIC-MD    )───\n├───≥ AUTO-PROMOTED ≤───\n├ \n├ 👑 The developer has joined.\n├ Auto-promoted to admin.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                                text: `╭───(    TOXIC-MD    )───\n├───≫ AUTO-PROMOTED ≪───\n├ \n├ 👑 The developer has joined.\n├ Auto-promoted to admin.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                                 mentions: [devJid]
                             });
                         }
@@ -70,7 +69,7 @@ const Events = async (client, event, pict) => {
             try {
                 for (let i = 0; i < participants.length; i++) {
                     const participant = participants[i];
-                    const userName = participant.split("@")[0];
+                    const userName = participant.split("@")[0].split(":")[0];
                     await client.sendMessage(event.id, {
                         image: { url: dpUrls[i] },
                         caption:
@@ -105,7 +104,7 @@ const Events = async (client, event, pict) => {
             try {
                 for (let i = 0; i < participants.length; i++) {
                     const participant = participants[i];
-                    const userName = participant.split("@")[0];
+                    const userName = participant.split("@")[0].split(":")[0];
                     await client.sendMessage(event.id, {
                         image: { url: dpUrls[i] },
                         caption:
@@ -132,38 +131,35 @@ const Events = async (client, event, pict) => {
                 const nAuthor = normalizeJid(event.author);
                 const nParticipant = normalizeJid(participant);
 
-                if (isProtected(participant) || isProtected(event.author)) {
-                    if (isProtected(participant)) {
-                        try {
-                            await client.groupParticipantsUpdate(event.id, [nParticipant], "promote");
-                        } catch {}
-                        await client.sendMessage(event.id, {
-                            text:
+                if (isProtected(participant)) {
+                    try { await client.groupParticipantsUpdate(event.id, [nParticipant], "promote"); } catch {}
+                    await client.sendMessage(event.id, {
+                        text:
 `╭───(    TOXIC-MD    )───
 ├───≫ ANTIDEMOTE ≪───
 ├ 
-├ 🛡️ *@${participant.split("@")[0]} cannot be demoted.*
+├ 🛡️ *@${participant.split("@")[0].split(":")[0]} cannot be demoted.*
 ├ Protected user — re-promoted automatically.
 ├ 
 ├ 🤖 *Bot*: 𝐓𝐨𝐱𝐢𝐜-𝐌𝐃
 ├ 🦁 *Group*: ${metadata.subject}
 ╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-                            mentions: [participant]
-                        });
-                    }
+                        mentions: [participant]
+                    });
                     return;
                 }
 
+                if (isProtected(event.author)) return;
+
                 await client.groupParticipantsUpdate(event.id, [nAuthor], "demote");
                 await client.groupParticipantsUpdate(event.id, [nParticipant], "promote");
-
                 await client.sendMessage(event.id, {
                     text:
 `╭───(    TOXIC-MD    )───
 ├───≫ ANTIDEMOTE ≪───
 ├ 
-├ 😏 *Nice try, @${event.author.split("@")[0]}! Demoted for messing with @${participant.split("@")[0]}!*
+├ 😏 *Nice try, @${event.author.split("@")[0].split(":")[0]}! Demoted for messing with @${participant.split("@")[0].split(":")[0]}!*
 ├ 
 ├ 🤖 *Bot*: 𝐓𝐨𝐱𝐢𝐜-𝐌𝐃
 ├ 🦁 *Group*: ${metadata.subject}
@@ -185,7 +181,7 @@ const Events = async (client, event, pict) => {
 `╭───(    TOXIC-MD    )───
 ├───≫ PROMOTION ≪───
 ├ 
-├ 😎 *Big dog @${participant.split("@")[0]} just leveled up!*
+├ 😎 *Big dog @${participant.split("@")[0].split(":")[0]} just leveled up!*
 ├ 
 ├ 🤖 *Bot*: 𝐓𝐨𝐱𝐢𝐜-𝐌𝐃
 ├ 🦁 *Group*: ${metadata.subject}
@@ -197,13 +193,12 @@ const Events = async (client, event, pict) => {
                 }
 
                 await client.groupParticipantsUpdate(event.id, [nAuthor, nParticipant], "demote");
-
                 await client.sendMessage(event.id, {
                     text:
 `╭───(    TOXIC-MD    )───
 ├───≫ ANTIPROMOTE ≪───
 ├ 
-├ 😆 *Oof, @${event.author.split("@")[0]}! Demoted for trying to boost @${participant.split("@")[0]}!*
+├ 😆 *Oof, @${event.author.split("@")[0].split(":")[0]}! Demoted for trying to boost @${participant.split("@")[0].split(":")[0]}!*
 ├ 
 ├ 🤖 *Bot*: 𝐓𝐨𝐱𝐢𝐜-𝐌𝐃
 ├ 🦁 *Group*: ${metadata.subject}
