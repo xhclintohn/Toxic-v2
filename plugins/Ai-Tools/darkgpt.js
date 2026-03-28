@@ -10,7 +10,7 @@ module.exports = async (context) => {
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        const apiUrl = `https://api.danzy.web.id/api/ai/venice?message=${encodeURIComponent(text)}&system=${encodeURIComponent('Reply with a toxic tone always')}`;
+        const apiUrl = `https://api.danzy.web.id/api/ai/venice?message=${encodeURIComponent(text)}&system=`;
 
         const response = await axios.get(apiUrl, {
             headers: {
