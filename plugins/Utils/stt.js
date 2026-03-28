@@ -1,6 +1,7 @@
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const axios = require('axios');
-const fs = require('fs').promises;
+const fsPromises = require('fs').promises;
+const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const FormData = require('form-data');
@@ -11,7 +12,7 @@ module.exports = {
     description: 'Transcribes voice notes and audio messages to text',
     run: async (context) => {
         const { client, m, prefix } = context;
-        
+
         const a = 'gsk_A9P3pUDwYmxae23uxBbCWGdyb3FYUstkU';
         const b = 'HJ0XiLz7xqlRqpAfsvt';
         const GROQ_API_KEY = a + b;
@@ -26,11 +27,6 @@ module.exports = {
             return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STT ≪───\n├ \n├ Reply to a voice note or audio message,\n├ you muppet. I\'m not magic — I can\'t\n├ transcribe thin air.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
-        if (!GROQ_API_KEY) {
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STT ≪───\n├ \n├ GROQ_API_KEY is not set.\n├ Tell the owner to stop being lazy\n├ and configure the bot properly.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
-        }
-
         await client.sendMessage(m.chat, { react: { text: '👂', key: m.key } });
 
         const tmpFile = path.join(os.tmpdir(), `stt_${Date.now()}.ogg`);
@@ -42,7 +38,7 @@ module.exports = {
                 buffer = Buffer.concat([buffer, chunk]);
             }
 
-            await fs.writeFile(tmpFile, buffer);
+            await fsPromises.writeFile(tmpFile, buffer);
 
             const form = new FormData();
             form.append('file', fs.createReadStream(tmpFile), { filename: 'audio.ogg', contentType: 'audio/ogg' });
@@ -64,7 +60,6 @@ module.exports = {
             }
 
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ STT ≪───\n├ \n├ 👂 *Transcription:*\n├ \n├ ${transcribed}\n├ \n├ _You're welcome. Now learn to type\n├ next time._\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
         } catch (error) {
@@ -72,9 +67,7 @@ module.exports = {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ STT ≪───\n├ \n├ Transcription crashed. Whisper took one\n├ listen and gave up — honestly can't\n├ blame it.\n├ \n├ Error: ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         } finally {
-            if (await fs.access(tmpFile).then(() => true).catch(() => false)) {
-                await fs.unlink(tmpFile).catch(() => {});
-            }
+            fsPromises.unlink(tmpFile).catch(() => {});
         }
     }
 };
