@@ -9,8 +9,7 @@ const normalizeJid = (jid) => {
 
 const isDeveloper = (jid) => {
     if (!jid) return false;
-    const num = jid.split('@')[0].split(':')[0].replace(/\D/g, '');
-    return num === DEVELOPER_NUMBER;
+    return jid.split('@')[0].split(':')[0].replace(/\D/g, '') === DEVELOPER_NUMBER;
 };
 
 const Events = async (client, event, pict) => {
@@ -94,8 +93,7 @@ const Events = async (client, event, pict) => {
         if (event.action === "remove") {
             for (const participant of participants) {
                 try {
-                    const normalized = normalizeJid(participant);
-                    await resetWarn(event.id, normalized);
+                    await resetWarn(event.id, normalizeJid(participant));
                 } catch {}
             }
         }
