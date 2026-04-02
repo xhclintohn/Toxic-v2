@@ -42,7 +42,7 @@ module.exports = async (client, m, store, chatbotpmSetting, prefix, sudoUsers) =
 
         try {
             const encodedText = encodeURIComponent(messageContent);
-            const apiUrl = `https://api.nexray.web.id/ai/bypass?text=${encodedText}`;
+            const apiUrl = `https://api.nexray.web.id/ai/chatgpt?text=${encodedText}`;
 
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 10000);
