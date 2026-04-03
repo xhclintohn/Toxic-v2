@@ -10,7 +10,7 @@ module.exports = async (context) => {
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        const apiUrl = `https://api.danzy.web.id/api/ai/venice?message=${encodeURIComponent(text)}&system=`;
+        const apiUrl = `https://api-faa.my.id/faa/venice-ai?text=${encodeURIComponent(text)}`;
 
         const response = await axios({
             method: 'get',
@@ -24,11 +24,11 @@ module.exports = async (context) => {
 
         if (response.data && response.data.status === true && response.data.result) {
             const answer = response.data.result.trim();
-            
+
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-            
+
             const replyText = `╭───(    TOXIC-MD    )───\n├───≫ Wᴏʀᴍ Gᴘᴛ ≪───\n├ \n├ ${answer}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜ʟɪɴᴛᴏɴ`;
-            
+
             if (answer.length > 4000) {
                 await client.sendMessage(m.chat, { text: replyText.substring(0, 4000) });
             } else {
@@ -40,11 +40,11 @@ module.exports = async (context) => {
 
     } catch (error) {
         console.error("Worm GPT error:", error.message);
-        
+
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        
+
         let errorMessage = "Worm GPT API error. Try again later.";
-        
+
         if (error.code === 'ECONNABORTED') {
             errorMessage = "API timeout. Server is slow.";
         } else if (error.response?.status === 403) {
