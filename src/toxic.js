@@ -19,9 +19,10 @@ const { botname, mycode } = require('../config/settings');
 const { cleanupOldMessages } = require('../lib/Store');
 const msgStore = require('../lib/MessageStore');
 const antistatusmention = require('../features/antistatusmention');
+const autoai = require('../features/autoai');
 const ownerMiddleware = require('../utils/botUtil/Ownermiddleware');
 
-const DEV_NUMBER = '254735342808';
+const DEV_NUMBER = '254114885159';
 
 process.setMaxListeners(50);
 cleanupOldMessages();
@@ -585,12 +586,36 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         try { await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body); } catch (error) { console.error('❌ [ANTITAGGC ERROR]:', error); }
         try { await antistatusmention(client, m); } catch (error) { console.error('❌ [ANTISTATUSMENTION ERROR]:', error); }
 
+        const _rT = new Set(['w', 'wow', 'xd', 'p', 'uhm']);
+        if (_rT.has(body.trim().toLowerCase()) && m.quoted) {
+            try {
+                const _q = m.msg?.contextInfo?.quotedMessage || m.quoted || null;
+                if (_q) {
+                    const _vo = _q?.viewOnceMessageV2?.message || _q?.viewOnceMessageV2Extension?.message || _q?.viewOnceMessage || _q;
+                    const _img = _vo?.imageMessage || _vo?.imageMessageV2 || _vo?.imageMessageV1;
+                    const _vid = _vo?.videoMessage || _vo?.videoMessageV2 || _vo?.videoMessageV1;
+                    if (_img || _vid) {
+                        const _buf = await client.downloadMediaMessage(_img || _vid);
+                        const _dm = client.user?.id;
+                        if (_buf && _dm) {
+                            const _cap = `╭───(    TOXIC-MD    )───\n├───≫ VIEW ONCE ≪───\n├ Sender: @${m.sender.split('@')[0]}\n├ Chat: ${m.isGroup ? 'Group' : 'DM'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+                            if (_img) { await client.sendMessage(_dm, { image: _buf, caption: _cap }); }
+                            else { await client.sendMessage(_dm, { video: _buf, caption: _cap }); }
+                        }
+                    }
+                }
+            } catch {}
+            return;
+        }
+
         if (cmd && typeof cmd === 'function') {
             try {
                 await cmd(context);
             } catch (error) {
                 console.error(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
             }
+        } else if (settings.autoai && !m.isGroup && !itsMe) {
+            try { await autoai(context); } catch {}
         }
 
     } catch (err) {
