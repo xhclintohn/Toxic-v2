@@ -6,6 +6,7 @@ db.pragma('journal_mode = WAL');
 db.pragma('synchronous = NORMAL');
 db.pragma('cache_size = -64000');
 db.pragma('temp_store = MEMORY');
+db.pragma('wal_checkpoint(PASSIVE)');
 db.exec(`
     CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS group_settings (
@@ -142,8 +143,7 @@ async function getConversationHistory(num, limit = 20) {
 async function addConversationMessage(num, role, message) {
     try {
         db.prepare('INSERT INTO conversation_history (num, role, message) VALUES (?, ?, ?)').run(num, role, message);
-        const cnt = db.prepare('SELECT COUNT(*) as c FROM conversation_history WHERE num = ?').get(num);
-        if (cnt.c > 50) db.prepare('DELETE FROM conversation_history WHERE num = ? AND id IN (SELECT id FROM conversation_history WHERE num = ? ORDER BY timestamp ASC LIMIT ?)').run(num, num, cnt.c - 50);
+        db.prepare('DELETE FROM conversation_history WHERE num = ? AND id NOT IN (SELECT id FROM conversation_history WHERE num = ? ORDER BY timestamp DESC LIMIT 50)').run(num, num);
     } catch {}
 }
 
