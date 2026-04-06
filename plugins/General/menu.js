@@ -18,7 +18,6 @@ module.exports = {
         if (cleanText !== '' && !['menu', 'help', 'commands', 'list'].includes(cleanText.split(' ')[0].toLowerCase())) {
             const commandName = cleanText.split(' ')[0];
             await client.sendMessage(m.chat, {
-                text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo ${m.pushName}, what's with the\n├ extra bullshit after "${commandName}"?\n├ Just type *${prefix}menu* properly, moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
             return;
         }
@@ -39,7 +38,6 @@ module.exports = {
                 .join('');
         };
 
-        const menuText = `╭───(    TOXIC-MD    )───\n├───≫ Mᴇɴᴜ ≪───\n├ \n├ Hello, @${m.pushName}\n├ \n├ Bot: TOXIC-MD\n├ Prefix: ${effectivePrefix}\n├ Mode: ${mode}\n├ \n├ Select a button below.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
         const msg = generateWAMessageFromContent(
             m.chat,
