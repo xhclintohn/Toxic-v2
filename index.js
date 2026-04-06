@@ -29,6 +29,7 @@ const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetchJson, sleep } =
 const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream: "store" }) });
 
 const authenticationn = require('./auth/auth.js');
+require('./features/cleanup');
 const { smsg } = require('./handlers/smsg');
 const { getSettings, getBannedUsers, banUser } = require("./database/config");
 const { botname } = require('./config/settings');
