@@ -49,25 +49,22 @@ const GROUP_META_TTL = 300000;
 async function fastGetSettings() {
     const now = Date.now();
     if (_cachedSettings && (now - _cachedSettingsTime) < FAST_CACHE_TTL) return _cachedSettings;
-    _cachedSettings = await getSettings();
-    _cachedSettingsTime = now;
+    try { _cachedSettings = await getSettings(); _cachedSettingsTime = now; } catch (e) {}
     return _cachedSettings;
 }
 
 async function fastGetSudo() {
     const now = Date.now();
     if (_cachedSudo && (now - _cachedSudoTime) < FAST_CACHE_TTL) return _cachedSudo;
-    _cachedSudo = await getSudoUsers();
-    _cachedSudoTime = now;
-    return _cachedSudo;
+    try { _cachedSudo = await getSudoUsers(); _cachedSudoTime = now; } catch (e) {}
+    return _cachedSudo || [];
 }
 
 async function fastGetBanned() {
     const now = Date.now();
     if (_cachedBanned && (now - _cachedBannedTime) < FAST_CACHE_TTL) return _cachedBanned;
-    _cachedBanned = await getBannedUsers();
-    _cachedBannedTime = now;
-    return _cachedBanned;
+    try { _cachedBanned = await getBannedUsers(); _cachedBannedTime = now; } catch (e) {}
+    return _cachedBanned || [];
 }
 
 async function fastGroupMetadata(client, jid) {
