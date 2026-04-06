@@ -151,6 +151,14 @@ async function clearConversationHistory(num) {
     try { db.prepare('DELETE FROM conversation_history WHERE num = ?').run(num); } catch {}
 }
 
+function clearOldConversationHistory(hoursOld = 5) {
+    try {
+        const cutoff = Math.floor(Date.now() / 1000) - (hoursOld * 3600);
+        const result = db.prepare('DELETE FROM conversation_history WHERE timestamp < ?').run(cutoff);
+        if (result.changes > 0) console.log('Cleared', result.changes, 'old conversation records');
+    } catch {}
+}
+
 async function getWarnCount(jid, user) {
     try { const r = db.prepare('SELECT warns FROM warn_data WHERE jid = ? AND user = ?').get(jid, user); return r ? r.warns : 0; } catch { return 0; }
 }
@@ -174,5 +182,6 @@ module.exports = {
     banUser, unbanUser, getBannedUsers,
     addSudoUser, removeSudoUser, getSudoUsers,
     getConversationHistory, addConversationMessage, clearConversationHistory,
-    getWarnCount, addWarn, resetWarn
+    getWarnCount, addWarn, resetWarn,
+    clearOldConversationHistory
 };
