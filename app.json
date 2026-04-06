@@ -5,14 +5,21 @@
   "repository": "https://github.com/xhclintohn/Toxic-v2.git",
   "logo": "https://qu.ax/XxQwp.jpg",
   "success_url": "/",
-  "keywords": ["whatsapp-bot", "baileys", "nodejs", "heroku", "toxic-md"],
+  "keywords": [
+    "whatsapp-bot",
+    "baileys",
+    "nodejs",
+    "heroku",
+    "toxic-md"
+  ],
   "scripts": {
     "postdeploy": "echo '🚀 Toxic-MD has been successfully deployed!'"
   },
   "build": {
-    "languages": ["nodejs"]
+    "languages": [
+      "nodejs"
+    ]
   },
-
   "env": {
     "SESSION": {
       "description": "🔑 Required – Your WhatsApp session ID (generated after linking the bot).",
@@ -27,14 +34,7 @@
       "required": false
     }
   },
-
-  "addons": [
-    {
-      "plan": "heroku-postgresql",
-      "description": "🗃️ Free PostgreSQL database for storing bot data."
-    }
-  ],
-
+  "addons": [],
   "buildpacks": [
     {
       "url": "heroku/nodejs",
