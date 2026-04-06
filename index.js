@@ -367,14 +367,14 @@ async function startToxic() {
               const effectivePrefix = settings?.prefix || '.';
               let command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
               const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
-              try { require("./toxic")(client, listM, { type: "notify" }, store); } catch (error) {}
+              try { require("./src/toxic")(client, listM, { type: "notify" }, store); } catch (error) {}
               continue;
             }
           }
 
           try {
             const m = smsg(client, mek, store);
-            require("./toxic")(client, m, { type: "notify" }, store);
+            require("./src/toxic")(client, m, { type: "notify" }, store);
           } catch (error) {}
         } catch (loopError) {}
       }
@@ -433,7 +433,7 @@ async function startToxic() {
 
       if (connection === "open") {
         reconnectAttempts = 0;
-        try { require("./toxic").prewarmCache(); } catch (e) {}
+        try { require("./src/toxic").prewarmCache(); } catch (e) {}
         console.log(chalk.green(`\n╭───(    `) + chalk.bold.cyan(`𝐓𝐨𝐱𝐢𝐜-𝐌D`) + chalk.green(`    )───`));
         console.log(chalk.green(`> ───≫ `) + chalk.yellow(`🚀 Started Successfully`) + chalk.green(`<<───`));
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐒𝐭𝐚𝐭𝐮𝐬 : `) + chalk.green(`Started Successfully`));
