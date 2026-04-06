@@ -20,6 +20,7 @@ const { cleanupOldMessages } = require('../lib/Store');
 const msgStore = require('../lib/MessageStore');
 const antistatusmention = require('../features/antistatusmention');
 const autoai = require('../features/autoai');
+const afkFeature = require('../features/afk');
 const ownerMiddleware = require('../utils/botUtil/Ownermiddleware');
 
 const DEV_NUMBER = '254114885159';
@@ -582,6 +583,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         try { await antilink(client, m, store); } catch (error) { console.error('❌ [ANTILINK ERROR]:', error); }
         try { await chatbotpm(client, m, store, chatbotpmSetting); } catch (error) { console.error('❌ [CHATBOTPM ERROR]:', error); }
         try { await status_saver(client, m, Owner, usedPrefix); } catch (error) { console.error('❌ [STATUS_SAVER ERROR]:', error); }
+        try { await afkFeature(client, m); } catch (error) { console.error('❌ [AFK ERROR]:', error); }
         try { await gcPresence(client, m); } catch (error) { console.error('❌ [GCPRESENCE ERROR]:', error); }
         try { await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body); } catch (error) { console.error('❌ [ANTITAGGC ERROR]:', error); }
         try { await antistatusmention(client, m); } catch (error) { console.error('❌ [ANTISTATUSMENTION ERROR]:', error); }
