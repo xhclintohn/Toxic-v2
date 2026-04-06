@@ -57,21 +57,9 @@ process.on("uncaughtException", (error) => {
   console.error('❌ [UNCAUGHT ERROR]:', error);
 });
 
-let cachedSettings = null;
-let settingsCacheTime = 0;
-const SETTINGS_CACHE_TTL = 30000;
-
-async function getCachedSettings() {
-  const now = Date.now();
-  if (cachedSettings && (now - settingsCacheTime) < SETTINGS_CACHE_TTL) return cachedSettings;
-  cachedSettings = await getSettings();
-  settingsCacheTime = now;
-  return cachedSettings;
-}
-
 function invalidateSettingsCache() {
-  cachedSettings = null;
-  settingsCacheTime = 0;
+  const { db } = require('./database/config');
+  try { db.prepare('SELECT 1').get(); } catch (e) {}
 }
 
 function cleanupSessionFiles() {
@@ -174,9 +162,6 @@ async function startToxic() {
       return;
     }
 
-    cachedSettings = settingss;
-    settingsCacheTime = Date.now();
-
     const { autobio } = settingss;
     const version = (await (await fetch('https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Defaults/baileys-version.json')).json()).version;
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
@@ -197,7 +182,7 @@ async function startToxic() {
         const msg = store.loadMessage(key.remoteJid, key.id);
         return msg?.message || undefined;
       },
-      transactionOpts: { maxCommitRetries: 10, delayBetweenTriesMs: 3000 },
+      transactionOpts: { maxCommitRetries: 3, delayBetweenTriesMs: 500 },
       patchMessageBeforeSending: (message) => {
         try {
           if (!message || typeof message !== 'object') return message;
@@ -274,7 +259,7 @@ async function startToxic() {
 
     client.ws.on('CB:call', async (json) => {
       try {
-        const settingszs = await getCachedSettings();
+        const settingszs = await getSettings();
         if (!settingszs?.anticall) return;
         const callId = json.content?.[0]?.attrs?.['call-id'];
         const callerJid = json.content?.[0]?.attrs?.['call-creator'];
@@ -294,7 +279,7 @@ async function startToxic() {
     client.ev.on("messages.upsert", async ({ messages, type }) => {
       if (type !== "notify") return;
 
-      let settings = await getCachedSettings();
+      let settings = await getSettings();
       if (!settings) return;
 
       client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
@@ -348,14 +333,14 @@ async function startToxic() {
           if (isStealthOn) continue;
 
           if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-            try { await client.readMessages([mek.key]); } catch (error) {}
+            client.readMessages([mek.key]).catch(() => {});
           }
 
           if (remoteJid.endsWith('@s.whatsapp.net')) {
             try {
-              if (presence === 'online') await client.sendPresenceUpdate("available", remoteJid);
-              else if (presence === 'typing') await client.sendPresenceUpdate("composing", remoteJid);
-              else if (presence === 'recording') await client.sendPresenceUpdate("recording", remoteJid);
+              if (presence === 'online') client.sendPresenceUpdate("available", remoteJid).catch(() => {});
+              else if (presence === 'typing') client.sendPresenceUpdate("composing", remoteJid).catch(() => {});
+              else if (presence === 'recording') client.sendPresenceUpdate("recording", remoteJid).catch(() => {});
             } catch (error) {}
           }
 
@@ -384,7 +369,7 @@ async function startToxic() {
       for (const update of updates) {
         try {
           if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
-            const settings = await getCachedSettings();
+            const settings = await getSettings();
             client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
             await handleAutoViewStatus(client, { key: update.key });
           }
