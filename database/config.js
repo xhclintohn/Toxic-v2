@@ -6,6 +6,8 @@ db.pragma('journal_mode = WAL');
 db.pragma('synchronous = NORMAL');
 db.pragma('cache_size = -64000');
 db.pragma('temp_store = MEMORY');
+db.pragma('busy_timeout = 5000');
+db.pragma('mmap_size = 268435456');
 db.pragma('wal_checkpoint(PASSIVE)');
 db.exec(`
     CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
@@ -25,6 +27,29 @@ db.exec(`
     CREATE TABLE IF NOT EXISTS warn_data (jid TEXT NOT NULL, user TEXT NOT NULL, warns INTEGER DEFAULT 0, PRIMARY KEY (jid, user));
 `);
 
+const stmts = {
+    getAllSettings: db.prepare('SELECT key, value FROM settings'),
+    upsertSetting: db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)'),
+    getGroupSettings: db.prepare('SELECT * FROM group_settings WHERE jid = ?'),
+    hasGroupSettings: db.prepare('SELECT jid FROM group_settings WHERE jid = ?'),
+    insertGroupSettings: db.prepare('INSERT INTO group_settings (jid) VALUES (?)'),
+    insertBanned: db.prepare('INSERT OR IGNORE INTO banned_users (num) VALUES (?)'),
+    deleteBanned: db.prepare('DELETE FROM banned_users WHERE num = ?'),
+    getAllBanned: db.prepare('SELECT num FROM banned_users'),
+    insertSudo: db.prepare('INSERT OR IGNORE INTO sudo_users (num) VALUES (?)'),
+    deleteSudo: db.prepare('DELETE FROM sudo_users WHERE num = ?'),
+    getAllSudo: db.prepare('SELECT num FROM sudo_users'),
+    getConvHistory: db.prepare('SELECT role, message FROM conversation_history WHERE num = ? ORDER BY timestamp DESC LIMIT ?'),
+    insertConvMessage: db.prepare('INSERT INTO conversation_history (num, role, message) VALUES (?, ?, ?)'),
+    pruneConvHistory: db.prepare('DELETE FROM conversation_history WHERE num = ? AND id NOT IN (SELECT id FROM conversation_history WHERE num = ? ORDER BY timestamp DESC LIMIT 50)'),
+    deleteConvHistory: db.prepare('DELETE FROM conversation_history WHERE num = ?'),
+    deleteOldConvHistory: db.prepare('DELETE FROM conversation_history WHERE timestamp < ?'),
+    getWarn: db.prepare('SELECT warns FROM warn_data WHERE jid = ? AND user = ?'),
+    insertWarn: db.prepare('INSERT INTO warn_data (jid, user, warns) VALUES (?, ?, 1)'),
+    incrementWarn: db.prepare('UPDATE warn_data SET warns = warns + 1 WHERE jid = ? AND user = ?'),
+    deleteWarn: db.prepare('DELETE FROM warn_data WHERE jid = ? AND user = ?'),
+};
+
 const cache = {
     settings: { data: null, time: 0, ttl: 30000 },
     sudoUsers: { data: null, time: 0, ttl: 60000 },
@@ -40,7 +65,7 @@ async function initializeDatabase() {}
 async function getSettings() {
     if (isCacheValid(cache.settings)) return cache.settings.data;
     try {
-        const rows = db.prepare('SELECT key, value FROM settings').all();
+        const rows = stmts.getAllSettings.all();
         const s = {};
         for (const row of rows) { try { s[row.key] = JSON.parse(row.value); } catch { s[row.key] = row.value; } }
         const defaults = {
@@ -61,7 +86,7 @@ async function getSettings() {
 
 async function updateSetting(key, value) {
     try {
-        db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, JSON.stringify(value));
+        stmts.upsertSetting.run(key, JSON.stringify(value));
         cache.settings.data = null; cache.settings.time = 0;
     } catch (e) { console.error('Error updating setting:', e); }
 }
@@ -70,7 +95,7 @@ async function getGroupSettings(jid) {
     const cached = cache.groupSettings.get(jid);
     if (cached && (Date.now() - cached.time) < GROUP_SETTINGS_TTL) return cached.data;
     try {
-        const row = db.prepare('SELECT * FROM group_settings WHERE jid = ?').get(jid);
+        const row = stmts.getGroupSettings.get(jid);
         const result = row ? {
             antidelete: !!row.antidelete, gcpresence: !!row.gcpresence, events: !!row.events,
             antidemote: !!row.antidemote, antipromote: !!row.antipromote, antilink: row.antilink || 'off',
@@ -88,37 +113,41 @@ async function getGroupSettings(jid) {
 
 async function updateGroupSetting(jid, key, value) {
     try {
-        const existing = db.prepare('SELECT jid FROM group_settings WHERE jid = ?').get(jid);
-        if (existing) { db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(value, jid); }
-        else { db.prepare(`INSERT INTO group_settings (jid, ${key}) VALUES (?, ?)`).run(jid, value); }
+        const existing = stmts.hasGroupSettings.get(jid);
+        if (existing) {
+            db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(value, jid);
+        } else {
+            stmts.insertGroupSettings.run(jid);
+            db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(value, jid);
+        }
         cache.groupSettings.delete(jid);
     } catch (e) { console.error('Error updating group setting:', e); }
 }
 
 async function banUser(num) {
-    try { db.prepare('INSERT OR IGNORE INTO banned_users (num) VALUES (?)').run(num); cache.bannedUsers.data = null; cache.bannedUsers.time = 0; }
+    try { stmts.insertBanned.run(num); cache.bannedUsers.data = null; cache.bannedUsers.time = 0; }
     catch (e) { console.error('Error banning user:', e); }
 }
 
 async function unbanUser(num) {
-    try { db.prepare('DELETE FROM banned_users WHERE num = ?').run(num); cache.bannedUsers.data = null; cache.bannedUsers.time = 0; }
+    try { stmts.deleteBanned.run(num); cache.bannedUsers.data = null; cache.bannedUsers.time = 0; }
     catch (e) { console.error('Error unbanning user:', e); }
 }
 
 async function addSudoUser(num) {
-    try { db.prepare('INSERT OR IGNORE INTO sudo_users (num) VALUES (?)').run(num); cache.sudoUsers.data = null; cache.sudoUsers.time = 0; }
+    try { stmts.insertSudo.run(num); cache.sudoUsers.data = null; cache.sudoUsers.time = 0; }
     catch (e) { console.error('Error adding sudo:', e); }
 }
 
 async function removeSudoUser(num) {
-    try { db.prepare('DELETE FROM sudo_users WHERE num = ?').run(num); cache.sudoUsers.data = null; cache.sudoUsers.time = 0; }
+    try { stmts.deleteSudo.run(num); cache.sudoUsers.data = null; cache.sudoUsers.time = 0; }
     catch (e) { console.error('Error removing sudo:', e); }
 }
 
 async function getSudoUsers() {
     if (isCacheValid(cache.sudoUsers)) return cache.sudoUsers.data;
     try {
-        const rows = db.prepare('SELECT num FROM sudo_users').all();
+        const rows = stmts.getAllSudo.all();
         const users = rows.map(r => r.num);
         cache.sudoUsers = { data: users, time: Date.now(), ttl: 60000 };
         return users;
@@ -128,7 +157,7 @@ async function getSudoUsers() {
 async function getBannedUsers() {
     if (isCacheValid(cache.bannedUsers)) return cache.bannedUsers.data;
     try {
-        const rows = db.prepare('SELECT num FROM banned_users').all();
+        const rows = stmts.getAllBanned.all();
         const users = rows.map(r => r.num);
         cache.bannedUsers = { data: users, time: Date.now(), ttl: 60000 };
         return users;
@@ -136,44 +165,44 @@ async function getBannedUsers() {
 }
 
 async function getConversationHistory(num, limit = 20) {
-    try { return db.prepare('SELECT role, message FROM conversation_history WHERE num = ? ORDER BY timestamp DESC LIMIT ?').all(num, limit).reverse(); }
+    try { return stmts.getConvHistory.all(num, limit).reverse(); }
     catch { return []; }
 }
 
 async function addConversationMessage(num, role, message) {
     try {
-        db.prepare('INSERT INTO conversation_history (num, role, message) VALUES (?, ?, ?)').run(num, role, message);
-        db.prepare('DELETE FROM conversation_history WHERE num = ? AND id NOT IN (SELECT id FROM conversation_history WHERE num = ? ORDER BY timestamp DESC LIMIT 50)').run(num, num);
+        stmts.insertConvMessage.run(num, role, message);
+        stmts.pruneConvHistory.run(num, num);
     } catch {}
 }
 
 async function clearConversationHistory(num) {
-    try { db.prepare('DELETE FROM conversation_history WHERE num = ?').run(num); } catch {}
+    try { stmts.deleteConvHistory.run(num); } catch {}
 }
 
 function clearOldConversationHistory(hoursOld = 5) {
     try {
         const cutoff = Math.floor(Date.now() / 1000) - (hoursOld * 3600);
-        const result = db.prepare('DELETE FROM conversation_history WHERE timestamp < ?').run(cutoff);
+        const result = stmts.deleteOldConvHistory.run(cutoff);
         if (result.changes > 0) console.log('Cleared', result.changes, 'old conversation records');
     } catch {}
 }
 
 async function getWarnCount(jid, user) {
-    try { const r = db.prepare('SELECT warns FROM warn_data WHERE jid = ? AND user = ?').get(jid, user); return r ? r.warns : 0; } catch { return 0; }
+    try { const r = stmts.getWarn.get(jid, user); return r ? r.warns : 0; } catch { return 0; }
 }
 
 async function addWarn(jid, user) {
     try {
-        const r = db.prepare('SELECT warns FROM warn_data WHERE jid = ? AND user = ?').get(jid, user);
-        if (r) { db.prepare('UPDATE warn_data SET warns = warns + 1 WHERE jid = ? AND user = ?').run(jid, user); return r.warns + 1; }
-        db.prepare('INSERT INTO warn_data (jid, user, warns) VALUES (?, ?, 1)').run(jid, user);
+        const r = stmts.getWarn.get(jid, user);
+        if (r) { stmts.incrementWarn.run(jid, user); return r.warns + 1; }
+        stmts.insertWarn.run(jid, user);
         return 1;
     } catch { return 0; }
 }
 
 async function resetWarn(jid, user) {
-    try { db.prepare('DELETE FROM warn_data WHERE jid = ? AND user = ?').run(jid, user); } catch {}
+    try { stmts.deleteWarn.run(jid, user); } catch {}
 }
 
 module.exports = {
