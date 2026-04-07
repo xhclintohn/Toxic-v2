@@ -629,10 +629,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 console.error(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
             }
         } else if (settings.autoai && !itsMe) {
-            const _botNum = botNumber.split('@')[0].split(':')[0];
-            const _mentioned = m.mentionedJid || [];
-            const _botTagged = _mentioned.some(j => j.split('@')[0].split(':')[0] === _botNum);
-            if (!m.isGroup || _botTagged) {
+            if (!m.isGroup || (body && usedPrefix && body.startsWith(usedPrefix))) {
                 try { await autoai(context); } catch {}
             }
         }
