@@ -359,8 +359,8 @@ async function startToxic() {
 
           try {
             const m = smsg(client, mek, store);
-            require("./src/toxic")(client, m, { type: "notify" }, store);
-          } catch (error) {}
+            require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.error('❌ [TOXIC ASYNC]:', e.message));
+          } catch (error) { console.error('❌ [TOXIC SYNC]:', error.message); }
         } catch (loopError) {}
       }
     });
