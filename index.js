@@ -32,6 +32,14 @@ const authenticationn = require('./auth/auth.js');
 require('./features/cleanup');
 const { smsg } = require('./handlers/smsg');
 const { getSettings, getBannedUsers, banUser } = require("./database/config");
+let _idxSettingsCache = null, _idxSettingsCacheTime = 0;
+const IDX_CACHE_TTL = 20000;
+async function getCachedSettings() {
+  const now = Date.now();
+  if (_idxSettingsCache && (now - _idxSettingsCacheTime) < IDX_CACHE_TTL) return _idxSettingsCache;
+  try { _idxSettingsCache = await getCachedSettings(); _idxSettingsCacheTime = Date.now(); } catch {}
+  return _idxSettingsCache;
+}
 const { botname } = require('./config/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('./handlers/commandHandler');
@@ -155,7 +163,7 @@ async function startToxic() {
       }
     }
 
-    let settingss = await getSettings();
+    let settingss = await getCachedSettings();
     if (!settingss) {
       console.log('❌ TOXIC-MD FAILED TO CONNECT - Settings not found');
       global._toxicIsStarting = false;
@@ -259,7 +267,7 @@ async function startToxic() {
 
     client.ws.on('CB:call', async (json) => {
       try {
-        const settingszs = await getSettings();
+        const settingszs = await getCachedSettings();
         if (!settingszs?.anticall) return;
         const callId = json.content?.[0]?.attrs?.['call-id'];
         const callerJid = json.content?.[0]?.attrs?.['call-creator'];
@@ -279,7 +287,7 @@ async function startToxic() {
     client.ev.on("messages.upsert", async ({ messages, type }) => {
       if (type !== "notify") return;
 
-      let settings = await getSettings();
+      let settings = await getCachedSettings();
       if (!settings) return;
 
       client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
@@ -369,7 +377,7 @@ async function startToxic() {
       for (const update of updates) {
         try {
           if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
-            const settings = await getSettings();
+            const settings = await getCachedSettings();
             client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
             await handleAutoViewStatus(client, { key: update.key });
           }

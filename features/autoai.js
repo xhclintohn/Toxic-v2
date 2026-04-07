@@ -4,142 +4,155 @@ const { commands, aliases } = require('../handlers/commandHandler');
 const { getConversationHistory, addConversationMessage } = require('../database/config');
 
 const COMMAND_CATALOG = `
-DOWNLOADS & MEDIA:
-- play <song name or youtube link> → play/download a song
-- ytmp3 <url> → download youtube audio
-- ytmp4 <url> → download youtube video  
-- yt <query> → search youtube
-- yts <query> → youtube search results
-- spotify <url or song name> → download spotify track
+MUSIC & DOWNLOADS:
+- play <song name or youtube url> → play or download a song/music
+- ytmp3 <url> → download youtube as audio
+- ytmp4 <url> → download youtube as video
+- yt <query> → youtube search
+- yts <query> → youtube search list
+- spotify <url or name> → download spotify track
 - tikdl <url> → download tiktok video
-- tikaudio <url> → download tiktok audio only
+- tikaudio <url> → tiktok audio only
 - igdl <url> → download instagram reel/post
 - fbdl <url> → download facebook video
 - twtdl <url> → download twitter/X video
-- pinterest <query> → search pinterest images
-- image <query> → search and download image
-- alldl <url> → download from any link
-- mediafire <url> → download mediafire file
+- alldl <url> → universal downloader
+- mediafire <url> → mediafire file download
 - apk <app name> → download android apk
-- shazam → identify playing song (reply to audio)
+- shazam → identify a song (reply to audio)
+- image <query> → download image
+- pinterest <query> → pinterest images
+- video <query> → search and download video
 
 AI TOOLS:
 - gpt <prompt> → ask ChatGPT
 - groq <prompt> → ask Groq AI
 - gemini <prompt> → ask Google Gemini
-- imagine <prompt> → generate AI image
-- vision → analyze image with AI (reply to image)
-- remini → enhance/upscale image quality (reply to image)
+- imagine <prompt> → generate AI image from text
+- vision → analyze/describe image with AI (reply to image)
+- remini → enhance or upscale image quality HD (reply to image)
 - aicode <prompt> → generate code with AI
-- darkgpt <prompt> → uncensored AI chat
 - transcribe → transcribe voice note to text (reply to audio)
-- stt → speech to text (reply to voice)
-- codegen <description> → generate code
+- stt → speech to text (reply to voice message)
+- codegen <description> → generate code from description
+- chat <prompt> → AI chat
 
-EDITING & STICKERS:
-- sticker → convert image/gif/video to sticker
-- toimg → convert sticker to image
+STICKERS & EDITING:
+- sticker → convert image/gif/video to WhatsApp sticker
+- toimg → convert sticker back to image
 - tts <text> → text to speech audio
 - removebg → remove image background (reply to image)
 - imgedit <prompt> → edit image with AI (reply to image)
 - togif → convert video to gif
-- tofigure → make toon figure from image
-- toghibli → ghibli style filter
+- tofigure → cartoon figure from image
+- toghibli → ghibli anime style filter
 - toanime → anime style filter
-- brat <text> → brat text meme
-- rip → rest in peace meme (reply to image)
-- trigger → triggered gif
-- trash → trash meme
-- shit → sh*t meme
-- wanted → wanted poster
-- wasted → wasted meme
+- brat <text> → brat text style meme
+- rip → RIP meme (reply to image)
+- trigger → triggered gif (reply to image)
+- trash → trash meme (reply to image)
+- wanted → wanted poster (reply to image)
+- wasted → wasted meme (reply to image)
 - emix <emoji> → emoji mix
-- logogen <text> → generate logo text
-- tts <text> → text to speech
-- carbon <code> → beautiful code screenshot
+- logogen <text> → logo text generator
+- carbon <code> → code screenshot
 - encrypt <text> → encrypt text
 
-SEARCH & INFO:
-- google <query> → google search
+SEARCH & INFORMATION:
+- google <query> → google search results
 - wiki <topic> → wikipedia summary
-- lyrics <song> → get song lyrics
-- movie <title> → movie info
+- lyrics <song name> → get song lyrics
+- movie <title> → movie information
 - song <query> → search for a song
 - weather <city> → weather forecast
 - wallpaper <query> → download wallpaper
-- npm <package> → npm package info
+- npm <package name> → npm package info
 - technews → latest tech news
-- screenshot <url> → screenshot a website
+- screenshot <url> → take website screenshot
 - shorten <url> → shorten a link
-- github <user/repo> → github info
+- github <user or repo> → github profile/repo info
 
 GENERAL:
-- menu → show all commands
-- ping → check bot speed
-- alive → check bot is alive
+- menu → show all bot commands
+- ping → check bot speed/latency
+- alive → check if bot is online
 - uptime → bot uptime
 - tr <lang> <text> → translate text (e.g. tr es hello)
 - fancy <1-20> <text> → fancy text styles
 - vcf <number> → create contact card
-- tempmail → get temp email
-- profile → see your profile
-- pair <number> → pair with someone
-- advice → get random advice
-- catfact → cat fact
-- fact → random fact
-- gaycheck → fun gay check
-- random-anime → random anime image
+- tempmail → get temporary email address
+- profile → view your bot profile
+- advice → random advice
+- catfact → random cat fact
+- fact → random interesting fact
+- weather <city> → get weather info
 
-GROUPS (admin/owner required for some):
-- tagall <msg> → tag all members
-- hidetag <msg> → tag all silently
+GROUPS (some need admin):
+- tagall <message> → tag all group members
+- hidetag <message> → tag all members silently
 - add <number> → add member to group
-- remove @user → remove/kick member
-- promote @user → make admin
-- demote @user → remove admin
+- remove @user → kick member from group
+- promote @user → make member an admin
+- demote @user → remove admin from member
 - link → get group invite link
-- revoke → reset group link
-- close → close group (admin only)
-- open → open group (admin only)
-- poll <question|option1|option2> → create poll
-- pin → pin a message (reply to msg)
-- clear → clear all messages
-- groupmeta → show group info
-- afk <reason> → set AFK status
+- revoke → reset group invite link
+- close → lock group (admins only)
+- open → unlock group (admins only)
+- poll <question|opt1|opt2> → create a poll
+- pin → pin a message (reply to message)
+- clear → delete all messages
+- groupmeta → show group info and stats
+- afk <reason> → set yourself as AFK
+- hug @user → hug someone
+- kiss @user → kiss someone
+- slap @user → slap someone
 
 SETTINGS (owner only):
 - prefix <symbol> → change command prefix
-- mode <public/private/group/inbox> → bot mode
-- autoview on/off → auto view status
+- mode <public/private/group/inbox> → set bot mode
+- autoview on/off → auto view status updates
 - autolike on/off → auto like status
 - autoread on/off → auto read messages
-- antidelete on/off → anti delete messages
-- antitag on/off → anti-tag protection
+- antidelete on/off → recover deleted messages
+- antitag on/off → anti-tag in groups
 - stealth on/off → stealth mode
-- chatbotpm on/off → DM chatbot
-- autoai on/off → this AI agent
-- addsudo <number> → add sudo user
-- delsudo <number> → remove sudo user
-- ban @user → ban user
+- autoai on/off → toggle this AI agent
+- addsudo <number> → add a sudo user
+- delsudo <number> → remove a sudo user
+- ban @user → ban user from bot
 - unban @user → unban user
 `;
 
-async function callGroq(messagesArr) {
+async function callGroq(systemPrompt, userPrompt, history) {
     const groqKey = process.env.GROQ_API_KEY;
-    if (!groqKey) return null;
+    if (!groqKey) {
+        console.error('❌ [AUTOAI] GROQ_API_KEY not set in environment');
+        return null;
+    }
+    const msgs = [
+        { role: 'system', content: systemPrompt },
+        ...history.map(h => ({ role: h.role === 'user' ? 'user' : 'assistant', content: h.message })),
+        { role: 'user', content: userPrompt }
+    ];
     try {
         const result = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
             model: 'llama3-70b-8192',
-            messages: messagesArr,
+            messages: msgs,
             max_tokens: 250,
-            temperature: 0.7
+            temperature: 0.6
         }, {
             headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
             timeout: 12000
         });
-        return result.data?.choices?.[0]?.message?.content?.trim() || null;
+        const content = result.data?.choices?.[0]?.message?.content?.trim();
+        if (!content) {
+            console.error('❌ [AUTOAI] Groq returned empty content — possible content filter or token issue');
+            return null;
+        }
+        return content;
     } catch (e) {
-        console.error('❌ [AUTOAI GROQ]:', e.response?.data?.error?.message || e.message);
+        const errMsg = e.response?.data?.error?.message || e.message;
+        console.error('❌ [AUTOAI GROQ ERROR]:', errMsg);
         return null;
     }
 }
@@ -154,17 +167,20 @@ async function callNexray(prompt) {
         } finally {
             clearTimeout(t);
         }
-        if (!res.ok) return null;
+        if (!res.ok) {
+            console.error('❌ [AUTOAI NEXRAY] Status:', res.status);
+            return null;
+        }
         const data = await res.json();
         return data?.result || null;
     } catch (e) {
-        console.error('❌ [AUTOAI NEXRAY]:', e.message);
+        console.error('❌ [AUTOAI NEXRAY ERROR]:', e.message);
         return null;
     }
 }
 
 module.exports = async (context) => {
-    const { client, m, body, prefix, Owner, isAdmin, isBotAdmin, IsGroup } = context;
+    const { client, m, body, prefix, Owner, isAdmin, IsGroup } = context;
 
     const messageText = (
         m.message?.conversation ||
@@ -187,60 +203,36 @@ module.exports = async (context) => {
     try { await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } }); } catch {}
 
     const userNum = m.sender.split('@')[0].split(':')[0];
-    const userRole = Owner ? 'owner/sudo' : isAdmin ? 'group admin' : 'regular user';
+    const userRole = Owner ? 'owner' : isAdmin ? 'group admin' : 'user';
     const chatType = IsGroup ? 'group' : 'DM';
 
     let history = [];
     try { history = await getConversationHistory(userNum, 6); } catch {}
 
-    const systemPrompt = `You are Toxic-MD, an AI agent for a WhatsApp bot. Your job is to detect user intent and execute bot commands.
+    const systemPrompt = `You are Toxic-MD, an AI agent for a WhatsApp bot. Detect user intent and map it to bot commands.
 
-USER ROLE: ${userRole} | CHAT: ${chatType}
+USER: ${userRole} | CHAT: ${chatType}
 
-COMMAND CATALOG:
+AVAILABLE COMMANDS:
 ${COMMAND_CATALOG}
 
-RULES (follow strictly):
-1. If the user's message matches ANY command intent above, respond ONLY with: CMD:commandname args
-   - Extract the exact command name from the catalog
-   - Put all relevant args after the command name
-   - Do NOT add any other text, just CMD:commandname args
-2. Only if no command matches, reply casually in savage toxic style (max 120 chars)
-3. For owner-only commands: ${Owner ? 'this user IS owner, allow all' : 'this user is NOT owner, tell them they need to be owner'}
-4. For admin commands in groups: ${isAdmin ? 'this user IS admin' : 'this user is NOT admin'}
+INSTRUCTIONS:
+- If the user wants to do something a command handles, respond EXACTLY with: CMD:commandname args
+- Do NOT include any other text when using CMD: format — just CMD:commandname args
+- If truly no command matches, reply in a short savage/funny style (max 100 chars)
+- Owner-only commands: ${Owner ? 'ALLOWED for this user' : 'NOT allowed — tell them'}
+- Admin commands: ${isAdmin ? 'ALLOWED for this user' : 'NOT allowed in this chat'}`;
 
-EXAMPLES:
-"play despacito" → CMD:play despacito
-"download this tiktok https://..." → CMD:tikdl https://...
-"make a sticker" → CMD:sticker
-"translate to spanish: hello" → CMD:tr es hello
-"who sings this song?" (replying to audio) → CMD:shazam
-"what's the weather in Lagos?" → CMD:weather Lagos
-"search google for best phones 2025" → CMD:google best phones 2025
-"remove background from this image" → CMD:removebg
-"enhance this image" → CMD:remini
-"tag everyone" → CMD:tagall
-"close the group" → CMD:close
-"what is quantum physics" → CMD:wiki quantum physics
-"get lyrics of Blinding Lights" → CMD:lyrics Blinding Lights
-"turn on autoview" → CMD:autoview on
-"make this a sticker" → CMD:sticker
-"hey how are you" → Doing fine unlike your brain cells 💀`;
-
-    const groqMessages = [
-        { role: 'system', content: systemPrompt },
-        ...history.map(h => ({ role: h.role === 'user' ? 'user' : 'assistant', content: h.message })),
-        { role: 'user', content: prompt }
-    ];
-
-    let response = await callGroq(groqMessages);
+    let response = await callGroq(systemPrompt, prompt, history);
 
     if (!response) {
-        const fallbackPrompt = `${systemPrompt}\n\nUser: ${prompt}\nRespond with CMD:commandname args if it matches a command, otherwise reply casually:`;
-        response = await callNexray(fallbackPrompt);
+        console.log('⚠️ [AUTOAI] Groq failed, trying nexray fallback...');
+        const shortPrompt = `You are a WhatsApp bot assistant. If the user wants a bot action, say CMD:commandname args. Otherwise reply briefly. User says: ${prompt}`;
+        response = await callNexray(shortPrompt);
     }
 
     if (!response) {
+        console.error('❌ [AUTOAI] Both Groq and nexray failed for prompt:', prompt.slice(0, 50));
         try { await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } }); } catch {}
         return;
     }
@@ -260,13 +252,13 @@ EXAMPLES:
                 await target({ ...context, args: cmdArgs, text: joinedArgs, q: joinedArgs, body: joinedArgs });
                 try { await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } }); } catch {}
             } catch (e) {
-                console.error('❌ [AUTOAI CMD ERROR]:', e.message);
+                console.error('❌ [AUTOAI CMD ERROR]:', cmdName, e.message);
                 try { await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } }); } catch {}
             }
         } else {
-            console.error('❌ [AUTOAI] Unknown command:', cmdName, '→', resolvedName);
+            console.error('❌ [AUTOAI] Command not found:', cmdName, '(resolved:', resolvedName + ')');
             try { await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } }); } catch {}
-            await client.sendMessage(m.chat, { text: `Can't find that command 💀 Try asking differently` }, { quoted: m });
+            await client.sendMessage(m.chat, { text: `Couldn't find that command 💀` }, { quoted: m });
         }
     } else {
         try { await client.sendMessage(m.chat, { text: response }, { quoted: m }); } catch {}
