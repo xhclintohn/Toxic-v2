@@ -10,43 +10,17 @@ module.exports = async (context) => {
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        const apiUrl = `https://api-faa.my.id/faa/venice-ai?text=${encodeURIComponent(text)}`;
+        const response = await axios.get(`https://api-faa.my.id/faa/venice-ai?text=${encodeURIComponent(text)}`);
 
-        const response = await axios.get(apiUrl, { timeout: 30000 });
-
-        if (response.data && response.data.status === true && response.data.result) {
-            const answer = response.data.result.trim();
-
+        if (response.data && response.data.result) {
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-            const replyText = `╭───(    TOXIC-MD    )───\n├───≫ Wᴏʀᴍ Gᴘᴛ ≪───\n├ \n├ ${answer}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜ʟɪɴᴛᴏɴ`;
-
-            if (answer.length > 4000) {
-                await client.sendMessage(m.chat, { text: replyText.substring(0, 4000) });
-            } else {
-                await m.reply(replyText);
-            }
+            await m.reply(response.data.result);
         } else {
-            throw new Error('Invalid response from API');
+            throw new Error('No response from API');
         }
 
     } catch (error) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-
-        let errorMessage = "Worm GPT API error. Try again later.";
-
-        if (error.code === 'ECONNABORTED') {
-            errorMessage = "API timeout. Server is slow.";
-        } else if (error.response?.status === 403) {
-            errorMessage = "Access denied. Try using a VPN or different network.";
-        } else if (error.response?.status === 404) {
-            errorMessage = "API endpoint not found.";
-        } else if (error.response?.status === 429) {
-            errorMessage = "Rate limit. Wait a few seconds.";
-        } else if (error.message) {
-            errorMessage = error.message;
-        }
-
-        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜ʟɪɴᴛᴏɴ`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Wᴏʀᴍ Gᴘᴛ ≪───\n├ \n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜ʟɪɴᴛᴏɴ`);
     }
 };
