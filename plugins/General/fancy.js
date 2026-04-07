@@ -1,3 +1,4 @@
+const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
 const fancyStyles = {
   0: {"0":"0","1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9","a":"ค","b":"๖","c":"¢","d":"໓","e":"ē","f":"f","g":"ງ","h":"h","i":"i","j":"ว","k":"k","l":"l","m":"๓","n":"ຖ","o":"໐","p":"p","q":"๑","r":"r","s":"Ş","t":"t","u":"น","v":"ง","w":"ຟ","x":"x","y":"ฯ","z":"ຊ","A":"ค","B":"๖","C":"¢","D":"໓","E":"ē","F":"f","G":"ງ","H":"h","I":"i","J":"ว","K":"k","L":"l","M":"๓","N":"ຖ","O":"໐","P":"p","Q":"๑","R":"r","S":"Ş","T":"t","U":"น","V":"ง","W":"ຟ","X":"x","Y":"ฯ","Z":"ຊ" },
   1: {"0":"0","1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9","a":"ą","b":"ც","c":"ƈ","d":"ɖ","e":"ɛ","f":"ʄ","g":"ɠ","h":"ɧ","i":"ı","j":"ʝ","k":"ƙ","l":"Ɩ","m":"ɱ","n":"ŋ","o":"ơ","p":"℘","q":"զ","r":"ཞ","s":"ʂ","t":"ɬ","u":"ų","v":"۷","w":"ῳ","x":"ҳ","y":"ყ","z":"ʑ","A":"ą","B":"ც","C":"ƈ","D":"ɖ","E":"ɛ","F":"ʄ","G":"ɠ","H":"ɧ","I":"ı","J":"ʝ","K":"ƙ","L":"Ɩ","M":"ɱ","N":"ŋ","O":"ơ","P":"℘","Q":"զ","R":"ཞ","S":"ʂ","T":"ɬ","U":"ų","V":"۷","W":"ῳ","X":"ҳ","Y":"ყ","Z":"ʑ" },
@@ -94,19 +95,23 @@ module.exports = {
       const styledText = applyStyle(inputText, styleNum - 1);
       if (!styledText) throw new Error('Style application failed');
 
-      await client.sendMessage(m.chat, {
-        interactiveMessage: {
-          header: { hasMediaAttachment: false },
-          body: { text: styledText },
-          footer: { text: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
-          nativeFlowMessage: {
-            buttons: [{
-              name: 'cta_copy',
-              buttonParamsJson: JSON.stringify({ display_text: '📋 Copy Text', copy_code: styledText })
-            }]
+      const msg = generateWAMessageFromContent(
+        m.chat,
+        {
+          interactiveMessage: {
+            body: { text: styledText },
+            footer: { text: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
+            nativeFlowMessage: {
+              buttons: [{
+                name: 'cta_copy',
+                buttonParamsJson: JSON.stringify({ display_text: '📋 Copy Text', copy_code: styledText })
+              }]
+            }
           }
-        }
-      }, { quoted: m });
+        },
+        { quoted: m }
+      );
+      await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
 
     } catch (error) {
       await client.sendMessage(m.chat, {
