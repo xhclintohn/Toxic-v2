@@ -22,7 +22,7 @@ module.exports = async (context) => {
     if (body.length > 800) return;
 
     const userNum = m.sender.split('@')[0].split(':')[0];
-    const commandNames = [...new Set(commands.map(c => c.name).filter(Boolean))].slice(0, 60).join(', ');
+    const commandNames = Object.keys(commands).slice(0, 60).join(', ');
     const history = await getConversationHistory(userNum, 8);
 
     const messages = [
@@ -56,9 +56,9 @@ module.exports = async (context) => {
     if (response.startsWith('CMD:')) {
         const cmdStr = response.slice(4).trim();
         const [cmdName, ...cmdArgs] = cmdStr.split(' ');
-        const target = commands.find(c => c.name === cmdName || (Array.isArray(c.alias) && c.alias.includes(cmdName)));
-        if (target && typeof target.run === 'function') {
-            try { await target.run({ ...context, args: cmdArgs, text: cmdArgs.join(' '), q: cmdArgs.join(' ') }); } catch {}
+        const target = commands[cmdName] || commands[Object.keys(commands).find(k => { const m = commands[k]; return Array.isArray(m?.alias) && m.alias.includes(cmdName); })];
+        if (target && typeof target === 'function') {
+            try { await target({ ...context, args: cmdArgs, text: cmdArgs.join(' '), q: cmdArgs.join(' ') }); } catch {}
         } else {
             await client.sendMessage(m.chat, { text: `bro idk that command 💀` }, { quoted: m });
         }

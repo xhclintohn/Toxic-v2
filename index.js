@@ -60,8 +60,6 @@ process.on("uncaughtException", (error) => {
 function invalidateSettingsCache() {
   const { db } = require('./database/config');
   try { db.prepare('SELECT 1').get(); } catch (e) {}
-  _idxSettingsCache = null;
-  _idxSettingsCacheTime = 0;
 }
 
 function cleanupSessionFiles() {
@@ -261,7 +259,7 @@ async function startToxic() {
 
     client.ws.on('CB:call', async (json) => {
       try {
-        const settingszs = await fastIdxGetSettings();
+        const settingszs = await getSettings();
         if (!settingszs?.anticall) return;
         const callId = json.content?.[0]?.attrs?.['call-id'];
         const callerJid = json.content?.[0]?.attrs?.['call-creator'];
@@ -281,7 +279,7 @@ async function startToxic() {
     client.ev.on("messages.upsert", async ({ messages, type }) => {
       if (type !== "notify") return;
 
-      let settings = await fastIdxGetSettings();
+      let settings = await getSettings();
       if (!settings) return;
 
       client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
@@ -371,7 +369,7 @@ async function startToxic() {
       for (const update of updates) {
         try {
           if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
-            const settings = await fastIdxGetSettings();
+            const settings = await getSettings();
             client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
             await handleAutoViewStatus(client, { key: update.key });
           }
