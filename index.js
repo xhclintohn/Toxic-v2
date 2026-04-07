@@ -37,7 +37,7 @@ const IDX_CACHE_TTL = 20000;
 async function getCachedSettings() {
   const now = Date.now();
   if (_idxSettingsCache && (now - _idxSettingsCacheTime) < IDX_CACHE_TTL) return _idxSettingsCache;
-  try { _idxSettingsCache = await getCachedSettings(); _idxSettingsCacheTime = Date.now(); } catch {}
+  try { _idxSettingsCache = await getSettings(); _idxSettingsCacheTime = Date.now(); } catch {}
   return _idxSettingsCache;
 }
 const { botname } = require('./config/settings');
