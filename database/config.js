@@ -8,7 +8,7 @@ db.pragma('cache_size = -64000');
 db.pragma('temp_store = MEMORY');
 db.pragma('busy_timeout = 5000');
 db.pragma('mmap_size = 268435456');
-db.pragma('wal_checkpoint(PASSIVE)');
+
 db.exec(`
     CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS group_settings (
@@ -25,6 +25,14 @@ db.exec(`
     CREATE TABLE IF NOT EXISTS banned_users (num TEXT PRIMARY KEY);
     CREATE TABLE IF NOT EXISTS users (num TEXT PRIMARY KEY);
     CREATE TABLE IF NOT EXISTS warn_data (jid TEXT NOT NULL, user TEXT NOT NULL, warns INTEGER DEFAULT 0, PRIMARY KEY (jid, user));
+    CREATE TABLE IF NOT EXISTS msg_store (
+        id TEXT NOT NULL, jid TEXT NOT NULL, sender TEXT,
+        message TEXT NOT NULL, timestamp INTEGER NOT NULL,
+        PRIMARY KEY (id, jid)
+    );
+    CREATE INDEX IF NOT EXISTS idx_msg_store_id ON msg_store(id);
+    CREATE INDEX IF NOT EXISTS idx_msg_store_jid ON msg_store(jid);
+    CREATE INDEX IF NOT EXISTS idx_msg_store_ts ON msg_store(timestamp);
 `);
 
 const stmts = {
@@ -32,7 +40,7 @@ const stmts = {
     upsertSetting: db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)'),
     getGroupSettings: db.prepare('SELECT * FROM group_settings WHERE jid = ?'),
     hasGroupSettings: db.prepare('SELECT jid FROM group_settings WHERE jid = ?'),
-    insertGroupSettings: db.prepare('INSERT INTO group_settings (jid) VALUES (?)'),
+    insertGroupSettings: db.prepare('INSERT OR IGNORE INTO group_settings (jid) VALUES (?)'),
     insertBanned: db.prepare('INSERT OR IGNORE INTO banned_users (num) VALUES (?)'),
     deleteBanned: db.prepare('DELETE FROM banned_users WHERE num = ?'),
     getAllBanned: db.prepare('SELECT num FROM banned_users'),
@@ -48,6 +56,10 @@ const stmts = {
     insertWarn: db.prepare('INSERT INTO warn_data (jid, user, warns) VALUES (?, ?, 1)'),
     incrementWarn: db.prepare('UPDATE warn_data SET warns = warns + 1 WHERE jid = ? AND user = ?'),
     deleteWarn: db.prepare('DELETE FROM warn_data WHERE jid = ? AND user = ?'),
+    saveMsgStore: db.prepare('INSERT OR REPLACE INTO msg_store (id, jid, sender, message, timestamp) VALUES (?, ?, ?, ?, ?)'),
+    getMsgById: db.prepare('SELECT * FROM msg_store WHERE id = ? LIMIT 1'),
+    deleteMsgStore: db.prepare('DELETE FROM msg_store WHERE id = ? AND jid = ?'),
+    cleanupMsgStore: db.prepare('DELETE FROM msg_store WHERE timestamp < ?'),
 };
 
 const cache = {
@@ -113,13 +125,8 @@ async function getGroupSettings(jid) {
 
 async function updateGroupSetting(jid, key, value) {
     try {
-        const existing = stmts.hasGroupSettings.get(jid);
-        if (existing) {
-            db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(value, jid);
-        } else {
-            stmts.insertGroupSettings.run(jid);
-            db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(value, jid);
-        }
+        stmts.insertGroupSettings.run(jid);
+        db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(value, jid);
         cache.groupSettings.delete(jid);
     } catch (e) { console.error('Error updating group setting:', e); }
 }
@@ -205,6 +212,29 @@ async function resetWarn(jid, user) {
     try { stmts.deleteWarn.run(jid, user); } catch {}
 }
 
+function saveMessage(id, jid, sender, messageObj) {
+    try { stmts.saveMsgStore.run(id, jid, sender || '', JSON.stringify(messageObj), Date.now()); }
+    catch (e) { console.error('❌ [MSG_STORE] Save error:', e.message); }
+}
+
+function getMessage(id) {
+    try {
+        const row = stmts.getMsgById.get(id);
+        if (!row) return null;
+        return { id: row.id, jid: row.jid, sender: row.sender, message: JSON.parse(row.message), timestamp: row.timestamp };
+    } catch (e) { return null; }
+}
+
+function deleteMessage(id, jid) {
+    try { stmts.deleteMsgStore.run(id, jid); } catch {}
+}
+
+function cleanupOldMsgStore(maxAgeMs = 12 * 60 * 60 * 1000) {
+    try { stmts.cleanupMsgStore.run(Date.now() - maxAgeMs); } catch {}
+}
+
+setInterval(() => cleanupOldMsgStore(), 12 * 60 * 60 * 1000);
+
 module.exports = {
     db, initializeDatabase, getSettings, updateSetting,
     getGroupSettings, updateGroupSetting,
@@ -212,5 +242,6 @@ module.exports = {
     addSudoUser, removeSudoUser, getSudoUsers,
     getConversationHistory, addConversationMessage, clearConversationHistory,
     getWarnCount, addWarn, resetWarn,
-    clearOldConversationHistory
+    clearOldConversationHistory,
+    saveMessage, getMessage, deleteMessage, cleanupOldMsgStore
 };
