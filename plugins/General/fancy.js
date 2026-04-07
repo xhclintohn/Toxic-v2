@@ -95,8 +95,6 @@ module.exports = {
       if (!styledText) throw new Error('Style application failed');
 
       await client.sendMessage(m.chat, {
-        text: styledText,
-        footer: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
         interactiveMessage: {
           header: { hasMediaAttachment: false },
           body: { text: styledText },
