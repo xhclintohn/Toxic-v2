@@ -137,6 +137,13 @@ module.exports = {
           `${prefix}multiprefix on`
         ) +
         fmt(
+          'Auto AI (Groq)',
+          'Automatically replies to DMs and @mentions using Groq AI. Requires GROQ_API_KEY env var.',
+          settings.autoai === true || settings.autoai === 'true' ? '✅ ON' : '❌ OFF',
+          `${prefix}autoai on/off`,
+          `${prefix}autoai on`
+        ) +
+        fmt(
           'Stealth Mode',
           'Auto-deletes commands and bot replies 8 seconds after execution.',
           settings.stealth === true || settings.stealth === 'true' ? '✅ ON' : '❌ OFF',

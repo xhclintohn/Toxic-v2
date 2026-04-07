@@ -97,14 +97,17 @@ module.exports = {
       await client.sendMessage(m.chat, {
         text: styledText,
         footer: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
-        buttons: [
-          {
-            buttonId: styledText,
-            buttonText: { displayText: '📋 Tap to Copy' },
-            type: 1
+        interactiveMessage: {
+          header: { hasMediaAttachment: false },
+          body: { text: styledText },
+          footer: { text: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
+          nativeFlowMessage: {
+            buttons: [{
+              name: 'cta_copy',
+              buttonParamsJson: JSON.stringify({ display_text: '📋 Copy Text', copy_code: styledText })
+            }]
           }
-        ],
-        headerType: 1
+        }
       }, { quoted: m });
 
     } catch (error) {
