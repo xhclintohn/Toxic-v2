@@ -49,21 +49,36 @@ const GROUP_META_TTL = 300000;
 async function fastGetSettings() {
     const now = Date.now();
     if (_cachedSettings && (now - _cachedSettingsTime) < FAST_CACHE_TTL) return _cachedSettings;
-    try { _cachedSettings = await getSettings(); _cachedSettingsTime = now; } catch (e) {}
-    return _cachedSettings;
+    try {
+        _cachedSettings = await getSettings();
+        _cachedSettingsTime = now;
+    } catch (e) {
+        console.error('❌ [fastGetSettings]:', e.message);
+    }
+    return _cachedSettings || { prefix: '.', mode: 'public', gcpresence: false, antitag: false, antidelete: true, antilink: 'off', chatbotpm: false, packname: 'Toxic-MD', author: 'xh_clinton', multiprefix: false, stealth: false, startmessage: true, autoview: false, autoai: false, warn_limit: 3 };
 }
 
 async function fastGetSudo() {
     const now = Date.now();
     if (_cachedSudo && (now - _cachedSudoTime) < FAST_CACHE_TTL) return _cachedSudo;
-    try { _cachedSudo = await getSudoUsers(); _cachedSudoTime = now; } catch (e) {}
+    try {
+        _cachedSudo = await getSudoUsers();
+        _cachedSudoTime = now;
+    } catch (e) {
+        console.error('❌ [fastGetSudo]:', e.message);
+    }
     return _cachedSudo || [];
 }
 
 async function fastGetBanned() {
     const now = Date.now();
     if (_cachedBanned && (now - _cachedBannedTime) < FAST_CACHE_TTL) return _cachedBanned;
-    try { _cachedBanned = await getBannedUsers(); _cachedBannedTime = now; } catch (e) {}
+    try {
+        _cachedBanned = await getBannedUsers();
+        _cachedBannedTime = now;
+    } catch (e) {
+        console.error('❌ [fastGetBanned]:', e.message);
+    }
     return _cachedBanned || [];
 }
 
