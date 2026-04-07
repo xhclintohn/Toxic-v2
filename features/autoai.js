@@ -201,7 +201,7 @@ EXAMPLES:
     try {
         console.log(`🤖 [AUTOAI] Calling Groq API (key length: ${groqKey.length})...`);
         const result = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-            model: 'llama3-70b-8192',
+            model: 'llama-3.3-70b-versatile',
             messages: groqMessages,
             max_tokens: 250,
             temperature: 0.6
