@@ -1,6 +1,6 @@
 const { getGroupSettings, getSudoUsers, resetWarn } = require("../database/config");
 
-const DEVELOPER_NUMBER = "254735342808";
+const DEVELOPER_NUMBER = "254114885159";
 
 const normalizeJid = (jid) => {
     if (!jid) return '';
