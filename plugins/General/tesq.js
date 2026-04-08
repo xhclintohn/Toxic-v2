@@ -1,4 +1,5 @@
 const { randomUUID } = require('crypto');
+const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
 
 module.exports = {
     name: 'tesq',
@@ -88,8 +89,13 @@ module.exports = {
         };
 
         try {
-            await client.sendMessage(m.chat, msgContent, { quoted: m });
-        } catch {
+            const msg = generateWAMessageFromContent(m.chat, msgContent, {
+                userJid: client.user?.jid,
+                quoted: m
+            });
+            await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
+        } catch (err) {
+            console.error('tesq error:', err?.message);
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ TOXIC AI ≪───\n├ \n├ ${msgText}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     }

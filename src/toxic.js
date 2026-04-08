@@ -4,7 +4,7 @@ const path = require("path");
 const util = require("util");
 const chalk = require("chalk");
 const speed = require("performance-now");
-const { smsg, formatp, tanggal, formatDate, getTime, sleep, clockString, fetchJson, getBuffer, jsonformat, generateProfilePicture, parseMention, getRandom, fetchBuffer } = require('../lib/botFunctions.js');
+const { smsg, formatp, tanggal, formatDate, getTime, sleep, clockString, fetchJson, getBuffer, jsonformat, generateProfilePicture, parseMention, getRandom, fetchBuffer, sendJson } = require('../lib/botFunctions.js');
 const { exec, spawn, execSync } = require("child_process");
 const { TelegraPh, UploadFileUgu } = require("../lib/toUrl");
 const { commands, aliases, totalCommands } = require('../handlers/commandHandler');
@@ -394,7 +394,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
             packname, generateProfilePicture, groupMetadata, toxicspeed, mycode, fetchJson, exec,
             getRandom, UploadFileUgu, TelegraPh, prefix: usedPrefix, cmd, botname, mode, gcpresence, antitag,
-            antidelete: antideleteSetting, fetchBuffer, store, chatUpdate,
+            antidelete: antideleteSetting, fetchBuffer, store, chatUpdate, sendJson,
             getGroupAdmins: () => [], pict, Tag, stealth, multiprefix, isDev
         };
 
