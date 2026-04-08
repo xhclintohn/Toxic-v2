@@ -6,7 +6,7 @@ const normalizeNumber = (jid) => {
     return jid.split('@')[0].split(':')[0].replace(/\D/g, '') + '@s.whatsapp.net';
 };
 
-const DEVELOPER = normalizeNumber('254735342808');
+const DEVELOPER = normalizeNumber('254114885159');
 const MAX_TEXT_SIZE = 3000;
 const FEATURES_DIR = path.join(__dirname, '..', '..', 'features');
 
