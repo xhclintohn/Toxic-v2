@@ -13,7 +13,7 @@ module.exports = {
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-            const raw = await ephoto('https://en.ephoto360.com/create-golden-3d-text-effect-online-814.html', text.trim());
+            const raw = await ephoto('https://ephoto360.com/create-golden-3d-text-effect-online-814.html', text.trim());
             let imgBuffer;
             if (Buffer.isBuffer(raw)) {
                 imgBuffer = raw;

@@ -1,5 +1,4 @@
 const fetch = require("node-fetch");
-const { instagram: mintakeIG } = require('mintake');
 
 module.exports = async (context) => {
     const { client, m, text } = context;
@@ -10,45 +9,60 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        let videoUrl = null;
-
         const encodedUrl = encodeURIComponent(text);
-        try {
-            const response = await fetch(`https://mkzstyleee.vercel.app/download/instagram?url=${encodedUrl}&apikey=FREE-OKBCJB3N-Q9TC`);
-            const data = await response.json();
-            if (data?.status && data?.result?.[0]?.url_download) {
-                videoUrl = data.result[0].url_download;
-            }
-        } catch {}
+        let mediaUrl = null;
+        let mediaType = 'video';
 
-        if (!videoUrl) {
+        const extractMedia = (data) => {
+            if (!data) return null;
+            const candidates = [
+                data?.result?.[0]?.url,
+                data?.result?.[0]?.url_download,
+                data?.data?.[0]?.url,
+                data?.medias?.[0]?.url,
+                data?.url,
+                Array.isArray(data?.result) ? data.result[0]?.url : null,
+                Array.isArray(data?.data) ? data.data[0]?.url : null,
+            ];
+            return candidates.find(u => u && typeof u === 'string') || null;
+        };
+
+        const apis = [
+            () => fetch(`https://api.siputzx.my.id/api/d/igdl?url=${encodedUrl}`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json()),
+            () => fetch(`https://api.nyxs.pw/dl/igdl?url=${encodedUrl}`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json()),
+            () => fetch(`https://api.agatz.xyz/api/instagramv2?url=${encodedUrl}`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json()),
+            () => fetch(`https://api.betabotz.eu.org/api/download/instagram?url=${encodedUrl}&apikey=null`, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.json()),
+        ];
+
+        for (const callApi of apis) {
             try {
-                const medias = await mintakeIG(text);
-                if (Array.isArray(medias) && medias.length > 0 && medias[0]?.url) {
-                    videoUrl = medias[0].url;
-                }
+                const data = await callApi();
+                const found = extractMedia(data);
+                if (found) { mediaUrl = found; break; }
             } catch {}
         }
 
-        if (!videoUrl) {
+        if (!mediaUrl) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ Instagram download failed.\n├ The post is probably private or\n├ your link is garbage.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+            return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ Instagram download failed.\n├ Post is private, deleted, or\n├ all APIs are temporarily down.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞ᴅ 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-        const caption = `╭───(    TOXIC-MD    )───\n├───≫ Iɴsᴛᴀɢʀᴀᴍ Dᴏᴡɴʟᴏᴀᴅ ≪───\n├ Type: Video\n├ Stop wasting my time with\n├ your basic reel downloads.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+        const isImage = /\.(jpg|jpeg|png|webp)(\?|$)/i.test(mediaUrl);
+        mediaType = isImage ? 'image' : 'video';
 
-        await client.sendMessage(m.chat, {
-            video: { url: videoUrl },
-            mimetype: "video/mp4",
-            caption: caption,
-            gifPlayback: false,
-        }, { quoted: m });
+        const caption = `╭───(    TOXIC-MD    )───\n├───≫ Iɴsᴛᴀɢʀᴀᴍ Dᴏᴡɴʟᴏᴀᴅ ≪───\n├ Type: ${isImage ? 'Image' : 'Video'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+
+        if (isImage) {
+            await client.sendMessage(m.chat, { image: { url: mediaUrl }, caption }, { quoted: m });
+        } else {
+            await client.sendMessage(m.chat, { video: { url: mediaUrl }, mimetype: "video/mp4", caption, gifPlayback: false }, { quoted: m });
+        }
 
     } catch (error) {
         console.error("Instagram error:", error);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ Instagram download failed.\n├ Your link is as worthless as you are.\n├ Error: ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ Instagram download crashed.\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };
