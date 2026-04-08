@@ -88,7 +88,7 @@ module.exports = {
         };
 
         try {
-            await client.relayMessage(m.chat, msgContent, { messageId: randomUUID() });
+            await client.sendMessage(m.chat, msgContent, { quoted: m });
         } catch {
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ TOXIC AI ≪───\n├ \n├ ${msgText}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
