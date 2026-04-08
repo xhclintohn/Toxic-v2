@@ -10,7 +10,7 @@ module.exports = {
 
     try {
       const devContact = {
-        phoneNumber: '254735342808',
+        phoneNumber: '254114885159',
         fullName: 'xh_clinton | Toxic Dev',
         org: 'Toxic-MD Bot'
       };

@@ -14,18 +14,18 @@ module.exports = {
     const effectivePrefix = settings.prefix || ''; 
 
     const categories = [
-      { name: 'General', display: 'GEᑎEᖇᗩᒪMENU', emoji: '📜' },
-      { name: 'Settings', display: 'SETTINGSMENU', emoji: '🛠️' },
-      { name: 'Owner', display: 'OWNERMENU', emoji: '👑' },
-      { name: 'Heroku', display: 'HEROKUMENU', emoji: '☁️' },
-      { name: 'Privacy', display: 'PRIVACYMENU', emoji: '🔒' },
-      { name: 'Groups', display: 'GROUPMENU', emoji: '👥' },
-      { name: 'Ai-Tools', display: 'AIMENJ', emoji: '🧠' },
-      { name: 'Downloads', display: 'DOWNLOADMENU', emoji: '🎬' },
-      { name: 'Editing', display: 'EDITING', emoji: '✂️' },
-      { name: 'Logo', display: 'LOGO', emoji: '🎨' },
-      { name: '+18', display: '+18MENU', emoji: '🔞' },
-      { name: 'Utils', display: 'UTILSMENU', emoji: '🔧' }
+      { name: 'Core', display: 'GEᑎEᖇᗩᒪMENU', emoji: '📜' },
+      { name: 'Config', display: 'SETTINGSMENU', emoji: '🛠️' },
+      { name: 'Control', display: 'OWNERMENU', emoji: '👑' },
+      { name: 'Deploy', display: 'HEROKUMENU', emoji: '☁️' },
+      { name: 'Shield', display: 'PRIVACYMENU', emoji: '🔒' },
+      { name: 'Community', display: 'GROUPMENU', emoji: '👥' },
+      { name: 'Intelligence', display: 'AIMENJ', emoji: '🧠' },
+      { name: 'Media', display: 'DOWNLOADMENU', emoji: '🎬' },
+      { name: 'Studio', display: 'EDITING', emoji: '✂️' },
+      { name: 'Effects', display: 'LOGO', emoji: '🎨' },
+      { name: 'Uncensored', display: '+18MENU', emoji: '🔞' },
+      { name: 'Tools', display: 'UTILSMENU', emoji: '🔧' }
     ];
 
     const getGreeting = () => {

@@ -263,17 +263,20 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             if (multiprefix === 'true' || multiprefix === true) {
                 const mp = ALL_PREFIXES.find(p => body.startsWith(p));
                 if (mp) {
-                    commandName = body.slice(mp.length).trim().split(/\s+/)[0].toLowerCase();
+                    const _r1 = body.slice(mp.length).trim().split(/\s+/)[0].toLowerCase();
+                    commandName = _r1.replace(/^[^\w+]+/, '') || _r1;
                     usedPrefix = mp;
                 } else if (!prefix) {
                     commandName = body.trim().split(/\s+/)[0].toLowerCase();
                 }
             } else {
                 if (prefix && body.startsWith(prefix)) {
-                    commandName = body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase();
+                    const _r2 = body.slice(prefix.length).trim().split(/\s+/)[0].toLowerCase();
+                    commandName = _r2.replace(/^[^\w+]+/, '') || _r2;
                     usedPrefix = prefix;
                 } else if (body.startsWith('/') && prefix !== '/') {
-                    commandName = body.slice(1).trim().split(/\s+/)[0].toLowerCase();
+                    const _r3 = body.slice(1).trim().split(/\s+/)[0].toLowerCase();
+                    commandName = _r3.replace(/^[^\w+]+/, '') || _r3;
                     usedPrefix = '/';
                 } else if (!prefix) {
                     commandName = body.trim().split(/\s+/)[0].toLowerCase();
@@ -629,8 +632,11 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 console.error(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
             }
         } else if (settings.autoai && !itsMe) {
-            if (!m.isGroup || (body && usedPrefix && body.startsWith(usedPrefix))) {
-                try { await autoai(context); } catch {}
+            const _chatbotDM = !m.isGroup && (chatbotpmSetting === true || chatbotpmSetting === 'true' || chatbotpmSetting === 'on');
+            if (!_chatbotDM) {
+                if (!m.isGroup || (body && usedPrefix && body.startsWith(usedPrefix))) {
+                    try { await autoai(context); } catch {}
+                }
             }
         }
 

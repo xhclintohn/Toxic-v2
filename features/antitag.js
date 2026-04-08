@@ -1,6 +1,6 @@
 const { getGroupSettings } = require("../database/config");
 
-const DEV_NUMBER = '254735342808';
+const DEV_NUMBER = '254114885159';
 const normalizeNumber = (jid) => {
     if (!jid) return '';
     return jid.split('@')[0].split(':')[0].replace(/\D/g, '') + '@s.whatsapp.net';

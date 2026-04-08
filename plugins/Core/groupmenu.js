@@ -3,9 +3,9 @@ const fs = require('fs');
 const { getSettings } = require('../../database/config');
 
 module.exports = {
-  name: 'aimenu',
-  aliases: ['aimenu'],
-  description: 'Displays only the AI menu',
+  name: 'groupmenu',
+  aliases: ['grupmenu'],
+  description: 'Displays only the Groups menu',
   run: async (context) => {
     const { client, m, pict } = context;
     const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃';
@@ -26,9 +26,9 @@ module.exports = {
         .join('');
     };
 
-    let menuText = `╭───(    TOXIC-MD    )───\n├───≫ AI MENU ≪───\n├ \n├ Prefix: ${effectivePrefix || 'None'}\n├ \n`;
+    let menuText = `╭───(    TOXIC-MD    )───\n├───≫ GROUPS MENU ≪───\n├ \n├ Prefix: ${effectivePrefix || 'None'}\n├ \n`;
 
-    let commandFiles = fs.readdirSync('./plugins/Ai-Tools').filter(file => file.endsWith('.js'));
+    let commandFiles = fs.readdirSync('./plugins/Community').filter(file => file.endsWith('.js'));
     for (const file of commandFiles) {
       const commandName = file.replace('.js', '');
       const fancyCommandName = toFancyFont(commandName);

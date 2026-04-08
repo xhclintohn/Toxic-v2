@@ -1,6 +1,6 @@
 const { getGroupSettings, getWarnCount, incrementWarn, resetWarn, getWarnLimit } = require("../database/config");
 
-const DEV_NUMBER = '254735342808';
+const DEV_NUMBER = '254114885159';
 
 const normalizeJid = (jid) => {
     if (!jid) return '';
