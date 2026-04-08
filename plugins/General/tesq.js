@@ -1,12 +1,11 @@
 const { randomUUID } = require('crypto');
-const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
 
 module.exports = {
     name: 'tesq',
     alias: ['fakeai', 'metaai', 'aicode'],
     description: 'Send a fake Meta AI styled message with code block',
     run: async (context) => {
-        const { client, m, text } = context;
+        const { client, m, text, sendJson } = context;
         const msgText = text || 'HACKED BY TOXIC-MD 💀';
         const intro = `*TOXIC-MD AI*\nHere's what I found:\n\n`;
         const unifiedData = Buffer.from(JSON.stringify({
@@ -89,11 +88,7 @@ module.exports = {
         };
 
         try {
-            const msg = generateWAMessageFromContent(m.chat, msgContent, {
-                userJid: client.user?.jid,
-                quoted: m
-            });
-            await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
+            await sendJson(client, m.chat, msgContent, { quoted: m });
         } catch (err) {
             console.error('tesq error:', err?.message);
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ TOXIC AI ≪───\n├ \n├ ${msgText}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
