@@ -3,9 +3,9 @@ const fs = require('fs');
 const { getSettings } = require('../../database/config');
 
 module.exports = {
-  name: 'utilsmenu',
-  aliases: ['utils'],
-  description: 'Displays only the Utils menu',
+  name: 'nsfwmenu',
+  aliases: ['nsfwmenu'],
+  description: 'Displays only the +18 menu',
   run: async (context) => {
     const { client, m, pict } = context;
     const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃';
@@ -26,9 +26,9 @@ module.exports = {
         .join('');
     };
 
-    let menuText = `╭───(    TOXIC-MD    )───\n├───≫ UTILS MENU ≪───\n├ \n├ Prefix: ${effectivePrefix || 'None'}\n├ \n`;
+    let menuText = `╭───(    TOXIC-MD    )───\n├───≫ +18 MENU ≪───\n├ \n├ Prefix: ${effectivePrefix || 'None'}\n├ \n`;
 
-    let commandFiles = fs.readdirSync('./plugins/Tools').filter(file => file.endsWith('.js'));
+    let commandFiles = fs.readdirSync('./plugins/NSFW').filter(file => file.endsWith('.js'));
     for (const file of commandFiles) {
       const commandName = file.replace('.js', '');
       const fancyCommandName = toFancyFont(commandName);

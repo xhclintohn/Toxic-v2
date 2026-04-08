@@ -3,9 +3,9 @@ const fs = require('fs');
 const { getSettings } = require('../../database/config');
 
 module.exports = {
-  name: 'ownermenu',
-  aliases: ['ownercmds'],
-  description: 'Displays only the Owner menu',
+  name: 'utilsmenu',
+  aliases: ['utils'],
+  description: 'Displays only the Utils menu',
   run: async (context) => {
     const { client, m, pict } = context;
     const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃';
@@ -26,9 +26,9 @@ module.exports = {
         .join('');
     };
 
-    let menuText = `╭───(    TOXIC-MD    )───\n├───≫ OWNER MENU ≪───\n├ \n├ Prefix: ${effectivePrefix || 'None'}\n├ \n`;
+    let menuText = `╭───(    TOXIC-MD    )───\n├───≫ UTILS MENU ≪───\n├ \n├ Prefix: ${effectivePrefix || 'None'}\n├ \n`;
 
-    let commandFiles = fs.readdirSync('./plugins/Control').filter(file => file.endsWith('.js'));
+    let commandFiles = fs.readdirSync('./plugins/Utils').filter(file => file.endsWith('.js'));
     for (const file of commandFiles) {
       const commandName = file.replace('.js', '');
       const fancyCommandName = toFancyFont(commandName);
@@ -36,6 +36,7 @@ module.exports = {
     }
 
     menuText += `╰──────────────────☉\n`;
+    menuText += `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
     await client.sendMessage(m.chat, {
       text: menuText,

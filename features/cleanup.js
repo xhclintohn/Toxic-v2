@@ -1,32 +1,37 @@
-const { db, clearOldConversationHistory } = require('../database/config');
-const fs = require('fs');
-const path = require('path');
+const { readdirSync, statSync, unlinkSync, existsSync, mkdirSync } = require('fs');
+const { join } = require('path');
 
-function cleanJunkFiles() {
-    const dirs = [
-        path.resolve('./tmp'),
-        path.resolve('./media'),
-        path.resolve('./downloads'),
-    ];
-    const exts = new Set(['.jpg','.jpeg','.png','.mp4','.mp3','.webp','.gif','.ogg','.opus','.pdf','.webm','.aac']);
-    const limit = 24 * 60 * 60 * 1000;
-    for (const dir of dirs) {
-        if (!fs.existsSync(dir)) continue;
-        try {
-            for (const file of fs.readdirSync(dir)) {
-                if (!exts.has(path.extname(file).toLowerCase())) continue;
-                const fp = path.join(dir, file);
-                try {
-                    if (Date.now() - fs.statSync(fp).mtimeMs > limit) fs.unlinkSync(fp);
-                } catch {}
-            }
-        } catch {}
+const TMP_DIRS = ['./tmp', './temp'];
+const MAX_AGE_MS = 3 * 60 * 60 * 1000;
+const INTERVAL_MS = 6 * 60 * 60 * 1000;
+
+function cleanTmp(maxAgeMs = MAX_AGE_MS) {
+    let deleted = 0;
+    const now = Date.now();
+    for (const dir of TMP_DIRS) {
+        if (!existsSync(dir)) {
+            mkdirSync(dir, { recursive: true });
+            continue;
+        }
+        for (const file of readdirSync(dir)) {
+            const fp = join(dir, file);
+            try {
+                const stat = statSync(fp);
+                if (stat.isFile() && now - stat.mtimeMs > maxAgeMs) {
+                    unlinkSync(fp);
+                    deleted++;
+                }
+            } catch {}
+        }
     }
-    try { db.pragma('wal_checkpoint(TRUNCATE)'); } catch {}
-    console.log('Junk cleanup done');
+    if (deleted > 0) console.log(`[cleanup] Deleted ${deleted} stale tmp file(s)`);
 }
 
-setInterval(() => { clearOldConversationHistory(5); }, 5 * 60 * 60 * 1000);
-setInterval(cleanJunkFiles, 24 * 60 * 60 * 1000);
+function startCleanupScheduler() {
+    cleanTmp();
+    setInterval(() => cleanTmp(), INTERVAL_MS);
+}
 
-module.exports = { cleanJunkFiles };
+module.exports = { cleanTmp, startCleanupScheduler };
+
+startCleanupScheduler();
