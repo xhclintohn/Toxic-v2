@@ -1,4 +1,4 @@
-const { ephoto } = require('mintake');
+const { ephoto } = require('../../lib/ephoto');
 const fetch = require('node-fetch');
 
 module.exports = {

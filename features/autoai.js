@@ -43,7 +43,9 @@ module.exports = async (context) => {
     try {
         const raw = await getConversationHistory(userNum);
         if (Array.isArray(raw)) {
-            history = raw.slice(-10).map(h => ({ role: h.role, content: h.content }));
+            history = raw.slice(-10)
+                .filter(h => h && h.role && h.content)
+                .map(h => ({ role: h.role, content: String(h.content) }));
         }
     } catch {}
 
