@@ -5,22 +5,21 @@ module.exports = {
     aliases: ['tits', 'boobies'],
     description: 'Get some boobs (NSFW)',
     run: async (context) => {
-        const { client, m, prefix } = context;
-        
+        const { client, m } = context;
+
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-            const apiUrl = 'https://omegatech-api.dixonomega.tech/api/Nsfw/sexyimg?category=boobs';
-            const response = await fetch(apiUrl);
-            
-            if (!response.ok) throw new Error(`API failed: ${response.status}`);
-            
-            const imageBuffer = await response.buffer();
-            
+            const res = await fetch('https://nekobot.xyz/api/image?type=boobs');
+            if (!res.ok) throw new Error(`API returned ${res.status}`);
+            const data = await res.json();
+
+            if (!data.success || !data.message) throw new Error('No image URL returned');
+
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
             await client.sendMessage(m.chat, {
-                image: imageBuffer,
+                image: { url: data.message },
                 caption: `╭───(    TOXIC-MD    )───\n├───≫ NSFW ≪───\n├ \n├ Here's your boobs, you horny bastard.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: m });
 

@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const { instagram: mintakeIG } = require('mintake');
 
 module.exports = async (context) => {
     const { client, m, text } = context;
@@ -9,17 +10,30 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        const encodedUrl = encodeURIComponent(text);
-        const response = await fetch(`https://mkzstyleee.vercel.app/download/instagram?url=${encodedUrl}&apikey=FREE-OKBCJB3N-Q9TC`);
-        const data = await response.json();
+        let videoUrl = null;
 
-        if (!data?.status || !data?.result || !data?.result[0]?.url_download) {
+        const encodedUrl = encodeURIComponent(text);
+        try {
+            const response = await fetch(`https://mkzstyleee.vercel.app/download/instagram?url=${encodedUrl}&apikey=FREE-OKBCJB3N-Q9TC`);
+            const data = await response.json();
+            if (data?.status && data?.result?.[0]?.url_download) {
+                videoUrl = data.result[0].url_download;
+            }
+        } catch {}
+
+        if (!videoUrl) {
+            try {
+                const medias = await mintakeIG(text);
+                if (Array.isArray(medias) && medias.length > 0 && medias[0]?.url) {
+                    videoUrl = medias[0].url;
+                }
+            } catch {}
+        }
+
+        if (!videoUrl) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ Instagram download failed.\n├ The post is probably private or\n├ your link is garbage.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
-
-        const videoUrl = data.result[0].url_download;
-        const thumbnail = data.result[0].thumbnail || "";
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 

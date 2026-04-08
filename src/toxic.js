@@ -7,7 +7,6 @@ const speed = require("performance-now");
 const { smsg, formatp, tanggal, formatDate, getTime, sleep, clockString, fetchJson, getBuffer, jsonformat, generateProfilePicture, parseMention, getRandom, fetchBuffer } = require('../lib/botFunctions.js');
 const { exec, spawn, execSync } = require("child_process");
 const { TelegraPh, UploadFileUgu } = require("../lib/toUrl");
-const uploadtoimgur = require('../lib/Imgur');
 const { commands, aliases, totalCommands } = require('../handlers/commandHandler');
 const status_saver = require('../features/status_saver');
 const gcPresence = require('../features/gcPresence');
@@ -395,7 +394,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
             packname, generateProfilePicture, groupMetadata, toxicspeed, mycode, fetchJson, exec,
             getRandom, UploadFileUgu, TelegraPh, prefix: usedPrefix, cmd, botname, mode, gcpresence, antitag,
-            antidelete: antideleteSetting, fetchBuffer, store, uploadtoimgur, chatUpdate,
+            antidelete: antideleteSetting, fetchBuffer, store, chatUpdate,
             getGroupAdmins: () => [], pict, Tag, stealth, multiprefix, isDev
         };
 

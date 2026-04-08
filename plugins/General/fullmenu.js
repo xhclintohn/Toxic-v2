@@ -23,7 +23,7 @@ module.exports = {
       { name: 'AI', display: 'AIMENJ', emoji: '🧠' },
       { name: 'Downloads', display: 'DOWNLOADMENU', emoji: '🎬' },
       { name: 'Editing', display: 'EDITING', emoji: '✂️' },
-      { name: 'Effects', display: 'LOGO', emoji: '🎨' },
+      { name: 'Effects', display: 'EFFECTS', emoji: '🎨' },
       { name: 'NSFW', display: '+18MENU', emoji: '🔞' },
       { name: 'Utils', display: 'UTILSMENU', emoji: '🔧' }
     ];

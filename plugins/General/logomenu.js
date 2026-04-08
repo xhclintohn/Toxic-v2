@@ -26,7 +26,7 @@ module.exports = {
         .join('');
     };
 
-    let menuText = `╭───(    TOXIC-MD    )───\n├───≫ LOGO MENU ≪───\n├ \n├ Prefix: ${effectivePrefix || 'None'}\n├ \n`;
+    let menuText = `╭───(    TOXIC-MD    )───\n├───≫ EFFECTS MENU ≪───\n├ \n├ Prefix: ${effectivePrefix || 'None'}\n├ \n`;
 
     let commandFiles = fs.readdirSync('./plugins/Effects').filter(file => file.endsWith('.js'));
     for (const file of commandFiles) {

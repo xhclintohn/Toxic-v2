@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const { tiktok: mintakeTiktok } = require('mintake');
 
 module.exports = async (context) => {
     const { client, m, text, prefix } = context;
@@ -9,21 +10,39 @@ module.exports = async (context) => {
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        const encodedUrl = encodeURIComponent(text);
-        const response = await fetch(`https://api.nexray.web.id/downloader/tiktok?url=${encodedUrl}`, {
-            method: "GET"
-        });
-        const data = await response.json();
+        let videoUrl = null;
+        let musicUrl = null;
+        let username = 'unknown';
+        let stats = {};
 
-        if (!data?.status || !data?.result?.data) {
+        const encodedUrl = encodeURIComponent(text);
+        try {
+            const response = await fetch(`https://api.nexray.web.id/downloader/tiktok?url=${encodedUrl}`, { method: "GET" });
+            const data = await response.json();
+            if (data?.status && data?.result?.data) {
+                videoUrl = data.result.data;
+                musicUrl = data.result.music_info?.url;
+                username = data.result.author?.nickname || 'unknown';
+                stats = data.result.stats || {};
+            }
+        } catch {}
+
+        if (!videoUrl) {
+            try {
+                const fallback = await mintakeTiktok(text);
+                if (fallback?.nowm) {
+                    videoUrl = fallback.nowm;
+                    if (fallback.audio) musicUrl = fallback.audio;
+                } else if (fallback?.wm) {
+                    videoUrl = fallback.wm;
+                }
+            } catch {}
+        }
+
+        if (!videoUrl) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply("failed to download that garbage tiktok! either the link is dead or your taste in content is so bad even the api rejected it.");
         }
-
-        const videoUrl = data.result.data;
-        const musicUrl = data.result.music_info?.url;
-        const username = data.result.author?.nickname || "unknown";
-        const stats = data.result.stats || {};
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
@@ -49,16 +68,13 @@ module.exports = async (context) => {
             try {
                 const musicResponse = await fetch(musicUrl);
                 const musicBuffer = Buffer.from(await musicResponse.arrayBuffer());
-
                 await client.sendMessage(m.chat, {
                     audio: musicBuffer,
                     mimetype: "audio/mpeg",
                     ptt: false,
                     fileName: `tiktok_audio.mp3`
                 });
-            } catch (audioError) {
-                console.log("audio extraction failed:", audioError.message);
-            }
+            } catch {}
         }
 
     } catch (error) {
