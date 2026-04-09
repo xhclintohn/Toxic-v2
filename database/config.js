@@ -1,319 +1,380 @@
 const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
+  const path = require('path');
 
-const BACKUP_FILE = path.resolve('./data/persistent.json');
+  let _backend = null;
+  let _db = null;
+  let _pg = null;
+  let _ready = null;
 
-function saveBackup() {
-    try {
-        const dir = path.dirname(BACKUP_FILE);
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        const settings = {};
-        for (const row of db.prepare('SELECT key, value FROM settings').all()) {
-            try { settings[row.key] = JSON.parse(row.value); } catch { settings[row.key] = row.value; }
-        }
-        const banned = db.prepare('SELECT num FROM banned_users').all().map(r => r.num);
-        const sudo = db.prepare('SELECT num FROM sudo_users').all().map(r => r.num);
-        const warns = db.prepare('SELECT jid, user, warns FROM warn_data').all();
-        const groups = db.prepare('SELECT * FROM group_settings').all();
-        fs.writeFileSync(BACKUP_FILE, JSON.stringify({ settings, banned, sudo, warns, groups, ts: Date.now() }));
-    } catch {}
-}
+  const cache = {
+      settings: { data: null, time: 0, ttl: 30000 },
+      sudoUsers: { data: null, time: 0, ttl: 60000 },
+      bannedUsers: { data: null, time: 0, ttl: 60000 },
+      groupSettings: new Map()
+  };
+  const GS_TTL = 60000;
+  function isCacheValid(e) { return e.data !== null && (Date.now() - e.time) < e.ttl; }
 
-let _backupTimer = null;
-function scheduleBackup() {
-    clearTimeout(_backupTimer);
-    _backupTimer = setTimeout(saveBackup, 3000);
-}
+  const SQLITE_SCHEMA = `
+      CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS group_settings (
+          jid TEXT PRIMARY KEY, antidelete INTEGER DEFAULT 1, gcpresence INTEGER DEFAULT 0,
+          events INTEGER DEFAULT 0, antidemote INTEGER DEFAULT 0, antipromote INTEGER DEFAULT 0,
+          antilink TEXT DEFAULT 'off', antistatusmention TEXT DEFAULT 'off', antitag INTEGER DEFAULT 0,
+          welcome INTEGER DEFAULT 0, goodbye INTEGER DEFAULT 0, warn_limit INTEGER DEFAULT 3
+      );
+      CREATE TABLE IF NOT EXISTS conversation_history (
+          id INTEGER PRIMARY KEY AUTOINCREMENT, num TEXT NOT NULL, role TEXT NOT NULL,
+          message TEXT NOT NULL, timestamp INTEGER DEFAULT (strftime('%s','now'))
+      );
+      CREATE TABLE IF NOT EXISTS sudo_users (num TEXT PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS banned_users (num TEXT PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS warn_data (jid TEXT NOT NULL, user TEXT NOT NULL, warns INTEGER DEFAULT 0, PRIMARY KEY (jid, user));
+      CREATE TABLE IF NOT EXISTS msg_store (
+          id TEXT NOT NULL, jid TEXT NOT NULL, sender TEXT, message TEXT NOT NULL,
+          timestamp INTEGER NOT NULL, PRIMARY KEY (id, jid)
+      );
+      CREATE INDEX IF NOT EXISTS idx_ch_num ON conversation_history(num);
+      CREATE INDEX IF NOT EXISTS idx_ms_id ON msg_store(id);
+      CREATE INDEX IF NOT EXISTS idx_ms_ts ON msg_store(timestamp);
+  `;
 
-function restoreBackup() {
-    try {
-        if (!fs.existsSync(BACKUP_FILE)) return;
-        const count = db.prepare('SELECT COUNT(*) as c FROM settings').get();
-        if (count.c > 0) return;
-        const data = JSON.parse(fs.readFileSync(BACKUP_FILE, 'utf8'));
-        if (!data || !data.ts) return;
-        if (data.settings && Object.keys(data.settings).length) {
-            const upsert = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
-            const tx = db.transaction(entries => { for (const [k, v] of entries) upsert.run(k, JSON.stringify(v)); });
-            tx(Object.entries(data.settings));
-        }
-        if (data.banned?.length) {
-            const ins = db.prepare('INSERT OR IGNORE INTO banned_users (num) VALUES (?)');
-            const tx = db.transaction(items => { for (const n of items) ins.run(n); });
-            tx(data.banned);
-        }
-        if (data.sudo?.length) {
-            const ins = db.prepare('INSERT OR IGNORE INTO sudo_users (num) VALUES (?)');
-            const tx = db.transaction(items => { for (const n of items) ins.run(n); });
-            tx(data.sudo);
-        }
-        if (data.warns?.length) {
-            const ins = db.prepare('INSERT OR REPLACE INTO warn_data (jid, user, warns) VALUES (?, ?, ?)');
-            const tx = db.transaction(items => { for (const w of items) ins.run(w.jid, w.user, w.warns); });
-            tx(data.warns);
-        }
-        if (data.groups?.length) {
-            const ins = db.prepare('INSERT OR IGNORE INTO group_settings (jid) VALUES (?)');
-            const tx = db.transaction(items => { for (const g of items) ins.run(g.jid); });
-            tx(data.groups);
-            for (const g of data.groups) {
-                db.prepare('UPDATE group_settings SET antidelete=?,gcpresence=?,events=?,antidemote=?,antipromote=?,antilink=?,antistatusmention=?,antitag=?,welcome=?,goodbye=?,warn_limit=? WHERE jid=?')
-                  .run(g.antidelete,g.gcpresence,g.events,g.antidemote,g.antipromote,g.antilink,g.antistatusmention,g.antitag,g.welcome,g.goodbye,g.warn_limit,g.jid);
-            }
-        }
-        console.log('✅ Database restored from local backup (' + new Date(data.ts).toLocaleString() + ')');
-    } catch (e) {
-        console.error('❌ Failed to restore DB backup:', e.message);
-    }
-}
+  const PG_SCHEMA = [
+      `CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL)`,
+      `CREATE TABLE IF NOT EXISTS group_settings (
+          jid TEXT PRIMARY KEY, antidelete INTEGER DEFAULT 1, gcpresence INTEGER DEFAULT 0,
+          events INTEGER DEFAULT 0, antidemote INTEGER DEFAULT 0, antipromote INTEGER DEFAULT 0,
+          antilink TEXT DEFAULT 'off', antistatusmention TEXT DEFAULT 'off', antitag INTEGER DEFAULT 0,
+          welcome INTEGER DEFAULT 0, goodbye INTEGER DEFAULT 0, warn_limit INTEGER DEFAULT 3
+      )`,
+      `CREATE TABLE IF NOT EXISTS conversation_history (
+          id SERIAL PRIMARY KEY, num TEXT NOT NULL, role TEXT NOT NULL,
+          message TEXT NOT NULL, timestamp BIGINT DEFAULT EXTRACT(epoch FROM NOW())::BIGINT
+      )`,
+      `CREATE TABLE IF NOT EXISTS sudo_users (num TEXT PRIMARY KEY)`,
+      `CREATE TABLE IF NOT EXISTS banned_users (num TEXT PRIMARY KEY)`,
+      `CREATE TABLE IF NOT EXISTS warn_data (jid TEXT NOT NULL, user TEXT NOT NULL, warns INTEGER DEFAULT 0, PRIMARY KEY (jid, user))`,
+      `CREATE TABLE IF NOT EXISTS msg_store (
+          id TEXT NOT NULL, jid TEXT NOT NULL, sender TEXT, message TEXT NOT NULL,
+          timestamp BIGINT NOT NULL, PRIMARY KEY (id, jid)
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_ch_num ON conversation_history(num)`,
+      `CREATE INDEX IF NOT EXISTS idx_ms_ts ON msg_store(timestamp)`
+  ];
 
-const db = new Database(path.resolve('./whatsasena.db'));
-db.pragma('journal_mode = WAL');
-db.pragma('synchronous = NORMAL');
-db.pragma('cache_size = -64000');
-db.pragma('temp_store = MEMORY');
-db.pragma('busy_timeout = 5000');
-db.pragma('mmap_size = 268435456');
+  function initSqlite() {
+      _db = new Database(path.resolve('./whatsasena.db'));
+      _db.pragma('journal_mode = WAL');
+      _db.pragma('synchronous = NORMAL');
+      _db.pragma('cache_size = -64000');
+      _db.pragma('temp_store = MEMORY');
+      _db.pragma('busy_timeout = 5000');
+      _db.pragma('mmap_size = 268435456');
+      _db.exec(SQLITE_SCHEMA);
+      _backend = 'sqlite';
+      console.log('✅ [DB] Using SQLite (better-sqlite3)');
+  }
 
-db.exec(`
-    CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS group_settings (
-        jid TEXT PRIMARY KEY, antidelete INTEGER DEFAULT 1, gcpresence INTEGER DEFAULT 0,
-        events INTEGER DEFAULT 0, antidemote INTEGER DEFAULT 0, antipromote INTEGER DEFAULT 0,
-        antilink TEXT DEFAULT 'off', antistatusmention TEXT DEFAULT 'off', antitag INTEGER DEFAULT 0,
-        welcome INTEGER DEFAULT 0, goodbye INTEGER DEFAULT 0, warn_limit INTEGER DEFAULT 3
-    );
-    CREATE TABLE IF NOT EXISTS conversation_history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, num TEXT NOT NULL, role TEXT NOT NULL,
-        message TEXT NOT NULL, timestamp INTEGER DEFAULT (strftime('%s','now'))
-    );
-    CREATE TABLE IF NOT EXISTS sudo_users (num TEXT PRIMARY KEY);
-    CREATE TABLE IF NOT EXISTS banned_users (num TEXT PRIMARY KEY);
-    CREATE TABLE IF NOT EXISTS users (num TEXT PRIMARY KEY);
-    CREATE TABLE IF NOT EXISTS warn_data (jid TEXT NOT NULL, user TEXT NOT NULL, warns INTEGER DEFAULT 0, PRIMARY KEY (jid, user));
-    CREATE TABLE IF NOT EXISTS msg_store (
-        id TEXT NOT NULL, jid TEXT NOT NULL, sender TEXT,
-        message TEXT NOT NULL, timestamp INTEGER NOT NULL,
-        PRIMARY KEY (id, jid)
-    );
-    CREATE INDEX IF NOT EXISTS idx_msg_store_id ON msg_store(id);
-    CREATE INDEX IF NOT EXISTS idx_msg_store_jid ON msg_store(jid);
-    CREATE INDEX IF NOT EXISTS idx_msg_store_ts ON msg_store(timestamp);
-`);
+  async function tryInitPg() {
+      try {
+          const { Pool } = require('pg');
+          const pool = new Pool({
+              connectionString: process.env.DATABASE_URL,
+              ssl: { rejectUnauthorized: false },
+              connectionTimeoutMillis: 10000,
+              max: 10
+          });
+          await Promise.race([
+              pool.query('SELECT 1'),
+              new Promise((_, rej) => setTimeout(() => rej(new Error('PG connect timeout')), 60000))
+          ]);
+          for (const sql of PG_SCHEMA) { try { await pool.query(sql); } catch {} }
+          _pg = pool;
+          _backend = 'pg';
+          console.log('✅ [DB] Using Heroku PostgreSQL');
+          return true;
+      } catch (e) {
+          console.log(`⚠️ [DB] PostgreSQL unavailable (${e.message}) — using SQLite`);
+          return false;
+      }
+  }
 
-const stmts = {
-    getAllSettings: db.prepare('SELECT key, value FROM settings'),
-    upsertSetting: db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)'),
-    getGroupSettings: db.prepare('SELECT * FROM group_settings WHERE jid = ?'),
-    hasGroupSettings: db.prepare('SELECT jid FROM group_settings WHERE jid = ?'),
-    insertGroupSettings: db.prepare('INSERT OR IGNORE INTO group_settings (jid) VALUES (?)'),
-    insertBanned: db.prepare('INSERT OR IGNORE INTO banned_users (num) VALUES (?)'),
-    deleteBanned: db.prepare('DELETE FROM banned_users WHERE num = ?'),
-    getAllBanned: db.prepare('SELECT num FROM banned_users'),
-    insertSudo: db.prepare('INSERT OR IGNORE INTO sudo_users (num) VALUES (?)'),
-    deleteSudo: db.prepare('DELETE FROM sudo_users WHERE num = ?'),
-    getAllSudo: db.prepare('SELECT num FROM sudo_users'),
-    getConvHistory: db.prepare('SELECT role, message FROM conversation_history WHERE num = ? ORDER BY timestamp DESC LIMIT ?'),
-    insertConvMessage: db.prepare('INSERT INTO conversation_history (num, role, message) VALUES (?, ?, ?)'),
-    pruneConvHistory: db.prepare('DELETE FROM conversation_history WHERE num = ? AND id NOT IN (SELECT id FROM conversation_history WHERE num = ? ORDER BY timestamp DESC LIMIT 50)'),
-    deleteConvHistory: db.prepare('DELETE FROM conversation_history WHERE num = ?'),
-    deleteOldConvHistory: db.prepare('DELETE FROM conversation_history WHERE timestamp < ?'),
-    getWarn: db.prepare('SELECT warns FROM warn_data WHERE jid = ? AND user = ?'),
-    insertWarn: db.prepare('INSERT INTO warn_data (jid, user, warns) VALUES (?, ?, 1)'),
-    incrementWarn: db.prepare('UPDATE warn_data SET warns = warns + 1 WHERE jid = ? AND user = ?'),
-    deleteWarn: db.prepare('DELETE FROM warn_data WHERE jid = ? AND user = ?'),
-    saveMsgStore: db.prepare('INSERT OR REPLACE INTO msg_store (id, jid, sender, message, timestamp) VALUES (?, ?, ?, ?, ?)'),
-    getMsgById: db.prepare('SELECT * FROM msg_store WHERE id = ? LIMIT 1'),
-    deleteMsgStore: db.prepare('DELETE FROM msg_store WHERE id = ? AND jid = ?'),
-    cleanupMsgStore: db.prepare('DELETE FROM msg_store WHERE timestamp < ?'),
-};
+  _ready = (async () => {
+      if (process.env.DATABASE_URL) {
+          const ok = await tryInitPg();
+          if (!ok) initSqlite();
+      } else {
+          initSqlite();
+      }
+  })();
 
-const cache = {
-    settings: { data: null, time: 0, ttl: 30000 },
-    sudoUsers: { data: null, time: 0, ttl: 60000 },
-    bannedUsers: { data: null, time: 0, ttl: 60000 },
-    groupSettings: new Map()
-};
-const GROUP_SETTINGS_TTL = 60000;
+  async function ensureReady() { await _ready; }
 
-function isCacheValid(e) { return e.data !== null && (Date.now() - e.time) < e.ttl; }
+  async function qAll(sqlLite, sqlPg, params = []) {
+      await ensureReady();
+      if (_backend === 'pg') return (await _pg.query(sqlPg, params)).rows;
+      return _db.prepare(sqlLite).all(...params);
+  }
 
-async function initializeDatabase() { restoreBackup(); }
+  async function qGet(sqlLite, sqlPg, params = []) {
+      await ensureReady();
+      if (_backend === 'pg') return (await _pg.query(sqlPg, params)).rows[0] || null;
+      return _db.prepare(sqlLite).get(...params) || null;
+  }
 
-async function getSettings() {
-    if (isCacheValid(cache.settings)) return cache.settings.data;
-    try {
-        const rows = stmts.getAllSettings.all();
-        const s = {};
-        for (const row of rows) { try { s[row.key] = JSON.parse(row.value); } catch { s[row.key] = row.value; } }
-        const defaults = {
-            prefix: '.', mode: 'public', gcpresence: false, antitag: false, antidelete: true,
-            antilink: 'off', chatbotpm: false, packname: 'Toxic-MD', author: 'xh_clinton',
-            multiprefix: false, stealth: false, startmessage: true, autoview: false,
-            autoai: false, antistatusmention: 'off', warn_limit: 3, toxicagent: false
-        };
-        const result = { ...defaults, ...s };
-        cache.settings = { data: result, time: Date.now(), ttl: 30000 };
-        return result;
-    } catch (error) {
-        console.error('Error fetching settings:', error);
-        if (cache.settings.data) return cache.settings.data;
-        return { prefix: '.', mode: 'public', gcpresence: false, antitag: false, antidelete: true, antilink: 'off', chatbotpm: false, packname: 'Toxic-MD', author: 'xh_clinton', multiprefix: false, stealth: false, startmessage: true, autoview: false, autoai: false };
-    }
-}
+  async function qRun(sqlLite, sqlPg, params = []) {
+      await ensureReady();
+      if (_backend === 'pg') { await _pg.query(sqlPg, params); }
+      else { _db.prepare(sqlLite).run(...params); }
+  }
 
-async function updateSetting(key, value) {
-    try {
-        stmts.upsertSetting.run(key, JSON.stringify(value));
-        cache.settings.data = null; cache.settings.time = 0;
-        scheduleBackup();
-    } catch (e) { console.error('Error updating setting:', e); }
-}
+  async function initializeDatabase() { await ensureReady(); }
 
-async function getGroupSettings(jid) {
-    const cached = cache.groupSettings.get(jid);
-    if (cached && (Date.now() - cached.time) < GROUP_SETTINGS_TTL) return cached.data;
-    try {
-        const row = stmts.getGroupSettings.get(jid);
-        const result = row ? {
-            antidelete: !!row.antidelete, gcpresence: !!row.gcpresence, events: !!row.events,
-            antidemote: !!row.antidemote, antipromote: !!row.antipromote, antilink: row.antilink || 'off',
-            antistatusmention: row.antistatusmention || 'off', antitag: !!row.antitag,
-            welcome: !!row.welcome, goodbye: !!row.goodbye, warn_limit: row.warn_limit || 3
-        } : { antidelete: true, gcpresence: false, events: false, antidemote: false, antipromote: false, antilink: 'off', antistatusmention: 'off', antitag: false, welcome: false, goodbye: false, warn_limit: 3 };
-        if (cache.groupSettings.size > 500) cache.groupSettings.delete(cache.groupSettings.keys().next().value);
-        cache.groupSettings.set(jid, { data: result, time: Date.now() });
-        return result;
-    } catch (e) {
-        console.error('Error fetching group settings:', e);
-        return { antidelete: true, gcpresence: false, events: false, antidemote: false, antipromote: false, antitag: false, antilink: 'off', antistatusmention: 'off', welcome: false, goodbye: false, warn_limit: 3 };
-    }
-}
+  async function getSettings() {
+      if (isCacheValid(cache.settings)) return cache.settings.data;
+      const rows = await qAll(
+          'SELECT key, value FROM settings',
+          'SELECT key, value FROM settings'
+      );
+      const defaults = {
+          prefix: '.', mode: 'public', botname: 'TOXIC-MD', chatbotpm: false,
+          autoview: false, autoread: false, antidelete: false, stealth: false,
+          autoai: false, toxicagent: false, anticall: false
+      };
+      const s = { ...defaults };
+      for (const r of rows) {
+          try { s[r.key] = JSON.parse(r.value); } catch { s[r.key] = r.value; }
+      }
+      cache.settings.data = s;
+      cache.settings.time = Date.now();
+      return s;
+  }
 
-async function updateGroupSetting(jid, key, value) {
-    try {
-        stmts.insertGroupSettings.run(jid);
-        db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(value, jid);
-        cache.groupSettings.delete(jid);
-        scheduleBackup();
-    } catch (e) { console.error('Error updating group setting:', e); }
-}
+  async function updateSetting(key, value) {
+      const v = JSON.stringify(value);
+      await qRun(
+          'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+          'INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2',
+          [key, v]
+      );
+      cache.settings.data = null;
+  }
 
-async function banUser(num) {
-    try { stmts.insertBanned.run(num); cache.bannedUsers.data = null; cache.bannedUsers.time = 0; scheduleBackup(); }
-    catch (e) { console.error('Error banning user:', e); }
-}
+  async function getGroupSettings(jid) {
+      const cached = cache.groupSettings.get(jid);
+      if (cached && (Date.now() - cached.time) < GS_TTL) return cached.data;
+      const row = await qGet(
+          'SELECT * FROM group_settings WHERE jid = ?',
+          'SELECT * FROM group_settings WHERE jid = $1',
+          [jid]
+      );
+      const data = row ? {
+          antidelete: !!row.antidelete, gcpresence: !!row.gcpresence, events: !!row.events,
+          antidemote: !!row.antidemote, antipromote: !!row.antipromote, antilink: row.antilink || 'off',
+          antistatusmention: row.antistatusmention || 'off', antitag: !!row.antitag,
+          welcome: !!row.welcome, goodbye: !!row.goodbye, warn_limit: row.warn_limit || 3
+      } : {
+          antidelete: true, gcpresence: false, events: false, antidemote: false, antipromote: false,
+          antilink: 'off', antistatusmention: 'off', antitag: false, welcome: false, goodbye: false, warn_limit: 3
+      };
+      cache.groupSettings.set(jid, { data, time: Date.now() });
+      return data;
+  }
 
-async function unbanUser(num) {
-    try { stmts.deleteBanned.run(num); cache.bannedUsers.data = null; cache.bannedUsers.time = 0; scheduleBackup(); }
-    catch (e) { console.error('Error unbanning user:', e); }
-}
+  async function updateGroupSetting(jid, key, value) {
+      await ensureReady();
+      if (_backend === 'pg') {
+          await _pg.query('INSERT INTO group_settings (jid) VALUES ($1) ON CONFLICT (jid) DO NOTHING', [jid]);
+          await _pg.query(`UPDATE group_settings SET ${key} = $1 WHERE jid = $2`, [value, jid]);
+      } else {
+          _db.prepare('INSERT OR IGNORE INTO group_settings (jid) VALUES (?)').run(jid);
+          _db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(value, jid);
+      }
+      cache.groupSettings.delete(jid);
+  }
 
-async function addSudoUser(num) {
-    try { stmts.insertSudo.run(num); cache.sudoUsers.data = null; cache.sudoUsers.time = 0; scheduleBackup(); }
-    catch (e) { console.error('Error adding sudo:', e); }
-}
+  async function banUser(num) {
+      await qRun(
+          'INSERT OR IGNORE INTO banned_users (num) VALUES (?)',
+          'INSERT INTO banned_users (num) VALUES ($1) ON CONFLICT DO NOTHING',
+          [num]
+      );
+      cache.bannedUsers.data = null;
+  }
 
-async function removeSudoUser(num) {
-    try { stmts.deleteSudo.run(num); cache.sudoUsers.data = null; cache.sudoUsers.time = 0; scheduleBackup(); }
-    catch (e) { console.error('Error removing sudo:', e); }
-}
+  async function unbanUser(num) {
+      await qRun('DELETE FROM banned_users WHERE num = ?', 'DELETE FROM banned_users WHERE num = $1', [num]);
+      cache.bannedUsers.data = null;
+  }
 
-async function getSudoUsers() {
-    if (isCacheValid(cache.sudoUsers)) return cache.sudoUsers.data;
-    try {
-        const rows = stmts.getAllSudo.all();
-        const users = rows.map(r => r.num);
-        cache.sudoUsers = { data: users, time: Date.now(), ttl: 60000 };
-        return users;
-    } catch (e) { console.error('Error fetching sudo users:', e); return cache.sudoUsers.data || []; }
-}
+  async function getBannedUsers() {
+      if (isCacheValid(cache.bannedUsers)) return cache.bannedUsers.data;
+      const rows = await qAll('SELECT num FROM banned_users', 'SELECT num FROM banned_users');
+      const data = rows.map(r => r.num);
+      cache.bannedUsers.data = data;
+      cache.bannedUsers.time = Date.now();
+      return data;
+  }
 
-async function getBannedUsers() {
-    if (isCacheValid(cache.bannedUsers)) return cache.bannedUsers.data;
-    try {
-        const rows = stmts.getAllBanned.all();
-        const users = rows.map(r => r.num);
-        cache.bannedUsers = { data: users, time: Date.now(), ttl: 60000 };
-        return users;
-    } catch (e) { console.error('Error fetching banned users:', e); return cache.bannedUsers.data || []; }
-}
+  async function addSudoUser(num) {
+      await qRun(
+          'INSERT OR IGNORE INTO sudo_users (num) VALUES (?)',
+          'INSERT INTO sudo_users (num) VALUES ($1) ON CONFLICT DO NOTHING',
+          [num]
+      );
+      cache.sudoUsers.data = null;
+  }
 
-async function getConversationHistory(num, limit = 20) {
-    try { return stmts.getConvHistory.all(num, limit).reverse(); }
-    catch { return []; }
-}
+  async function removeSudoUser(num) {
+      await qRun('DELETE FROM sudo_users WHERE num = ?', 'DELETE FROM sudo_users WHERE num = $1', [num]);
+      cache.sudoUsers.data = null;
+  }
 
-async function addConversationMessage(num, role, message) {
-    try {
-        stmts.insertConvMessage.run(num, role, message);
-        stmts.pruneConvHistory.run(num, num);
-    } catch {}
-}
+  async function getSudoUsers() {
+      if (isCacheValid(cache.sudoUsers)) return cache.sudoUsers.data;
+      const rows = await qAll('SELECT num FROM sudo_users', 'SELECT num FROM sudo_users');
+      const data = rows.map(r => r.num);
+      cache.sudoUsers.data = data;
+      cache.sudoUsers.time = Date.now();
+      return data;
+  }
 
-async function clearConversationHistory(num) {
-    try { stmts.deleteConvHistory.run(num); } catch {}
-}
+  async function getConversationHistory(num, limit = 20) {
+      const rows = await qAll(
+          'SELECT role, message FROM conversation_history WHERE num = ? ORDER BY timestamp DESC LIMIT ?',
+          'SELECT role, message FROM conversation_history WHERE num = $1 ORDER BY timestamp DESC LIMIT $2',
+          [num, limit]
+      );
+      return rows.reverse();
+  }
 
-function clearOldConversationHistory(hoursOld = 5) {
-    try {
-        const cutoff = Math.floor(Date.now() / 1000) - (hoursOld * 3600);
-        const result = stmts.deleteOldConvHistory.run(cutoff);
-        if (result.changes > 0) console.log('Cleared', result.changes, 'old conversation records');
-    } catch {}
-}
+  async function addConversationMessage(num, role, message) {
+      await qRun(
+          'INSERT INTO conversation_history (num, role, message) VALUES (?, ?, ?)',
+          'INSERT INTO conversation_history (num, role, message) VALUES ($1, $2, $3)',
+          [num, role, message]
+      );
+      if (_backend === 'sqlite') {
+          _db.prepare('DELETE FROM conversation_history WHERE num = ? AND id NOT IN (SELECT id FROM conversation_history WHERE num = ? ORDER BY timestamp DESC LIMIT 50)').run(num, num);
+      } else {
+          _pg.query('DELETE FROM conversation_history WHERE num = $1 AND id NOT IN (SELECT id FROM conversation_history WHERE num = $1 ORDER BY timestamp DESC LIMIT 50)', [num]).catch(() => {});
+      }
+  }
 
-async function getWarnCount(jid, user) {
-    try { const r = stmts.getWarn.get(jid, user); return r ? r.warns : 0; } catch { return 0; }
-}
+  async function clearConversationHistory(num) {
+      await qRun(
+          'DELETE FROM conversation_history WHERE num = ?',
+          'DELETE FROM conversation_history WHERE num = $1',
+          [num]
+      );
+  }
 
-async function addWarn(jid, user) {
-    try {
-        const r = stmts.getWarn.get(jid, user);
-        if (r) { stmts.incrementWarn.run(jid, user); scheduleBackup(); return r.warns + 1; }
-        stmts.insertWarn.run(jid, user);
-        scheduleBackup();
-        return 1;
-    } catch { return 0; }
-}
+  function clearOldConversationHistory(hoursOld = 5) {
+      const cutoff = Math.floor(Date.now() / 1000) - hoursOld * 3600;
+      if (_backend === 'pg') {
+          _pg.query('DELETE FROM conversation_history WHERE timestamp < $1', [cutoff]).catch(() => {});
+      } else if (_db) {
+          try { _db.prepare('DELETE FROM conversation_history WHERE timestamp < ?').run(cutoff); } catch {}
+      }
+  }
 
-async function resetWarn(jid, user) {
-    try { stmts.deleteWarn.run(jid, user); scheduleBackup(); } catch {}
-}
+  async function getWarnCount(jid, user) {
+      const row = await qGet(
+          'SELECT warns FROM warn_data WHERE jid = ? AND user = ?',
+          'SELECT warns FROM warn_data WHERE jid = $1 AND user = $2',
+          [jid, user]
+      );
+      return row ? row.warns : 0;
+  }
 
-function saveMessage(id, jid, sender, messageObj) {
-    try { stmts.saveMsgStore.run(id, jid, sender || '', JSON.stringify(messageObj), Date.now()); }
-    catch (e) { console.error('❌ [MSG_STORE] Save error:', e.message); }
-}
+  async function addWarn(jid, user) {
+      try {
+          const row = await qGet(
+              'SELECT warns FROM warn_data WHERE jid = ? AND user = ?',
+              'SELECT warns FROM warn_data WHERE jid = $1 AND user = $2',
+              [jid, user]
+          );
+          if (row) {
+              await qRun(
+                  'UPDATE warn_data SET warns = warns + 1 WHERE jid = ? AND user = ?',
+                  'UPDATE warn_data SET warns = warns + 1 WHERE jid = $1 AND user = $2',
+                  [jid, user]
+              );
+              return row.warns + 1;
+          }
+          await qRun(
+              'INSERT INTO warn_data (jid, user, warns) VALUES (?, ?, 1)',
+              'INSERT INTO warn_data (jid, user, warns) VALUES ($1, $2, 1)',
+              [jid, user]
+          );
+          return 1;
+      } catch { return 0; }
+  }
 
-function getMessage(id) {
-    try {
-        const row = stmts.getMsgById.get(id);
-        if (!row) return null;
-        return { id: row.id, jid: row.jid, sender: row.sender, message: JSON.parse(row.message), timestamp: row.timestamp };
-    } catch (e) { return null; }
-}
+  async function resetWarn(jid, user) {
+      await qRun(
+          'DELETE FROM warn_data WHERE jid = ? AND user = ?',
+          'DELETE FROM warn_data WHERE jid = $1 AND user = $2',
+          [jid, user]
+      );
+  }
 
-function deleteMessage(id, jid) {
-    try { stmts.deleteMsgStore.run(id, jid); } catch {}
-}
+  async function setWarnLimit(jid, limit) {
+      await updateGroupSetting(jid, 'warn_limit', parseInt(limit) || 3);
+  }
 
-function cleanupOldMsgStore(maxAgeMs = 12 * 60 * 60 * 1000) {
-    try { stmts.cleanupMsgStore.run(Date.now() - maxAgeMs); } catch {}
-}
+  async function getWarnLimit(jid) {
+      const gs = await getGroupSettings(jid);
+      return gs.warn_limit || 3;
+  }
 
-setInterval(() => cleanupOldMsgStore(), 12 * 60 * 60 * 1000);
+  async function saveMessage(id, jid, sender, messageObj) {
+      await qRun(
+          'INSERT OR REPLACE INTO msg_store (id, jid, sender, message, timestamp) VALUES (?, ?, ?, ?, ?)',
+          'INSERT INTO msg_store (id, jid, sender, message, timestamp) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id, jid) DO UPDATE SET message = $4, timestamp = $5',
+          [id, jid, sender || '', JSON.stringify(messageObj), Date.now()]
+      );
+  }
 
-restoreBackup();
+  async function getMessage(id) {
+      const row = await qGet(
+          'SELECT * FROM msg_store WHERE id = ? LIMIT 1',
+          'SELECT * FROM msg_store WHERE id = $1 LIMIT 1',
+          [id]
+      );
+      if (!row) return null;
+      try { return { id: row.id, jid: row.jid, sender: row.sender, message: JSON.parse(row.message), timestamp: row.timestamp }; }
+      catch { return null; }
+  }
 
-module.exports = {
-    db, initializeDatabase, getSettings, updateSetting,
-    getGroupSettings, updateGroupSetting,
-    banUser, unbanUser, getBannedUsers,
-    addSudoUser, removeSudoUser, getSudoUsers,
-    getConversationHistory, addConversationMessage, clearConversationHistory,
-    getWarnCount, addWarn, resetWarn,
-    clearOldConversationHistory,
-    saveMessage, getMessage, deleteMessage, cleanupOldMsgStore
-};
+  async function deleteMessage(id, jid) {
+      await qRun(
+          'DELETE FROM msg_store WHERE id = ? AND jid = ?',
+          'DELETE FROM msg_store WHERE id = $1 AND jid = $2',
+          [id, jid]
+      );
+  }
+
+  async function cleanupOldMsgStore(maxAgeMs = 12 * 60 * 60 * 1000) {
+      const cutoff = Date.now() - maxAgeMs;
+      await qRun(
+          'DELETE FROM msg_store WHERE timestamp < ?',
+          'DELETE FROM msg_store WHERE timestamp < $1',
+          [cutoff]
+      );
+  }
+
+  setInterval(() => cleanupOldMsgStore(), 12 * 60 * 60 * 1000);
+  setInterval(() => clearOldConversationHistory(1), 60 * 60 * 1000);
+
+  module.exports = {
+      get db() { return _db; },
+      initializeDatabase, getSettings, updateSetting,
+      getGroupSettings, updateGroupSetting,
+      banUser, unbanUser, getBannedUsers,
+      addSudoUser, removeSudoUser, getSudoUsers,
+      getConversationHistory, addConversationMessage, clearConversationHistory, clearOldConversationHistory,
+      getWarnCount, addWarn, resetWarn, setWarnLimit, getWarnLimit,
+      saveMessage, getMessage, deleteMessage, cleanupOldMsgStore
+  };
+  
