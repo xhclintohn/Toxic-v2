@@ -34,7 +34,12 @@
       "required": false
     }
   },
-  "addons": [],
+  "addons": [
+    {
+      "plan": "heroku-postgresql",
+      "as": "DATABASE"
+    }
+  ],
   "buildpacks": [
     {
       "url": "heroku/nodejs",
