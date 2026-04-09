@@ -96,7 +96,7 @@ If nothing matches any command, respond naturally with savage toxic personality.
     try {
         console.log(`🤖 [AUTOAI] Calling Groq API...`);
         const result = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-            model: 'llama-3.3-70b-versatile',
+            model: 'llama-3.1-8b-instant',
             messages: [
                 { role: 'system', content: systemPrompt },
                 ...history,
