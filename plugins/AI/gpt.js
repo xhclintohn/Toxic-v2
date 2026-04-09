@@ -1,16 +1,11 @@
 const fetch = require('node-fetch');
+const { GROQ_API_KEY: GROQ_KEY } = require('../../keys');
 
 module.exports = async (context) => {
-    const { client, m, text, botname } = context;
+    const { client, m, text } = context;
 
-    if (!botname) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Bot has no name. Impressive incompetence.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-    if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Type a prompt, genius. You used the command but forgot the question.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞᷊ 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-
-    let GROQ_KEY = process.env.GROQ_API_KEY;
-    if (!GROQ_KEY) {
-        try { GROQ_KEY = require('../../keys').GROQ_API_KEY; } catch {}
-    }
-    if (!GROQ_KEY) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ GROQ_API_KEY not set. Get one free at console.groq.com\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+    if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Type a prompt, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+    if (!GROQ_KEY || GROQ_KEY === 'REPLACE_WITH_YOUR_GROQ_API_KEY_HERE') return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ GROQ_API_KEY not set in keys.js\n├ Get one free at console.groq.com\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -30,7 +25,6 @@ module.exports = async (context) => {
         });
 
         if (!res.ok) throw new Error(`Groq API error: ${res.status}`);
-
         const data = await res.json();
         const reply = data.choices?.[0]?.message?.content?.trim();
         if (!reply) throw new Error('Empty response from AI.');

@@ -18,7 +18,7 @@ module.exports = async (context) => {
         }
 
         const GROQ_KEY = process.env.GROQ_API_KEY || (() => { try { return require('../../keys').GROQ_API_KEY; } catch { return ''; } })();
-        if (!GROQ_KEY) throw new Error('No GROQ_API_KEY configured');
+        if (!GROQ_KEY || GROQ_KEY === 'REPLACE_WITH_YOUR_GROQ_API_KEY_HERE') throw new Error('GROQ_API_KEY not set in keys.js');
 
         const mediaBuffer = await q.download();
         const base64Image = mediaBuffer.toString('base64');

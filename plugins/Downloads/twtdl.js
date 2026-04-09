@@ -1,77 +1,61 @@
 const fetch = require('node-fetch');
 
-async function cobaltFetch(url) {
-    const res = await fetch('https://api.cobalt.tools/', {
-        method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, downloadMode: 'auto' })
-    });
-    if (!res.ok) throw new Error(`cobalt ${res.status}`);
-    const d = await res.json();
-    if (d.status === 'stream' || d.status === 'redirect' || d.status === 'tunnel') return d.url;
-    if (d.status === 'picker' && d.picker?.length) return d.picker[0].url;
-    throw new Error(d.error?.code || 'cobalt no URL');
-}
+  async function cobaltFetch(url) {
+      const res = await fetch('https://api.cobalt.tools/', {
+          method: 'POST',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, downloadMode: 'auto' }),
+          timeout: 15000
+      });
+      if (!res.ok) throw new Error(`cobalt ${res.status}`);
+      const d = await res.json();
+      if (d.status === 'redirect' || d.status === 'tunnel' || d.status === 'stream') return { url: d.url, isVideo: true };
+      if (d.status === 'picker' && d.picker?.length) return { url: d.picker[0].url, isVideo: d.picker[0].type !== 'photo' };
+      throw new Error(d.error?.code || 'cobalt returned no URL');
+  }
 
-module.exports = async (context) => {
-    const { client, m, text } = context;
+  async function twitsaveFetch(url) {
+      const res = await fetch(`https://api.privatezia.biz.id/api/downloader/alldownload?url=${encodeURIComponent(url)}`, {
+          headers: { Accept: 'application/json' }, timeout: 12000
+      });
+      const d = await res.json();
+      if (!d?.status || !d?.result?.video?.url) throw new Error('twitsave no URL');
+      return d.result.video.url;
+  }
 
-    if (!text) {
-        return m.reply('╭───(    TOXIC-MD    )───\n├ Drop a Twitter/X link!\n├ Ex: .twitterdl https://x.com/user/status/123\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
-    }
+  module.exports = async (context) => {
+      const { client, m, text, prefix } = context;
 
-    if (!text.includes('twitter.com') && !text.includes('x.com')) {
-        return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a valid Twitter/X link!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
-    }
+      if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Give me a Twitter/X link.\n├ Example: ${prefix}twitter https://x.com/user/status/xxxx\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+      if (!text.includes('twitter.com') && !text.includes('x.com') && !text.includes('t.co')) return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a Twitter/X link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
 
-    try {
-        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        let videoUrl = null;
-        let title = 'Twitter/X Video';
+      let videoUrl = null;
 
-        try {
-            videoUrl = await cobaltFetch(text);
-        } catch {}
+      try { const r = await cobaltFetch(text); videoUrl = r.url; } catch {}
+      if (!videoUrl) {
+          try { videoUrl = await twitsaveFetch(text); } catch {}
+      }
 
-        if (!videoUrl) {
-            try {
-                const encodedUrl = encodeURIComponent(text);
-                const response = await fetch(`https://api.privatezia.biz.id/api/downloader/alldownload?url=${encodedUrl}`, {
-                    headers: { Accept: 'application/json' }
-                });
-                const data = await response.json();
-                if (data?.status && data?.result?.video?.url) {
-                    videoUrl = data.result.video.url;
-                    title = data.result.title || title;
-                }
-            } catch {}
-        }
+      if (!videoUrl) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+          return m.reply('╭───(    TOXIC-MD    )───\n├ Could not download this Twitter/X video.\n├ It might be private or unavailable.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+      }
 
-        if (!videoUrl) {
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply('╭───(    TOXIC-MD    )───\n├ No video found! API might be down or link is private.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
-        }
-
-        const videoResponse = await fetch(videoUrl);
-        if (!videoResponse.ok) throw new Error(`Failed to download: HTTP ${videoResponse.status}`);
-        const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
-
-        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-        await client.sendMessage(
-            m.chat,
-            {
-                video: videoBuffer,
-                mimetype: 'video/mp4',
-                caption: `╭───(    TOXIC-MD    )───\n├───≫ Twitter/X Video ≪───\n├ \n├ ${title}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-                gifPlayback: false,
-            },
-            { quoted: m }
-        );
-    } catch (e) {
-        console.error('Twitter/X download error:', e);
-        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        m.reply(`╭───(    TOXIC-MD    )───\n├ Download failed: ${e.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-    }
-};
+      try {
+          const dlRes = await fetch(videoUrl, { timeout: 40000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+          if (!dlRes.ok) throw new Error(`fetch ${dlRes.status}`);
+          const buf = Buffer.from(await dlRes.arrayBuffer());
+          await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+          await client.sendMessage(m.chat, {
+              video: buf, mimetype: 'video/mp4', gifPlayback: false,
+              caption: '╭───(    TOXIC-MD    )───\n├───≫ Twitter/X Video ≪───\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
+          }, { quoted: m });
+      } catch (err) {
+          console.error('[TWTDL] send error:', err);
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+          m.reply(`╭───(    TOXIC-MD    )───\n├ ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+      }
+  };
+  
