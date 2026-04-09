@@ -7,7 +7,9 @@ const fetch = require('node-fetch');
       const items = d?.data || d?.result || [];
       if (!items.length) throw new Error('agatz no media');
       const hd = items.find(i => (i.quality || i.type || '').toLowerCase().includes('hd')) || items[0];
-      return hd?.url || (typeof hd === 'string' ? hd : null);
+      const videoUrl = hd?.url || (typeof hd === 'string' ? hd : null);
+      if (!videoUrl) throw new Error('agatz no url');
+      return videoUrl;
   }
 
   async function snapsaveFetch(url) {
@@ -19,7 +21,8 @@ const fetch = require('node-fetch');
           timeout: 15000
       });
       const html = await r.text();
-      const match = html.match(/href="(https?://[^"]+.mp4[^"]*)"[^>]*>HD/i) || html.match(/href="(https?://[^"]+.mp4[^"]*)"/i);
+      const re = new RegExp('href="(https?:\\/\\/[^"]+\\.mp4[^"]*)"', 'i');
+      const match = html.match(re);
       if (!match) throw new Error('snapsave no url');
       return match[1].replace(/&amp;/g, '&');
   }
@@ -29,7 +32,8 @@ const fetch = require('node-fetch');
           headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000
       });
       const html = await r.text();
-      const match = html.match(/href="(https?:\/\/[^"]+\.mp4[^"]*)"/i);
+      const re = new RegExp('href="(https?:\\/\\/[^"]+\\.mp4[^"]*)"', 'i');
+      const match = html.match(re);
       if (!match) throw new Error('getfvid no url');
       return match[1].replace(/&amp;/g, '&');
   }
