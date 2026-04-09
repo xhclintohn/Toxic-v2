@@ -31,7 +31,8 @@ const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream
 const authenticationn = require('./auth/auth.js');
 require('./features/cleanup');
 const { smsg } = require('./handlers/smsg');
-const { getSettings, getBannedUsers, banUser } = require("./database/config");
+const { getSettings, getBannedUsers, banUser, db } = require("./database/config");
+const { restoreFromGist, startBackupInterval } = require('./lib/dbBackup');
 let _idxSettingsCache = null, _idxSettingsCacheTime = 0;
 const IDX_CACHE_TTL = 20000;
 async function getCachedSettings() {
@@ -128,6 +129,7 @@ async function startToxic() {
     if (!fs.existsSync(sessionName)) fs.mkdirSync(sessionName, { recursive: true });
 
     await authenticationn();
+    await restoreFromGist(db).catch(e => console.error('❌ [DB RESTORE]:', e.message));
 
     if (global._toxicReconnectTimer) {
       clearTimeout(global._toxicReconnectTimer);
@@ -521,6 +523,7 @@ app.get("/", (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.
 app.get("/health", (req, res) => res.json({ status: "ok", uptime: process.uptime() }));
 app.listen(port, () => console.log(`Server running on port ${port}`));
 
+startBackupInterval(db);
 startToxic();
 
 module.exports = { startToxic, invalidateSettingsCache };

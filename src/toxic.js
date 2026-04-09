@@ -19,6 +19,7 @@ const { cleanupOldMessages } = require('../lib/Store');
 const msgStore = require('../lib/MessageStore');
 const antistatusmention = require('../features/antistatusmention');
 const autoai = require('../features/autoai');
+const toxicaiFeature = require('../features/toxicai');
 const afkFeature = require('../features/afk');
 const ownerMiddleware = require('../utils/botUtil/Ownermiddleware');
 
@@ -54,7 +55,7 @@ async function fastGetSettings() {
     } catch (e) {
         console.error('❌ [fastGetSettings]:', e.message);
     }
-    return _cachedSettings || { prefix: '.', mode: 'public', gcpresence: false, antitag: false, antidelete: true, antilink: 'off', chatbotpm: false, packname: 'Toxic-MD', author: 'xh_clinton', multiprefix: false, stealth: false, startmessage: true, autoview: false, autoai: false, warn_limit: 3 };
+    return _cachedSettings || { prefix: '.', mode: 'public', gcpresence: false, antitag: false, antidelete: true, antilink: 'off', chatbotpm: false, packname: 'Toxic-MD', author: 'xh_clinton', multiprefix: false, stealth: false, startmessage: true, autoview: false, autoai: false, toxicai: false, warn_limit: 3 };
 }
 
 async function fastGetSudo() {
@@ -630,10 +631,21 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             } catch (error) {
                 console.error(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
             }
+        } else if (isDev && !itsMe && (settings.toxicai === true || settings.toxicai === 'true')) {
+            try { await toxicaiFeature(context); } catch {}
         } else if (settings.autoai && !itsMe) {
             const _chatbotDM = !m.isGroup && (chatbotpmSetting === true || chatbotpmSetting === 'true' || chatbotpmSetting === 'on');
             if (!_chatbotDM) {
-                if (!m.isGroup || (body && usedPrefix && body.startsWith(usedPrefix))) {
+                const _botNum = (botNumber || '').split('@')[0].split(':')[0];
+                const _isMentioned = (m.mentionedJid || []).some(j => (j || '').split('@')[0].split(':')[0] === _botNum);
+                const _isReplyToBot = (() => {
+                    const qSender = m.msg?.contextInfo?.participant || m.quoted?.sender || '';
+                    return !!(qSender && qSender.split('@')[0].split(':')[0] === _botNum);
+                })();
+                const _triggerT = /^t\s+/i.test((body || '').trim());
+                const _hasPrefix = !!(body && usedPrefix && body.startsWith(usedPrefix));
+                const _isDM = !m.isGroup;
+                if (_isDM || _isMentioned || _isReplyToBot || _triggerT || _hasPrefix) {
                     try { await autoai(context); } catch {}
                 }
             }

@@ -1,83 +1,51 @@
 const fetch = require('node-fetch');
 
-module.exports = async (client, m, store, chatbotpmSetting, prefix, sudoUsers) => {
+module.exports = async (client, m, store, chatbotpmSetting) => {
     try {
-        if (!m || !m.key || !m.message || !m.key.remoteJid.endsWith("@s.whatsapp.net") || m.key.fromMe) {
-            return;
-        }
-
-        if (!(chatbotpmSetting === true || chatbotpmSetting === 'true')) {
-            return;
-        }
+        if (!m || !m.key || !m.message || !m.key.remoteJid.endsWith('@s.whatsapp.net') || m.key.fromMe) return;
+        if (!(chatbotpmSetting === true || chatbotpmSetting === 'true')) return;
 
         const botNumber = await client.decodeJid(client.user.id);
         const sender = m.sender ? await client.decodeJid(m.sender) : null;
-        const senderNumber = sender ? sender.split('@')[0] : null;
-
-        if (!sender || !senderNumber) {
-            return;
-        }
-
-        const sudoList = Array.isArray(sudoUsers) ? sudoUsers.map(v => String(v).replace(/[^0-9]/g, '')).filter(Boolean) : [];
-        if (sudoList.includes(senderNumber) || sender === botNumber) {
-            return;
-        }
+        if (!sender || sender === botNumber) return;
 
         const messageContent = (
             m.message?.conversation ||
             m.message?.extendedTextMessage?.text ||
             m.message?.imageMessage?.caption ||
-            m.message?.videoMessage?.caption ||
-            ""
+            m.message?.videoMessage?.caption || ''
         ).trim();
 
-        const effectivePrefix = (typeof prefix === 'string' && prefix.length) ? prefix : '.';
-        if (messageContent.startsWith(effectivePrefix)) {
-            return;
+        if (!messageContent) return;
+
+        const ALL_PREFIXES = ['.', '!', '#', '/', '$', '?', '+', '-', '*', '~', '%', '&', '^', '=', '|'];
+        if (ALL_PREFIXES.some(p => messageContent.startsWith(p))) return;
+
+        let GROQ_KEY = process.env.GROQ_API_KEY;
+        if (!GROQ_KEY) {
+            try { GROQ_KEY = require('../keys').GROQ_API_KEY; } catch {}
         }
+        if (!GROQ_KEY) return;
 
-        if (!messageContent) {
-            return;
-        }
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'llama-3.3-70b-versatile',
+                messages: [
+                    { role: 'system', content: 'You are TOXIC-MD, a savage brutally honest WhatsApp assistant. Answer helpfully but with maximum attitude and sarcasm. Keep it under 3 sentences.' },
+                    { role: 'user', content: messageContent }
+                ],
+                max_tokens: 200,
+                temperature: 0.8
+            })
+        });
 
-        try {
-            const encodedText = encodeURIComponent(messageContent);
-            const apiUrl = `https://api.nexray.web.id/ai/chatgpt?text=${encodedText}`;
+        if (!res.ok) return;
+        const data = await res.json();
+        const reply = data.choices?.[0]?.message?.content?.trim();
+        if (!reply) return;
 
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 10000);
-            let response;
-            try {
-                response = await fetch(apiUrl, { signal: controller.signal });
-            } finally {
-                clearTimeout(timeout);
-            }
-
-            if (!response.ok) {
-                throw new Error(`API request failed with status ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (!data.status || !data.result) {
-                throw new Error("invalid API response");
-            }
-
-            await client.sendMessage(
-                m.key.remoteJid,
-                { text: data.result },
-                { quoted: m }
-            );
-
-        } catch (e) {
-            console.error(`toxic-md chatbotpm error:`, e);
-            await client.sendMessage(
-                m.key.remoteJid,
-                { text: `chatbot error: ${e.message}` },
-                { quoted: m }
-            );
-        }
-    } catch (e) {
-        console.error("toxic-md chatbotpm error:", e);
-    }
+        await client.sendMessage(m.key.remoteJid, { text: reply }, { quoted: m });
+    } catch {}
 };
