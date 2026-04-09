@@ -55,7 +55,7 @@ async function fastGetSettings() {
     } catch (e) {
         console.error('❌ [fastGetSettings]:', e.message);
     }
-    return _cachedSettings || { prefix: '.', mode: 'public', gcpresence: false, antitag: false, antidelete: true, antilink: 'off', chatbotpm: false, packname: 'Toxic-MD', author: 'xh_clinton', multiprefix: false, stealth: false, startmessage: true, autoview: false, autoai: false, toxicai: false, warn_limit: 3 };
+    return _cachedSettings || { prefix: '.', mode: 'public', gcpresence: false, antitag: false, antidelete: true, antilink: 'off', chatbotpm: false, packname: 'Toxic-MD', author: 'xh_clinton', multiprefix: false, stealth: false, startmessage: true, autoview: false, autoai: false, toxicagent: false, warn_limit: 3 };
 }
 
 async function fastGetSudo() {
@@ -595,13 +595,14 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             return;
         }
 
-        try { await antilink(client, m, store); } catch (error) { console.error('❌ [ANTILINK ERROR]:', error); }
-        try { await chatbotpm(client, m, store, chatbotpmSetting); } catch (error) { console.error('❌ [CHATBOTPM ERROR]:', error); }
-        try { await status_saver(client, m, Owner, usedPrefix); } catch (error) { console.error('❌ [STATUS_SAVER ERROR]:', error); }
-        try { await afkFeature(client, m); } catch (error) { console.error('❌ [AFK ERROR]:', error); }
-        try { await gcPresence(client, m); } catch (error) { console.error('❌ [GCPRESENCE ERROR]:', error); }
-        try { await antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body); } catch (error) { console.error('❌ [ANTITAGGC ERROR]:', error); }
-        try { await antistatusmention(client, m); } catch (error) { console.error('❌ [ANTISTATUSMENTION ERROR]:', error); }
+        await Promise.all([
+            antilink(client, m, store).catch(e => console.error('❌ [ANTILINK]:', e)),
+            status_saver(client, m, Owner, usedPrefix).catch(e => console.error('❌ [STATUS_SAVER]:', e)),
+            afkFeature(client, m).catch(e => console.error('❌ [AFK]:', e)),
+            gcPresence(client, m).catch(e => console.error('❌ [GCPRESENCE]:', e)),
+            antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body).catch(e => console.error('❌ [ANTITAGGC]:', e)),
+            antistatusmention(client, m).catch(e => console.error('❌ [ANTISTATUSMENTION]:', e)),
+        ]);
 
         const _rT = new Set(['w', 'wow', 'xd', 'p', 'uhm']);
         if (_rT.has(body.trim().toLowerCase()) && m.quoted) {
@@ -631,11 +632,14 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             } catch (error) {
                 console.error(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
             }
-        } else if (isDev && !itsMe && (settings.toxicai === true || settings.toxicai === 'true')) {
+        } else if (isDev && !itsMe && (settings.toxicagent === true || settings.toxicagent === 'true')) {
             try { await toxicaiFeature(context); } catch {}
-        } else if (settings.autoai && !itsMe) {
-            const _chatbotDM = !m.isGroup && (chatbotpmSetting === true || chatbotpmSetting === 'true' || chatbotpmSetting === 'on');
-            if (!_chatbotDM) {
+        } else {
+            const _isDM = !m.isGroup;
+            const _chatbotDMOn = _isDM && (chatbotpmSetting === true || chatbotpmSetting === 'true' || chatbotpmSetting === 'on');
+            if (_chatbotDMOn) {
+                try { await chatbotpm(client, m, store, chatbotpmSetting); } catch (e) { console.error('❌ [CHATBOTPM]:', e); }
+            } else if (settings.autoai && !itsMe) {
                 const _botNum = (botNumber || '').split('@')[0].split(':')[0];
                 const _isMentioned = (m.mentionedJid || []).some(j => (j || '').split('@')[0].split(':')[0] === _botNum);
                 const _isReplyToBot = (() => {
@@ -644,7 +648,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 })();
                 const _triggerT = /^t\s+/i.test((body || '').trim());
                 const _hasPrefix = !!(body && usedPrefix && body.startsWith(usedPrefix));
-                const _isDM = !m.isGroup;
                 if (_isDM || _isMentioned || _isReplyToBot || _triggerT || _hasPrefix) {
                     try { await autoai(context); } catch {}
                 }

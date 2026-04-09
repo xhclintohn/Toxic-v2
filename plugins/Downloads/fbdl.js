@@ -1,4 +1,17 @@
-const fetch = require("node-fetch");
+const fetch = require('node-fetch');
+
+async function cobaltFetch(url) {
+    const res = await fetch('https://api.cobalt.tools/', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, downloadMode: 'auto' })
+    });
+    if (!res.ok) throw new Error(`cobalt ${res.status}`);
+    const d = await res.json();
+    if (d.status === 'stream' || d.status === 'redirect' || d.status === 'tunnel') return d.url;
+    if (d.status === 'picker' && d.picker?.length) return d.picker[0].url;
+    throw new Error(d.error?.code || 'cobalt no URL');
+}
 
 module.exports = async (context) => {
     const { client, m, text, prefix } = context;
@@ -7,43 +20,38 @@ module.exports = async (context) => {
         return m.reply(`╭───(    TOXIC-MD    )───\n├ Where's the Facebook link, you brainless moron?\n├ Example: ${prefix}facebook https://www.facebook.com/reel/xxxxx\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
-    if (!text.includes("facebook.com")) {
-        return m.reply("╭───(    TOXIC-MD    )───\n├ That's not a Facebook link, you absolute potato!\n├ Facebook links contain 'facebook.com', duh.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+    if (!text.includes('facebook.com') && !text.includes('fb.watch')) {
+        return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a Facebook link, you absolute potato!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
     }
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        const encodedUrl = encodeURIComponent(text.trim());
-        const apiUrl = `https://vinztyty.my.id/download/facebook?url=${encodedUrl}`;
+        let videoUrl = null;
+        let quality = 'best available';
 
-        const response = await fetch(apiUrl);
-        const data = await response.json();
+        try {
+            videoUrl = await cobaltFetch(text.trim());
+        } catch {}
 
-        if (!data.status || !data.result || data.result.length === 0) {
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply("╭───(    TOXIC-MD    )───\n├ No video found or API failed. Try another link!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+        if (!videoUrl) {
+            try {
+                const encodedUrl = encodeURIComponent(text.trim());
+                const apiUrl = `https://vinztyty.my.id/download/facebook?url=${encodedUrl}`;
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                if (data.status && data.result?.length) {
+                    const videos = data.result;
+                    const v720 = videos.find(v => v.quality?.includes('720p') && v.url && v.url !== '/');
+                    const best = v720 || videos.find(v => v.url && v.url !== '/');
+                    if (best) { videoUrl = best.url; quality = best.quality || 'SD'; }
+                }
+            } catch {}
         }
 
-        const videos = data.result;
-        let video720p = null;
-        let bestVideo = null;
-
-        for (const video of videos) {
-            if (video.quality && video.quality.includes("720p") && video.url && video.url !== "/") {
-                video720p = video;
-                break;
-            }
-            if (video.url && video.url !== "/" && !bestVideo) {
-                bestVideo = video;
-            }
-        }
-
-        const videoToUse = video720p || bestVideo;
-
-        if (!videoToUse || !videoToUse.url || videoToUse.url === "/") {
+        if (!videoUrl) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply("╭───(    TOXIC-MD    )───\n├ Failed to get a valid video URL.\n├ Link might be private or restricted, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+            return m.reply('╭───(    TOXIC-MD    )───\n├ No video found or API failed. Try another link!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
@@ -51,15 +59,15 @@ module.exports = async (context) => {
         await client.sendMessage(
             m.chat,
             {
-                video: { url: videoToUse.url },
-                caption: `╭───(    TOXIC-MD    )───\n├───≫ FACEBOOK DL ≪───\n├ \n├ Quality: ${videoToUse.quality || "best available"}\n├ Don't waste my time with more garbage.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                video: { url: videoUrl },
+                caption: `╭───(    TOXIC-MD    )───\n├───≫ FACEBOOK DL ≪───\n├ \n├ Quality: ${quality}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 gifPlayback: false
             },
             { quoted: m }
         );
 
     } catch (e) {
-        console.error("Facebook DL Error:", e);
+        console.error('Facebook DL Error:', e);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         m.reply(`╭───(    TOXIC-MD    )───\n├───≫ FB DL ERROR ≪───\n├ \n├ Download crashed harder than your IQ.\n├ ${e.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }

@@ -1,79 +1,77 @@
-const fetch = require("node-fetch");
+const fetch = require('node-fetch');
+
+async function cobaltFetch(url) {
+    const res = await fetch('https://api.cobalt.tools/', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, downloadMode: 'auto' })
+    });
+    if (!res.ok) throw new Error(`cobalt ${res.status}`);
+    const d = await res.json();
+    if (d.status === 'stream' || d.status === 'redirect' || d.status === 'tunnel') return d.url;
+    if (d.status === 'picker' && d.picker?.length) return d.picker[0].url;
+    throw new Error(d.error?.code || 'cobalt no URL');
+}
 
 module.exports = async (context) => {
-    const { client, m, text, botname } = context;
-
-    const formatStylishReply = (message) => {
-        return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
-    };
-
-    const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-        for (let attempt = 1; attempt <= retries; attempt++) {
-            try {
-                const response = await fetch(url, options);
-                if (!response.ok) {
-                    throw new Error(`API failed with status ${response.status}`);
-                }
-                return response;
-            } catch (error) {
-                if (attempt === retries || error.type !== "request-timeout") {
-                    throw error;
-                }
-                console.error(`Attempt ${attempt} failed: ${error.message}. Retrying in ${delay}ms...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-    };
+    const { client, m, text } = context;
 
     if (!text) {
-        return m.reply(formatStylishReply("Yo, drop a Twitter/X link, fam! 📹 Ex: .twitterdl https://x.com/user/status/123"));
+        return m.reply('╭───(    TOXIC-MD    )───\n├ Drop a Twitter/X link!\n├ Ex: .twitterdl https://x.com/user/status/123\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
     }
 
-    if (!text.includes("twitter.com") && !text.includes("x.com")) {
-        return m.reply(formatStylishReply("That’s not a valid Twitter/X link, you clueless twit! Try again."));
+    if (!text.includes('twitter.com') && !text.includes('x.com')) {
+        return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a valid Twitter/X link!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
     }
 
     try {
-        const encodedUrl = encodeURIComponent(text);
-        const response = await fetchWithRetry(
-            `https://api.privatezia.biz.id/api/downloader/alldownload?url=${encodedUrl}`,
-            { headers: { Accept: "application/json" }, timeout: 15000 }
-        );
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        const data = await response.json();
+        let videoUrl = null;
+        let title = 'Twitter/X Video';
 
-        if (!data || !data.status || !data.result || !data.result.video || !data.result.video.url) {
-            return m.reply(formatStylishReply("API’s actin’ shady, no video found! 😢 Try again later."));
+        try {
+            videoUrl = await cobaltFetch(text);
+        } catch {}
+
+        if (!videoUrl) {
+            try {
+                const encodedUrl = encodeURIComponent(text);
+                const response = await fetch(`https://api.privatezia.biz.id/api/downloader/alldownload?url=${encodedUrl}`, {
+                    headers: { Accept: 'application/json' }
+                });
+                const data = await response.json();
+                if (data?.status && data?.result?.video?.url) {
+                    videoUrl = data.result.video.url;
+                    title = data.result.title || title;
+                }
+            } catch {}
         }
 
-        const twtvid = data.result.video.url;
-        const title = data.result.title || "No title available";
-
-        if (!twtvid) {
-            return m.reply(formatStylishReply("Invalid Twitter/X data. Make sure the video exists, fam!"));
+        if (!videoUrl) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+            return m.reply('╭───(    TOXIC-MD    )───\n├ No video found! API might be down or link is private.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
-        const videoResponse = await fetchWithRetry(twtvid, { timeout: 15000 });
-        if (!videoResponse.ok) {
-            throw new Error(`Failed to download video: HTTP ${videoResponse.status}`);
-        }
+        const videoResponse = await fetch(videoUrl);
+        if (!videoResponse.ok) throw new Error(`Failed to download: HTTP ${videoResponse.status}`);
+        const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
 
-        const arrayBuffer = await videoResponse.arrayBuffer();
-        const videoBuffer = Buffer.from(arrayBuffer);
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
         await client.sendMessage(
             m.chat,
             {
                 video: videoBuffer,
-                mimetype: "video/mp4",
-                caption: formatStylishReply(`🎥 Twitter/X Video\n\n📌 *Title:* ${title}`),
+                mimetype: 'video/mp4',
+                caption: `╭───(    TOXIC-MD    )───\n├───≫ Twitter/X Video ≪───\n├ \n├ ${title}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 gifPlayback: false,
             },
             { quoted: m }
         );
     } catch (e) {
-        console.error("Twitter/X download error:", e);
-        m.reply(formatStylishReply(`Yo, we hit a snag: ${e.message}. Check the URL and try again! 😎`));
+        console.error('Twitter/X download error:', e);
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        m.reply(`╭───(    TOXIC-MD    )───\n├ Download failed: ${e.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

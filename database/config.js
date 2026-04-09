@@ -1,5 +1,72 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
+
+const BACKUP_FILE = path.resolve('./data/persistent.json');
+
+function saveBackup() {
+    try {
+        const dir = path.dirname(BACKUP_FILE);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        const settings = {};
+        for (const row of db.prepare('SELECT key, value FROM settings').all()) {
+            try { settings[row.key] = JSON.parse(row.value); } catch { settings[row.key] = row.value; }
+        }
+        const banned = db.prepare('SELECT num FROM banned_users').all().map(r => r.num);
+        const sudo = db.prepare('SELECT num FROM sudo_users').all().map(r => r.num);
+        const warns = db.prepare('SELECT jid, user, warns FROM warn_data').all();
+        const groups = db.prepare('SELECT * FROM group_settings').all();
+        fs.writeFileSync(BACKUP_FILE, JSON.stringify({ settings, banned, sudo, warns, groups, ts: Date.now() }));
+    } catch {}
+}
+
+let _backupTimer = null;
+function scheduleBackup() {
+    clearTimeout(_backupTimer);
+    _backupTimer = setTimeout(saveBackup, 3000);
+}
+
+function restoreBackup() {
+    try {
+        if (!fs.existsSync(BACKUP_FILE)) return;
+        const count = db.prepare('SELECT COUNT(*) as c FROM settings').get();
+        if (count.c > 0) return;
+        const data = JSON.parse(fs.readFileSync(BACKUP_FILE, 'utf8'));
+        if (!data || !data.ts) return;
+        if (data.settings && Object.keys(data.settings).length) {
+            const upsert = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
+            const tx = db.transaction(entries => { for (const [k, v] of entries) upsert.run(k, JSON.stringify(v)); });
+            tx(Object.entries(data.settings));
+        }
+        if (data.banned?.length) {
+            const ins = db.prepare('INSERT OR IGNORE INTO banned_users (num) VALUES (?)');
+            const tx = db.transaction(items => { for (const n of items) ins.run(n); });
+            tx(data.banned);
+        }
+        if (data.sudo?.length) {
+            const ins = db.prepare('INSERT OR IGNORE INTO sudo_users (num) VALUES (?)');
+            const tx = db.transaction(items => { for (const n of items) ins.run(n); });
+            tx(data.sudo);
+        }
+        if (data.warns?.length) {
+            const ins = db.prepare('INSERT OR REPLACE INTO warn_data (jid, user, warns) VALUES (?, ?, ?)');
+            const tx = db.transaction(items => { for (const w of items) ins.run(w.jid, w.user, w.warns); });
+            tx(data.warns);
+        }
+        if (data.groups?.length) {
+            const ins = db.prepare('INSERT OR IGNORE INTO group_settings (jid) VALUES (?)');
+            const tx = db.transaction(items => { for (const g of items) ins.run(g.jid); });
+            tx(data.groups);
+            for (const g of data.groups) {
+                db.prepare('UPDATE group_settings SET antidelete=?,gcpresence=?,events=?,antidemote=?,antipromote=?,antilink=?,antistatusmention=?,antitag=?,welcome=?,goodbye=?,warn_limit=? WHERE jid=?')
+                  .run(g.antidelete,g.gcpresence,g.events,g.antidemote,g.antipromote,g.antilink,g.antistatusmention,g.antitag,g.welcome,g.goodbye,g.warn_limit,g.jid);
+            }
+        }
+        console.log('✅ Database restored from local backup (' + new Date(data.ts).toLocaleString() + ')');
+    } catch (e) {
+        console.error('❌ Failed to restore DB backup:', e.message);
+    }
+}
 
 const db = new Database(path.resolve('./whatsasena.db'));
 db.pragma('journal_mode = WAL');
@@ -72,7 +139,7 @@ const GROUP_SETTINGS_TTL = 60000;
 
 function isCacheValid(e) { return e.data !== null && (Date.now() - e.time) < e.ttl; }
 
-async function initializeDatabase() {}
+async function initializeDatabase() { restoreBackup(); }
 
 async function getSettings() {
     if (isCacheValid(cache.settings)) return cache.settings.data;
@@ -84,7 +151,7 @@ async function getSettings() {
             prefix: '.', mode: 'public', gcpresence: false, antitag: false, antidelete: true,
             antilink: 'off', chatbotpm: false, packname: 'Toxic-MD', author: 'xh_clinton',
             multiprefix: false, stealth: false, startmessage: true, autoview: false,
-            autoai: false, antistatusmention: 'off', warn_limit: 3
+            autoai: false, antistatusmention: 'off', warn_limit: 3, toxicagent: false
         };
         const result = { ...defaults, ...s };
         cache.settings = { data: result, time: Date.now(), ttl: 30000 };
@@ -100,6 +167,7 @@ async function updateSetting(key, value) {
     try {
         stmts.upsertSetting.run(key, JSON.stringify(value));
         cache.settings.data = null; cache.settings.time = 0;
+        scheduleBackup();
     } catch (e) { console.error('Error updating setting:', e); }
 }
 
@@ -128,26 +196,27 @@ async function updateGroupSetting(jid, key, value) {
         stmts.insertGroupSettings.run(jid);
         db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(value, jid);
         cache.groupSettings.delete(jid);
+        scheduleBackup();
     } catch (e) { console.error('Error updating group setting:', e); }
 }
 
 async function banUser(num) {
-    try { stmts.insertBanned.run(num); cache.bannedUsers.data = null; cache.bannedUsers.time = 0; }
+    try { stmts.insertBanned.run(num); cache.bannedUsers.data = null; cache.bannedUsers.time = 0; scheduleBackup(); }
     catch (e) { console.error('Error banning user:', e); }
 }
 
 async function unbanUser(num) {
-    try { stmts.deleteBanned.run(num); cache.bannedUsers.data = null; cache.bannedUsers.time = 0; }
+    try { stmts.deleteBanned.run(num); cache.bannedUsers.data = null; cache.bannedUsers.time = 0; scheduleBackup(); }
     catch (e) { console.error('Error unbanning user:', e); }
 }
 
 async function addSudoUser(num) {
-    try { stmts.insertSudo.run(num); cache.sudoUsers.data = null; cache.sudoUsers.time = 0; }
+    try { stmts.insertSudo.run(num); cache.sudoUsers.data = null; cache.sudoUsers.time = 0; scheduleBackup(); }
     catch (e) { console.error('Error adding sudo:', e); }
 }
 
 async function removeSudoUser(num) {
-    try { stmts.deleteSudo.run(num); cache.sudoUsers.data = null; cache.sudoUsers.time = 0; }
+    try { stmts.deleteSudo.run(num); cache.sudoUsers.data = null; cache.sudoUsers.time = 0; scheduleBackup(); }
     catch (e) { console.error('Error removing sudo:', e); }
 }
 
@@ -202,14 +271,15 @@ async function getWarnCount(jid, user) {
 async function addWarn(jid, user) {
     try {
         const r = stmts.getWarn.get(jid, user);
-        if (r) { stmts.incrementWarn.run(jid, user); return r.warns + 1; }
+        if (r) { stmts.incrementWarn.run(jid, user); scheduleBackup(); return r.warns + 1; }
         stmts.insertWarn.run(jid, user);
+        scheduleBackup();
         return 1;
     } catch { return 0; }
 }
 
 async function resetWarn(jid, user) {
-    try { stmts.deleteWarn.run(jid, user); } catch {}
+    try { stmts.deleteWarn.run(jid, user); scheduleBackup(); } catch {}
 }
 
 function saveMessage(id, jid, sender, messageObj) {
@@ -234,6 +304,8 @@ function cleanupOldMsgStore(maxAgeMs = 12 * 60 * 60 * 1000) {
 }
 
 setInterval(() => cleanupOldMsgStore(), 12 * 60 * 60 * 1000);
+
+restoreBackup();
 
 module.exports = {
     db, initializeDatabase, getSettings, updateSetting,

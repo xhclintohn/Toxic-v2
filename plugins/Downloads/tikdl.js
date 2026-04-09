@@ -1,12 +1,25 @@
-const fetch = require("node-fetch");
+const fetch = require('node-fetch');
 const { tiktok: mintakeTiktok } = require('mintake');
+
+async function cobaltFetch(url, mode = 'auto') {
+    const res = await fetch('https://api.cobalt.tools/', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, downloadMode: mode })
+    });
+    if (!res.ok) throw new Error(`cobalt ${res.status}`);
+    const d = await res.json();
+    if (d.status === 'stream' || d.status === 'redirect' || d.status === 'tunnel') return d.url;
+    if (d.status === 'picker' && d.picker?.length) return d.picker[0].url;
+    throw new Error(d.error?.code || 'cobalt no URL');
+}
 
 module.exports = async (context) => {
     const { client, m, text, prefix } = context;
 
     try {
         if (!text) return m.reply(`did you forget your brain at home? where's the tiktok link?\nexample: ${prefix}tt https://vt.tiktok.com/xxxxx`);
-        if (!text.includes("tiktok.com")) return m.reply("are you fucking blind? that's not a tiktok link! tiktok links contain 'tiktok.com', you absolute potato.");
+        if (!text.includes('tiktok.com')) return m.reply("are you fucking blind? that's not a tiktok link! tiktok links contain 'tiktok.com', you absolute potato.");
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
@@ -15,28 +28,23 @@ module.exports = async (context) => {
         let username = 'unknown';
         let stats = {};
 
-        const encodedUrl = encodeURIComponent(text);
         try {
-            const response = await fetch(`https://api.nexray.web.id/downloader/tiktok?url=${encodedUrl}`, { method: "GET" });
-            const data = await response.json();
-            if (data?.status && data?.result?.data) {
-                videoUrl = data.result.data;
-                musicUrl = data.result.music_info?.url;
-                username = data.result.author?.nickname || 'unknown';
-                stats = data.result.stats || {};
+            const fallback = await mintakeTiktok(text);
+            if (fallback?.nowm) {
+                videoUrl = fallback.nowm;
+                if (fallback.audio) musicUrl = fallback.audio;
+                username = fallback.author?.nickname || fallback.nickname || 'unknown';
+            } else if (fallback?.wm) {
+                videoUrl = fallback.wm;
             }
         } catch {}
 
         if (!videoUrl) {
-            try {
-                const fallback = await mintakeTiktok(text);
-                if (fallback?.nowm) {
-                    videoUrl = fallback.nowm;
-                    if (fallback.audio) musicUrl = fallback.audio;
-                } else if (fallback?.wm) {
-                    videoUrl = fallback.wm;
-                }
-            } catch {}
+            try { videoUrl = await cobaltFetch(text, 'mute'); } catch {}
+        }
+
+        if (!videoUrl) {
+            try { videoUrl = await cobaltFetch(text, 'auto'); } catch {}
         }
 
         if (!videoUrl) {
@@ -52,16 +60,16 @@ module.exports = async (context) => {
         const caption = `╭───(    TOXIC-MD    )───
 ├───≫ 🔗 TikTok Download ≪───
 ├ Author : ${username}
-├ Views : ${stats.views || "0"}
-├ Likes : ${stats.likes || "0"}
-├ Comments : ${stats.comment || "0"}
+├ Views : ${stats.views || '0'}
+├ Likes : ${stats.likes || '0'}
+├ Comments : ${stats.comment || '0'}
 ╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
         await client.sendMessage(m.chat, {
             video: videoBuffer,
-            mimetype: "video/mp4",
-            caption: caption
+            mimetype: 'video/mp4',
+            caption
         }, { quoted: m });
 
         if (musicUrl) {
@@ -70,21 +78,21 @@ module.exports = async (context) => {
                 const musicBuffer = Buffer.from(await musicResponse.arrayBuffer());
                 await client.sendMessage(m.chat, {
                     audio: musicBuffer,
-                    mimetype: "audio/mpeg",
+                    mimetype: 'audio/mpeg',
                     ptt: false,
-                    fileName: `tiktok_audio.mp3`
+                    fileName: 'tiktok_audio.mp3'
                 });
             } catch {}
         }
 
     } catch (error) {
-        console.error("tiktok error:", error);
+        console.error('tiktok error:', error);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         await m.reply(`╭───(    TOXIC-MD    )───
 ├───≫ Error ≪───
 ├ Error : ${error.message}
 ├ Fix : Try again later
 ╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+> ©𝐏𝐨𝐰𝐞𝐫𝐞ᴅ 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

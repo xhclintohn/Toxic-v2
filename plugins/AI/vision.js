@@ -1,21 +1,4 @@
-const axios = require('axios');
-const FormData = require('form-data');
-
-async function uploadToCatbox(buffer) {
-    const form = new FormData();
-    form.append('reqtype', 'fileupload');
-    form.append('fileToUpload', buffer, { filename: 'image.png' });
-
-    const response = await axios.post('https://catbox.moe/user/api.php', form, {
-        headers: form.getHeaders(),
-    });
-
-    if (!response.data || !response.data.includes('catbox')) {
-        throw new Error('upload failed');
-    }
-
-    return response.data.trim();
-}
+const fetch = require('node-fetch');
 
 module.exports = async (context) => {
     const { client, m, text } = context;
@@ -28,44 +11,72 @@ module.exports = async (context) => {
         }
 
         const q = m.quoted || m;
-        const mime = (q.msg || q).mimetype || "";
+        const mime = (q.msg || q).mimetype || '';
 
-        if (!mime.startsWith("image/")) {
+        if (!mime.startsWith('image/')) {
             return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ That's not an image, you donkey.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
+        const GROQ_KEY = process.env.GROQ_API_KEY || (() => { try { return require('../../keys').GROQ_API_KEY; } catch { return ''; } })();
+        if (!GROQ_KEY) throw new Error('No GROQ_API_KEY configured');
+
         const mediaBuffer = await q.download();
-        const uploadedURL = await uploadToCatbox(mediaBuffer);
+        const base64Image = mediaBuffer.toString('base64');
+        const mimeType = mime || 'image/jpeg';
 
-        const api = `https://api.deline.web.id/ai/toprompt?url=${encodeURIComponent(uploadedURL)}`;
-        const result = await axios.get(api);
+        const prompt = text ? text.trim() : 'Describe this image in detail. Be thorough but concise.';
 
-        if (!result.data?.status || !result.data?.result?.original) {
-            throw new Error('api returned invalid response');
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${GROQ_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+                messages: [
+                    {
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'image_url',
+                                image_url: { url: `data:${mimeType};base64,${base64Image}` }
+                            },
+                            {
+                                type: 'text',
+                                text: prompt
+                            }
+                        ]
+                    }
+                ],
+                max_tokens: 1024,
+                temperature: 0.7
+            })
+        });
+
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`Groq API error ${res.status}: ${errText}`);
         }
 
-        const originalText = result.data.result.original;
-        const promptText = text ? `├ Prompt: ${text}\n├\n` : '';
+        const data = await res.json();
+        const result = data.choices?.[0]?.message?.content?.trim();
+
+        if (!result) throw new Error('Empty response from vision model');
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
         await client.sendMessage(
             m.chat,
             {
-                text: `╭───(    TOXIC-MD    )───\n├───≫ Iᴍᴀɢᴇ Aɴᴀʟʏsɪs ≪───\n├ \n${promptText}├ ${originalText}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Iᴍᴀɢᴇ Aɴᴀʟʏsɪs ≪───\n├ \n${result.split('\n').map(l => `├ ${l}`).join('\n')}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
             },
             { quoted: m }
         );
 
     } catch (err) {
-        console.error('image analysis error:', err);
-
+        console.error('vision error:', err);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-
-        let errorMessage = 'analysis failed';
-        if (err.message.includes('upload failed')) errorMessage = 'upload failed';
-        if (err.message.includes('invalid response')) errorMessage = 'api returned invalid response';
-
-        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ ${errorMessage}\n├ error: ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Vision analysis failed.\n├ ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };

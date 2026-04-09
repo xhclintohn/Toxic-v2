@@ -1,153 +1,92 @@
 const fetch = require('node-fetch');
 
-function getAuthHeaders() {
-    const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || (() => { try { return require('../../keys').GITHUB_TOKEN; } catch { return ''; } })();
-    const headers = {
+function getHeaders() {
+    return {
         'User-Agent': 'Toxic-MD-Bot/2.0',
         'Accept': 'application/vnd.github.v3+json'
     };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    return headers;
 }
 
 async function githubUserStalk(user) {
-    const response = await fetch('https://api.github.com/users/' + user, { headers: getAuthHeaders() });
+    const response = await fetch('https://api.github.com/users/' + user, { headers: getHeaders() });
     if (!response.ok) throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
-    const data = await response.json();
-    return {
-        username: data.login, name: data.name, bio: data.bio, id: data.id,
-        profile_pic: data.avatar_url, html_url: data.html_url, type: data.type,
-        company: data.company, blog: data.blog, location: data.location,
-        email: data.email, public_repo: data.public_repos, public_gists: data.public_gists,
-        followers: data.followers, following: data.following,
-        created_at: data.created_at, updated_at: data.updated_at
-    };
+    return response.json();
 }
 
 async function githubRepoSearch(query) {
-    const response = await fetch(`https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&per_page=1`, { headers: getAuthHeaders() });
+    const response = await fetch(`https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&sort=stars&order=desc`, { headers: getHeaders() });
     if (!response.ok) throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
-    const data = await response.json();
-    if (data.total_count === 0) throw new Error('No repository found');
-    const repo = data.items[0];
-    return {
-        type: 'repository', name: repo.name, full_name: repo.full_name,
-        description: repo.description, html_url: repo.html_url,
-        owner: repo.owner.login, owner_url: repo.owner.html_url, owner_avatar: repo.owner.avatar_url,
-        stargazers_count: repo.stargazers_count, forks_count: repo.forks_count,
-        watchers_count: repo.watchers_count, open_issues_count: repo.open_issues_count,
-        size: formatSize(repo.size), language: repo.language,
-        created_at: repo.created_at, updated_at: repo.updated_at,
-        pushed_at: repo.pushed_at, license: repo.license?.name || 'No license',
-        default_branch: repo.default_branch
-    };
+    return response.json();
 }
 
-async function githubUserSearch(query) {
-    const response = await fetch(`https://api.github.com/search/users?q=${encodeURIComponent(query)}&per_page=1`, { headers: getAuthHeaders() });
-    if (!response.ok) throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
-    const data = await response.json();
-    if (data.total_count === 0) throw new Error('No user found');
-    return data.items[0];
+async function githubCodeSearch(query) {
+    const response = await fetch(`https://api.github.com/search/code?q=${encodeURIComponent(query)}`, { headers: getHeaders() });
+    if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+    return response.json();
 }
 
-function formatSize(size) {
-    if (size < 1024) return size + ' KB';
-    if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' MB';
-    return (size / (1024 * 1024)).toFixed(1) + ' GB';
-}
-
-async function getBuffer(url) {
-    try {
-        const response = await fetch(url, { headers: getAuthHeaders() });
-        return Buffer.from(await response.arrayBuffer());
-    } catch { return null; }
+async function githubTrending() {
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const response = await fetch(`https://api.github.com/search/repositories?q=created:>${weekAgo}&sort=stars&order=desc`, { headers: getHeaders() });
+    if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+    return response.json();
 }
 
 module.exports = async (context) => {
-    const { client, m, text } = context;
+    const { client, m, text, prefix, args, commandName } = context;
+
+    if (!text) {
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ GitHub Search ≪───\n├ Usage:\n├ ${prefix}github user <username>\n├ ${prefix}github repos <query>\n├ ${prefix}github trending\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+    }
+
+    const subCommand = args[0]?.toLowerCase();
+    const searchQuery = args.slice(1).join(' ');
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-        if (!text) {
-            return m.reply(`╭───(    TOXIC-MD    )───\n├ provide a github username or repo\n├ example: .github octocat\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-        }
-
-        let result;
-        let isUser = false;
-        let isRepo = false;
-
-        try {
-            result = await githubUserStalk(text);
-            isUser = true;
-        } catch {
-            try {
-                result = await githubRepoSearch(text);
-                isRepo = true;
-            } catch {
-                try {
-                    const userResult = await githubUserSearch(text);
-                    if (userResult) {
-                        result = await githubUserStalk(userResult.login);
-                        isUser = true;
-                    }
-                } catch { throw new Error('not found on github'); }
-            }
-        }
-
-        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-        let caption = '';
-        let thumb = null;
-
-        if (isUser) {
-            thumb = await getBuffer(result.profile_pic);
-            caption = `╭───(    TOXIC-MD    )───\n` +
-                `├───≫ Gɪᴛʜᴜʙ Pʀᴏꜰɪʟᴇ ≪───\n` +
-                `│🔖 username: ${result.username || 'n/a'}\n` +
-                `│♦️ name: ${result.name || 'n/a'}\n` +
-                `│✨ bio: ${result.bio || 'n/a'}\n` +
-                `│🏢 company: ${result.company || 'n/a'}\n` +
-                `│📍 location: ${result.location || 'n/a'}\n` +
-                `│👥 followers: ${result.followers || 0}\n` +
-                `│🫶 following: ${result.following || 0}\n` +
-                `│📦 repos: ${result.public_repo || 0}\n` +
-                `│📝 gists: ${result.public_gists || 0}\n` +
-                `│📧 email: ${result.email || 'private'}\n` +
-                `│🔗 profile: ${result.html_url}\n` +
-                `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
-
-        } else if (isRepo) {
-            thumb = await getBuffer(result.owner_avatar);
-            caption = `╭───(    TOXIC-MD    )───\n` +
-                `├───≫ Gɪᴛʜᴜʙ Rᴇᴘᴏ ≪───\n` +
-                `│📦 repo: ${result.full_name}\n` +
-                `│📝 description: ${result.description || 'no description'}\n` +
-                `│👤 owner: ${result.owner}\n` +
-                `│⭐ stars: ${result.stargazers_count}\n` +
-                `│🍴 forks: ${result.forks_count}\n` +
-                `│👀 watchers: ${result.watchers_count}\n` +
-                `│🐛 issues: ${result.open_issues_count}\n` +
-                `│📏 size: ${result.size}\n` +
-                `│💻 language: ${result.language || 'not specified'}\n` +
-                `│📄 license: ${result.license}\n` +
-                `│🌿 branch: ${result.default_branch}\n` +
-                `│🔗 url: ${result.html_url}\n` +
-                `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
-        }
-
-        if (thumb) {
-            await client.sendMessage(m.chat, { image: thumb, caption }, { quoted: m });
+        if (subCommand === 'user' || subCommand === 'stalk') {
+            if (!searchQuery) return m.reply('Give me a GitHub username to stalk.');
+            const userData = await githubUserStalk(searchQuery);
+            const bio = userData.bio || 'No bio';
+            const location = userData.location || 'Unknown';
+            const createdDate = new Date(userData.created_at).toLocaleDateString();
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+            await m.reply(
+                `╭───(    TOXIC-MD    )───\n├───≫ GitHub User ≪───\n├ Name: ${userData.name || userData.login}\n├ Username: @${userData.login}\n├ Bio: ${bio}\n├ Location: ${location}\n├ Repos: ${userData.public_repos}\n├ Followers: ${userData.followers}\n├ Following: ${userData.following}\n├ Joined: ${createdDate}\n├ URL: ${userData.html_url}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            );
+        } else if (subCommand === 'repos' || subCommand === 'search') {
+            if (!searchQuery) return m.reply('Give me something to search, genius.');
+            const repoData = await githubRepoSearch(searchQuery);
+            if (!repoData.items || repoData.items.length === 0) return m.reply('No repositories found. Try a different query.');
+            const top5 = repoData.items.slice(0, 5);
+            const repoList = top5.map((repo, i) =>
+                `├ ${i + 1}. ${repo.full_name}\n│  ⭐ ${repo.stargazers_count} | ${repo.language || 'Unknown'}\n│  ${repo.description ? repo.description.substring(0, 60) : 'No description'}`
+            ).join('\n');
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ GitHub Repos ≪───\n${repoList}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        } else if (subCommand === 'trending') {
+            const trendData = await githubTrending();
+            if (!trendData.items || trendData.items.length === 0) return m.reply('No trending repos found.');
+            const top5 = trendData.items.slice(0, 5);
+            const trendList = top5.map((repo, i) =>
+                `├ ${i + 1}. ${repo.full_name}\n│  ⭐ ${repo.stargazers_count} | ${repo.language || 'Unknown'}\n│  ${repo.description ? repo.description.substring(0, 60) : 'No description'}`
+            ).join('\n');
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ GitHub Trending ≪───\n${trendList}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         } else {
-            await client.sendMessage(m.chat, { text: caption }, { quoted: m });
+            const userData = await githubUserStalk(text.trim());
+            const bio = userData.bio || 'No bio';
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+            await m.reply(
+                `╭───(    TOXIC-MD    )───\n├───≫ GitHub User ≪───\n├ Name: ${userData.name || userData.login}\n├ Username: @${userData.login}\n├ Bio: ${bio}\n├ Repos: ${userData.public_repos}\n├ Followers: ${userData.followers}\n├ URL: ${userData.html_url}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            );
         }
-
     } catch (error) {
+        console.error('GitHub search error:', error);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        let errorMessage = 'failed to search github';
-        if (error.message.includes('not found')) errorMessage = 'not found on github';
-        if (error.message.includes('rate limit')) errorMessage = 'rate limit exceeded — set GITHUB_TOKEN for higher limits';
-        await m.reply(`╭───(    TOXIC-MD    )───\n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        if (error.message.includes('404')) return m.reply('User/repo not found. Double-check the name.');
+        if (error.message.includes('403')) return m.reply('GitHub rate limit hit. Try again in a minute.');
+        await m.reply(`╭───(    TOXIC-MD    )───\n├ GitHub search failed.\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };
