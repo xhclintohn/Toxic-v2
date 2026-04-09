@@ -54,7 +54,7 @@ if (!fs.existsSync(sessionName)) {
 const groupEvents = require("./handlers/eventHandler");
 const connectionHandler = require('./handlers/connectionHandler');
 
-const CHANNEL_JID = '120363322461279856@newsletter';
+const CHANNEL_JID = '120363427340708111@newsletter';
 const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '✨', '🌚', '🗿', '😮'];
 
 process.on("unhandledRejection", (reason) => {
