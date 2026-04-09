@@ -1,44 +1,50 @@
 const fetch = require('node-fetch');
 
-  async function cobaltFetch(url) {
-      const res = await fetch('https://api.cobalt.tools/', {
-          method: 'POST',
-          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, downloadMode: 'auto' }),
-          timeout: 15000
-      });
-      if (!res.ok) throw new Error(`cobalt ${res.status}`);
-      const d = await res.json();
-      if (d.status === 'redirect' || d.status === 'tunnel' || d.status === 'stream') return { url: d.url, isVideo: true };
-      if (d.status === 'picker' && d.picker?.length) return { url: d.picker[0].url, isVideo: d.picker[0].type !== 'photo' };
-      throw new Error(d.error?.code || 'cobalt returned no URL');
+  async function agatzFetch(url) {
+      const r = await fetch(`https://api.agatz.xyz/api/facebook?url=${encodeURIComponent(url)}`, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000 });
+      if (!r.ok) throw new Error(`agatz ${r.status}`);
+      const d = await r.json();
+      const items = d?.data || d?.result || [];
+      if (!items.length) throw new Error('agatz no media');
+      const hd = items.find(i => (i.quality || i.type || '').toLowerCase().includes('hd')) || items[0];
+      return hd?.url || (typeof hd === 'string' ? hd : null);
   }
 
-  async function fdownloaderFetch(url) {
-      const res = await fetch(`https://api.agatz.xyz/api/facebook?url=${encodeURIComponent(url)}`, {
+  async function snapsaveFetch(url) {
+      const params = new URLSearchParams({ url, lang: 'en' });
+      const r = await fetch('https://snapsave.app/action.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'Mozilla/5.0', 'Origin': 'https://snapsave.app', 'Referer': 'https://snapsave.app/' },
+          body: params.toString(),
+          timeout: 15000
+      });
+      const html = await r.text();
+      const match = html.match(/href="(https?://[^"]+.mp4[^"]*)"[^>]*>HD/i) || html.match(/href="(https?://[^"]+.mp4[^"]*)"/i);
+      if (!match) throw new Error('snapsave no url');
+      return match[1].replace(/&amp;/g, '&');
+  }
+
+  async function getfvidFetch(url) {
+      const r = await fetch(`https://getfvid.com/downloader?url=${encodeURIComponent(url)}`, {
           headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000
       });
-      if (!res.ok) throw new Error(`fdownloader ${res.status}`);
-      const d = await res.json();
-      const items = d?.data || d?.result || [];
-      if (!Array.isArray(items) || !items.length) throw new Error('no media');
-      const hd = items.find(i => i.quality === 'HD') || items[0];
-      return hd.url || hd;
+      const html = await r.text();
+      const match = html.match(/href="(https?:\/\/[^"]+\.mp4[^"]*)"/i);
+      if (!match) throw new Error('getfvid no url');
+      return match[1].replace(/&amp;/g, '&');
   }
 
   module.exports = async (context) => {
       const { client, m, text, prefix } = context;
-
       if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Where's the Facebook link?\n├ Example: ${prefix}facebook https://www.facebook.com/reel/xxxxx\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       if (!text.includes('facebook.com') && !text.includes('fb.watch')) return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a Facebook link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
 
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
       let videoUrl = null;
-
-      try { const r = await cobaltFetch(text.trim()); videoUrl = r.url; } catch {}
-      if (!videoUrl) {
-          try { videoUrl = await fdownloaderFetch(text.trim()); } catch {}
+      for (const [name, fn] of [['agatz', agatzFetch], ['snapsave', snapsaveFetch], ['getfvid', getfvidFetch]]) {
+          try { videoUrl = await fn(text.trim()); if (videoUrl) break; }
+          catch (e) { console.error(`[FBDL] ${name}:`, e.message); }
       }
 
       if (!videoUrl) {
@@ -52,13 +58,12 @@ const fetch = require('node-fetch');
           const buf = Buffer.from(await dlRes.arrayBuffer());
           await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
           await client.sendMessage(m.chat, {
-              video: buf, mimetype: 'video/mp4', gifPlayback: false,
+              video: buf, mimetype: 'video/mp4',
               caption: '╭───(    TOXIC-MD    )───\n├───≫ Facebook DL ≪───\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
           }, { quoted: m });
-      } catch (err) {
-          console.error('[FBDL] send error:', err);
+      } catch (e) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-          m.reply(`╭───(    TOXIC-MD    )───\n├ ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+          m.reply(`╭───(    TOXIC-MD    )───\n├ ${e.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
   };
   

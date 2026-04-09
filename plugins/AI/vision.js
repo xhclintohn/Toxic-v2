@@ -17,7 +17,7 @@ module.exports = async (context) => {
             return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ That's not an image, you donkey.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
-        const GROQ_KEY = process.env.GROQ_API_KEY || (() => { try { return require('../../keys').GROQ_API_KEY; } catch { return ''; } })();
+        const { GROQ_API_KEY: GROQ_KEY } = require('../../keys');
         if (!GROQ_KEY || GROQ_KEY === 'REPLACE_WITH_YOUR_GROQ_API_KEY_HERE') throw new Error('GROQ_API_KEY not set in keys.js');
 
         const mediaBuffer = await q.download();
