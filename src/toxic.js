@@ -298,75 +298,83 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         m.isGroup = m.chat?.endsWith("g.us");
         m.metadata = {};
-        let _groupParticipants = [];
-        try {
-            m.metadata = m.isGroup ? await fastGroupMetadata(client, m.chat) : {};
-            _groupParticipants = m.metadata?.participants || [];
-        } catch (metaErr) {
-            console.error('❌ [GROUP METADATA]:', metaErr.message);
-        }
-
         const lidToPN = {};
-        const normSender = normalizeNumber(m.sender);
-        const normBot = normalizeNumber(botNumber);
-        let userAdminFound = false;
-        let botAdminFound = false;
+        let _botLidKey = '';
 
-        for (const p of _groupParticipants) {
-            const pJid = p.jid || p.id || '';
-            const pLid = p.lid || '';
-            if (pLid && pJid) lidToPN[pLid.split(':')[0]] = pJid;
-        }
-
-        if (!isDev && m.isGroup) {
-            const senderLidKey = (m.sender || '').split('@')[0].split(':')[0];
-            const resolvedJid = lidToPN[senderLidKey];
-            if (resolvedJid && isDevNumber(resolvedJid)) isDev = true;
-        }
-
-        for (const p of _groupParticipants) {
-            const pJid = p.jid || p.id || '';
-            const pLid = p.lid || '';
-            const normP = normalizeNumber(pJid);
-            const normPLid = pLid ? normalizeNumber(pLid) : '';
-            if (normP === normSender || normPLid === normSender || normP === normSender.replace('@s.whatsapp.net', '@lid')) {
-                userAdminFound = p.admin !== null && p.admin !== undefined;
+        if (m.isGroup) {
+            let _groupParticipants = [];
+            try {
+                m.metadata = await fastGroupMetadata(client, m.chat);
+                _groupParticipants = m.metadata?.participants || [];
+            } catch (metaErr) {
+                console.error('❌ [GROUP METADATA]:', metaErr.message);
             }
-            if (normP === normBot || normPLid === normBot) {
-                botAdminFound = p.admin !== null && p.admin !== undefined;
+
+            const normSender = normalizeNumber(m.sender);
+            const normBot = normalizeNumber(botNumber);
+            let userAdminFound = false;
+            let botAdminFound = false;
+
+            for (const p of _groupParticipants) {
+                const pJid = p.jid || p.id || '';
+                const pLid = p.lid || '';
+                if (pLid && pJid) {
+                    const lidKey = pLid.split(':')[0];
+                    lidToPN[lidKey] = pJid;
+                    if (!_botLidKey && normalizeNumber(pJid) === normBot) _botLidKey = lidKey;
+                }
             }
-        }
 
-        m.isAdmin = isDev ? true : userAdminFound;
-        m.isBotAdmin = botAdminFound;
+            if (!isDev) {
+                const senderLidKey = (m.sender || '').split('@')[0].split(':')[0];
+                const resolvedJid = lidToPN[senderLidKey];
+                if (resolvedJid && isDevNumber(resolvedJid)) isDev = true;
+            }
 
-        try {
-            if (m.msg?.contextInfo?.mentionedJid) {
-                m.msg.contextInfo.mentionedJid = m.msg.contextInfo.mentionedJid.map(j => {
-                    if (!j.endsWith('@lid')) return j;
+            for (const p of _groupParticipants) {
+                const pJid = p.jid || p.id || '';
+                const pLid = p.lid || '';
+                const normP = normalizeNumber(pJid);
+                const normPLid = pLid ? normalizeNumber(pLid) : '';
+                if (normP === normSender || normPLid === normSender || normP === normSender.replace('@s.whatsapp.net', '@lid')) {
+                    userAdminFound = p.admin !== null && p.admin !== undefined;
+                }
+                if (normP === normBot || normPLid === normBot) {
+                    botAdminFound = p.admin !== null && p.admin !== undefined;
+                }
+            }
+
+            m.isAdmin = isDev ? true : userAdminFound;
+            m.isBotAdmin = botAdminFound;
+            m._botLidKey = _botLidKey;
+
+            try {
+                const resolveLid = j => {
+                    if (!j || !j.endsWith('@lid')) return j;
                     return lidToPN[j.split('@')[0].split(':')[0]] || j;
-                });
+                };
+                if (m.msg?.contextInfo?.mentionedJid) {
+                    m.msg.contextInfo.mentionedJid = m.msg.contextInfo.mentionedJid.map(resolveLid);
+                }
+                if (m.message?.extendedTextMessage?.contextInfo?.mentionedJid) {
+                    m.message.extendedTextMessage.contextInfo.mentionedJid = m.message.extendedTextMessage.contextInfo.mentionedJid.map(resolveLid);
+                }
+                if (m.mentionedJid) {
+                    m.mentionedJid = m.mentionedJid.map(resolveLid);
+                }
+                if (m.quoted?.sender?.endsWith?.('@lid')) {
+                    m.quoted.sender = lidToPN[m.quoted.sender.split('@')[0].split(':')[0]] || m.quoted.sender;
+                }
+                if (m.msg?.contextInfo?.participant?.endsWith?.('@lid')) {
+                    m.msg.contextInfo.participant = lidToPN[m.msg.contextInfo.participant.split('@')[0].split(':')[0]] || m.msg.contextInfo.participant;
+                }
+            } catch (lidErr) {
+                console.error('❌ [LID RESOLVE]:', lidErr.message);
             }
-            if (m.message?.extendedTextMessage?.contextInfo?.mentionedJid) {
-                m.message.extendedTextMessage.contextInfo.mentionedJid = m.message.extendedTextMessage.contextInfo.mentionedJid.map(j => {
-                    if (!j.endsWith('@lid')) return j;
-                    return lidToPN[j.split('@')[0].split(':')[0]] || j;
-                });
-            }
-            if (m.mentionedJid) {
-                m.mentionedJid = m.mentionedJid.map(j => {
-                    if (!j.endsWith('@lid')) return j;
-                    return lidToPN[j.split('@')[0].split(':')[0]] || j;
-                });
-            }
-            if (m.quoted?.sender?.endsWith?.('@lid')) {
-                m.quoted.sender = lidToPN[m.quoted.sender.split('@')[0].split(':')[0]] || m.quoted.sender;
-            }
-            if (m.msg?.contextInfo?.participant?.endsWith?.('@lid')) {
-                m.msg.contextInfo.participant = lidToPN[m.msg.contextInfo.participant.split('@')[0].split(':')[0]] || m.msg.contextInfo.participant;
-            }
-        } catch (lidErr) {
-            console.error('❌ [LID RESOLVE]:', lidErr.message);
+        } else {
+            m.isAdmin = isDev;
+            m.isBotAdmin = false;
+            m._botLidKey = '';
         }
 
         let clint = m.quoted || m;
@@ -652,10 +660,16 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 try { await chatbotpm(client, m, store, chatbotpmSetting); } catch (e) { console.error('❌ [CHATBOTPM]:', e); }
             } else if (settings.autoai && !itsMe) {
                 const _botNum = (botNumber || '').split('@')[0].split(':')[0];
-                const _isMentioned = (m.mentionedJid || []).some(j => (j || '').split('@')[0].split(':')[0] === _botNum);
+                const _bLidKey = m._botLidKey || '';
+                const _isMentioned = (m.mentionedJid || []).some(j => {
+                    const jk = (j || '').split('@')[0].split(':')[0];
+                    return jk === _botNum || (_bLidKey && jk === _bLidKey);
+                });
                 const _isReplyToBot = (() => {
                     const qSender = m.msg?.contextInfo?.participant || m.quoted?.sender || '';
-                    return !!(qSender && qSender.split('@')[0].split(':')[0] === _botNum);
+                    if (!qSender) return false;
+                    const qk = qSender.split('@')[0].split(':')[0];
+                    return qk === _botNum || (_bLidKey && qk === _bLidKey);
                 })();
                 const _triggerT = /^t\s+/i.test((body || '').trim());
                 const _hasPrefix = !!(body && usedPrefix && body.startsWith(usedPrefix));
