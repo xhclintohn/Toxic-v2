@@ -1,92 +1,48 @@
-const fs = require("fs");
-const path = require("path");
-const axios = require("axios");
+const fetch = require('node-fetch');
+  const NEXRAY_MP3 = 'https://api.nexray.web.id/downloader/ytmp3?url=';
+  const NEXRAY_MP4 = 'https://api.nexray.web.id/downloader/ytmp4?url=';
 
-const tempDir = path.join(__dirname, "temp");
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir);
-}
+  function extractYtId(url) {
+      const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/|v\/))([A-Za-z0-9_-]{11})/);
+      return m ? m[1] : null;
+  }
 
-const isValidYouTubeUrl = (url) => {
-  return /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|shorts\/|embed\/)?[A-Za-z0-9_-]{11}(\?.*)?$/.test(url);
-};
-
-module.exports = async (context) => {
-  const { client, m, text } = context;
-
-  const formatStylishReply = (message) => {
-    return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+  module.exports = async (context) => {
+      const { client, m, text, prefix, args } = context;
+      if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}yt https://youtu.be/xxxx [mp3/mp4]\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+      const parts = text.trim().split(/\s+/);
+      const ytUrl = parts[0];
+      const format = (parts[1] || 'mp3').toLowerCase();
+      const id = extractYtId(ytUrl);
+      if (!id) return m.reply('╭───(    TOXIC-MD    )───\n├ Invalid YouTube link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+      try {
+          const fullUrl = `https://youtube.com/watch?v=${id}`;
+          if (format === 'mp4') {
+              await m.reply('⏳ Fetching video (720p)... May take up to 60s.');
+              const r = await fetch(NEXRAY_MP4 + encodeURIComponent(fullUrl) + '&resolusi=720', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 90000 });
+              const d = await r.json();
+              if (!d.status || !d.result?.url) throw new Error('Video API failed');
+              await client.sendMessage(m.chat, {
+                  video: { url: d.result.url }, mimetype: 'video/mp4',
+                  caption: `╭───(    TOXIC-MD    )───\n├ 🎬 ${d.result.title || 'YouTube Video'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+              }, { quoted: m });
+          } else {
+              const r = await fetch(NEXRAY_MP3 + encodeURIComponent(fullUrl), { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 30000 });
+              const d = await r.json();
+              if (!d.status || !d.result?.url) throw new Error('Audio API failed');
+              const { title, quality, url: audioUrl } = d.result;
+              const dlRes = await fetch(audioUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 40000 });
+              const buf = Buffer.from(await dlRes.arrayBuffer());
+              await client.sendMessage(m.chat, {
+                  audio: buf, mimetype: 'audio/mpeg', ptt: false,
+                  fileName: `${title || 'yt-audio'}.mp3`
+              }, { quoted: m });
+          }
+          await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+      } catch (e) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+          m.reply(`╭───(    TOXIC-MD    )───\n├ Failed: ${e.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+      }
   };
-
-  if (!text || !isValidYouTubeUrl(text)) {
-    return client.sendMessage(
-      m.chat,
-      { text: formatStylishReply("Yo, drop a valid YouTube URL, fam! 🎵 Ex: .yt https://youtu.be/60ItHLz5WEA") },
-      { quoted: m, ad: true }
-    );
-  }
-
-  try {
-    const timestamp = Date.now();
-    const fileName = `audio_${timestamp}.mp3`;
-    const filePath = path.join(tempDir, fileName);
-
-    const thumbnailUrl = `https://i.ytimg.com/vi/${text.match(/[?&]v=([^&]+)/)?.[1]}/hqdefault.jpg` || "https://via.placeholder.com/120x90";
-
-    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-
-    const apiUrl = `https://ytdownloader-aie4qa.fly.dev/download/audio?song=${encodeURIComponent(text)}&quality=128K&cb=${timestamp}`;
-    const response = await axios({
-      method: "get",
-      url: apiUrl,
-      responseType: "stream",
-      timeout: 600000,
-    });
-
-    const writer = fs.createWriteStream(filePath);
-    response.data.pipe(writer);
-
-    await new Promise((resolve, reject) => {
-      writer.on("finish", resolve);
-      writer.on("error", reject);
-    });
-
-    if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
-      throw new Error("Audio download failed or file is empty");
-    }
-
-    await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-    await client.sendMessage(
-      m.chat,
-      {
-        audio: { url: filePath },
-        mimetype: "audio/mpeg",
-        fileName: `song.mp3`,
-        contextInfo: {
-          externalAdReply: {
-            title: "YouTube Audio",
-            body: "Quality: 128K | Powered by Toxic-MD",
-            thumbnailUrl,
-            sourceUrl: text,
-            mediaType: 1,
-            renderLargerThumbnail: true,
-          },
-        },
-      },
-      { quoted: m, ad: true }
-    );
-
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-  } catch (error) {
-    await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-    await client.sendMessage(
-      m.chat,
-      { text: formatStylishReply(`Yo, we hit a snag: ${error.message}. Check the URL and try again! 😎`) },
-      { quoted: m, ad: true }
-    );
-  }
-};
+  

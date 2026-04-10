@@ -1,30 +1,35 @@
-const axios = require('axios');
+const fetch = require('node-fetch');
+  const NEXRAY = 'https://api.nexray.web.id/downloader/soundcloud?url=';
 
-module.exports = {
-    name: 'soundcloud',
-    alias: ['scloud', 'scdl'],
-    description: 'Download audio from SoundCloud',
-    run: async (context) => {
-        const { client, m, text, prefix } = context;
-        if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ SOUNDCLOUD DL ≪───\n├ \n├ Usage: ${prefix}soundcloud <url>\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-        if (!text.match(/soundcloud\.com/i)) return m.reply('That doesn\'t look like a SoundCloud link.');
-        try {
-            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-            const { data } = await axios.get(`https://api.siputzx.my.id/api/d/soundcloud?url=${encodeURIComponent(text)}`, { timeout: 20000 });
-            if (!data?.data) throw new Error('no data');
-            const result = data.data;
-            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-            if (result.thumbnail) {
-                await client.sendMessage(m.chat, { image: { url: result.thumbnail }, caption: `*${result.title || 'SoundCloud Track'}*` }, { quoted: m });
-            }
-            await client.sendMessage(m.chat, {
-                audio: { url: result.audio || result.url },
-                mimetype: 'audio/mpeg',
-                ptt: false
-            }, { quoted: m });
-        } catch {
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            m.reply('╭───(    TOXIC-MD    )───\n├ Failed to download SoundCloud track.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
-        }
-    }
-};
+  module.exports = {
+      name: 'soundcloud',
+      alias: ['scloud', 'scdl'],
+      run: async (context) => {
+          const { client, m, text, prefix } = context;
+          if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}soundcloud https://soundcloud.com/user/track\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+          if (!text.includes('soundcloud.com')) return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a SoundCloud link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+          await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+          try {
+              const r = await fetch(NEXRAY + encodeURIComponent(text.trim()), { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 25000 });
+              const d = await r.json();
+              if (!d.status || !d.result) throw new Error('SoundCloud API failed');
+              const { title, thumbnail, audio } = d.result;
+              const audioUrl = audio || d.result.url || d.result.download;
+              if (!audioUrl) throw new Error('No audio URL returned');
+              if (thumbnail) {
+                  await client.sendMessage(m.chat, { image: { url: thumbnail }, caption: `🎵 ${title || 'SoundCloud Track'}` }, { quoted: m });
+              }
+              const dlRes = await fetch(audioUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 35000 });
+              const buf = Buffer.from(await dlRes.arrayBuffer());
+              await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+              await client.sendMessage(m.chat, {
+                  audio: buf, mimetype: 'audio/mpeg', ptt: false,
+                  fileName: `${title || 'soundcloud-track'}.mp3`
+              }, { quoted: m });
+          } catch (e) {
+              await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+              m.reply(`╭───(    TOXIC-MD    )───\n├ Failed: ${e.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+          }
+      }
+  };
+  
