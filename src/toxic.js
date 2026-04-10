@@ -42,44 +42,64 @@ let _cachedSudo = null;
 let _cachedSudoTime = 0;
 let _cachedBanned = null;
 let _cachedBannedTime = 0;
+let _cachedBotNumber = '';
+let _settingsPending = null;
+let _sudoPending = null;
+let _bannedPending = null;
 const _groupMetaCache = new Map();
 const FAST_CACHE_TTL = 300000;
 const GROUP_META_TTL = 300000;
+const _DEFAULTS = { prefix: '.', mode: 'public', gcpresence: false, antitag: false, antidelete: true, antilink: 'off', chatbotpm: false, packname: 'Toxic-MD', author: 'xh_clinton', multiprefix: false, stealth: false, startmessage: true, autoview: false, autoai: false, toxicagent: false, warn_limit: 3 };
 
 async function fastGetSettings() {
     const now = Date.now();
     if (_cachedSettings && (now - _cachedSettingsTime) < FAST_CACHE_TTL) return _cachedSettings;
-    try {
-        _cachedSettings = await getSettings();
-        _cachedSettingsTime = now;
-    } catch (e) {
-        console.error('❌ [fastGetSettings]:', e.message);
-    }
-    return _cachedSettings || { prefix: '.', mode: 'public', gcpresence: false, antitag: false, antidelete: true, antilink: 'off', chatbotpm: false, packname: 'Toxic-MD', author: 'xh_clinton', multiprefix: false, stealth: false, startmessage: true, autoview: false, autoai: false, toxicagent: false, warn_limit: 3 };
+    if (_settingsPending) return _settingsPending;
+    _settingsPending = (async () => {
+        try {
+            _cachedSettings = await getSettings();
+            _cachedSettingsTime = Date.now();
+        } catch (e) {
+            console.error('❌ [fastGetSettings]:', e.message);
+        }
+        _settingsPending = null;
+        return _cachedSettings || _DEFAULTS;
+    })();
+    return _settingsPending;
 }
 
 async function fastGetSudo() {
     const now = Date.now();
     if (_cachedSudo && (now - _cachedSudoTime) < FAST_CACHE_TTL) return _cachedSudo;
-    try {
-        _cachedSudo = await getSudoUsers();
-        _cachedSudoTime = now;
-    } catch (e) {
-        console.error('❌ [fastGetSudo]:', e.message);
-    }
-    return _cachedSudo || [];
+    if (_sudoPending) return _sudoPending;
+    _sudoPending = (async () => {
+        try {
+            _cachedSudo = await getSudoUsers();
+            _cachedSudoTime = Date.now();
+        } catch (e) {
+            console.error('❌ [fastGetSudo]:', e.message);
+        }
+        _sudoPending = null;
+        return _cachedSudo || [];
+    })();
+    return _sudoPending;
 }
 
 async function fastGetBanned() {
     const now = Date.now();
     if (_cachedBanned && (now - _cachedBannedTime) < FAST_CACHE_TTL) return _cachedBanned;
-    try {
-        _cachedBanned = await getBannedUsers();
-        _cachedBannedTime = now;
-    } catch (e) {
-        console.error('❌ [fastGetBanned]:', e.message);
-    }
-    return _cachedBanned || [];
+    if (_bannedPending) return _bannedPending;
+    _bannedPending = (async () => {
+        try {
+            _cachedBanned = await getBannedUsers();
+            _cachedBannedTime = Date.now();
+        } catch (e) {
+            console.error('❌ [fastGetBanned]:', e.message);
+        }
+        _bannedPending = null;
+        return _cachedBanned || [];
+    })();
+    return _bannedPending;
 }
 
 async function fastGroupMetadata(client, jid) {
@@ -290,7 +310,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         const args = body.trim().split(/ +/).slice(1);
         const pushname = m.pushName || "No Name";
-        const botNumber = await client.decodeJid(client.user.id);
+        if (!_cachedBotNumber && client?.user?.id) _cachedBotNumber = client.decodeJid(client.user.id);
+        const botNumber = _cachedBotNumber || client.decodeJid(client.user.id);
         const itsMe = normalizeNumber(m.sender) === normalizeNumber(botNumber);
         let isDev = isDevNumber(m.sender);
         let text = (q = args.join(" "));
@@ -683,7 +704,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 })();
                 const _triggerT = /^t\s+/i.test((body || '').trim());
                 const _hasPrefix = !!(body && usedPrefix && body.startsWith(usedPrefix));
-                if (_isDM || _isMentioned || _isReplyToBot || _triggerT || _hasPrefix) {
+                if ((_isDM && body && body.trim()) || _isMentioned || _isReplyToBot || _triggerT || _hasPrefix) {
                     try { await autoai(context); } catch {}
                 }
             }

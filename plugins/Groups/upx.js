@@ -84,9 +84,8 @@ module.exports = {
             }, { quoted: m });
         }
 
-        const msg = m.quoted.msg || m.quoted;
-        const msgType = Object.keys(msg || {}).find(k => ['imageMessage', 'videoMessage', 'stickerMessage'].includes(k));
-        if (!msgType) {
+        const msgType = m.quoted?.mtype;
+        if (!['imageMessage', 'videoMessage', 'stickerMessage'].includes(msgType)) {
             return client.sendMessage(m.chat, {
                 text: BOX('UPX ERROR', ['Reply must be a sticker, image, or video.'])
             }, { quoted: m });
@@ -95,7 +94,7 @@ module.exports = {
         await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
         try {
-            const buffer = await client.downloadMediaMessage(m.quoted);
+            const buffer = m.quoted.download ? await m.quoted.download() : await client.downloadMediaMessage(m.quoted);
             if (!buffer || !buffer.length) throw new Error('Download failed — empty buffer');
 
             const extMap = { imageMessage: 'jpg', videoMessage: 'mp4', stickerMessage: 'webp' };
