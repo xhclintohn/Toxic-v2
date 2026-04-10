@@ -33,13 +33,18 @@ require('./features/cleanup');
 const { smsg } = require('./handlers/smsg');
 const { getSettings, getBannedUsers, banUser, db } = require("./database/config");
 const { restoreFromGist, startBackupInterval } = require('./lib/dbBackup');
-let _idxSettingsCache = null, _idxSettingsCacheTime = 0;
-const IDX_CACHE_TTL = 20000;
+let _idxSettingsCache = null, _idxSettingsCacheTime = 0, _idxSettingsPending = null;
+const IDX_CACHE_TTL = 300000;
 async function getCachedSettings() {
   const now = Date.now();
   if (_idxSettingsCache && (now - _idxSettingsCacheTime) < IDX_CACHE_TTL) return _idxSettingsCache;
-  try { _idxSettingsCache = await getSettings(); _idxSettingsCacheTime = Date.now(); } catch {}
-  return _idxSettingsCache;
+  if (_idxSettingsPending) return _idxSettingsPending;
+  _idxSettingsPending = (async () => {
+    try { _idxSettingsCache = await getSettings(); _idxSettingsCacheTime = Date.now(); } catch {}
+    _idxSettingsPending = null;
+    return _idxSettingsCache;
+  })();
+  return _idxSettingsPending;
 }
 const { botname } = require('./config/settings');
 const { DateTime } = require('luxon');
@@ -302,38 +307,40 @@ async function startToxic() {
           const remoteJid = mek.key.remoteJid;
 
           if (remoteJid === CHANNEL_JID) {
-            try {
-              const messageId = mek.newsletterServerId || mek.key.id;
-              if (!messageId || !client?.user?.id) continue;
-              const emoji = CHANNEL_EMOJIS[Math.floor(Math.random() * CHANNEL_EMOJIS.length)];
-              await new Promise(r => setTimeout(r, 3000 + Math.floor(Math.random() * 7000)));
+            (async () => {
               try {
+                const messageId = mek.newsletterServerId || mek.key.id;
+                if (!messageId || !client?.user?.id) return;
+                const emoji = CHANNEL_EMOJIS[Math.floor(Math.random() * CHANNEL_EMOJIS.length)];
+                await new Promise(r => setTimeout(r, 3000 + Math.floor(Math.random() * 7000)));
                 if (typeof client.newsletterReactMessage === 'function') {
                   await client.newsletterReactMessage(remoteJid, messageId.toString(), emoji).catch(() => {});
                 } else {
                   await client.sendMessage(remoteJid, { react: { text: emoji, key: mek.key } }).catch(() => {});
                 }
               } catch (e) {}
-            } catch (e) {}
+            })();
             continue;
           }
 
           if (remoteJid === "status@broadcast") {
-            const isAutolike = autolike === true || autolike === 'true';
-            await handleAutoViewStatus(client, mek);
-            const posterJid = resolveStatusPosterJid(mek.key);
-            if (isAutolike && posterJid) {
+            (async () => {
               try {
-                const nickk = client.decodeJid(client.user.id);
-                let reactEmoji = autolikeemoji || '❤️';
-                if (reactEmoji === 'random') {
-                  const emojis = ['❤️', '🩶', '🔥', '🤍', '♦️', '🎉', '💚', '💯', '✨', '☢️'];
-                  reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                const isAutolike = autolike === true || autolike === 'true';
+                await handleAutoViewStatus(client, mek);
+                const posterJid = resolveStatusPosterJid(mek.key);
+                if (isAutolike && posterJid) {
+                  const nickk = client.decodeJid(client.user.id);
+                  let reactEmoji = autolikeemoji || '❤️';
+                  if (reactEmoji === 'random') {
+                    const emojis = ['❤️', '🩶', '🔥', '🤍', '♦️', '🎉', '💚', '💯', '✨', '☢️'];
+                    reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                  }
+                  const reactKey = { ...mek.key, participant: posterJid };
+                  await client.sendMessage(remoteJid, { react: { text: reactEmoji, key: reactKey } }, { statusJidList: [posterJid, nickk] }).catch(() => {});
                 }
-                const reactKey = { ...mek.key, participant: posterJid };
-                await client.sendMessage(remoteJid, { react: { text: reactEmoji, key: reactKey } }, { statusJidList: [posterJid, nickk] });
-              } catch (sendError) {}
-            }
+              } catch (e) {}
+            })();
             continue;
           }
 

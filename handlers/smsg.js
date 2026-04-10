@@ -108,20 +108,18 @@ function smsg(conn, m, store) {
         return smsg(conn, q, store);
       };
 
-      let vM = (m.quoted.fakeObj = M.fromObject({
-        key: {
-          remoteJid: m.quoted.chat,
-          fromMe: m.quoted.fromMe,
-          id: m.quoted.id,
-        },
-        message: quoted,
-        ...(m.isGroup ? { participant: m.quoted.sender } : {}),
-      }));
-
-      m.quoted.delete = () =>
-        conn.sendMessage(m.quoted.chat, { delete: vM.key });
-      m.quoted.copyNForward = (jid, forceForward = false, options = {}) =>
-        conn.copyNForward(jid, vM, forceForward, options);
+      let _vM;
+      const _getVM = () => {
+        if (!_vM) _vM = M.fromObject({
+          key: { remoteJid: m.quoted.chat, fromMe: m.quoted.fromMe, id: m.quoted.id },
+          message: quoted,
+          ...(m.isGroup ? { participant: m.quoted.sender } : {}),
+        });
+        return _vM;
+      };
+      m.quoted.fakeObj = { get key() { return _getVM().key; } };
+      m.quoted.delete = () => conn.sendMessage(m.quoted.chat, { delete: _getVM().key });
+      m.quoted.copyNForward = (jid, forceForward = false, options = {}) => conn.copyNForward(jid, _getVM(), forceForward, options);
       m.quoted.download = () => conn.downloadMediaMessage(m.quoted);
       }
     }
