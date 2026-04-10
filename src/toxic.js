@@ -204,6 +204,7 @@ function getViewOnceMedia(rawMessage) {
 }
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
+    if (m.key?.fromMe) return;
     try {
         const [rawSudoUsers, rawBannedUsers, fetchedSettings] = await Promise.all([
             fastGetSudo(),

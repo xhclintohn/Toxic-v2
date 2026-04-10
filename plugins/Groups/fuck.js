@@ -1,103 +1,54 @@
+/**
+ * FUCK reaction — set FUCK_STICKER to a raw GitHub URL to send a sticker.
+ * Leave empty to use text fallback.
+ */
+const { getBuffer } = require('../../lib/botFunctions');
+
+const FUCK_STICKER = ''; // paste raw GitHub sticker URL here
+
+const getTarget = (m) => {
+    const jid = (m.mentionedJid && m.mentionedJid[0]) || (m.quoted && m.quoted.sender) || null;
+    if (!jid) return null;
+    if (!jid.includes('@s.whatsapp.net') && !jid.includes('@lid')) return null;
+    return jid;
+};
+
 module.exports = {
-  name: 'fuck',
-  aliases: ['screw', 'bang'],
-  description: 'Sends a toxic, realistic "fuck" reaction to a tagged or quoted user',
-  run: async (context) => {
-    const { client, m } = context;
-
-    try {
-      console.log(`Fuck command context: isGroup=${m.isGroup}, mentionedJid=${JSON.stringify(m.mentionedJid)}, quotedSender=${m.quoted?.sender || 'none'}, sender=${m.sender}`);
-
-      if (!m.mentionedJid || m.mentionedJid.length === 0) {
-        if (!m.quoted || !m.quoted.sender) {
-          console.error('No tagged or quoted user provided');
-          return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Yo, perv, tag someone or quote\n├ a message to fuck! I ain't doing\n├ this without a target!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-        }
-      }
-
-      const targetUser = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null);
-      console.log(`Target JID: ${targetUser}`);
-
-      if (
-        !targetUser ||
-        typeof targetUser !== 'string' ||
-        (!targetUser.includes('@s.whatsapp.net') && !targetUser.includes('@lid'))
-      ) {
-        console.error(`Invalid target user: ${JSON.stringify(targetUser)}`);
-        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Invalid user, dumbass! Tag or\n├ quote a real person to fuck!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-      }
-
-      const targetNumber = targetUser.split('@')[0];
-      const senderNumber = m.sender.split('@')[0];
-      if (!targetNumber || !senderNumber) {
-        console.error(`Failed to extract numbers: target=${targetUser}, sender=${m.sender}`);
-        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Something's fucked up with the\n├ user IDs. Try again, idiot!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-      }
-
-      const fuckingMsg = await client.sendMessage(
-        m.chat,
-        {
-          text: `╭───(    TOXIC-MD    )───\n├ \n├ @${senderNumber} is getting ready\n├ to fuck @${targetNumber}...\n├ This is gonna be wild, bitch!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-          mentions: [m.sender, targetUser],
-        },
-        { quoted: m }
-      );
-
-      await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000));
-
-      const intensities = [
-        {
-          level: 'Awkward',
-          description: 'a clumsy, embarrassing attempt that made @TARGET laugh their ass off! @SENDER, you\'re a fucking disaster!',
-          emoji: '',
-        },
-        {
-          level: 'Steamy',
-          description: 'a hot and heavy session that got @TARGET all flustered! @SENDER, you\'re not half bad!',
-          emoji: '',
-        },
-        {
-          level: 'Legendary',
-          description: 'an earth-shattering fuck that left @TARGET in awe! @SENDER, you\'re a goddamn sex god!',
-          emoji: '',
-        },
-      ];
-      const intensity = intensities[Math.floor(Math.random() * intensities.length)];
-
-      const resultMsg = `╭───(    TOXIC-MD    )───
-├───≫ FUCK REPORT ≪───
-├ 
-├ *INITIATOR:* @${senderNumber}
-├ *VICTIM:* @${targetNumber}
-├ *INTENSITY:* ${intensity.level}
-├ 
-├ *VERDICT:* ${intensity.description.replace('@TARGET', `@${targetNumber}`).replace('@SENDER', `@${senderNumber}`)}
-├ 
-├ *DISCLAIMER:* This was 100% consensual
-├ in this fictional world, you filthy animal!
-├ Cry about it!
-╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
-
-      await client.sendMessage(
-        m.chat,
-        {
-          text: resultMsg,
-          mentions: [m.sender, targetUser],
-        },
-        { quoted: m }
-      );
-
-      if (fuckingMsg && fuckingMsg.key) {
+    name: 'fuck',
+    aliases: ['screw', 'bang'],
+    description: 'Send a savage reaction to a tagged or quoted user',
+    run: async (context) => {
+        const { client, m } = context;
         try {
-          await client.sendMessage(m.chat, { delete: fuckingMsg.key });
-        } catch (deleteError) {
-          console.error(`Failed to delete fucking message: ${deleteError.stack}`);
+            const target = getTarget(m);
+            if (!target) return m.reply(`╭───(    TOXIC-MD    )───\n├ Tag or quote someone first.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+
+            const tNum = target.split('@')[0];
+            const sNum = m.sender.split('@')[0];
+
+            if (FUCK_STICKER) {
+                try {
+                    const buf = await getBuffer(FUCK_STICKER);
+                    await client.sendMessage(m.chat, { sticker: buf }, { quoted: m });
+                    await client.sendMessage(m.chat, {
+                        text: `@${sNum} went off on @${tNum} 😤`,
+                        mentions: [m.sender, target]
+                    });
+                    return;
+                } catch {}
+            }
+
+            const lines = [
+                `@${sNum} absolutely roasted @${tNum}. The audacity. 🔥`,
+                `@${sNum} just went full savage on @${tNum}. Someone's getting blocked. 😤`,
+                `@${sNum} told @${tNum} exactly what they think. No filter whatsoever. 💀`,
+            ];
+            await client.sendMessage(m.chat, {
+                text: `╭───(    TOXIC-MD    )───\n├ ${lines[Math.floor(Math.random() * lines.length)]}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                mentions: [m.sender, target]
+            }, { quoted: m });
+        } catch (e) {
+            await m.reply(`╭───(    TOXIC-MD    )───\n├ Command failed. Try again.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
-      }
-    } catch (error) {
-      console.error(`Fuck command exploded: ${error.stack}`);
-      await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Shit broke harder than your\n├ bedframe! Can't fuck right now,\n├ you unlucky bastard.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
-  },
 };

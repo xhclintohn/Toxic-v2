@@ -197,6 +197,13 @@ const aliases = {
 
     botmode: "mode",
     setmode: "mode",
+
+    pall: "promoteall",
+    dall: "demoteall",
+    tagadminto: "tagadmins",
+    calladmins: "tagadmins",
+    ghupload: "upx",
+    uploadmedia: "upx",
 };
 
 let _loadedCount = 0;

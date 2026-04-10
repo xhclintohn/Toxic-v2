@@ -55,29 +55,20 @@ module.exports = {
                 }
 
                 const modeInfo = MODES[current] || MODES.public;
-                const sections = [{
-                    title: 'Choose a mode',
-                    rows: Object.entries(MODES).map(([key, val]) => ({
-                        title: `${val.emoji} ${val.label}${current === key ? ' (active)' : ''}`,
-                        rowId: `${prefix}mode ${key}`,
-                        description: val.desc
-                    }))
-                }];
-
                 await client.sendMessage(m.chat, {
                     text: fmt('BOT MODE', [
-                        `Active mode: ${modeInfo.emoji} ${modeInfo.label}`,
+                        `Active: ${modeInfo.emoji} ${modeInfo.label}`,
                         ``,
-                        `🌐 PUBLIC  — Everyone can use commands everywhere`,
-                        `🔒 PRIVATE — Only owner can use commands`,
-                        `👥 GROUP   — Groups only, DMs are blocked`,
-                        `📩 INBOX   — DMs only, groups are ignored`,
+                        `${current === 'public'  ? '▶' : '  '} 🌐 PUBLIC  → ${prefix}mode public`,
+                        `${current === 'private' ? '▶' : '  '} 🔒 PRIVATE → ${prefix}mode private`,
+                        `${current === 'group'   ? '▶' : '  '} 👥 GROUP   → ${prefix}mode group`,
+                        `${current === 'inbox'   ? '▶' : '  '} 📩 INBOX   → ${prefix}mode inbox`,
                         ``,
-                        `Usage: ${prefix}mode public / private / group / inbox`
-                    ]),
-                    sections,
-                    buttonText: 'Switch Mode',
-                    footer: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
+                        `PUBLIC  — Everyone can use commands everywhere`,
+                        `PRIVATE — Only you can use commands`,
+                        `GROUP   — Groups only, DMs ignored`,
+                        `INBOX   — DMs only, groups ignored`
+                    ])
                 }, { quoted: m });
 
             } catch {
