@@ -15,6 +15,15 @@ const Database = require('better-sqlite3');
   const GS_TTL = 60000;
   function isCacheValid(e) { return e.data !== null && (Date.now() - e.time) < e.ttl; }
 
+  const _settingsListeners = [];
+  const _sudoListeners = [];
+  const _bannedListeners = [];
+  function registerSettingsListener(fn) { _settingsListeners.push(fn); }
+  function registerSudoListener(fn) { _sudoListeners.push(fn); }
+  function registerBannedListener(fn) { _bannedListeners.push(fn); }
+  function _notify(list) { list.forEach(fn => { try { fn(); } catch {} }); }
+  function getBackend() { return _backend; }
+
   const SQLITE_SCHEMA = `
       CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS group_settings (
@@ -158,6 +167,7 @@ const Database = require('better-sqlite3');
           [key, v]
       );
       cache.settings.data = null;
+      _notify(_settingsListeners);
   }
 
   async function getGroupSettings(jid) {
@@ -200,11 +210,13 @@ const Database = require('better-sqlite3');
           [num]
       );
       cache.bannedUsers.data = null;
+      _notify(_bannedListeners);
   }
 
   async function unbanUser(num) {
       await qRun('DELETE FROM banned_users WHERE num = ?', 'DELETE FROM banned_users WHERE num = $1', [num]);
       cache.bannedUsers.data = null;
+      _notify(_bannedListeners);
   }
 
   async function getBannedUsers() {
@@ -223,11 +235,13 @@ const Database = require('better-sqlite3');
           [num]
       );
       cache.sudoUsers.data = null;
+      _notify(_sudoListeners);
   }
 
   async function removeSudoUser(num) {
       await qRun('DELETE FROM sudo_users WHERE num = ?', 'DELETE FROM sudo_users WHERE num = $1', [num]);
       cache.sudoUsers.data = null;
+      _notify(_sudoListeners);
   }
 
   async function getSudoUsers() {
@@ -369,6 +383,8 @@ const Database = require('better-sqlite3');
 
   module.exports = {
       get db() { return _db; },
+      getBackend,
+      registerSettingsListener, registerSudoListener, registerBannedListener,
       initializeDatabase, getSettings, updateSetting,
       getGroupSettings, updateGroupSetting,
       banUser, unbanUser, getBannedUsers,

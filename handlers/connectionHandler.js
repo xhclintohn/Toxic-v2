@@ -1,11 +1,19 @@
 const { Boom } = require("@hapi/boom");
 const { DateTime } = require("luxon");
 const { default: toxicConnect, DisconnectReason } = require("@whiskeysockets/baileys");
-const { getSettings, getSudoUsers, addSudoUser } = require("../database/config");
+const { getSettings, getSudoUsers, addSudoUser, getBackend } = require("../database/config");
 const { commands, totalCommands } = require("../handlers/commandHandler");
 
 const botName = process.env.BOTNAME || "Toxic-MD";
 let hasSentStartMessage = false;
+let _cachedDbLabel = null;
+function getDbLabel() {
+    if (!_cachedDbLabel) {
+        const b = getBackend();
+        _cachedDbLabel = b === 'pg' ? 'PostgreSQL (Heroku)' : b === 'sqlite' ? 'SQLite' : 'SQLite';
+    }
+    return _cachedDbLabel;
+}
 
 async function connectionHandler(socket, connectionUpdate, reconnect) {
   const { connection, lastDisconnect } = connectionUpdate;
@@ -71,7 +79,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               `➡️ *Prefix*: ${settings.prefix}`,
               `📋 *Commands*: ${totalCommands}`,
               `🕒 *Time*: ${getCurrentTime()}`,
-              `💾 *Database*: SQLite`,
+              `💾 *Database*: ${getDbLabel()}`,
               `📚 *Library*: Baileys`,
               ``,
               `├  *New User*: You've been dumped into the sudo list. Lucky you.`,
@@ -95,7 +103,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
               `➡️ *Prefix*: ${settings.prefix}`,
               `📋 *Commands*: ${totalCommands}`,
               `🕒 *Time*: ${getCurrentTime()}`,
-              `💾 *Database*: SQLite`,
+              `💾 *Database*: ${getDbLabel()}`,
               `📚 *Library*: Baileys`,
               ``,
               `├  ⚠️ *Give it a second* — the bot needs a moment to warm up`,
