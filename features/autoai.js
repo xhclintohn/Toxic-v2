@@ -27,7 +27,7 @@ const LANGUAGE_CODES = {
 module.exports = async (context) => {
     const { client, m, settings, usedPrefix } = context;
 
-    const GROQ_KEY = process.env.GROQ_API_KEY || (() => { try { return require('../keys').GROQ_API_KEY; } catch { return ''; } })();
+    const { GROQ_API_KEY: GROQ_KEY } = require('../keys');
     if (!GROQ_KEY) {
         console.error('❌ [AUTOAI] No GROQ_API_KEY set');
         return;
