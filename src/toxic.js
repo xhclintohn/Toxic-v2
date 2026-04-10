@@ -291,7 +291,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const pushname = m.pushName || "No Name";
         const botNumber = await client.decodeJid(client.user.id);
         const itsMe = normalizeNumber(m.sender) === normalizeNumber(botNumber);
-        const isDev = isDevNumber(m.sender);
+        let isDev = isDevNumber(m.sender);
         let text = (q = args.join(" "));
         const arg = budy.trim().substring(budy.indexOf(" ") + 1);
         const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
@@ -312,6 +312,17 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 const pLid = p.lid || '';
                 if (pLid && pJid) lidToPN[pLid.split(':')[0]] = pJid;
 
+            }
+
+            if (!isDev && m.isGroup) {
+                const senderLidKey = (m.sender || '').split('@')[0].split(':')[0];
+                const resolvedJid = lidToPN[senderLidKey];
+                if (resolvedJid && isDevNumber(resolvedJid)) isDev = true;
+            }
+
+            for (const p of participants) {
+                const pJid = p.jid || p.id || '';
+                const pLid = p.lid || '';
                 const normP = normalizeNumber(pJid);
                 const normPLid = pLid ? normalizeNumber(pLid) : '';
 

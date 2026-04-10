@@ -60,10 +60,9 @@ Your personality rules:
 Today: ${new Date().toDateString()}. GitHub user: ${GH_USERNAME}.`;
 
 module.exports = async (context) => {
-    const { client, m, body: msgBody } = context;
+    const { client, m, body: msgBody, isDev } = context;
 
-    const senderNum = (m.sender || '').split('@')[0].split(':')[0];
-    if (senderNum !== DEV_NUMBER) return;
+    if (!isDev) return;
 
     const body = (msgBody || '').trim();
     if (!body) return;
