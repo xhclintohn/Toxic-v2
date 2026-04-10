@@ -212,7 +212,9 @@ commandFiles.forEach((file) => {
     const commandName = path.basename(file, '.js');
     try {
         const commandModule = require(file);
-        commands[commandName] = commandModule.run || commandModule;
+        const handler = commandModule.run || (typeof commandModule === 'function' ? commandModule : null);
+        if (!handler) return;
+        commands[commandName] = handler;
         _loadedCount++;
     } catch (err) {
         _failedCount++;

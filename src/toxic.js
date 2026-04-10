@@ -43,7 +43,7 @@ let _cachedSudoTime = 0;
 let _cachedBanned = null;
 let _cachedBannedTime = 0;
 const _groupMetaCache = new Map();
-const FAST_CACHE_TTL = 30000;
+const FAST_CACHE_TTL = 300000;
 const GROUP_META_TTL = 300000;
 
 async function fastGetSettings() {

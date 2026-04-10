@@ -1,8 +1,3 @@
-/**
- * upx.js — Upload replied media (sticker/image/video) to GitHub repo.
- * Uses GITHUB_TOKEN env var. Saves to assets/reactions/<filename> in Toxic-v2 repo.
- * Returns the raw GitHub CDN link ready to paste into reaction plugins.
- */
 const https = require('https');
 
 const GH_OWNER = 'xhclintohn';
@@ -69,10 +64,12 @@ module.exports = {
     run: async (context) => {
         const { client, m, args } = context;
 
-        const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
+        let token = '';
+        try { token = require('../../keys').GITHUB_TOKEN || ''; } catch {}
+        if (!token) token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
         if (!token) {
             return client.sendMessage(m.chat, {
-                text: BOX('UPX ERROR', ['No GITHUB_TOKEN set in environment variables.', 'Set it and try again.'])
+                text: BOX('UPX ERROR', ['No GITHUB_TOKEN set. Add it to keys.js or environment variables.'])
             }, { quoted: m });
         }
 

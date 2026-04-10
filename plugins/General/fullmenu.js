@@ -25,7 +25,8 @@ module.exports = {
       { name: 'Editing', display: 'EDITING', emoji: '✂️' },
       { name: 'Effects', display: 'EFFECTS', emoji: '🎨' },
       { name: 'NSFW', display: '+18MENU', emoji: '🔞' },
-      { name: 'Utils', display: 'UTILSMENU', emoji: '🔧' }
+      { name: 'Utils', display: 'UTILSMENU', emoji: '🔧' },
+      { name: 'Reactions', display: 'REACTIONSMENU', emoji: '🎭' }
     ];
 
     const getGreeting = () => {
@@ -57,7 +58,7 @@ module.exports = {
 
     let commandCount = 0;
     for (const category of categories) {
-      let commandFiles = fs.readdirSync(`./plugins/${category.name}`).filter(file => file.endsWith('.js'));
+      let commandFiles = fs.readdirSync(`./plugins/${category.name}`).filter(file => file.endsWith('.js') && file !== 'links.js');
 
       if (commandFiles.length === 0 && category.name !== '+18') continue;
 

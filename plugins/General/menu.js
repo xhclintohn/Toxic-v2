@@ -110,6 +110,7 @@ module.exports = {
                                                 { title: '𝐋𝐨𝐠𝐨𝐌𝐞𝐧𝐮', description: 'Logo & text makers', id: `${prefix}logomenu` },
                                                 { title: '+𝟏𝟖𝐌𝐞𝐧𝐮', description: 'NSFW commands (18+)', id: `${prefix}+18menu` },
                                                 { title: '𝐔𝐭𝐢𝐥𝐬𝐌𝐞𝐧𝐮', description: 'Utility commands', id: `${prefix}utilsmenu` },
+                                                { title: '𝐑𝐞𝐚𝐜𝐭𝐢𝐨𝐧𝐬𝐌𝐞𝐧𝐮', description: 'Reaction commands', id: `${prefix}reactionsmenu` },
                                             ],
                                         },
                                     ],
