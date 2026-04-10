@@ -25,6 +25,12 @@ setInterval(() => {
     for (const [k, v] of _mem) if (now - v.ts > MEM_TTL) _mem.delete(k);
 }, 15 * 60 * 1000);
 
+function boxWrap(text, title) {
+    const lines = String(text || '').split('\n').filter(l => l.trim());
+    const body = lines.map(l => `├ ${l}`).join('\n');
+    return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├\n${body}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+}
+
 function extractCmds(text) {
     const lines = (text || '').split('\n');
     const cmds = [];
@@ -164,7 +170,7 @@ module.exports = async (context) => {
         _mem.delete(userNum);
         try { await clearConversationHistory(userNum); } catch {}
         try { await client.sendMessage(m.chat, { react: { text: '🗑️', key: m.key } }); } catch {}
-        await client.sendMessage(m.chat, { text: `done. memory wiped 🗑️ fresh start. please make better choices this time.` }, { quoted: m });
+        await client.sendMessage(m.chat, { text: boxWrap('done. memory wiped 🗑️ fresh start. please make better choices this time.', 'MEMORY CLEARED') }, { quoted: m });
         return;
     }
 
@@ -226,7 +232,7 @@ module.exports = async (context) => {
         }
 
         if (notFound.length) {
-            try { await client.sendMessage(m.chat, { text: `...${notFound.join(', ')} doesn't exist bruh 💀 type .menu` }, { quoted: m }); } catch {}
+            try { await client.sendMessage(m.chat, { text: boxWrap(`...${notFound.join(', ')} doesn't exist bruh 💀 type .menu to see what does`, 'UNKNOWN CMD') }, { quoted: m }); } catch {}
         }
         try { await client.sendMessage(m.chat, { react: { text: allOk ? '✅' : '❌', key: m.key } }); } catch {}
         if (textOnly) {
@@ -237,7 +243,7 @@ module.exports = async (context) => {
         _addHist(userNum, 'assistant', response);
         try { await addConversationMessage(userNum, 'user', prompt); } catch {}
         try { await addConversationMessage(userNum, 'assistant', response); } catch {}
-        try { await client.sendMessage(m.chat, { text: response }, { quoted: m }); } catch {}
+        try { await client.sendMessage(m.chat, { text: boxWrap(response, 'TOXIC-AI') }, { quoted: m }); } catch {}
         try { await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } }); } catch {}
     }
 };

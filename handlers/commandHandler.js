@@ -196,14 +196,21 @@ const aliases = {
     warnlimit: "setwarncount"
 };
 
+let _loadedCount = 0;
+let _failedCount = 0;
 commandFiles.forEach((file) => {
     const commandName = path.basename(file, '.js');
     try {
         const commandModule = require(file);
         commands[commandName] = commandModule.run || commandModule;
+        _loadedCount++;
     } catch (err) {
+        _failedCount++;
         console.error(`❌ [COMMANDHANDLER] Failed to load plugin: ${file}\n   Reason: ${err.message}`);
     }
 });
+
+const chalk = require('chalk');
+console.log(chalk.green(`✔`) + chalk.white(` Loaded `) + chalk.cyan(`${_loadedCount}`) + chalk.white(` plugins`) + (_failedCount ? chalk.red(` (${_failedCount} failed)`) : chalk.gray(` • ${Object.keys(aliases).length} aliases registered`)));
 
 module.exports = { commands, aliases, totalCommands };

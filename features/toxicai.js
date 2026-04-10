@@ -37,6 +37,12 @@ setInterval(() => {
     }
 }, 30 * 60 * 1000);
 
+function boxWrap(text, title) {
+    const lines = String(text || '').split('\n').filter(l => l.trim());
+    const body = lines.map(l => `├ ${l}`).join('\n');
+    return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├\n${body}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+}
+
 function isClearIntent(text) {
     return /^(clear|reset|wipe|delete|flush|erase)\s*(this\s*)?(conv(ersation)?|chat|hist(ory)?|messages?|thread|memory|mem)$/i.test(text.trim());
 }
@@ -123,7 +129,7 @@ module.exports = async (context) => {
     if (isClearIntent(body)) {
         clearHistory(m.sender);
         try { await client.sendMessage(m.chat, { react: { text: '🗑️', key: m.key } }); } catch {}
-        await client.sendMessage(m.chat, { text: `conversation wiped. gone. zero memory. fresh hell starts now 🗑️` }, { quoted: m });
+        await client.sendMessage(m.chat, { text: boxWrap('conversation wiped. gone. zero memory. fresh hell starts now 🗑️', 'MEMORY CLEARED') }, { quoted: m });
         return;
     }
 
@@ -341,7 +347,7 @@ module.exports = async (context) => {
         }
 
         pushHistory(m.sender, 'assistant', finalReply);
-        await client.sendMessage(m.chat, { text: finalReply }, { quoted: m });
+        await client.sendMessage(m.chat, { text: boxWrap(finalReply, 'TOXICAGENT') }, { quoted: m });
         try { await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } }); } catch {}
     } catch (e) {
         console.error('[ToxicAgent] error:', e.message);

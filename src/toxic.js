@@ -449,7 +449,11 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             }
         }
 
-        if (cmd && mode === 'private' && !itsMe && !isDev && !Owner) return;
+        if (cmd && !itsMe && !isDev && !Owner) {
+            if (mode === 'private') return;
+            if (mode === 'group' && !m.isGroup) return;
+            if (mode === 'inbox' && m.isGroup) return;
+        }
 
         if (shouldStoreMessage(m)) {
             const remoteJid = m.chat || m.key?.remoteJid;
@@ -614,14 +618,19 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             return;
         }
 
-        await Promise.all([
-            antilink(client, m, store).catch(e => console.error('❌ [ANTILINK]:', e)),
+        const _featurePromises = [
             status_saver(client, m, Owner, usedPrefix).catch(e => console.error('❌ [STATUS_SAVER]:', e)),
             afkFeature(client, m).catch(e => console.error('❌ [AFK]:', e)),
-            gcPresence(client, m).catch(e => console.error('❌ [GCPRESENCE]:', e)),
-            antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body).catch(e => console.error('❌ [ANTITAGGC]:', e)),
-            antistatusmention(client, m).catch(e => console.error('❌ [ANTISTATUSMENTION]:', e)),
-        ]);
+        ];
+        if (m.isGroup) {
+            _featurePromises.push(
+                antilink(client, m, store).catch(e => console.error('❌ [ANTILINK]:', e)),
+                gcPresence(client, m).catch(e => console.error('❌ [GCPRESENCE]:', e)),
+                antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body).catch(e => console.error('❌ [ANTITAGGC]:', e)),
+                antistatusmention(client, m).catch(e => console.error('❌ [ANTISTATUSMENTION]:', e)),
+            );
+        }
+        await Promise.all(_featurePromises);
 
         const _rT = new Set(['w', 'wow', 'xd', 'p', 'uhm']);
         if (_rT.has(body.trim().toLowerCase()) && m.quoted) {
