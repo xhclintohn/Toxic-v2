@@ -163,7 +163,8 @@ function getViewOnceMedia(rawMessage) {
 }
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
-    if (m.key?.fromMe) return;
+    const _selfJid = client.decodeJid ? client.decodeJid(client.user?.id) : (client.user?.id || '');
+    if (m.key?.fromMe && m.key?.remoteJid !== _selfJid) return;
     try {
         const [rawSudoUsers, rawBannedUsers, fetchedSettings] = await Promise.all([
             getCachedSudo(),
@@ -622,12 +623,12 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 console.error(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
             }
         } else if (isDev && !itsMe && (settings.toxicagent === true || settings.toxicagent === 'true')) {
-            try { await toxicaiFeature(context); } catch {}
+            toxicaiFeature(context).catch(() => {});
         } else {
             const _isDM = !m.isGroup;
             const _chatbotDMOn = _isDM && (chatbotpmSetting === true || chatbotpmSetting === 'true' || chatbotpmSetting === 'on');
             if (_chatbotDMOn) {
-                try { await chatbotpm(client, m, store, chatbotpmSetting); } catch (e) { console.error('❌ [CHATBOTPM]:', e); }
+                chatbotpm(client, m, store, chatbotpmSetting).catch(e => console.error('❌ [CHATBOTPM]:', e));
             } else if (settings.autoai && !itsMe) {
                 const _botNum = (botNumber || '').split('@')[0].split(':')[0];
                 const _bLidKey = m._botLidKey || '';
@@ -644,7 +645,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 const _triggerT = /^t\s+/i.test((body || '').trim());
                 const _hasPrefix = !!(body && usedPrefix && body.startsWith(usedPrefix));
                 if ((_isDM && body && body.trim()) || _isMentioned || _isReplyToBot || _triggerT || _hasPrefix) {
-                    try { await autoai(context); } catch {}
+                    autoai(context).catch(() => {});
                 }
             }
         }

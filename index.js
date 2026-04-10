@@ -357,7 +357,7 @@ async function startToxic() {
               const effectivePrefix = settings?.prefix || '.';
               let command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
               const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
-              try { require("./src/toxic")(client, listM, { type: "notify" }, store); } catch (error) {}
+              require("./src/toxic")(client, listM, { type: "notify" }, store).catch(e => console.error('❌ [TOXIC LIST]:', e.message));
               return;
             }
           }
