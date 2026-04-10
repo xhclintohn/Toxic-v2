@@ -1,6 +1,6 @@
 const axios = require('axios');
 const { commands, aliases } = require('../handlers/commandHandler');
-const { getConversationHistory, addConversationMessage } = require('../database/config');
+const { getConversationHistory, addConversationMessage, clearConversationHistory } = require('../database/config');
 
 const _mem = new Map();
 const MEM_TTL = 60 * 60 * 1000;
@@ -159,6 +159,14 @@ module.exports = async (context) => {
     let prompt = (m.body || '').trim();
     if (!prompt) return;
     if (/^t\s+/i.test(prompt)) prompt = prompt.replace(/^t\s+/i, '').trim();
+
+    if (/^(clear|reset|wipe|delete|flush|erase)\s*(this\s*)?(conv(ersation)?|chat|hist(ory)?|messages?|thread|memory|mem)$/i.test(prompt)) {
+        _mem.delete(userNum);
+        try { await clearConversationHistory(userNum); } catch {}
+        try { await client.sendMessage(m.chat, { react: { text: '🗑️', key: m.key } }); } catch {}
+        await client.sendMessage(m.chat, { text: `done. memory wiped 🗑️ fresh start. please make better choices this time.` }, { quoted: m });
+        return;
+    }
 
     try { await client.sendMessage(m.chat, { react: { text: '🤔', key: m.key } }); } catch {}
 

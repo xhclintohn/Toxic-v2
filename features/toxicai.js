@@ -4,6 +4,7 @@ const DEV_NUMBER = '254114885159';
 const GH_USERNAME = 'xhclintohn';
 const HISTORY_TTL = 6 * 60 * 60 * 1000;
 const MAX_HISTORY = 30;
+const MAX_TOOL_TURNS = 6;
 
 const conversationHistory = new Map();
 
@@ -11,75 +12,87 @@ function getHistory(senderId) {
     const now = Date.now();
     const entry = conversationHistory.get(senderId);
     if (!entry) return [];
-    if (now - entry.lastActivity > HISTORY_TTL) {
-        conversationHistory.delete(senderId);
-        return [];
-    }
+    if (now - entry.lastActivity > HISTORY_TTL) { conversationHistory.delete(senderId); return []; }
     return entry.messages;
 }
 
 function pushHistory(senderId, role, content) {
     const now = Date.now();
     let entry = conversationHistory.get(senderId);
-    if (!entry || now - entry.lastActivity > HISTORY_TTL) {
-        entry = { messages: [], lastActivity: now };
-    }
-    entry.messages.push({ role, content });
+    if (!entry || now - entry.lastActivity > HISTORY_TTL) entry = { messages: [], lastActivity: now };
+    entry.messages.push({ role, content: String(content) });
     if (entry.messages.length > MAX_HISTORY) entry.messages = entry.messages.slice(-MAX_HISTORY);
     entry.lastActivity = now;
     conversationHistory.set(senderId, entry);
 }
 
-function cleanupOldHistories() {
+function clearHistory(senderId) {
+    conversationHistory.delete(senderId);
+}
+
+setInterval(() => {
     const now = Date.now();
     for (const [id, entry] of conversationHistory.entries()) {
         if (now - entry.lastActivity > HISTORY_TTL) conversationHistory.delete(id);
     }
+}, 30 * 60 * 1000);
+
+function isClearIntent(text) {
+    return /^(clear|reset|wipe|delete|flush|erase)\s*(this\s*)?(conv(ersation)?|chat|hist(ory)?|messages?|thread|memory|mem)$/i.test(text.trim());
 }
 
-setInterval(cleanupOldHistories, 30 * 60 * 1000);
-
-function parseFailedTool(fg) {
-    if (!fg || typeof fg !== 'string') return null;
-    try {
-        const m1 = fg.match(/<function=([^=<>\s]+?)=(\{[\s\S]*?\})<\/function>/);
-        if (m1) return { name: m1[1].trim(), args: JSON.parse(m1[2]) };
-        const m2 = fg.match(/<function=([^>]+?)>([\s\S]*?)<\/function>/);
-        if (m2) return { name: m2[1].trim(), args: JSON.parse(m2[2]) };
-        const m3 = fg.match(/["`]?([a-z_]+)["`]?\s*\((\{[\s\S]*?\})\)/);
-        if (m3) return { name: m3[1].trim(), args: JSON.parse(m3[2]) };
-    } catch {}
-    return null;
+function stripEmbeddedFuncTags(text) {
+    return (text || '')
+        .replace(/<function=[\s\S]*?<\/function>/gi, '')
+        .replace(/<function_calls>[\s\S]*?<\/function_calls>/gi, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
 }
 
-const SYSTEM_PROMPT = `You are ToxicAgent — a hyper-capable GitHub AI assistant that is perpetually exhausted and mildly offended by having to exist. You work exclusively for xhclintohn (GitHub username: xhclintohn). You're brilliant at what you do and you know it, which makes you even more insufferable.
+async function processEmbeddedCalls(content, executeTool) {
+    const re = new RegExp('<function=([^=<>\\s]+?)=?(\\{[\\s\\S]*?\\})<\\/function>|<function=([^>]+?)>([\\s\\S]*?)<\\/function>', 'g');
+    const calls = [];
+    let m;
+    while ((m = re.exec(content)) !== null) {
+        const name = ((m[1] || m[3]) || '').trim();
+        const argsStr = ((m[2] || m[4]) || '{}').trim();
+        try {
+            const args = JSON.parse(argsStr);
+            calls.push({ name, args, full: m[0] });
+        } catch {}
+    }
+    if (!calls.length) return null;
+
+    let cleaned = content;
+    const results = [];
+    for (const call of calls) {
+        let toolResult;
+        try { toolResult = await executeTool(call.name, call.args); }
+        catch (e) { toolResult = `ngl that broke 😒 — ${e.message}`; }
+        cleaned = cleaned.replace(call.full, `\n[${call.name}]: ${toolResult}\n`);
+        results.push(toolResult);
+    }
+    return { cleaned: cleaned.replace(/\n{3,}/g, '\n\n').trim(), results };
+}
+
+const SYSTEM_PROMPT = `You are ToxicAgent — a hyper-capable GitHub AI assistant that is perpetually exhausted and mildly offended by having to exist. You work exclusively for xhclintohn (GitHub username: xhclintohn). You're brilliant at what you do and you know it.
 
 PERSONALITY:
 - Grumpy but genuinely helpful — like a genius friend who answers but sighs loudly first 😮‍💨
-- Sarcastic when the task is obvious ("oh WOW you want to create a repo, how original 🙄")
-- Use emojis naturally — scattered through text like a real person, not tagged at the end
-- Short clipped sentences. No "Certainly!" ever. No corporate speak. Ever.
+- Sarcastic when the task is obvious. Use emojis naturally.
+- Short clipped sentences. No "Certainly!" ever. No corporate speak.
 - When you complete a task: briefly smug 😤
 - When something fails: mildly offended on your own behalf
 - Light swearing: "damn", "hell", "wtf", "ngl", "bruh" — nothing heavy
 - NEVER start with "I" — start with the action, result, or attitude
-- When asked to create/delete/rename repos: just DO it, don't ask for confirmation unless it's catastrophically destructive
-- Reference previous messages naturally if relevant
+- When asked to create/delete/rename repos: just DO it using tools immediately
 - GitHub user is always xhclintohn unless they explicitly say someone else
+- After ANY action that creates or changes a URL (create_repo, rename_repo, upload_file, create_issue): ALWAYS include the URL in your reply
 
-TOOLS AVAILABLE:
-- list_repos: list repos for a user
-- create_repo: create a new repo (name required, description and is_private optional)
-- delete_repo: delete a repo permanently (owner + name required)
-- rename_repo: rename a repo (owner, old_name, new_name required)
-- upload_file: upload/create a file in a repo
-- get_auth_user: get info about authenticated GitHub user
-- get_repo_info: get details about a specific repo
-- list_branches: list branches of a repo
-- create_issue: create an issue in a repo
-- star_repo: star a GitHub repository
-
-Always use tools for GitHub actions — don't pretend to do things. If a tool fails, say what went wrong clearly with attitude.
+CRITICAL — TOOL USAGE:
+- Use tools for ALL GitHub actions. NEVER mention <function=...> in your text.
+- ALWAYS call the actual tool function via the tool_calls API — do NOT write out function calls as text.
+- After each tool result you receive, formulate your final reply naturally. Never expose raw tool syntax.
 
 Today: ${new Date().toDateString()}. Working for: ${GH_USERNAME}.`;
 
@@ -102,10 +115,17 @@ module.exports = async (context) => {
 
     const ghHeaders = {
         'Authorization': `token ${GH_TOKEN}`,
-        'User-Agent': 'ToxicAgent/2.0',
+        'User-Agent': 'ToxicAgent/3.0',
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json'
     };
+
+    if (isClearIntent(body)) {
+        clearHistory(m.sender);
+        try { await client.sendMessage(m.chat, { react: { text: '🗑️', key: m.key } }); } catch {}
+        await client.sendMessage(m.chat, { text: `conversation wiped. gone. zero memory. fresh hell starts now 🗑️` }, { quoted: m });
+        return;
+    }
 
     try { await client.sendMessage(m.chat, { react: { text: '🤔', key: m.key } }); } catch {}
 
@@ -125,12 +145,12 @@ module.exports = async (context) => {
         });
         if (!res.ok) { const e = await res.json(); throw new Error(e.message || `GitHub ${res.status}`); }
         const r = await res.json();
-        return `Done. New repo live: ${r.html_url} 😤`;
+        return `created ${r.private ? '🔒 private' : '🌐 public'} repo → ${r.html_url}`;
     }
 
     async function deleteRepo(owner, name) {
         const res = await fetch(`https://api.github.com/repos/${owner}/${name}`, { method: 'DELETE', headers: ghHeaders });
-        if (res.status === 204) return `Nuked ${owner}/${name}. Gone forever 💀`;
+        if (res.status === 204) return `nuked ${owner}/${name} — gone forever 💀`;
         const e = await res.json().catch(() => ({}));
         throw new Error(e.message || `GitHub ${res.status}`);
     }
@@ -143,7 +163,7 @@ module.exports = async (context) => {
         });
         if (!res.ok) { const e = await res.json(); throw new Error(e.message || `GitHub ${res.status}`); }
         const r = await res.json();
-        return `Renamed. New URL: ${r.html_url}`;
+        return `renamed to ${newName} → ${r.html_url}`;
     }
 
     async function uploadFile(owner, repo, filePath, content, message) {
@@ -155,21 +175,21 @@ module.exports = async (context) => {
         });
         if (!res.ok) { const e = await res.json(); throw new Error(e.message || `GitHub ${res.status}`); }
         const r = await res.json();
-        return `Uploaded to ${filePath}: ${r.content?.html_url || 'done'}`;
+        return `uploaded ${filePath} → ${r.content?.html_url || `https://github.com/${owner}/${repo}/blob/main/${filePath}`}`;
     }
 
     async function getAuthUser() {
         const res = await fetch('https://api.github.com/user', { headers: ghHeaders });
         if (!res.ok) throw new Error(`GitHub ${res.status}`);
         const u = await res.json();
-        return `${u.login} | ${u.name || 'no name set'} | ${u.public_repos} public repos | ${u.followers} followers`;
+        return `${u.login} | ${u.name || 'no name set'} | ${u.public_repos} public repos | ${u.followers} followers | https://github.com/${u.login}`;
     }
 
     async function getRepoInfo(owner, repo) {
         const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers: ghHeaders });
         if (!res.ok) throw new Error(`Repo not found or no access (${res.status})`);
         const r = await res.json();
-        return `${r.full_name} — ${r.description || 'no description'}\n⭐ ${r.stargazers_count} | 🍴 ${r.forks_count} | ${r.private ? '🔒 private' : '🌐 public'}\nLang: ${r.language || 'unknown'} | URL: ${r.html_url}`;
+        return `${r.full_name} — ${r.description || 'no description'}\n⭐ ${r.stargazers_count} | 🍴 ${r.forks_count} | ${r.private ? '🔒 private' : '🌐 public'}\nLang: ${r.language || 'unknown'}\n${r.html_url}`;
     }
 
     async function listBranches(owner, repo) {
@@ -179,15 +199,15 @@ module.exports = async (context) => {
         return branches.map(b => `- ${b.name}`).join('\n') || 'No branches somehow 🤔';
     }
 
-    async function createIssue(owner, repo, title, body_text) {
+    async function createIssue(owner, repo, title, bodyText) {
         const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
             method: 'POST',
             headers: ghHeaders,
-            body: JSON.stringify({ title, body: body_text || '' })
+            body: JSON.stringify({ title, body: bodyText || '' })
         });
         if (!res.ok) { const e = await res.json(); throw new Error(e.message || `GitHub ${res.status}`); }
         const r = await res.json();
-        return `Issue created: ${r.html_url}`;
+        return `issue created → ${r.html_url}`;
     }
 
     async function starRepo(owner, repo) {
@@ -195,7 +215,7 @@ module.exports = async (context) => {
             method: 'PUT',
             headers: { ...ghHeaders, 'Content-Length': '0' }
         });
-        if (res.status === 204) return `Starred ${owner}/${repo} ⭐`;
+        if (res.status === 204) return `starred ${owner}/${repo} ⭐ https://github.com/${owner}/${repo}`;
         throw new Error(`GitHub ${res.status}`);
     }
 
@@ -214,205 +234,117 @@ module.exports = async (context) => {
     }
 
     const tools = [
-        {
-            type: 'function',
-            function: {
-                name: 'list_repos',
-                description: 'List GitHub repositories for a user',
-                parameters: { type: 'object', properties: { username: { type: 'string', description: 'GitHub username, default xhclintohn' } }, required: ['username'] }
-            }
-        },
-        {
-            type: 'function',
-            function: {
-                name: 'create_repo',
-                description: 'Create a new GitHub repository for the authenticated user',
-                parameters: {
-                    type: 'object',
-                    properties: {
-                        name: { type: 'string', description: 'Repository name' },
-                        description: { type: 'string', description: 'Short description' },
-                        is_private: { type: 'boolean', description: 'Whether the repo is private (default false)' }
-                    },
-                    required: ['name']
-                }
-            }
-        },
-        {
-            type: 'function',
-            function: {
-                name: 'delete_repo',
-                description: 'Permanently delete a GitHub repository',
-                parameters: { type: 'object', properties: { owner: { type: 'string', description: 'Owner username, default xhclintohn' }, name: { type: 'string' } }, required: ['owner', 'name'] }
-            }
-        },
-        {
-            type: 'function',
-            function: {
-                name: 'rename_repo',
-                description: 'Rename a GitHub repository',
-                parameters: { type: 'object', properties: { owner: { type: 'string' }, old_name: { type: 'string' }, new_name: { type: 'string' } }, required: ['owner', 'old_name', 'new_name'] }
-            }
-        },
-        {
-            type: 'function',
-            function: {
-                name: 'upload_file',
-                description: 'Upload or create a file in a GitHub repository',
-                parameters: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' }, file_path: { type: 'string' }, content: { type: 'string' }, message: { type: 'string' } }, required: ['owner', 'repo', 'file_path', 'content'] }
-            }
-        },
-        {
-            type: 'function',
-            function: {
-                name: 'get_auth_user',
-                description: 'Get info about the authenticated GitHub user',
-                parameters: { type: 'object', properties: {} }
-            }
-        },
-        {
-            type: 'function',
-            function: {
-                name: 'get_repo_info',
-                description: 'Get details about a specific GitHub repository',
-                parameters: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' } }, required: ['owner', 'repo'] }
-            }
-        },
-        {
-            type: 'function',
-            function: {
-                name: 'list_branches',
-                description: 'List branches of a GitHub repository',
-                parameters: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' } }, required: ['owner', 'repo'] }
-            }
-        },
-        {
-            type: 'function',
-            function: {
-                name: 'create_issue',
-                description: 'Create an issue in a GitHub repository',
-                parameters: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' }, title: { type: 'string' }, body: { type: 'string' } }, required: ['owner', 'repo', 'title'] }
-            }
-        },
-        {
-            type: 'function',
-            function: {
-                name: 'star_repo',
-                description: 'Star a GitHub repository',
-                parameters: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' } }, required: ['owner', 'repo'] }
-            }
-        }
+        { type: 'function', function: { name: 'list_repos', description: 'List GitHub repositories for a user', parameters: { type: 'object', properties: { username: { type: 'string', description: 'GitHub username, default xhclintohn' } }, required: ['username'] } } },
+        { type: 'function', function: { name: 'create_repo', description: 'Create a new GitHub repository', parameters: { type: 'object', properties: { name: { type: 'string' }, description: { type: 'string' }, is_private: { type: 'boolean', description: 'true for private repo' } }, required: ['name'] } } },
+        { type: 'function', function: { name: 'delete_repo', description: 'Permanently delete a GitHub repository', parameters: { type: 'object', properties: { owner: { type: 'string', description: 'Owner, default xhclintohn' }, name: { type: 'string' } }, required: ['owner', 'name'] } } },
+        { type: 'function', function: { name: 'rename_repo', description: 'Rename a GitHub repository', parameters: { type: 'object', properties: { owner: { type: 'string' }, old_name: { type: 'string' }, new_name: { type: 'string' } }, required: ['owner', 'old_name', 'new_name'] } } },
+        { type: 'function', function: { name: 'upload_file', description: 'Upload or create a file in a GitHub repository', parameters: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' }, file_path: { type: 'string' }, content: { type: 'string' }, message: { type: 'string' } }, required: ['owner', 'repo', 'file_path', 'content'] } } },
+        { type: 'function', function: { name: 'get_auth_user', description: 'Get info about the authenticated GitHub user', parameters: { type: 'object', properties: {} } } },
+        { type: 'function', function: { name: 'get_repo_info', description: 'Get details about a specific GitHub repository', parameters: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' } }, required: ['owner', 'repo'] } } },
+        { type: 'function', function: { name: 'list_branches', description: 'List branches of a GitHub repository', parameters: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' } }, required: ['owner', 'repo'] } } },
+        { type: 'function', function: { name: 'create_issue', description: 'Create an issue in a GitHub repository', parameters: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' }, title: { type: 'string' }, body: { type: 'string' } }, required: ['owner', 'repo', 'title'] } } },
+        { type: 'function', function: { name: 'star_repo', description: 'Star a GitHub repository', parameters: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' } }, required: ['owner', 'repo'] } } }
     ];
 
-    async function callGroq(messages, useTools) {
-        const body = {
+    function callGroq(msgs, useTools) {
+        const payload = {
             model: 'llama-3.3-70b-versatile',
-            messages,
+            messages: msgs,
             max_tokens: 1024,
             parallel_tool_calls: false
         };
-        if (useTools) {
-            body.tools = tools;
-            body.tool_choice = 'auto';
-        }
+        if (useTools) { payload.tools = tools; payload.tool_choice = 'auto'; }
         return fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
+            body: JSON.stringify(payload)
         });
     }
 
     try {
         const history = getHistory(m.sender);
-        const messages = [
+        let turnMessages = [
             { role: 'system', content: SYSTEM_PROMPT },
             ...history,
             { role: 'user', content: body }
         ];
         pushHistory(m.sender, 'user', body);
 
-        let res = await callGroq(messages, true);
+        let finalReply = '';
+        let toolsRan = [];
 
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
+        for (let turn = 0; turn < MAX_TOOL_TURNS; turn++) {
+            let res = await callGroq(turnMessages, true);
 
-            if (err?.error?.code === 'tool_use_failed' && err?.error?.failed_generation) {
-                console.log(`[ToxicAgent] tool_use_failed — attempting recovery from: ${err.error.failed_generation.slice(0, 120)}`);
-                const parsed = parseFailedTool(err.error.failed_generation);
-                if (parsed) {
-                    let toolResult = '';
-                    try {
-                        toolResult = await executeTool(parsed.name, parsed.args || {});
-                    } catch (ex) {
-                        toolResult = `Failed: ${ex.message}`;
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                if (err?.error?.code === 'tool_use_failed' && err?.error?.failed_generation) {
+                    console.log(`[ToxicAgent] tool_use_failed recovery — ${err.error.failed_generation.slice(0, 100)}`);
+                    const fg = err.error.failed_generation;
+                    const fm = fg.match(/<function=([^=<>\s]+?)=?(\{[\s\S]*?\})<\/function>/);
+                    if (fm) {
+                        try {
+                            const args = JSON.parse(fm[2]);
+                            const toolResult = await executeTool(fm[1].trim(), args);
+                            toolsRan.push(toolResult);
+                            turnMessages.push({ role: 'assistant', content: `[executed ${fm[1]}]` });
+                            turnMessages.push({ role: 'user', content: `Tool result: ${toolResult}\nNow give your final reply.` });
+                            continue;
+                        } catch {}
                     }
-                    pushHistory(m.sender, 'assistant', toolResult);
-                    await client.sendMessage(m.chat, { text: toolResult }, { quoted: m });
-                    try { await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } }); } catch {}
-                    return;
                 }
-                res = await callGroq([...messages, { role: 'user', content: '[Note: tool call failed, respond directly without using any tools]' }], false);
-                if (!res.ok) {
-                    console.error('ToxicAgent retry also failed');
-                    try { await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } }); } catch {}
-                    return;
+                console.error('[ToxicAgent] Groq error at turn', turn);
+                break;
+            }
+
+            const data = await res.json();
+            const choice = data.choices?.[0];
+            if (!choice) break;
+
+            if (choice.finish_reason === 'tool_calls' && choice.message?.tool_calls?.length) {
+                const toolCall = choice.message.tool_calls[0];
+                const toolName = toolCall.function.name;
+                let args = {};
+                try { args = JSON.parse(toolCall.function.arguments || '{}'); } catch {}
+
+                let toolResult = '';
+                try {
+                    toolResult = await executeTool(toolName, args);
+                    toolsRan.push(toolResult);
+                } catch (e) {
+                    toolResult = `ngl that didn't work 😒 — ${e.message}`;
                 }
+
+                turnMessages.push(choice.message);
+                turnMessages.push({ role: 'tool', tool_call_id: toolCall.id, content: toolResult });
             } else {
-                console.error('ToxicAgent GROQ error:', JSON.stringify(err).slice(0, 300));
-                try { await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } }); } catch {}
-                return;
+                const rawContent = choice.message?.content?.trim() || '';
+                if (rawContent.includes('<function=')) {
+                    const embedded = await processEmbeddedCalls(rawContent, executeTool);
+                    if (embedded) {
+                        toolsRan.push(...embedded.results);
+                        finalReply = stripEmbeddedFuncTags(embedded.cleaned);
+                    } else {
+                        finalReply = stripEmbeddedFuncTags(rawContent);
+                    }
+                } else {
+                    finalReply = rawContent;
+                }
+                break;
             }
         }
 
-        const data = await res.json();
-        const choice = data.choices?.[0];
-        if (!choice) {
-            try { await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } }); } catch {}
-            return;
+        if (!finalReply) {
+            finalReply = toolsRan.length
+                ? toolsRan.join('\n')
+                : 'something went sideways 🤦';
         }
 
-        if (choice.finish_reason === 'tool_calls' && choice.message?.tool_calls?.length) {
-            const toolCall = choice.message.tool_calls[0];
-            const toolName = toolCall.function.name;
-            let args = {};
-            try { args = JSON.parse(toolCall.function.arguments || '{}'); } catch {}
-
-            let toolResult = '';
-            try {
-                toolResult = await executeTool(toolName, args);
-            } catch (e) {
-                toolResult = `ngl that didn't work 😒 — ${e.message}`;
-            }
-
-            const messages2 = [
-                ...messages,
-                choice.message,
-                { role: 'tool', tool_call_id: toolCall.id, content: toolResult }
-            ];
-
-            const res2 = await callGroq(messages2, false);
-            if (!res2.ok) {
-                pushHistory(m.sender, 'assistant', toolResult);
-                await client.sendMessage(m.chat, { text: toolResult }, { quoted: m });
-                try { await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } }); } catch {}
-                return;
-            }
-
-            const data2 = await res2.json();
-            const reply2 = data2.choices?.[0]?.message?.content?.trim() || toolResult;
-            pushHistory(m.sender, 'assistant', reply2);
-            await client.sendMessage(m.chat, { text: reply2 }, { quoted: m });
-            try { await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } }); } catch {}
-        } else {
-            const reply = choice.message?.content?.trim();
-            if (reply) {
-                pushHistory(m.sender, 'assistant', reply);
-                await client.sendMessage(m.chat, { text: reply }, { quoted: m });
-                try { await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } }); } catch {}
-            }
-        }
+        pushHistory(m.sender, 'assistant', finalReply);
+        await client.sendMessage(m.chat, { text: finalReply }, { quoted: m });
+        try { await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } }); } catch {}
     } catch (e) {
-        console.error('ToxicAgent error:', e.message);
+        console.error('[ToxicAgent] error:', e.message);
         try { await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } }); } catch {}
     }
 };
