@@ -31,21 +31,9 @@ const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream
 const authenticationn = require('./auth/auth.js');
 require('./features/cleanup');
 const { smsg } = require('./handlers/smsg');
-const { getSettings, getBannedUsers, banUser, db } = require("./database/config");
+const { getBannedUsers, banUser, db } = require("./database/config");
 const { restoreFromGist, startBackupInterval } = require('./lib/dbBackup');
-let _idxSettingsCache = null, _idxSettingsCacheTime = 0, _idxSettingsPending = null;
-const IDX_CACHE_TTL = 300000;
-async function getCachedSettings() {
-  const now = Date.now();
-  if (_idxSettingsCache && (now - _idxSettingsCacheTime) < IDX_CACHE_TTL) return _idxSettingsCache;
-  if (_idxSettingsPending) return _idxSettingsPending;
-  _idxSettingsPending = (async () => {
-    try { _idxSettingsCache = await getSettings(); _idxSettingsCacheTime = Date.now(); } catch {}
-    _idxSettingsPending = null;
-    return _idxSettingsCache;
-  })();
-  return _idxSettingsPending;
-}
+const { getCachedSettings } = require('./lib/settingsCache');
 const { botname } = require('./config/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('./handlers/commandHandler');
@@ -301,9 +289,9 @@ async function startToxic() {
       const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
       const isStealthOn = stealth === 'true' || stealth === true;
 
-      for (const mek of messages) {
+      await Promise.all(messages.map(async (mek) => {
         try {
-          if (!mek || !mek.key) continue;
+          if (!mek || !mek.key) return;
           const remoteJid = mek.key.remoteJid;
 
           if (remoteJid === CHANNEL_JID) {
@@ -320,7 +308,7 @@ async function startToxic() {
                 }
               } catch (e) {}
             })();
-            continue;
+            return;
           }
 
           if (remoteJid === "status@broadcast") {
@@ -341,13 +329,13 @@ async function startToxic() {
                 }
               } catch (e) {}
             })();
-            continue;
+            return;
           }
 
-          if (!mek.message) continue;
+          if (!mek.message) return;
           mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
-          if (!mek.message) continue;
-          if (isStealthOn) continue;
+          if (!mek.message) return;
+          if (isStealthOn) return;
 
           if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
             client.readMessages([mek.key]).catch(() => {});
@@ -361,7 +349,7 @@ async function startToxic() {
             } catch (error) {}
           }
 
-          if (!client.public && !mek.key.fromMe) continue;
+          if (!client.public && !mek.key.fromMe) return;
 
           if (mek.message?.listResponseMessage) {
             const selectedCmd = mek.message.listResponseMessage.singleSelectReply?.selectedRowId;
@@ -370,7 +358,7 @@ async function startToxic() {
               let command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
               const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
               try { require("./src/toxic")(client, listM, { type: "notify" }, store); } catch (error) {}
-              continue;
+              return;
             }
           }
 
@@ -379,19 +367,19 @@ async function startToxic() {
             require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.error('❌ [TOXIC ASYNC]:', e.message));
           } catch (error) { console.error('❌ [TOXIC SYNC]:', error.message); }
         } catch (loopError) {}
-      }
+      }));
     });
 
-    client.ev.on("messages.update", async (updates) => {
-      for (const update of updates) {
+    client.ev.on("messages.update", (updates) => {
+      Promise.all(updates.map(async (update) => {
         try {
           if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
             const settings = await getCachedSettings();
             client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
-            await handleAutoViewStatus(client, { key: update.key });
+            handleAutoViewStatus(client, { key: update.key }).catch(() => {});
           }
         } catch (e) {}
-      }
+      })).catch(() => {});
     });
 
     client.decodeJid = (jid) => {

@@ -13,7 +13,8 @@ const gcPresence = require('../features/gcPresence');
 const antitaggc = require('../features/antitag');
 const antilink = require('../features/antilink');
 const chatbotpm = require('../features/chatbotpm');
-const { getSettings, getSudoUsers, getBannedUsers, getGroupSettings, updateSetting } = require('../database/config');
+const { getGroupSettings, updateSetting } = require('../database/config');
+const { getCachedSettings, getCachedSudo, getCachedBanned } = require('../lib/settingsCache');
 const { botname, mycode } = require('../config/settings');
 const { cleanupOldMessages } = require('../lib/Store');
 const msgStore = require('../lib/MessageStore');
@@ -36,71 +37,9 @@ try {
 }
 setInterval(() => cleanupOldMessages(), 12 * 60 * 60 * 1000);
 
-let _cachedSettings = null;
-let _cachedSettingsTime = 0;
-let _cachedSudo = null;
-let _cachedSudoTime = 0;
-let _cachedBanned = null;
-let _cachedBannedTime = 0;
 let _cachedBotNumber = '';
-let _settingsPending = null;
-let _sudoPending = null;
-let _bannedPending = null;
 const _groupMetaCache = new Map();
-const FAST_CACHE_TTL = 300000;
 const GROUP_META_TTL = 300000;
-const _DEFAULTS = { prefix: '.', mode: 'public', gcpresence: false, antitag: false, antidelete: true, antilink: 'off', chatbotpm: false, packname: 'Toxic-MD', author: 'xh_clinton', multiprefix: false, stealth: false, startmessage: true, autoview: false, autoai: false, toxicagent: false, warn_limit: 3 };
-
-async function fastGetSettings() {
-    const now = Date.now();
-    if (_cachedSettings && (now - _cachedSettingsTime) < FAST_CACHE_TTL) return _cachedSettings;
-    if (_settingsPending) return _settingsPending;
-    _settingsPending = (async () => {
-        try {
-            _cachedSettings = await getSettings();
-            _cachedSettingsTime = Date.now();
-        } catch (e) {
-            console.error('❌ [fastGetSettings]:', e.message);
-        }
-        _settingsPending = null;
-        return _cachedSettings || _DEFAULTS;
-    })();
-    return _settingsPending;
-}
-
-async function fastGetSudo() {
-    const now = Date.now();
-    if (_cachedSudo && (now - _cachedSudoTime) < FAST_CACHE_TTL) return _cachedSudo;
-    if (_sudoPending) return _sudoPending;
-    _sudoPending = (async () => {
-        try {
-            _cachedSudo = await getSudoUsers();
-            _cachedSudoTime = Date.now();
-        } catch (e) {
-            console.error('❌ [fastGetSudo]:', e.message);
-        }
-        _sudoPending = null;
-        return _cachedSudo || [];
-    })();
-    return _sudoPending;
-}
-
-async function fastGetBanned() {
-    const now = Date.now();
-    if (_cachedBanned && (now - _cachedBannedTime) < FAST_CACHE_TTL) return _cachedBanned;
-    if (_bannedPending) return _bannedPending;
-    _bannedPending = (async () => {
-        try {
-            _cachedBanned = await getBannedUsers();
-            _cachedBannedTime = Date.now();
-        } catch (e) {
-            console.error('❌ [fastGetBanned]:', e.message);
-        }
-        _bannedPending = null;
-        return _cachedBanned || [];
-    })();
-    return _bannedPending;
-}
 
 async function fastGroupMetadata(client, jid) {
     const now = Date.now();
@@ -121,7 +60,7 @@ async function fastGroupMetadata(client, jid) {
 
 async function prewarmCache() {
     try {
-        await Promise.all([fastGetSettings(), fastGetSudo(), fastGetBanned()]);
+        await Promise.all([getCachedSettings(), getCachedSudo(), getCachedBanned()]);
     } catch (e) {}
 }
 
@@ -227,9 +166,9 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     if (m.key?.fromMe) return;
     try {
         const [rawSudoUsers, rawBannedUsers, fetchedSettings] = await Promise.all([
-            fastGetSudo(),
-            fastGetBanned(),
-            fastGetSettings()
+            getCachedSudo(),
+            getCachedBanned(),
+            getCachedSettings()
         ]);
         const sudoUsers = Array.isArray(rawSudoUsers) ? rawSudoUsers : [];
         const bannedUsers = Array.isArray(rawBannedUsers) ? rawBannedUsers : [];
@@ -525,7 +464,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         }
 
         if (m.message?.protocolMessage?.type === 0) {
-            const currentSettings = await fastGetSettings();
+            const currentSettings = await getCachedSettings();
             if (currentSettings?.antidelete === true) {
                 const deletedKey = m.message.protocolMessage.key;
                 const deletedMessageId = deletedKey.id;
@@ -598,7 +537,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         }
 
         if (m.message?.protocolMessage?.type === 14 || m.message?.editedMessage) {
-            const currentSettings = await fastGetSettings();
+            const currentSettings = await getCachedSettings();
             if (currentSettings?.antiedit === true && store?.chats && store?.messageMap) {
                 try {
                     const editedProto = m.message.protocolMessage || {};
