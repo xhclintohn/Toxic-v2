@@ -630,7 +630,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 antistatusmention(client, m).catch(e => console.error('❌ [ANTISTATUSMENTION]:', e)),
             );
         }
-        await Promise.all(_featurePromises);
+        Promise.all(_featurePromises).catch(() => {});
 
         const _rT = new Set(['w', 'wow', 'xd', 'p', 'uhm']);
         if (_rT.has(body.trim().toLowerCase()) && m.quoted) {

@@ -31,8 +31,7 @@ const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream
 const authenticationn = require('./auth/auth.js');
 require('./features/cleanup');
 const { smsg } = require('./handlers/smsg');
-const { getSettings, getBannedUsers, banUser, db, getCachedSettingsSync } = require("./database/config");
-const { applyTranslationPatch } = require('./features/translator');
+const { getSettings, getBannedUsers, banUser, db } = require("./database/config");
 const { restoreFromGist, startBackupInterval } = require('./lib/dbBackup');
 let _idxSettingsCache = null, _idxSettingsCacheTime = 0;
 const IDX_CACHE_TTL = 20000;
@@ -414,7 +413,6 @@ async function startToxic() {
 
     client.public = true;
     client.serializeM = (m) => smsg(client, m, store);
-    try { applyTranslationPatch(client, getCachedSettingsSync); } catch (e) { console.error('❌ [TRANSLATOR PATCH]:', e.message); }
 
     client.ev.on("group-participants.update", async (m) => {
       try { groupEvents(client, m, null); } catch (error) {}

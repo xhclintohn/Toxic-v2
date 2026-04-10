@@ -137,7 +137,7 @@ const Database = require('better-sqlite3');
           'SELECT key, value FROM settings'
       );
       const defaults = {
-          prefix: '.', mode: 'public', botlang: 'en', botname: 'TOXIC-MD', startmessage: true,
+          prefix: '.', mode: 'public', botname: 'TOXIC-MD', startmessage: true,
           chatbotpm: false, autoview: false, autoread: false, antidelete: false, stealth: false,
           autoai: false, toxicagent: false, anticall: false
       };
@@ -367,13 +367,9 @@ const Database = require('better-sqlite3');
   setInterval(() => cleanupOldMsgStore(), 12 * 60 * 60 * 1000);
   setInterval(() => clearOldConversationHistory(1), 60 * 60 * 1000);
 
-  function getCachedSettingsSync() {
-      return cache.settings.data;
-  }
-
   module.exports = {
       get db() { return _db; },
-      initializeDatabase, getSettings, updateSetting, getCachedSettingsSync,
+      initializeDatabase, getSettings, updateSetting,
       getGroupSettings, updateGroupSetting,
       banUser, unbanUser, getBannedUsers,
       addSudoUser, removeSudoUser, getSudoUsers,

@@ -195,11 +195,6 @@ const aliases = {
     setwarn: "setwarncount",
     warnlimit: "setwarncount",
 
-    language: "botlang",
-    botlanguage: "botlang",
-    lang: "botlang",
-    l: "botlang",
-
     botmode: "mode",
     setmode: "mode",
 };
