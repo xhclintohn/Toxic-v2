@@ -193,7 +193,15 @@ const aliases = {
     clearwarn: "resetwarn",
     swc: "setwarncount",
     setwarn: "setwarncount",
-    warnlimit: "setwarncount"
+    warnlimit: "setwarncount",
+
+    language: "botlang",
+    botlanguage: "botlang",
+    lang: "botlang",
+    l: "botlang",
+
+    botmode: "mode",
+    setmode: "mode",
 };
 
 let _loadedCount = 0;

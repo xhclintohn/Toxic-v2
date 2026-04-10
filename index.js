@@ -214,7 +214,6 @@ async function startToxic() {
 
     client.sessionConfig = { autoViewStatus: settingss?.autoview === true || settingss?.autoview === 'true' };
     global._toxicCurrentClient = client;
-    applyTranslationPatch(client, getCachedSettingsSync);
     store.bind(client.ev);
 
     if (!client.pinMessage) {
@@ -415,6 +414,7 @@ async function startToxic() {
 
     client.public = true;
     client.serializeM = (m) => smsg(client, m, store);
+    try { applyTranslationPatch(client, getCachedSettingsSync); } catch (e) { console.error('❌ [TRANSLATOR PATCH]:', e.message); }
 
     client.ev.on("group-participants.update", async (m) => {
       try { groupEvents(client, m, null); } catch (error) {}

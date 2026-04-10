@@ -137,8 +137,8 @@ const Database = require('better-sqlite3');
           'SELECT key, value FROM settings'
       );
       const defaults = {
-          prefix: '.', mode: 'public', botlang: 'en', botname: 'TOXIC-MD', chatbotpm: false,
-          autoview: false, autoread: false, antidelete: false, stealth: false,
+          prefix: '.', mode: 'public', botlang: 'en', botname: 'TOXIC-MD', startmessage: true,
+          chatbotpm: false, autoview: false, autoread: false, antidelete: false, stealth: false,
           autoai: false, toxicagent: false, anticall: false
       };
       const s = { ...defaults };

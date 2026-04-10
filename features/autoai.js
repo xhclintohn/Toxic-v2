@@ -236,7 +236,7 @@ module.exports = async (context) => {
         }
         try { await client.sendMessage(m.chat, { react: { text: allOk ? '✅' : '❌', key: m.key } }); } catch {}
         if (textOnly) {
-            try { await client.sendMessage(m.chat, { text: textOnly }, { quoted: m }); } catch {}
+            try { await client.sendMessage(m.chat, { text: boxWrap(textOnly, 'TOXIC-AI') }, { quoted: m }); } catch {}
         }
     } else {
         _addHist(userNum, 'user', prompt);
