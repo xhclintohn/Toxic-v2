@@ -196,10 +196,12 @@ const aliases = {
 
 commandFiles.forEach((file) => {
     const commandName = path.basename(file, '.js');
-    const commandModule = require(file);
-
-   
-    commands[commandName] = commandModule.run || commandModule;
+    try {
+        const commandModule = require(file);
+        commands[commandName] = commandModule.run || commandModule;
+    } catch (err) {
+        console.error(`❌ [COMMANDHANDLER] Failed to load plugin: ${file}\n   Reason: ${err.message}`);
+    }
 });
 
 module.exports = { commands, aliases, totalCommands };
