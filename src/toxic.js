@@ -163,8 +163,11 @@ function getViewOnceMedia(rawMessage) {
 }
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
-    const _selfJid = client.decodeJid ? client.decodeJid(client.user?.id) : (client.user?.id || '');
-    if (m.key?.fromMe && m.key?.remoteJid !== _selfJid) return;
+    if (m.key?.fromMe) {
+        const _allPfx = ['.','!','#','/','$','?','+','-','*','~','@','%','&','^','=','|'];
+        const _fmBody = (m.text || m.body || m.message?.conversation || m.message?.extendedTextMessage?.text || '').trim();
+        if (!_fmBody || !_allPfx.some(p => _fmBody.startsWith(p))) return;
+    }
     try {
         const [rawSudoUsers, rawBannedUsers, fetchedSettings] = await Promise.all([
             getCachedSudo(),

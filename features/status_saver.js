@@ -1,6 +1,6 @@
 module.exports = async (client, m, Owner, prefix) => {
 
-  const textL = m.text.toLowerCase();
+  const textL = (m.text || '').toLowerCase();
   const quotedMessage = m.msg?.contextInfo?.quotedMessage;
 
 if (quotedMessage && textL.startsWith(prefix + "save") && !m.quoted.chat.includes("status@broadcast")) {
