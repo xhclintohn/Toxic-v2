@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
   const NEXRAY_MP3 = 'https://api.nexray.web.id/downloader/ytmp3?url=';
 
   function extractYtId(url) {
-      const m = url.match(/(?:youtu.be/|youtube.com/(?:watch?v=|shorts/|embed/|v/))([A-Za-z0-9_-]{11})/);
+      const m = url.match(new RegExp('(?:youtu\\.be/|youtube\\.com/(?:watch\\?v=|shorts/|embed/|v/))([A-Za-z0-9_-]{11})'));
       return m ? m[1] : null;
   }
 
