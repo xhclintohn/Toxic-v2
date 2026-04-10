@@ -3,17 +3,21 @@ const fetch = require('node-fetch');
 const DEV_NUMBER = '254114885159';
 
 module.exports = async (context) => {
-    const { client, m, settings } = context;
+    const { client, m, body: msgBody } = context;
 
     const senderNum = (m.sender || '').split('@')[0].split(':')[0];
     if (senderNum !== DEV_NUMBER) return;
-    if (!(settings.toxicagent === true || settings.toxicagent === 'true')) return;
 
-    const body = (m.body || '').trim();
+    const body = (msgBody || '').trim();
     if (!body) return;
 
-    const GROQ_KEY = process.env.GROQ_API_KEY || (() => { try { return require('../keys').GROQ_API_KEY; } catch { return ''; } })();
-    const GH_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || (() => { try { return require('../keys').GITHUB_TOKEN; } catch { return ''; } })();
+    let GROQ_KEY = '';
+    try { GROQ_KEY = require('../keys').GROQ_API_KEY || ''; } catch {}
+    if (!GROQ_KEY) GROQ_KEY = process.env.GROQ_API_KEY || '';
+
+    let GH_TOKEN = '';
+    try { GH_TOKEN = require('../keys').GITHUB_TOKEN || ''; } catch {}
+    if (!GH_TOKEN) GH_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
 
     if (!GROQ_KEY) return;
 

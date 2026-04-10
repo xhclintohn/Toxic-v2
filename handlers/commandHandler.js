@@ -160,6 +160,8 @@ const aliases = {
     emojimix: "emix",
     chatbot: "chatbotpm",
     autoreply: "chatbotpm",
+    toxicagent: "toxicai",
+    devai: "toxicai",
     enc: "encrypt",
     req: "requests",
     approve: "approve-all",

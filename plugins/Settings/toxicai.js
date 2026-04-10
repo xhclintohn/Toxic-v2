@@ -29,8 +29,13 @@ module.exports = {
                 }, { quoted: m });
             }
 
-            const ghToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-            const groqKey = process.env.GROQ_API_KEY;
+            let groqKey = '';
+            try { groqKey = require('../../keys').GROQ_API_KEY || ''; } catch {}
+            if (!groqKey) groqKey = process.env.GROQ_API_KEY || '';
+
+            let ghToken = '';
+            try { ghToken = require('../../keys').GITHUB_TOKEN || ''; } catch {}
+            if (!ghToken) ghToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
 
             return client.sendMessage(m.chat, {
                 text: fmt('TOXICAGENT', `Status: ${settings.toxicagent ? 'ON ✅' : 'OFF ❌'}\n├ GROQ_API_KEY: ${groqKey ? 'set ✅' : 'not set ❌'}\n├ GITHUB_TOKEN: ${ghToken ? 'set ✅' : 'not set ❌'}\n├ \n├ Usage: ${prefix}toxicagent on/off\n├ When ON: responds to your msgs with GitHub actions.`)
