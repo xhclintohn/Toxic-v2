@@ -31,7 +31,8 @@ const store = makeInMemoryStore({ logger: pino().child({ level: "silent", stream
 const authenticationn = require('./auth/auth.js');
 require('./features/cleanup');
 const { smsg } = require('./handlers/smsg');
-const { getSettings, getBannedUsers, banUser, db } = require("./database/config");
+const { getSettings, getBannedUsers, banUser, db, getCachedSettingsSync } = require("./database/config");
+const { applyTranslationPatch } = require('./features/translator');
 const { restoreFromGist, startBackupInterval } = require('./lib/dbBackup');
 let _idxSettingsCache = null, _idxSettingsCacheTime = 0;
 const IDX_CACHE_TTL = 20000;
@@ -213,6 +214,7 @@ async function startToxic() {
 
     client.sessionConfig = { autoViewStatus: settingss?.autoview === true || settingss?.autoview === 'true' };
     global._toxicCurrentClient = client;
+    applyTranslationPatch(client, getCachedSettingsSync);
     store.bind(client.ev);
 
     if (!client.pinMessage) {
