@@ -13,7 +13,8 @@ const { readFileSync } = require("fs");
 const path = require("path");
 
 const filePath = path.resolve(__dirname, "../toxic.jpg");
-const kali = readFileSync(filePath);
+let kali = Buffer.alloc(0);
+try { kali = readFileSync(filePath); } catch { kali = Buffer.alloc(0); }
 
 function smsg(conn, m, store) {
   if (!m) return {};
