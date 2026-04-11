@@ -315,6 +315,7 @@ async function startToxic() {
     });
 
     client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
+      process.stdout.write(`🔔 UPSERT type=${type} msgs=${messages?.length}\n`);
       try {
       global._toxicLastActivity = Date.now();
 
@@ -520,7 +521,9 @@ async function startToxic() {
         }
       }
 
-      try { await connectionHandler(client, update, startToxic); } catch (error) {}
+      // Fire-and-forget: NEVER await connectionHandler — it does DB calls that can stall
+      // the Baileys event queue and silently block ALL subsequent events (messages.upsert etc.)
+      connectionHandler(client, update, startToxic).catch(() => {});
     });
 
     client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text, ...options }, { quoted });
