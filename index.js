@@ -204,6 +204,17 @@ async function startToxic() {
     }
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
+    // ROOT-CAUSE FIX: toxic-baileys chats.js opens ev.buffer() when
+    // receivedPendingNotifications fires AND myAppStateKeyId is absent from creds.
+    // That buffer only flushes via appStateSyncKeyShare which never arrives when
+    // the key is missing → every messages.upsert event silently swallowed forever.
+    // Injecting a placeholder value prevents chats.js from opening the buffer at all.
+    if (state && state.creds && !state.creds.myAppStateKeyId) {
+      state.creds.myAppStateKeyId = 'toxic-placeholder-' + Date.now().toString(16);
+      console.log('⚠️ [CREDS] myAppStateKeyId was absent — placeholder injected. Event buffer deadlock prevented.');
+      try { await saveCreds(); } catch (_) {}
+    }
+
     const client = toxicConnect({
       printQRInTerminal: false,
       syncFullHistory: false,
