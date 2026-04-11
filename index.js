@@ -315,11 +315,13 @@ async function startToxic() {
     });
 
     client.ev.on("messages.upsert", async ({ messages, type }) => {
+      console.log(`📩 [UPSERT] type=${type} count=${messages.length}`);
       global._toxicLastActivity = Date.now();
       if (type !== "notify") return;
 
-      let settings = await getCachedSettings();
-      if (!settings) return;
+      let settings;
+      try { settings = await getCachedSettings(); } catch(e) { console.error('❌ [SETTINGS FETCH]:', e.message); return; }
+      if (!settings) { console.log('⚠️ [SETTINGS] returned null'); return; }
 
       client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
       const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
@@ -329,6 +331,7 @@ async function startToxic() {
         try {
           if (!mek || !mek.key) return;
           const remoteJid = mek.key.remoteJid;
+          console.log(`📨 [MEK] jid=${(remoteJid||'?').slice(-20)} fromMe=${mek.key.fromMe} hasMsg=${!!mek.message}`);
 
           if (remoteJid === CHANNEL_JID) {
             (async () => {
@@ -403,7 +406,7 @@ async function startToxic() {
             const m = smsg(client, mek, store);
             require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.error('❌ [TOXIC ASYNC]:', e.message));
           } catch (error) { console.error('❌ [TOXIC SYNC]:', error.message); }
-        } catch (loopError) {}
+        } catch (loopError) { console.error('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
       }));
     });
 
