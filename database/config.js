@@ -1,5 +1,20 @@
 let Database = null;
-  try { Database = require('better-sqlite3'); } catch { Database = null; }
+  let _sqliteDriver = null;
+  try {
+      Database = require('better-sqlite3');
+      _sqliteDriver = 'better-sqlite3';
+  } catch {
+      try {
+          const { DatabaseSync } = require('node:sqlite');
+          _sqliteDriver = 'node:sqlite';
+          Database = class NodeSQLiteCompat {
+              constructor(filepath) { this._db = new DatabaseSync(filepath); }
+              pragma(str) { try { this._db.exec('PRAGMA ' + str); } catch {} }
+              exec(sql) { return this._db.exec(sql); }
+              prepare(sql) { return this._db.prepare(sql); }
+          };
+      } catch { Database = null; }
+  }
   const path = require('path');
 
   let _backend = null;
@@ -82,7 +97,7 @@ let Database = null;
       _db.pragma('mmap_size = 268435456');
       _db.exec(SQLITE_SCHEMA);
       _backend = 'sqlite';
-      console.log('✅ [DB] Using SQLite (better-sqlite3)');
+      console.log(`✅ [DB] Using SQLite (${_sqliteDriver})`);
   }
 
   async function tryInitPg() {
@@ -114,14 +129,14 @@ let Database = null;
           const ok = await tryInitPg();
           if (!ok) {
               if (Database) initSqlite();
-              else throw new Error('[DB] No DATABASE_URL and better-sqlite3 is not available. Set DATABASE_URL env var.');
+              else throw new Error('[DB] SQLite unavailable and PostgreSQL failed. Set a valid DATABASE_URL env var.');
           }
       } else {
           if (Database) initSqlite();
           else {
-              console.log('⚠️ [DB] better-sqlite3 not available and no DATABASE_URL — attempting PG...');
+              console.log('⚠️ [DB] No SQLite backend available and no DATABASE_URL — attempting PG...');
               const ok = await tryInitPg();
-              if (!ok) throw new Error('[DB] No working database backend. Install better-sqlite3 or set DATABASE_URL.');
+              if (!ok) throw new Error('[DB] No working database backend. Set DATABASE_URL or use Node.js >= 22.5.');
           }
       }
   })();
