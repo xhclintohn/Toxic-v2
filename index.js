@@ -243,13 +243,6 @@ async function startToxic() {
     global._toxicCurrentClient = client;
     store.bind(client.ev);
 
-    if (global._toxicHeartbeat) clearInterval(global._toxicHeartbeat);
-    global._toxicHeartbeat = setInterval(() => {
-      const cl = global._toxicCurrentClient;
-      const state = cl?.ws?.readyState;
-      process.stdout.write('♥ alive wsState=' + state + '\n');
-    }, 30000);
-
     if (!client.pinMessage) {
       client.pinMessage = async (jid, messageKey, type) => {
         const { jidNormalizedUser } = require('@whiskeysockets/baileys');
@@ -322,18 +315,16 @@ async function startToxic() {
     });
 
     client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
-      process.stdout.write(`📩 UPSERT type=${type} count=${messages.length}\n`);
       try {
       global._toxicLastActivity = Date.now();
-      if (type !== "notify") {
-        const hasRecent = messages.some(msg => {
-          const ts = msg.messageTimestamp;
-          if (!ts) return false;
-          const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
-          return (Date.now() - tsNum * 1000) < 45000;
-        });
-        if (!hasRecent) return;
-      }
+      const _ct = global._toxicConnectTime || 0;
+      const hasRecent = messages.some(msg => {
+        const ts = msg.messageTimestamp;
+        if (!ts) return type === 'notify';
+        const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
+        return _ct > 0 ? tsNum * 1000 >= _ct - 10000 : (Date.now() - tsNum * 1000) < 45000;
+      });
+      if (!hasRecent) return;
 
       let settings;
       try { settings = await getCachedSettings(); } catch(e) { console.log('❌ [SETTINGS FETCH]:', e.message); return; }
@@ -389,12 +380,6 @@ async function startToxic() {
           if (!mek.message) return;
           mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
           if (!mek.message) return;
-
-          const _rawBody = (mek.message.conversation || mek.message.extendedTextMessage?.text || '').trim();
-          process.stdout.write('💬 MSG from=' + remoteJid + ' body=' + _rawBody.slice(0, 60) + '\n');
-          if (_rawBody.toLowerCase() === 'ping' || _rawBody.toLowerCase() === '.ping') {
-            try { await client.sendMessage(remoteJid, { text: 'pong ✅ bot is alive' }); } catch (_pe) { process.stdout.write('PING SEND ERR: ' + _pe.message + '\n'); }
-          }
 
           if (isStealthOn) return;
 
@@ -492,11 +477,10 @@ async function startToxic() {
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐒𝐭𝐚𝐭𝐮𝐬 : `) + chalk.green(`Started Successfully`));
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
         console.log(chalk.green(`╰──────────────────☉\n`));
-        process.stdout.write('🟢 WA CONNECTED — waiting for messages\n');
+        global._toxicConnectTime = Date.now();
       }
 
       if (connection === "close") {
-        process.stdout.write('🔴 WA DISCONNECTED reason=' + reason + ' msg=' + (lastDisconnect?.error?.message || 'none') + '\n');
         if (global._toxicShuttingDown) return;
         global._toxicCurrentClient = null;
 
