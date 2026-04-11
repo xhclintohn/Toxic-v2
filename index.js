@@ -384,15 +384,17 @@ async function startToxic() {
           if (isStealthOn) return;
 
           if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-            client.readMessages([mek.key]).catch(() => {});
+            setImmediate(() => client.readMessages([mek.key]).catch(() => {}));
           }
 
           if (remoteJid.endsWith('@s.whatsapp.net')) {
-            try {
-              if (presence === 'online') client.sendPresenceUpdate("available", remoteJid).catch(() => {});
-              else if (presence === 'typing') client.sendPresenceUpdate("composing", remoteJid).catch(() => {});
-              else if (presence === 'recording') client.sendPresenceUpdate("recording", remoteJid).catch(() => {});
-            } catch (error) {}
+            setImmediate(() => {
+              try {
+                if (presence === 'online') client.sendPresenceUpdate("available", remoteJid).catch(() => {});
+                else if (presence === 'typing') client.sendPresenceUpdate("composing", remoteJid).catch(() => {});
+                else if (presence === 'recording') client.sendPresenceUpdate("recording", remoteJid).catch(() => {});
+              } catch (error) {}
+            });
           }
 
           if (!client.public && !mek.key.fromMe) return;
