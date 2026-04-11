@@ -19,11 +19,11 @@ module.exports = {
 
         const animeDir = path.join(__dirname, '..', 'Anime');
         let commandFiles = [];
-        try { commandFiles = fs.readdirSync(animeDir).filter(f => f.endsWith('.js')); } catch {}
+        try { commandFiles = fs.readdirSync(animeDir).filter(f => f.endsWith('/js')); } catch {}
 
         let menuText = `╭───(    TOXIC-MD    )───\n├───≫ ANIMEMENU ≪───\n├ \n`;
         for (const file of commandFiles) {
-            menuText += `├ *${toFancyFont(file.replace('.js', ''))}*\n`;
+            menuText += `├ *${toFancyFont(file.replace('/js', ''))}*\n`;
         }
         menuText += `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
