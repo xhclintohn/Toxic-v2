@@ -1,4 +1,4 @@
-const { giftedAnime } = require('../../lib/giftedApi');
+const { getAnime } = require('../../lib/toxicApi');
 
 module.exports = {
     name: 'waifu',
@@ -8,7 +8,7 @@ module.exports = {
         const { client, m } = context;
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-            const url = await giftedAnime('waifu');
+            const url = await getAnime('waifu');
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
             await client.sendMessage(m.chat, {
                 image: { url },
@@ -16,7 +16,7 @@ module.exports = {
             }, { quoted: m });
         } catch (error) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            await m.reply('╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Waifu not found.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+            await m.reply('╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Waifu ran away!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
     }
 };
