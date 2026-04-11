@@ -8,10 +8,9 @@
     "postinstall": "node patch-baileys.js"
   },
   "engines": {
-    "node": "20.x"
+    "node": ">=20"
   },
   "dependencies": {
-    "better-sqlite3": "^12.8.0",
     "@hapi/boom": "^10.0.1",
     "@octokit/rest": "^22.0.0",
     "@vitalets/google-translate-api": "^9.2.0",
@@ -21,8 +20,6 @@
     "awesome-phonenumber": "^6.2.0",
     "axios": "latest",
     "badadvice": "latest",
-    "canvacord": "^5.4.10",
-    "canvas": "^2.11.2",
     "chalk": "^4.1.2",
     "cheerio": "^1.0.0",
     "compile-run": "latest",
@@ -50,6 +47,9 @@
     "pg": "^8.13.3"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.0.8"
+    "bufferutil": "^4.0.8",
+    "better-sqlite3": "^12.8.0",
+    "canvas": "^2.11.2",
+    "canvacord": "^5.4.10"
   }
 }

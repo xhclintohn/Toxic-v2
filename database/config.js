@@ -1,4 +1,5 @@
-const Database = require('better-sqlite3');
+let Database = null;
+  try { Database = require('better-sqlite3'); } catch { Database = null; }
   const path = require('path');
 
   let _backend = null;
@@ -111,9 +112,17 @@ const Database = require('better-sqlite3');
   _ready = (async () => {
       if (process.env.DATABASE_URL) {
           const ok = await tryInitPg();
-          if (!ok) initSqlite();
+          if (!ok) {
+              if (Database) initSqlite();
+              else throw new Error('[DB] No DATABASE_URL and better-sqlite3 is not available. Set DATABASE_URL env var.');
+          }
       } else {
-          initSqlite();
+          if (Database) initSqlite();
+          else {
+              console.log('⚠️ [DB] better-sqlite3 not available and no DATABASE_URL — attempting PG...');
+              const ok = await tryInitPg();
+              if (!ok) throw new Error('[DB] No working database backend. Install better-sqlite3 or set DATABASE_URL.');
+          }
       }
   })();
 

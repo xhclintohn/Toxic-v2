@@ -1,4 +1,4 @@
-const canvacord = require("canvacord");
+let canvacord = null; try { canvacord = require("canvacord"); } catch {}
 
 module.exports = async (context) => {
         const { client, m, Tag, botname } = context;

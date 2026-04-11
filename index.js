@@ -108,6 +108,8 @@ let autobioInterval = null;
 let storeWriteInterval = null;
 let memoryCheckInterval = null;
 let processedCallsInterval = null;
+let watchdogInterval = null;
+if (global._toxicLastActivity === undefined) global._toxicLastActivity = Date.now();
 
 if (global._toxicCurrentClient === undefined) global._toxicCurrentClient = null;
 if (global._toxicIsStarting === undefined) global._toxicIsStarting = false;
@@ -134,6 +136,7 @@ async function startToxic() {
     if (autobioInterval) clearInterval(autobioInterval);
     if (storeWriteInterval) clearInterval(storeWriteInterval);
     if (processedCallsInterval) clearInterval(processedCallsInterval);
+    if (watchdogInterval) clearInterval(watchdogInterval);
 
     cleanupInterval = setInterval(cleanupSessionFiles, 24 * 60 * 60 * 1000);
     cleanupSessionFiles();
@@ -144,6 +147,30 @@ async function startToxic() {
         if (usedMB > 450) { console.log(`⚠️ High memory: ${usedMB}MB`); if (global.gc) global.gc(); }
       } catch (e) {}
     }, 5 * 60 * 1000);
+
+    watchdogInterval = setInterval(async () => {
+      try {
+        const cl = global._toxicCurrentClient;
+        if (!cl || global._toxicShuttingDown || global._toxicIsStarting) return;
+        const silentMs = Date.now() - global._toxicLastActivity;
+        if (silentMs < 8 * 60 * 1000) return;
+        try {
+          await Promise.race([
+            cl.sendPresenceUpdate('available'),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('ping timeout')), 15000))
+          ]);
+          global._toxicLastActivity = Date.now();
+        } catch {
+          console.log('⚠️ [WATCHDOG] Connection appears dead — reconnecting...');
+          global._toxicCurrentClient = null;
+          try { cl.ev.removeAllListeners(); } catch {}
+          try { cl.ws.close(); } catch {}
+          if (!global._toxicReconnectTimer) {
+            global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
+          }
+        }
+      } catch {}
+    }, 3 * 60 * 1000);
 
     if (global._toxicCurrentClient) {
       try {
@@ -280,6 +307,7 @@ async function startToxic() {
     });
 
     client.ev.on("messages.upsert", async ({ messages, type }) => {
+      global._toxicLastActivity = Date.now();
       if (type !== "notify") return;
 
       let settings = await getCachedSettings();
@@ -423,6 +451,7 @@ async function startToxic() {
 
       if (connection === "open") {
         reconnectAttempts = 0;
+        global._toxicLastActivity = Date.now();
         try { require("./src/toxic").prewarmCache(); } catch (e) {}
         console.log(chalk.green(`\n╭───(    `) + chalk.bold.cyan(`𝐓𝐨𝐱𝐢𝐜-𝐌D`) + chalk.green(`    )───`));
         console.log(chalk.green(`> ───≫ `) + chalk.yellow(`🚀 Started Successfully`) + chalk.green(`<<───`));
