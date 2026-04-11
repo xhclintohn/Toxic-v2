@@ -1,50 +1,40 @@
-module.exports = async (context) => {
-  const { m, text } = context;
+const axios = require('axios');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
-  try {
-    if (!text) {
-      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo, genius, give me a city or\n├ town name! Don't waste my time.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+module.exports = {
+    name: 'weather',
+    aliases: ['wthr', 'forecast', 'temp'],
+    description: 'Get current weather for any city',
+    run: async (context) => {
+        const { client, m, text } = context;
+        const fq = getFakeQuoted(m);
+        const city = (text || '').trim();
+        if (!city) {
+            return client.sendMessage(m.chat, {
+                text: '╭───(    TOXIC-MD    )───\n├───≫ Wᴇᴀᴛʜᴇʀ ≪───\n├\n├ Give me a city name, genius.\n├ Usage: .weather Nairobi\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
+            }, { quoted: fq });
+        }
+        try {
+            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+            const res = await axios.get(`https://wttr.in/${encodeURIComponent(city)}?format=j1`, { timeout: 10000 });
+            const w = res.data.current_condition?.[0];
+            const area = res.data.nearest_area?.[0];
+            if (!w) throw new Error('No data');
+            const areaName = area?.areaName?.[0]?.value || city;
+            const country = area?.country?.[0]?.value || '';
+            const desc = w.weatherDesc?.[0]?.value || '';
+            const tempC = w.temp_C || '?';
+            const feelsC = w.FeelsLikeC || '?';
+            const humidity = w.humidity || '?';
+            const wind = w.windspeedKmph || '?';
+            const visibility = w.visibility || '?';
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+            return client.sendMessage(m.chat, {
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Wᴇᴀᴛʜᴇʀ ≪───\n├\n├ 📍 ${areaName}, ${country}\n├ ☁️ ${desc}\n├ 🌡️ Temp: ${tempC}°C (Feels ${feelsC}°C)\n├ 💧 Humidity: ${humidity}%\n├ 💨 Wind: ${wind} km/h\n├ 👁️ Visibility: ${visibility} km\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            }, { quoted: fq });
+        } catch (e) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+            return client.sendMessage(m.chat, { text: '╭───(    TOXIC-MD    )───\n├───≫ Wᴇᴀᴛʜᴇʀ ≪───\n├\n├ Weather API is throwing a tantrum. Try again.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: fq });
+        }
     }
-
-    const response = await fetch(`http://api.openweathermap.org/data/2.5/weather?q=${text}&units=metric&appid=1ad47ec6172f19dfaf89eb3307f74785`);
-    const data = await response.json();
-
-    console.log(`✅ Fetched weather data for ${text}`);
-
-    if (data.cod !== 200) {
-      return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ What the hell? Can't find ${text}.\n├ Pick a real place, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-    }
-
-    const cityName = data.name;
-    const temperature = data.main.temp;
-    const feelsLike = data.main.feels_like;
-    const minTemperature = data.main.temp_min;
-    const maxTemperature = data.main.temp_max;
-    const description = data.weather[0].description;
-    const humidity = data.main.humidity;
-    const windSpeed = data.wind.speed;
-    const rainVolume = data.rain ? data.rain['1h'] : 0;
-    const cloudiness = data.clouds.all;
-    const sunrise = new Date(data.sys.sunrise * 1000);
-    const sunset = new Date(data.sys.sunset * 1000);
-
-    await m.reply(`╭───(    TOXIC-MD    )───
-├───≫ Wᴇᴀᴛʜᴇʀ ≪───
-├ 
-├ Weather in *${cityName}*
-├ 🌡️ Temp: ${temperature}°C
-├ 🥵 Feels Like: ${feelsLike}°C
-├ 📝 Conditions: ${description}
-├ 💧 Humidity: ${humidity}%
-├ 🌀 Wind: ${windSpeed} m/s
-├ 🌧️ Rain (1h): ${rainVolume} mm
-├ ☁️ Clouds: ${cloudiness}%
-├ 🌄 Sunrise: ${sunrise.toLocaleTimeString()}
-├ 🌅 Sunset: ${sunset.toLocaleTimeString()}
-╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-  } catch (e) {
-    console.error(`❌ Error fetching weather for ${text}: ${e.message}`);
-    await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Ugh, something broke, or ${text}\n├ ain't a real place. Try again, moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-  }
 };
