@@ -15,6 +15,66 @@ let Database = null;
           };
       } catch { Database = null; }
   }
+
+  const _mem = {
+      settings: new Map(),
+      sudo: new Set(),
+      banned: new Set(),
+      groups: new Map(),
+      history: [],
+      warns: new Map(),
+      msgs: new Map()
+  };
+
+  function initMemory() {
+      _backend = 'memory';
+      console.log('⚠️ [DB] No SQLite/PG available — using in-memory storage (data resets on restart). Install better-sqlite3 or use Node.js 22+ for persistence.');
+  }
+
+  function _memOp(type, sql, params) {
+      const s = (sql || '').toLowerCase().trim();
+      if (s.includes('settings') && !s.includes('group_settings')) {
+          if (type === 'all') { const r = []; _mem.settings.forEach((v, k) => r.push({ key: k, value: v })); return r; }
+          if (type === 'run') { _mem.settings.set(params[0], params[1]); return; }
+      }
+      if (s.includes('sudo_users')) {
+          if (type === 'all') return [..._mem.sudo].map(num => ({ num }));
+          if (type === 'run' && s.includes('delete')) { _mem.sudo.delete(params[0]); return; }
+          if (type === 'run') { _mem.sudo.add(params[0]); return; }
+      }
+      if (s.includes('banned_users')) {
+          if (type === 'all') return [..._mem.banned].map(num => ({ num }));
+          if (type === 'run' && s.includes('delete')) { _mem.banned.delete(params[0]); return; }
+          if (type === 'run') { _mem.banned.add(params[0]); return; }
+      }
+      if (s.includes('group_settings')) {
+          if (type === 'get') return _mem.groups.get(params[0]) || null;
+          if (type === 'run' && s.includes('insert') && params[0] && !_mem.groups.has(params[0])) {
+              _mem.groups.set(params[0], { jid: params[0], antidelete: 1, gcpresence: 0, events: 0, antidemote: 0, antipromote: 0, antilink: 'off', antistatusmention: 'off', antitag: 0, welcome: 0, goodbye: 0, warn_limit: 3 });
+          }
+          return;
+      }
+      if (s.includes('conversation_history')) {
+          if (type === 'all') { const num = params[0]; const lim = params[1] || 20; return _mem.history.filter(r => r.num === num).slice(-lim); }
+          if (type === 'run' && s.includes('insert')) { _mem.history.push({ num: params[0], role: params[1], message: params[2], timestamp: Math.floor(Date.now() / 1000) }); if (_mem.history.length > 2000) _mem.history = _mem.history.slice(-1000); return; }
+          if (type === 'run' && s.includes('delete') && params.length === 1) { _mem.history = _mem.history.filter(r => r.num !== params[0]); return; }
+          if (type === 'run') { const cutoff = params[0]; _mem.history = _mem.history.filter(r => (r.timestamp || 0) > cutoff); return; }
+      }
+      if (s.includes('warn_data')) {
+          const key = (params[0] || '') + '|' + (params[1] || '');
+          if (type === 'get') return { warns: _mem.warns.get(key) || 0 };
+          if (type === 'run' && s.includes('delete')) { _mem.warns.delete(key); return; }
+          if (type === 'run' && s.includes('insert')) { _mem.warns.set(key, 1); return; }
+          if (type === 'run' && s.includes('update')) { _mem.warns.set(key, (_mem.warns.get(key) || 0) + 1); return; }
+      }
+      if (s.includes('msg_store')) {
+          if (type === 'get') return _mem.msgs.get(params[0]) || null;
+          if (type === 'run' && s.includes('insert')) { _mem.msgs.set(params[0], { id: params[0], jid: params[1], sender: params[2], message: params[3], timestamp: params[4] }); if (_mem.msgs.size > 1000) { const oldest = _mem.msgs.keys().next().value; _mem.msgs.delete(oldest); } return; }
+          if (type === 'run' && s.includes('delete') && params.length >= 2) { _mem.msgs.delete(params[0]); return; }
+          if (type === 'run' && s.includes('delete')) { const cutoff = params[0]; for (const [k, v] of _mem.msgs) { if ((v.timestamp || 0) < cutoff) _mem.msgs.delete(k); } return; }
+      }
+      return type === 'all' ? [] : null;
+  }
   const path = require('path');
 
   let _backend = null;
@@ -129,14 +189,14 @@ let Database = null;
           const ok = await tryInitPg();
           if (!ok) {
               if (Database) initSqlite();
-              else throw new Error('[DB] SQLite unavailable and PostgreSQL failed. Set a valid DATABASE_URL env var.');
+              else initMemory();
           }
       } else {
           if (Database) initSqlite();
           else {
-              console.log('⚠️ [DB] No SQLite backend available and no DATABASE_URL — attempting PG...');
+              console.log('⚠️ [DB] No SQLite backend available and no DATABASE_URL — trying PG...');
               const ok = await tryInitPg();
-              if (!ok) throw new Error('[DB] No working database backend. Set DATABASE_URL or use Node.js >= 22.5.');
+              if (!ok) initMemory();
           }
       }
   })();
@@ -146,19 +206,22 @@ let Database = null;
   async function qAll(sqlLite, sqlPg, params = []) {
       await ensureReady();
       if (_backend === 'pg') return (await _pg.query(sqlPg, params)).rows;
+      if (_backend === 'memory') return _memOp('all', sqlLite, params) || [];
       return _db.prepare(sqlLite).all(...params);
   }
 
   async function qGet(sqlLite, sqlPg, params = []) {
       await ensureReady();
       if (_backend === 'pg') return (await _pg.query(sqlPg, params)).rows[0] || null;
+      if (_backend === 'memory') return _memOp('get', sqlLite, params) || null;
       return _db.prepare(sqlLite).get(...params) || null;
   }
 
   async function qRun(sqlLite, sqlPg, params = []) {
       await ensureReady();
-      if (_backend === 'pg') { await _pg.query(sqlPg, params); }
-      else { _db.prepare(sqlLite).run(...params); }
+      if (_backend === 'pg') { await _pg.query(sqlPg, params); return; }
+      if (_backend === 'memory') { _memOp('run', sqlLite, params); return; }
+      _db.prepare(sqlLite).run(...params);
   }
 
   async function initializeDatabase() { await ensureReady(); }
@@ -220,6 +283,10 @@ let Database = null;
       if (_backend === 'pg') {
           await _pg.query('INSERT INTO group_settings (jid) VALUES ($1) ON CONFLICT (jid) DO NOTHING', [jid]);
           await _pg.query(`UPDATE group_settings SET ${key} = $1 WHERE jid = $2`, [value, jid]);
+      } else if (_backend === 'memory') {
+          if (!_mem.groups.has(jid)) _mem.groups.set(jid, { jid, antidelete: 1, gcpresence: 0, events: 0, antidemote: 0, antipromote: 0, antilink: 'off', antistatusmention: 'off', antitag: 0, welcome: 0, goodbye: 0, warn_limit: 3 });
+          const g = _mem.groups.get(jid);
+          g[key] = value;
       } else {
           _db.prepare('INSERT OR IGNORE INTO group_settings (jid) VALUES (?)').run(jid);
           _db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(value, jid);
@@ -292,9 +359,9 @@ let Database = null;
           'INSERT INTO conversation_history (num, role, message) VALUES ($1, $2, $3)',
           [num, role, message]
       );
-      if (_backend === 'sqlite') {
-          _db.prepare('DELETE FROM conversation_history WHERE num = ? AND id NOT IN (SELECT id FROM conversation_history WHERE num = ? ORDER BY timestamp DESC LIMIT 50)').run(num, num);
-      } else {
+      if (_backend === 'sqlite' && _db) {
+          try { _db.prepare('DELETE FROM conversation_history WHERE num = ? AND id NOT IN (SELECT id FROM conversation_history WHERE num = ? ORDER BY timestamp DESC LIMIT 50)').run(num, num); } catch {}
+      } else if (_backend === 'pg') {
           _pg.query('DELETE FROM conversation_history WHERE num = $1 AND id NOT IN (SELECT id FROM conversation_history WHERE num = $1 ORDER BY timestamp DESC LIMIT 50)', [num]).catch(() => {});
       }
   }
@@ -311,6 +378,8 @@ let Database = null;
       const cutoff = Math.floor(Date.now() / 1000) - hoursOld * 3600;
       if (_backend === 'pg') {
           _pg.query('DELETE FROM conversation_history WHERE timestamp < $1', [cutoff]).catch(() => {});
+      } else if (_backend === 'memory') {
+          _mem.history = _mem.history.filter(r => (r.timestamp || 0) > cutoff);
       } else if (_db) {
           try { _db.prepare('DELETE FROM conversation_history WHERE timestamp < ?').run(cutoff); } catch {}
       }
