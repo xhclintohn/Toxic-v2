@@ -59,7 +59,10 @@ async function fastGroupMetadata(client, jid) {
 
 async function prewarmCache() {
     try {
-        await Promise.all([getCachedSettings(), getCachedSudo(), getCachedBanned()]);
+        const sudoUsers = getCachedSudoSync();
+        const bannedUsers = getCachedBannedSync();
+        const settings = getCachedSettingsSync();
+        Promise.all([getCachedSudo(), getCachedBanned(), getCachedSettings()]).catch(() => {});
     } catch (e) {}
 }
 
