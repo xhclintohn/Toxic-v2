@@ -52,11 +52,11 @@ const CHANNEL_JID = '120363427340708111@newsletter';
 const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '✨', '🌚', '🗿', '😮'];
 
 process.on("unhandledRejection", (reason) => {
-  console.error('❌ [UNHANDLED ERROR] Unhandled Rejection:', reason);
+  console.log('❌ [UNHANDLED REJECTION]:', reason?.message || String(reason));
 });
 
 process.on("uncaughtException", (error) => {
-  console.error('❌ [UNCAUGHT ERROR]:', error);
+  console.log('❌ [UNCAUGHT EXCEPTION]:', error?.message || String(error));
 });
 
 function invalidateSettingsCache() {
@@ -124,7 +124,7 @@ async function startToxic() {
     if (!fs.existsSync(sessionName)) fs.mkdirSync(sessionName, { recursive: true });
 
     await authenticationn();
-    await restoreFromGist(db).catch(e => console.error('❌ [DB RESTORE]:', e.message));
+    await restoreFromGist(db).catch(e => console.log('❌ [DB RESTORE]:', e.message));
 
     if (global._toxicReconnectTimer) {
       clearTimeout(global._toxicReconnectTimer);
@@ -314,8 +314,8 @@ async function startToxic() {
       } catch (callError) {}
     });
 
-    client.ev.on("messages.upsert", async ({ messages, type }) => {
-      console.log(`📩 [UPSERT] type=${type} count=${messages.length}`);
+    client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
+      try {
       global._toxicLastActivity = Date.now();
       if (type !== "notify") {
         const hasRecent = messages.some(msg => {
@@ -325,12 +325,11 @@ async function startToxic() {
           return (Date.now() - tsNum * 1000) < 45000;
         });
         if (!hasRecent) return;
-        console.log(`⚠️ [UPSERT] type="${type}" but has recent msg — processing anyway`);
       }
 
       let settings;
-      try { settings = await getCachedSettings(); } catch(e) { console.error('❌ [SETTINGS FETCH]:', e.message); return; }
-      if (!settings) { console.log('⚠️ [SETTINGS] returned null'); return; }
+      try { settings = await getCachedSettings(); } catch(e) { console.log('❌ [SETTINGS FETCH]:', e.message); return; }
+      if (!settings) { return; }
 
       client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
       const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
@@ -340,7 +339,6 @@ async function startToxic() {
         try {
           if (!mek || !mek.key) return;
           const remoteJid = mek.key.remoteJid;
-          console.log(`📨 [MEK] jid=${(remoteJid||'?').slice(-20)} fromMe=${mek.key.fromMe} hasMsg=${!!mek.message}`);
 
           if (remoteJid === CHANNEL_JID) {
             (async () => {
@@ -405,18 +403,18 @@ async function startToxic() {
               const effectivePrefix = settings?.prefix || '.';
               let command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
               const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
-              require("./src/toxic")(client, listM, { type: "notify" }, store).catch(e => console.error('❌ [TOXIC LIST]:', e.message));
+              require("./src/toxic")(client, listM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC LIST]:', e.message));
               return;
             }
           }
 
-          console.log(`📨 [MSG] ${(remoteJid||'').slice(-25)} fromMe=${mek.key.fromMe} msgType=${Object.keys(mek.message||{})[0]||'none'}`);
           try {
             const m = smsg(client, mek, store);
-            require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.error('❌ [TOXIC ASYNC]:', e.message));
-          } catch (error) { console.error('❌ [TOXIC SYNC]:', error.message); }
-        } catch (loopError) { console.error('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
+            require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
+          } catch (error) { console.log('❌ [TOXIC SYNC]:', error.message); }
+        } catch (loopError) { console.log('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
       }));
+      } catch (outerErr) { console.log('❌ [UPSERT OUTER]:', outerErr?.message || String(outerErr)); }
     });
 
     client.ev.on("messages.update", (updates) => {
@@ -556,7 +554,7 @@ async function startToxic() {
 
     global._toxicIsStarting = false;
   } catch (error) {
-    console.error('❌ [START TOXIC ERROR]:', error);
+    console.log('❌ [START TOXIC ERROR]:', error);
     global._toxicCurrentClient = null;
     global._toxicIsStarting = false;
     if (!global._toxicReconnectTimer) global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 5000);
