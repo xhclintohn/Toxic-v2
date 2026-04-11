@@ -167,9 +167,12 @@ let Database = null;
               connectionString: process.env.DATABASE_URL,
               ssl: { rejectUnauthorized: false },
               connectionTimeoutMillis: 10000,
-              idleTimeoutMillis: 20000,
+              idleTimeoutMillis: 300000,
               max: 5,
-              allowExitOnIdle: false
+              min: 1,
+              allowExitOnIdle: false,
+              keepAlive: true,
+              keepAliveInitialDelayMillis: 10000
           });
           pool.on('error', (err) => { console.log('⚠️ [PG POOL ERROR]:', err.message); });
           await Promise.race([
@@ -177,6 +180,8 @@ let Database = null;
               new Promise((_, rej) => setTimeout(() => rej(new Error('PG connect timeout')), 20000))
           ]);
           for (const sql of PG_SCHEMA) { try { await pool.query(sql); } catch {} }
+          // Keepalive: ping DB every 3 minutes to prevent idle connection drops
+          setInterval(() => { pool.query('SELECT 1').catch(() => {}); }, 3 * 60 * 1000);
           _pg = pool;
           _backend = 'pg';
           console.log('✅ [DB] Using Heroku PostgreSQL');
