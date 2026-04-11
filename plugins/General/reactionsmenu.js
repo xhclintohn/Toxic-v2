@@ -23,9 +23,9 @@ module.exports = {
 
     let menuText = `╭───(    TOXIC-MD    )───\n├───≫ REACTIONS MENU ≪───\n├ \n├ Prefix: ${effectivePrefix || 'None'}\n├ \n`;
 
-    const commandFiles = fs.readdirSync('./plugins/Reactions').filter(f => f.endsWith('.js') && f !== 'links.js');
+    const commandFiles = fs.readdirSync('./plugins/Reactions').filter(f => f.endsWith('/js') && f !== 'links.js');
     for (const file of commandFiles) {
-      menuText += `├ *${toFancyFont(file.replace('.js', ''))}*\n`;
+      menuText += `├ *${toFancyFont(file.replace('/js', ''))}*\n`;
     }
 
     menuText += `╰──────────────────☉\n`;
