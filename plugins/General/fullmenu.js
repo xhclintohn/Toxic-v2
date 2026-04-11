@@ -1,7 +1,7 @@
 const { DateTime } = require('luxon');
 const fs = require('fs');
 const path = require('path');
-const { getSettings } = require('../../database/config');
+const { getSettings } = require('../../lib/fastSettings');
 
 module.exports = {
   name: 'fullmenu',
