@@ -167,11 +167,15 @@ let Database = null;
               connectionString: process.env.DATABASE_URL,
               ssl: { rejectUnauthorized: false },
               connectionTimeoutMillis: 10000,
-              max: 10
+              idleTimeoutMillis: 20000,
+              max: 5,
+              allowExitOnIdle: false
           });
+          pool.on('error', (err) => { console.log('⚠️ [PG POOL ERROR]:', err.message); });
+          pool.on('connect', (client) => { client.query('SET statement_timeout = 8000').catch(() => {}); });
           await Promise.race([
               pool.query('SELECT 1'),
-              new Promise((_, rej) => setTimeout(() => rej(new Error('PG connect timeout')), 60000))
+              new Promise((_, rej) => setTimeout(() => rej(new Error('PG connect timeout')), 20000))
           ]);
           for (const sql of PG_SCHEMA) { try { await pool.query(sql); } catch {} }
           _pg = pool;
