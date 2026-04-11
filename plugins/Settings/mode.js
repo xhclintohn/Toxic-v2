@@ -1,4 +1,5 @@
 const { getSettings, updateSetting } = require('../../database/config');
+const { generateWAMessageFromContent, proto } = require('@whiskeysockets/baileys');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 
 const MODES = {
@@ -28,6 +29,50 @@ module.exports = {
                 return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├\n${body}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
             };
 
+            const sendModeButtons = async (currentMode) => {
+                const sections = [{
+                    title: '⚙️ Select Bot Mode',
+                    highlight_label: '',
+                    rows: [
+                        { header: '🌐 PUBLIC', title: `${currentMode === 'public' ? '▶ ' : ''}🌐 PUBLIC`, description: 'Everyone can use commands anywhere', id: `${prefix}mode public` },
+                        { header: '🔒 PRIVATE', title: `${currentMode === 'private' ? '▶ ' : ''}🔒 PRIVATE`, description: 'Only owner can use commands', id: `${prefix}mode private` },
+                        { header: '👥 GROUP', title: `${currentMode === 'group' ? '▶ ' : ''}👥 GROUP`, description: 'Groups only, DMs ignored', id: `${prefix}mode group` },
+                        { header: '📩 INBOX', title: `${currentMode === 'inbox' ? '▶ ' : ''}📩 INBOX`, description: 'DMs only, groups ignored', id: `${prefix}mode inbox` },
+                    ]
+                }];
+
+                try {
+                    const interactiveMsg = generateWAMessageFromContent(m.chat, proto.Message.fromObject({
+                        interactiveMessage: {
+                            body: { text: `Current: ${MODES[currentMode]?.emoji || '🌐'} ${(currentMode || 'public').toUpperCase()} — tap to switch` },
+                            footer: { text: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
+                            header: { hasMediaAttachment: false },
+                            nativeFlowMessage: {
+                                buttons: [
+                                    {
+                                        name: 'single_select',
+                                        buttonParamsJson: JSON.stringify({ title: '⚙️ Choose Mode', sections })
+                                    }
+                                ],
+                                messageParamsJson: ''
+                            }
+                        }
+                    }), { quoted: m, userJid: client.user.id });
+                    await client.relayMessage(m.chat, interactiveMsg.message, { messageId: interactiveMsg.key.id });
+                } catch {
+                    await client.sendMessage(m.chat, {
+                        listMessage: {
+                            title: 'BOT MODE',
+                            description: `Current: ${(currentMode || 'public').toUpperCase()} — pick one to switch`,
+                            buttonText: '⚙️ Choose Mode',
+                            listType: 1,
+                            sections: sections.map(s => ({ title: s.title, rows: s.rows.map(r => ({ title: r.title, description: r.description, rowId: r.id })) })),
+                            footer: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
+                        },
+                    }, { quoted: m });
+                }
+            };
+
             try {
                 const settings = await getSettings();
                 const current = (settings.mode || 'public').toLowerCase();
@@ -35,23 +80,25 @@ module.exports = {
 
                 if (MODES[input]) {
                     if (current === input) {
-                        return client.sendMessage(m.chat, {
+                        await client.sendMessage(m.chat, {
                             text: fmt('BOT MODE', [
                                 `${MODES[input].emoji} Already in ${MODES[input].label} mode.`,
                                 `Nothing changed. Still the same.`,
                                 `Pick a different one if you actually want to do something.`
                             ])
                         }, { quoted: m });
+                        return sendModeButtons(current);
                     }
                     await updateSetting('mode', input);
                     await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
-                    return client.sendMessage(m.chat, {
+                    await client.sendMessage(m.chat, {
                         text: fmt('BOT MODE', [
                             `Switched to ${MODES[input].emoji} ${MODES[input].label}`,
                             ``,
                             CRANKY[input]
                         ])
                     }, { quoted: m });
+                    return sendModeButtons(input);
                 }
 
                 const modeInfo = MODES[current] || MODES.public;
@@ -59,17 +106,13 @@ module.exports = {
                     text: fmt('BOT MODE', [
                         `Active: ${modeInfo.emoji} ${modeInfo.label}`,
                         ``,
-                        `${current === 'public'  ? '▶' : '  '} 🌐 PUBLIC  → ${prefix}mode public`,
-                        `${current === 'private' ? '▶' : '  '} 🔒 PRIVATE → ${prefix}mode private`,
-                        `${current === 'group'   ? '▶' : '  '} 👥 GROUP   → ${prefix}mode group`,
-                        `${current === 'inbox'   ? '▶' : '  '} 📩 INBOX   → ${prefix}mode inbox`,
-                        ``,
                         `PUBLIC  — Everyone can use commands everywhere`,
                         `PRIVATE — Only you can use commands`,
                         `GROUP   — Groups only, DMs ignored`,
                         `INBOX   — DMs only, groups ignored`
                     ])
                 }, { quoted: m });
+                return sendModeButtons(current);
 
             } catch {
                 client.sendMessage(m.chat, {
