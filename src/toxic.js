@@ -163,7 +163,6 @@ function getViewOnceMedia(rawMessage) {
 }
 
 module.exports = toxic = async (client, m, chatUpdate, store) => {
-    console.log(`🤖 [TOXIC] key.fromMe=${m.key?.fromMe} chat=${(m.key?.remoteJid||'?').split('@')[1]}`);
     if (m.key?.fromMe) {
         const _allPfx = ['.','!','#','/','$','?','+','-','*','~','@','%','&','^','=','|'];
         const _fmBody = (m.text || m.body || m.message?.conversation || m.message?.extendedTextMessage?.text || '').trim();
@@ -251,7 +250,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         const resolvedCommandName = aliases[commandName] || commandName;
         const cmd = commands[resolvedCommandName];
-        console.log(`🔍 [CMD] prefix="${prefix}" body="${(body||'').slice(0,30)}" cmd="${commandName}" found=${!!cmd}`);
 
 
         const args = body.trim().split(/ +/).slice(1);
