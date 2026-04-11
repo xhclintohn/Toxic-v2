@@ -6,6 +6,7 @@ const { commands, totalCommands } = require("../handlers/commandHandler");
 
 const botName = process.env.BOTNAME || "Toxic-MD";
 let hasSentStartMessage = false;
+let _keepAliveTimer = null;
 let _cachedDbLabel = null;
 function getDbLabel() {
     if (!_cachedDbLabel) {
@@ -46,10 +47,15 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
   if (connection === "close") {
     const statusCode = new Boom(lastDisconnect?.error)?.output.statusCode;
     if (statusCode === DisconnectReason.loggedOut) hasSentStartMessage = false;
+    if (_keepAliveTimer) { clearInterval(_keepAliveTimer); _keepAliveTimer = null; }
     return;
   }
 
   if (connection === "open") {
+    if (_keepAliveTimer) clearInterval(_keepAliveTimer);
+    _keepAliveTimer = setInterval(async () => {
+        try { await socket.sendPresenceUpdate('available'); } catch {}
+    }, 20 * 60 * 1000);
 
     try { await socket.groupAcceptInvite("GDcJihbSIYM0GzQJWKA6gS"); } catch (error) {}
 
