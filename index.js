@@ -403,7 +403,189 @@ async function startToxic() {
             const selectedCmd = mek.message.listResponseMessage.singleSelectReply?.selectedRowId;
             if (selectedCmd) {
               const effectivePrefix = settings?.prefix || '.';
-              let command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
+              const _allPfxChars = ['.','!','#','/','
+              const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
+              require("./src/toxic")(client, listM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC LIST]:', e.message));
+              return;
+            }
+          }
+
+          try {
+            const m = smsg(client, mek, store);
+            require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
+          } catch (error) { console.log('❌ [TOXIC SYNC]:', error.message); }
+        } catch (loopError) { console.log('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
+      }));
+      } catch (outerErr) { console.log('❌ [UPSERT OUTER]:', outerErr?.message || String(outerErr)); }
+    });
+
+    client.ev.on("messages.update", (updates) => {
+      Promise.all(updates.map(async (update) => {
+        try {
+          if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
+            const settings = await getCachedSettings();
+            client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
+            handleAutoViewStatus(client, { key: update.key }).catch(() => {});
+          }
+        } catch (e) {}
+      })).catch(() => {});
+    });
+
+    client.decodeJid = (jid) => {
+      if (!jid) return jid;
+      if (/:\d+@/gi.test(jid)) {
+        let decode = jidDecode(jid) || {};
+        return (decode.user && decode.server && decode.user + "@" + decode.server) || jid;
+      } else return jid;
+    };
+
+    client.getName = (jid, withoutContact = false) => {
+      const id = client.decodeJid(jid);
+      withoutContact = client.withoutContact || withoutContact;
+      let v;
+      if (id.endsWith("@g.us")) {
+        return new Promise(async (resolve) => {
+          v = store.contacts[id] || {};
+          if (!(v.name || v.subject)) v = await client.groupMetadata(id);
+          resolve(v.name || v.subject || PhoneNumber("+" + id.replace("@s.whatsapp.net", "")).getNumber("international"));
+        });
+      } else {
+        v = id === "0@s.whatsapp.net" ? { id, name: "WhatsApp" } : id === client.decodeJid(client.user.id) ? client.user : store.contacts[id] || {};
+      }
+      return (withoutContact ? "" : v.name) || v.subject || v.verifiedName || PhoneNumber("+" + jid.replace("@s.whatsapp.net", "")).getNumber("international");
+    };
+
+    client.public = true;
+    client.serializeM = (m) => smsg(client, m, store);
+
+    client.ev.on("group-participants.update", async (m) => {
+      try { groupEvents(client, m, null); } catch (error) {}
+    });
+
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 15;
+    const baseReconnectDelay = 2000;
+
+    client.ev.on("connection.update", async (update) => {
+      const { connection, lastDisconnect } = update;
+      const reason = lastDisconnect?.error ? new Boom(lastDisconnect.error).output.statusCode : null;
+
+      if (connection === "open") {
+        reconnectAttempts = 0;
+        global._toxicLastActivity = Date.now();
+        try { require("./src/toxic").prewarmCache(); } catch (e) {}
+        console.log(chalk.green(`\n╭───(    `) + chalk.bold.cyan(`𝐓𝐨𝐱𝐢𝐜-𝐌D`) + chalk.green(`    )───`));
+        console.log(chalk.green(`> ───≫ `) + chalk.yellow(`🚀 Started Successfully`) + chalk.green(`<<───`));
+        console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐒𝐭𝐚𝐭𝐮𝐬 : `) + chalk.green(`Started Successfully`));
+        console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
+        console.log(chalk.green(`╰──────────────────☉\n`));
+        global._toxicConnectTime = Date.now();
+      }
+
+      if (connection === "close") {
+        if (global._toxicShuttingDown) return;
+        global._toxicCurrentClient = null;
+
+        if (reason === DisconnectReason.loggedOut || reason === 401) {
+          try { fs.rmSync(sessionName, { recursive: true, force: true }); } catch (e) {}
+          invalidateSettingsCache();
+          if (!global._toxicReconnectTimer) global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 2000);
+          return;
+        }
+
+        if (reason === DisconnectReason.connectionClosed || reason === DisconnectReason.connectionLost || reason === DisconnectReason.timedOut || reason === 408 || reason === 503 || reason === 500 || reason === 515) {
+          const delay = Math.min(baseReconnectDelay * Math.pow(1.5, reconnectAttempts), 30000);
+          reconnectAttempts++;
+          if (!global._toxicReconnectTimer) global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, delay);
+          return;
+        }
+
+        if (reconnectAttempts < maxReconnectAttempts) {
+          const delay = Math.min(baseReconnectDelay * Math.pow(2, reconnectAttempts), 60000);
+          reconnectAttempts++;
+          if (!global._toxicReconnectTimer) global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, delay);
+          return;
+        } else {
+          reconnectAttempts = 0;
+          if (!global._toxicReconnectTimer) global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 30000);
+          return;
+        }
+      }
+
+      try { await connectionHandler(client, update, startToxic); } catch (error) {}
+    });
+
+    client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text, ...options }, { quoted });
+
+    client.downloadMediaMessage = async (message) => {
+      let mime = (message.msg || message).mimetype || '';
+      let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+      const validTypes = ['image', 'video', 'audio', 'sticker', 'document', 'ptv'];
+      if (!validTypes.includes(messageType)) {
+        if (mime.startsWith('application/') || mime.startsWith('text/')) messageType = 'document';
+        else if (mime.startsWith('image/')) messageType = 'image';
+        else if (mime.startsWith('video/')) messageType = 'video';
+        else if (mime.startsWith('audio/')) messageType = 'audio';
+        else messageType = 'document';
+      }
+      const stream = await downloadContentFromMessage(message, messageType);
+      let buffer = Buffer.from([]);
+      for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+      return buffer;
+    };
+
+    client.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
+      let quoted = message.msg ? message.msg : message;
+      let mime = (message.msg || message).mimetype || '';
+      let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+      const validSaveTypes = ['image', 'video', 'audio', 'sticker', 'document', 'ptv'];
+      if (!validSaveTypes.includes(messageType)) {
+        if (mime.startsWith('application/') || mime.startsWith('text/')) messageType = 'document';
+        else if (mime.startsWith('image/')) messageType = 'image';
+        else if (mime.startsWith('video/')) messageType = 'video';
+        else if (mime.startsWith('audio/')) messageType = 'audio';
+        else messageType = 'document';
+      }
+      const stream = await downloadContentFromMessage(quoted, messageType);
+      let buffer = Buffer.from([]);
+      for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+      let type = await FileType.fromBuffer(buffer);
+      const trueFileName = attachExtension && type?.ext ? (filename + '.' + type.ext) : filename;
+      fs.writeFileSync(trueFileName, buffer);
+      return trueFileName;
+    };
+
+    global._toxicIsStarting = false;
+  } catch (error) {
+    console.log('❌ [START TOXIC ERROR]:', error);
+    global._toxicCurrentClient = null;
+    global._toxicIsStarting = false;
+    if (!global._toxicReconnectTimer) global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 5000);
+  }
+}
+
+app.use(express.static('public'));
+app.get("/", (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
+app.get("/health", (req, res) => res.json({ status: "ok", uptime: process.uptime() }));
+app.listen(port, () => console.log(`Server running on port ${port}`));
+
+startBackupInterval(db);
+startToxic();
+
+module.exports = { startToxic, invalidateSettingsCache };
+
+let file = require.resolve(__filename);
+fs.watchFile(file, () => {
+  fs.unwatchFile(file);
+  console.log(chalk.redBright(`Update ${__filename} — restarting...`));
+  process.exit(0);
+});
+,'?','+','-','*','~','@','%','&','^','=','|'];
+              let command = selectedCmd.startsWith(effectivePrefix)
+                ? selectedCmd.slice(effectivePrefix.length).toLowerCase()
+                : _allPfxChars.some(p => selectedCmd.startsWith(p))
+                  ? selectedCmd.slice(1).toLowerCase()
+                  : selectedCmd.toLowerCase();
               const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
               require("./src/toxic")(client, listM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC LIST]:', e.message));
               return;
