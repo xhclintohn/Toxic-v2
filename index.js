@@ -317,7 +317,16 @@ async function startToxic() {
     client.ev.on("messages.upsert", async ({ messages, type }) => {
       console.log(`📩 [UPSERT] type=${type} count=${messages.length}`);
       global._toxicLastActivity = Date.now();
-      if (type !== "notify") return;
+      if (type !== "notify") {
+        const hasRecent = messages.some(msg => {
+          const ts = msg.messageTimestamp;
+          if (!ts) return false;
+          const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
+          return (Date.now() - tsNum * 1000) < 45000;
+        });
+        if (!hasRecent) return;
+        console.log(`⚠️ [UPSERT] type="${type}" but has recent msg — processing anyway`);
+      }
 
       let settings;
       try { settings = await getCachedSettings(); } catch(e) { console.error('❌ [SETTINGS FETCH]:', e.message); return; }
