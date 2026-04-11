@@ -176,6 +176,33 @@ module.exports = async (context) => {
 
     try { await client.sendMessage(m.chat, { react: { text: '🤔', key: m.key } }); } catch {}
 
+    let quotedImageB64 = null;
+    let quotedImageMime = null;
+    let quotedFileName = null;
+    const quotedMsg = m.quoted || null;
+    if (quotedMsg) {
+        const quotedInner = quotedMsg.msg || quotedMsg;
+        const mime = quotedInner.mimetype || '';
+        if (mime.startsWith('image/') && !mime.startsWith('image/gif')) {
+            try {
+                const buf = await quotedMsg.download();
+                if (buf && buf.length > 0) {
+                    quotedImageB64 = buf.toString('base64');
+                    quotedImageMime = mime || 'image/jpeg';
+                }
+            } catch {}
+        } else if (mime.startsWith('application/') || mime.startsWith('text/')) {
+            try {
+                const buf = await quotedMsg.download();
+                if (buf && buf.length > 0 && buf.length < 500000) {
+                    quotedFileName = quotedInner.fileName || quotedInner.title || 'file';
+                    const fileText = buf.toString('utf8').slice(0, 3000);
+                    prompt = `[File: ${quotedFileName}]\n\n${fileText}\n\n---\n${prompt || 'Analyze this file.'}`;
+                }
+            } catch {}
+        }
+    }
+
     let history = _getHist(userNum);
     if (!history.length) {
         try {
@@ -189,18 +216,28 @@ module.exports = async (context) => {
 
     let response = null;
     try {
+        const isVision = !!quotedImageB64;
+        const userContent = isVision
+            ? [
+                { type: 'image_url', image_url: { url: `data:${quotedImageMime};base64,${quotedImageB64}` } },
+                { type: 'text', text: prompt || 'Describe this image in detail.' }
+              ]
+            : prompt;
+
         const result = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-            model: 'llama-3.1-8b-instant',
-            messages: [
-                { role: 'system', content: SYSTEM_PROMPT },
-                ...history.slice(-16),
-                { role: 'user', content: prompt }
-            ],
-            max_tokens: 300,
+            model: isVision ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.1-8b-instant',
+            messages: isVision
+                ? [{ role: 'user', content: userContent }]
+                : [
+                    { role: 'system', content: SYSTEM_PROMPT },
+                    ...history.slice(-16),
+                    { role: 'user', content: prompt }
+                  ],
+            max_tokens: isVision ? 1024 : 300,
             temperature: 0.7
         }, {
             headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-            timeout: 13000
+            timeout: 20000
         });
 
         const content = result.data?.choices?.[0]?.message?.content?.trim();
