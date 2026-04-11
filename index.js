@@ -489,6 +489,26 @@ async function startToxic() {
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
         console.log(chalk.green(`╰──────────────────☉\n`));
         global._toxicConnectTime = Date.now();
+
+        // CRITICAL FIX: toxic-baileys opens a second ev.buffer() when
+        // receivedPendingNotifications fires without myAppStateKeyId in creds.
+        // That buffer is ONLY flushed when appStateSyncKeyShare arrives — which
+        // never happens if the session creds lack myAppStateKeyId.
+        // Force-flush after 12 s to release any stuck buffer so messages.upsert fires.
+        if (global._bufferFlushTimer) clearTimeout(global._bufferFlushTimer);
+        global._bufferFlushTimer = setTimeout(() => {
+          global._bufferFlushTimer = null;
+          try {
+            if (typeof client.ev.isBuffering === 'function' && client.ev.isBuffering()) {
+              console.log('⚠️ [EV-BUFFER] Releasing stuck event buffer (myAppStateKeyId absent). Commands should now work.');
+              client.ev.flush(true);
+            } else {
+              console.log('✅ [EV-BUFFER] Buffer already clear — no action needed.');
+            }
+          } catch (e) {
+            console.log('⚠️ [EV-BUFFER] Force-flush error:', e.message);
+          }
+        }, 12000);
       }
 
       if (connection === "close") {
