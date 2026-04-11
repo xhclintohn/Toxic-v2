@@ -381,8 +381,12 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             packname, generateProfilePicture, groupMetadata, toxicspeed, mycode, fetchJson, exec,
             getRandom, UploadFileUgu, TelegraPh, prefix: usedPrefix, cmd, botname, mode, gcpresence, antitag,
             antidelete: antideleteSetting, fetchBuffer, store, chatUpdate, sendJson,
-            getGroupAdmins: () => [], pict, Tag, stealth, multiprefix, isDev
+            getGroupAdmins: () => [], pict, Tag, stealth, multiprefix, isDev, fakeQuoted, fq: fakeQuoted
         };
+
+        // Override m.reply so ALL plugins auto-use fakeQuoted styling
+        m.reply = (text, chatId = m.chat, opts = {}) =>
+            client.sendMessage(chatId, { text }, { quoted: fakeQuoted, ...opts });
 
         const trimmedBody = body.trim();
 
