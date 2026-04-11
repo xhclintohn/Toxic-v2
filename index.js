@@ -476,7 +476,11 @@ async function startToxic() {
       const { connection, lastDisconnect } = update;
       const reason = lastDisconnect?.error ? new Boom(lastDisconnect.error).output.statusCode : null;
 
-      if (connection === "open") {
+      if (connection !== "open") {
+        if (global._toxicKeepalive) { clearInterval(global._toxicKeepalive); global._toxicKeepalive = null; }
+        if (global._toxicGhost) { clearInterval(global._toxicGhost); global._toxicGhost = null; }
+    }
+    if (connection === "open") {
         reconnectAttempts = 0;
         global._toxicLastActivity = Date.now();
         try { require("./src/toxic").prewarmCache(); } catch (e) {}
@@ -486,6 +490,23 @@ async function startToxic() {
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
         console.log(chalk.green(`╰──────────────────☉\n`));
         global._toxicConnectTime = Date.now();
+
+        // Keepalive: send WhatsApp presence every 4 minutes to prevent ghost WS
+        if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
+        global._toxicKeepalive = setInterval(() => {
+            client.sendPresenceUpdate('available').catch(() => {});
+        }, 4 * 60 * 1000);
+
+        // Ghost watchdog: if no message events for 50 minutes, force a reconnect
+        if (global._toxicGhost) clearInterval(global._toxicGhost);
+        global._toxicGhost = setInterval(() => {
+            const lastMsg = global._toxicLastActivity || 0;
+            if (Date.now() - lastMsg > 50 * 60 * 1000) {
+                console.log('🔄 [WATCHDOG] No activity for 50min — reconnecting...');
+                global._toxicLastActivity = Date.now();
+                try { client.ws?.close?.(); } catch {}
+            }
+        }, 15 * 60 * 1000);
       }
 
       if (connection === "close") {
