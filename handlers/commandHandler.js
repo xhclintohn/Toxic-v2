@@ -212,6 +212,12 @@ const aliases = {
     frombase64: "base64decode",
     decode64: "base64decode",
     b64decode: "base64decode",
+
+    listgroup: "botgc",
+    listgroups: "botgc",
+    totalgroup: "botgc",
+    tg: "botgc",
+    lg: "botgc",
 };
 
 let _loadedCount = 0;
