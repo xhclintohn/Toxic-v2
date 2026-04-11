@@ -243,6 +243,13 @@ async function startToxic() {
     global._toxicCurrentClient = client;
     store.bind(client.ev);
 
+    if (global._toxicHeartbeat) clearInterval(global._toxicHeartbeat);
+    global._toxicHeartbeat = setInterval(() => {
+      const cl = global._toxicCurrentClient;
+      const state = cl?.ws?.readyState;
+      process.stdout.write('♥ alive wsState=' + state + '\n');
+    }, 30000);
+
     if (!client.pinMessage) {
       client.pinMessage = async (jid, messageKey, type) => {
         const { jidNormalizedUser } = require('@whiskeysockets/baileys');
@@ -382,6 +389,13 @@ async function startToxic() {
           if (!mek.message) return;
           mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
           if (!mek.message) return;
+
+          const _rawBody = (mek.message.conversation || mek.message.extendedTextMessage?.text || '').trim();
+          process.stdout.write('💬 MSG from=' + remoteJid + ' body=' + _rawBody.slice(0, 60) + '\n');
+          if (_rawBody.toLowerCase() === 'ping' || _rawBody.toLowerCase() === '.ping') {
+            try { await client.sendMessage(remoteJid, { text: 'pong ✅ bot is alive' }); } catch (_pe) { process.stdout.write('PING SEND ERR: ' + _pe.message + '\n'); }
+          }
+
           if (isStealthOn) return;
 
           if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
@@ -478,9 +492,11 @@ async function startToxic() {
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐒𝐭𝐚𝐭𝐮𝐬 : `) + chalk.green(`Started Successfully`));
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
         console.log(chalk.green(`╰──────────────────☉\n`));
+        process.stdout.write('🟢 WA CONNECTED — waiting for messages\n');
       }
 
       if (connection === "close") {
+        process.stdout.write('🔴 WA DISCONNECTED reason=' + reason + ' msg=' + (lastDisconnect?.error?.message || 'none') + '\n');
         if (global._toxicShuttingDown) return;
         global._toxicCurrentClient = null;
 
