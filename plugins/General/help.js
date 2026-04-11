@@ -20,9 +20,9 @@ module.exports = {
             const categories = fs.readdirSync(pluginsDir).filter(f => fs.statSync(path.join(pluginsDir, f)).isDirectory());
             let allCommands = [];
             for (const cat of categories) {
-                const files = fs.readdirSync(path.join(pluginsDir, cat)).filter(f => f.endsWith('/js'));
+                const files = fs.readdirSync(path.join(pluginsDir, cat)).filter(f => f.endsWith('.js'));
                 for (const file of files) {
-                    allCommands.push(file.replace('/js', ''));
+                    allCommands.push(file.replace('.js', ''));
                 }
             }
             allCommands.sort();
@@ -221,8 +221,8 @@ module.exports = {
         const categories = fs.readdirSync(pluginsDir).filter(f => fs.statSync(path.join(pluginsDir, f)).isDirectory());
         let found = false;
         for (const cat of categories) {
-            const files = fs.readdirSync(path.join(pluginsDir, cat)).filter(f => f.endsWith('/js'));
-            if (files.includes(cmdName + '/js')) {
+            const files = fs.readdirSync(path.join(pluginsDir, cat)).filter(f => f.endsWith('.js'));
+            if (files.includes(cmdName + '.js')) {
                 found = true;
                 const body = `├ 📌 *Command:* ${cmdName}\n├ 📁 *Category:* ${cat}\n├ 📖 *Usage:* ${effectivePrefix}${cmdName}\n├ ℹ️ No detailed help available for this command yet.`;
                 return await client.sendMessage(m.chat, { text: fmt(`HELP: ${cmdName.toUpperCase()}`, body) }, { quoted: m });
