@@ -28,9 +28,9 @@ module.exports = {
 
     let menuText = `╭───(    TOXIC-MD    )───\n├───≫ AI MENU ≪───\n├ \n├ Prefix: ${effectivePrefix || 'None'}\n├ \n`;
 
-    let commandFiles = fs.readdirSync('./plugins/AI').filter(file => file.endsWith('.js'));
+    let commandFiles = fs.readdirSync('./plugins/AI').filter(file => file.endsWith('/js'));
     for (const file of commandFiles) {
-      const commandName = file.replace('.js', '');
+      const commandName = file.replace('/js', '');
       const fancyCommandName = toFancyFont(commandName);
       menuText += `├ *${fancyCommandName}*\n`;
     }
