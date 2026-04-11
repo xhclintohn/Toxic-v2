@@ -315,6 +315,7 @@ async function startToxic() {
     });
 
     client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
+      process.stdout.write(`📩 UPSERT type=${type} count=${messages.length}\n`);
       try {
       global._toxicLastActivity = Date.now();
       if (type !== "notify") {
