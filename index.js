@@ -193,7 +193,15 @@ async function startToxic() {
     }
 
     const { autobio } = settingss;
-    const version = (await (await fetch('https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Defaults/baileys-version.json')).json()).version;
+    let version;
+    try {
+        const _vResp = await fetch('https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Defaults/baileys-version.json');
+        version = (await _vResp.json()).version;
+        if (!Array.isArray(version) || version.length < 3) throw new Error('bad version');
+    } catch (_ve) {
+        version = [2, 3000, 1015901307];
+        console.log('⚠️ [VERSION] Failed to fetch Baileys version, using fallback:', version.join('.'));
+    }
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
     const client = toxicConnect({
@@ -390,6 +398,7 @@ async function startToxic() {
             }
           }
 
+          console.log(`📨 [MSG] ${(remoteJid||'').slice(-25)} fromMe=${mek.key.fromMe} msgType=${Object.keys(mek.message||{})[0]||'none'}`);
           try {
             const m = smsg(client, mek, store);
             require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.error('❌ [TOXIC ASYNC]:', e.message));
