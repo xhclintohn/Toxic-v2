@@ -1,0 +1,22 @@
+const { getAnime } = require('../../lib/toxicApi');
+
+module.exports = {
+    name: 'blush',
+    aliases: ['animeblush', 'embarrass'],
+    description: 'Send a blushing anime image',
+    run: async (context) => {
+        const { client, m } = context;
+        try {
+            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+            const url = await getAnime('blush');
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+            await client.sendMessage(m.chat, {
+                image: { url },
+                caption: '╭───(    TOXIC-MD    )───\n├───≫ Bʟᴜsʜ ≪───\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
+            }, { quoted: m });
+        } catch (error) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+            await m.reply('╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Too embarrassed to show up!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+        }
+    }
+};
