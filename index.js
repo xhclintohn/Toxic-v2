@@ -33,7 +33,7 @@ require('./features/cleanup');
 const { smsg } = require('./handlers/smsg');
 const { getBannedUsers, banUser, db } = require("./database/config");
 const { restoreFromGist, startBackupInterval } = require('./lib/dbBackup');
-const { getCachedSettings, invalidateSettings } = require('./lib/settingsCache');
+const { getCachedSettings, getCachedSettingsSync, invalidateSettings } = require('./lib/settingsCache');
 const { botname } = require('./config/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('./handlers/commandHandler');
@@ -334,9 +334,10 @@ async function startToxic() {
       });
       if (!hasRecent) return;
 
-      let settings;
-      try { settings = await getCachedSettings(); } catch(e) { console.log('❌ [SETTINGS FETCH]:', e.message); return; }
-      if (!settings) { return; }
+      // Use sync read — always instant (returns cached or defaults).
+      // Background warm triggered so next call is guaranteed fresh.
+      let settings = getCachedSettingsSync();
+      getCachedSettings().catch(() => {});
 
       client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
       const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
@@ -596,15 +597,6 @@ app.get("/", (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.
 app.get("/health", (req, res) => res.json({ status: "ok", uptime: process.uptime() }));
 app.listen(port, () => console.log(`Server running on port ${port}`));
 
-// Keep dyno alive: ping /health every 25 min so Heroku never puts the process to sleep.
-// Set APP_URL env var to your app's public URL (e.g. https://my-bot.herokuapp.com)
-(function keepDynoAwake() {
-    const base = (process.env.APP_URL || '').replace(/\/$/, '');
-    if (!base) return;
-    const _ping = () => axios.get(base + '/health', { timeout: 10000 }).catch(() => {});
-    setInterval(_ping, 25 * 60 * 1000);
-    console.log('♻️  Dyno keep-alive active →', base + '/health');
-})();
 
 startBackupInterval(db);
 startToxic();
