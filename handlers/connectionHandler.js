@@ -50,8 +50,6 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
   }
 
   if (connection === "open") {
-    console.clear();
-    await new Promise(resolve => setTimeout(resolve, 3000));
 
     try { await socket.groupAcceptInvite("GDcJihbSIYM0GzQJWKA6gS"); } catch (error) {}
 
