@@ -13,9 +13,9 @@ module.exports = {
     run: async (context) => {
         const { client, m, prefix } = context;
 
-        const a = 'gsk_A9P3pUDwYmxae23uxBbCWGdyb3FYUstkU';
-        const b = 'HJ0XiLz7xqlRqpAfsvt';
-        const GROQ_API_KEY = a + b;
+        let GROQ_API_KEY = '';
+        try { GROQ_API_KEY = require('../../keys').GROQ_API_KEY || ''; } catch {}
+        if (!GROQ_API_KEY) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STT ≪───\n├ \n├ GROQ_API_KEY not set in keys.js\n├ Add it to enable transcription.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
 
         const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
         const directAudio = m.message?.audioMessage;
