@@ -370,9 +370,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const IsGroup = m.isGroup;
 
         const fakeQuoted = {
-            key: { participant: '0@s.whatsapp.net', remoteJid: '0@s.whatsapp.net', id: m.id },
-            message: { conversation: "Verified" },
-            contextInfo: { mentionedJid: [m.sender], forwardingScore: 999, isForwarded: true }
+            key: { participant: '0@s.whatsapp.net', remoteJid: '0@s.whatsapp.net', id: m.id || m.key?.id || 'toxic-fq' },
+            message: { conversation: "Verified" }
         };
 
         const context = {
@@ -385,9 +384,14 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         };
 
 
-        // Patch m.reply: use clean sendMessage (skips externalAdReply which WA may reject)
-        m.reply = (text, chatId = m.chat, options = {}) =>
-            client.sendMessage(chatId, { text }, { quoted: fakeQuoted, ...options });
+        // Patch m.reply: clean sendMessage with fallback if quoted fails
+        m.reply = async (text, chatId = m.chat, options = {}) => {
+            try {
+                return await client.sendMessage(chatId, { text: String(text ?? '') }, { quoted: fakeQuoted, ...options });
+            } catch (e) {
+                return await client.sendMessage(chatId, { text: String(text ?? '') }, options);
+            }
+        };
 
 
 
