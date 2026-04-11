@@ -317,18 +317,24 @@ async function startToxic() {
     client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
       try {
       global._toxicLastActivity = Date.now();
-      const _ct = global._toxicConnectTime || 0;
-      const hasRecent = messages.some(msg => {
-        const ts = msg.messageTimestamp;
-        if (!ts) return type === 'notify';
-        const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
-        return _ct > 0 ? tsNum * 1000 >= _ct - 10000 : (Date.now() - tsNum * 1000) < 45000;
-      });
-      if (!hasRecent) return;
+
+      // For real-time messages (type=notify), always process — don't filter by timestamp.
+      // For history-sync (type=append/set), apply a generous 90-second window.
+      if (type !== 'notify') {
+        const _ct = global._toxicConnectTime || 0;
+        const hasRecent = messages.some(msg => {
+          const ts = msg.messageTimestamp;
+          if (!ts) return false;
+          const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
+          return _ct > 0 ? tsNum * 1000 >= _ct - 90000 : (Date.now() - tsNum * 1000) < 90000;
+        });
+        if (!hasRecent) return;
+      }
 
       let settings;
       try { settings = await getCachedSettings(); } catch(e) { console.log('❌ [SETTINGS FETCH]:', e.message); return; }
-      if (!settings) { return; }
+      if (!settings) { console.log('⚠️ [MSG] settings null, dropping'); return; }
+      console.log(`📨 [MSG] type=${type} count=${messages.length} stealth=${settings.stealth} mode=${settings.mode} prefix=${settings.prefix}`);
 
       client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
       const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
@@ -377,11 +383,11 @@ async function startToxic() {
             return;
           }
 
-          if (!mek.message) return;
+          if (!mek.message) { console.log('⚠️ [MSG] no message field, skip'); return; }
           mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
-          if (!mek.message) return;
+          if (!mek.message) { console.log('⚠️ [MSG] ephemeral unwrap failed, skip'); return; }
 
-          if (isStealthOn) return;
+          if (isStealthOn) { console.log('⚠️ [MSG] stealth=ON, dropping'); return; }
 
           if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
             setImmediate(() => client.readMessages([mek.key]).catch(() => {}));
@@ -397,7 +403,7 @@ async function startToxic() {
             });
           }
 
-          if (!client.public && !mek.key.fromMe) return;
+          if (!client.public && !mek.key.fromMe) { console.log('⚠️ [MSG] client.public=false and not fromMe, skip'); return; }
 
           if (mek.message?.listResponseMessage) {
             const selectedCmd = mek.message.listResponseMessage.singleSelectReply?.selectedRowId;
@@ -412,6 +418,8 @@ async function startToxic() {
 
           try {
             const m = smsg(client, mek, store);
+            const _msgBody = m.body || m.text || '';
+            console.log(`🔧 [DISPATCH] from=${m.sender?.split('@')[0]} body=${_msgBody.slice(0,40)} chat=${m.chat?.slice(-15)}`);
             require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e));
           } catch (error) { console.log('❌ [TOXIC SYNC]:', error); }
         } catch (loopError) { console.log('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
