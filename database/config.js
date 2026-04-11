@@ -172,7 +172,6 @@ let Database = null;
               allowExitOnIdle: false
           });
           pool.on('error', (err) => { console.log('⚠️ [PG POOL ERROR]:', err.message); });
-          pool.on('connect', (client) => { client.query('SET statement_timeout = 8000').catch(() => {}); });
           await Promise.race([
               pool.query('SELECT 1'),
               new Promise((_, rej) => setTimeout(() => rej(new Error('PG connect timeout')), 20000))
