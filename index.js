@@ -323,6 +323,7 @@ async function startToxic() {
     });
 
     client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
+      console.log(`📨 [UPSERT] type=${type} count=${messages?.length}`);
       try {
       global._toxicLastActivity = Date.now();
       const _ct = global._toxicConnectTime || 0;
