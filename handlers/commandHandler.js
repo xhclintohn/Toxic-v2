@@ -204,6 +204,14 @@ const aliases = {
     calladmins: "tagadmins",
     ghupload: "upx",
     uploadmedia: "upx",
+    tobase64: "base64",
+    b64: "base64",
+    encode64: "base64",
+    unbase64: "base64decode",
+    debase64: "base64decode",
+    frombase64: "base64decode",
+    decode64: "base64decode",
+    b64decode: "base64decode",
 };
 
 let _loadedCount = 0;
