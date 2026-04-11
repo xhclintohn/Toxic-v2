@@ -384,9 +384,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             getGroupAdmins: () => [], pict, Tag, stealth, multiprefix, isDev, fakeQuoted, fq: fakeQuoted
         };
 
-        // Override m.reply so ALL plugins auto-use fakeQuoted styling
-        m.reply = (text, chatId = m.chat, opts = {}) =>
-            client.sendMessage(chatId, { text }, { quoted: fakeQuoted, ...opts });
+
 
         const trimmedBody = body.trim();
 
