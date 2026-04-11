@@ -226,7 +226,7 @@ commandFiles.forEach((file) => {
         _loadedCount++;
     } catch (err) {
         _failedCount++;
-        console.error(`❌ [COMMANDHANDLER] Failed to load plugin: ${file}\n   Reason: ${err.message}`);
+        console.log(`❌ [COMMANDHANDLER] Failed to load plugin: ${file}\n   Reason: ${err.message}`);
     }
 });
 
