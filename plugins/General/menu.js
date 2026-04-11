@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { getSettings } = require('../../database/config');
+const { generateWAMessageFromContent, proto } = require('@whiskeysockets/baileys');
 
 module.exports = {
     name: 'menu',
@@ -35,10 +36,7 @@ module.exports = {
             `├ Prefix: ${effectivePrefix}\n` +
             `├ Mode: ${mode}\n` +
             `├ \n` +
-            `├ 🔗 GitHub: https://github.com/xhclintohn/Toxic-MD\n` +
-            `├ \n` +
-            `├ Tap the button below to browse\n` +
-            `├ or pick a category from the list.\n` +
+            `├ Pick a category below or open GitHub.\n` +
             `╰──────────────────☉\n` +
             `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
@@ -60,49 +58,90 @@ module.exports = {
             },
         }, { quoted: m });
 
-        await client.sendMessage(m.chat, {
-            listMessage: {
-                title: '𝐕𝐈𝐄𝐖 𝐎𝐏𝐓𝐈𝐎𝐍𝐒',
-                description: 'Select a category to view its commands.',
-                buttonText: '📖 Browse Commands',
-                listType: 1,
-                sections: [
-                    {
-                        title: '⌜ 𝘾𝙤𝙧𝙚 𝘾𝙤𝙢𝙢𝙖𝙣𝙙𝙨 ⌟',
-                        rows: [
-                            { title: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮', description: 'Display all commands', rowId: `${effectivePrefix}fullmenu` },
-                            { title: '𝐃𝐞𝐯', description: 'Send developer contact', rowId: `${effectivePrefix}dev` },
-                        ],
-                    },
-                    {
-                        title: 'ℹ 𝘽𝙤𝙩 𝙄𝙣𝙛𝙤',
-                        rows: [
-                            { title: '𝐏𝐢𝐧𝐠', description: 'Check bot speed', rowId: `${effectivePrefix}ping` },
-                            { title: '𝐒𝐞𝐭𝐭𝐢𝐧𝐠𝐬', description: 'Show bot settings', rowId: `${effectivePrefix}settings` },
-                        ],
-                    },
-                    {
-                        title: '📜 𝘾𝙖𝙩𝙚𝙜𝙤𝙧𝙮 𝙈𝙚𝙣𝙪𝙨',
-                        rows: [
-                            { title: '𝐆𝐞𝐧𝐞𝐫𝐚𝐥𝐌𝐞𝐧𝐮', description: 'General commands', rowId: `${effectivePrefix}generalmenu` },
-                            { title: '𝐒𝐞𝐭𝐭𝐢𝐧𝐠𝐬𝐌𝐞𝐧𝐮', description: 'Bot settings commands', rowId: `${effectivePrefix}settingsmenu` },
-                            { title: '𝐎𝐰𝐧𝐞𝐫𝐌𝐞𝐧𝐮', description: 'Owner only commands', rowId: `${effectivePrefix}ownermenu` },
-                            { title: '𝐏𝐚𝐧𝐞𝐥𝐌𝐞𝐧𝐮', description: 'Panel & settings commands', rowId: `${effectivePrefix}panelmenu` },
-                            { title: '𝐏𝐫𝐢𝐯𝐚𝐜𝐲𝐌𝐞𝐧𝐮', description: 'Privacy commands', rowId: `${effectivePrefix}privacymenu` },
-                            { title: '𝐆𝐫𝐨𝐮𝐩𝐌𝐞𝐧𝐮', description: 'Group management', rowId: `${effectivePrefix}groupmenu` },
-                            { title: '𝐀𝐈𝐌𝐞𝐧𝐮', description: 'AI & chat commands', rowId: `${effectivePrefix}aimenu` },
-                            { title: '𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐌𝐞𝐧𝐮', description: 'Media downloaders', rowId: `${effectivePrefix}downloadmenu` },
-                            { title: '𝐄𝐝𝐢𝐭𝐢𝐧𝐠𝐌𝐞𝐧𝐮', description: 'Media editing tools', rowId: `${effectivePrefix}editingmenu` },
-                            { title: '𝐋𝐨𝐠𝐨𝐌𝐞𝐧𝐮', description: 'Logo & text makers', rowId: `${effectivePrefix}logomenu` },
-                            { title: '+𝟏𝟖𝐌𝐞𝐧𝐮', description: 'NSFW commands (18+)', rowId: `${effectivePrefix}+18menu` },
-                            { title: '𝐔𝐭𝐢𝐥𝐬𝐌𝐞𝐧𝐮', description: 'Utility commands', rowId: `${effectivePrefix}utilsmenu` },
-                            { title: '𝐑𝐞𝐚𝐜𝐭𝐢𝐨𝐧𝐬𝐌𝐞𝐧𝐮', description: 'Reaction commands', rowId: `${effectivePrefix}reactionsmenu` },
-                        ],
-                    },
+        const sections = [
+            {
+                title: '⌜ Core Commands ⌟',
+                highlight_label: '',
+                rows: [
+                    { header: 'Full Menu', title: 'FullMenu', description: 'All commands list', id: `${effectivePrefix}fullmenu` },
+                    { header: 'Dev', title: 'Dev', description: 'Developer contact', id: `${effectivePrefix}dev` },
+                    { header: 'Report', title: 'Report', description: 'Report a bug to dev', id: `${effectivePrefix}report` },
                 ],
-                footer: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
             },
-        }, { quoted: m });
+            {
+                title: 'ℹ Bot Info',
+                highlight_label: '',
+                rows: [
+                    { header: 'Ping', title: 'Ping', description: 'Check bot speed', id: `${effectivePrefix}ping` },
+                    { header: 'Settings', title: 'Settings', description: 'Bot settings', id: `${effectivePrefix}settings` },
+                    { header: 'Mode', title: 'Mode', description: 'Toggle bot mode', id: `${effectivePrefix}mode` },
+                ],
+            },
+            {
+                title: '📜 Category Menus',
+                highlight_label: '',
+                rows: [
+                    { header: 'GeneralMenu', title: 'GeneralMenu', description: 'General commands', id: `${effectivePrefix}generalmenu` },
+                    { header: 'SettingsMenu', title: 'SettingsMenu', description: 'Settings commands', id: `${effectivePrefix}settingsmenu` },
+                    { header: 'OwnerMenu', title: 'OwnerMenu', description: 'Owner only commands', id: `${effectivePrefix}ownermenu` },
+                    { header: 'PrivacyMenu', title: 'PrivacyMenu', description: 'Privacy commands', id: `${effectivePrefix}privacymenu` },
+                    { header: 'GroupMenu', title: 'GroupMenu', description: 'Group management', id: `${effectivePrefix}groupmenu` },
+                    { header: 'AIMenu', title: 'AIMenu', description: 'AI & chat commands', id: `${effectivePrefix}aimenu` },
+                    { header: 'DownloadMenu', title: 'DownloadMenu', description: 'Media downloaders', id: `${effectivePrefix}downloadmenu` },
+                    { header: 'EditingMenu', title: 'EditingMenu', description: 'Media editing tools', id: `${effectivePrefix}editingmenu` },
+                    { header: 'LogoMenu', title: 'LogoMenu', description: 'Logo & text effects', id: `${effectivePrefix}logomenu` },
+                    { header: '+18Menu', title: '+18Menu', description: 'NSFW (18+)', id: `${effectivePrefix}+18menu` },
+                    { header: 'UtilsMenu', title: 'UtilsMenu', description: 'Utility commands', id: `${effectivePrefix}utilsmenu` },
+                    { header: 'ReactionsMenu', title: 'ReactionsMenu', description: 'Reaction commands', id: `${effectivePrefix}reactionsmenu` },
+                ],
+            },
+        ];
+
+        try {
+            const interactiveMsg = generateWAMessageFromContent(m.chat, proto.Message.fromObject({
+                interactiveMessage: {
+                    body: { text: '🌐 GitHub  |  📖 Browse Categories' },
+                    footer: { text: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
+                    header: { hasMediaAttachment: false },
+                    nativeFlowMessage: {
+                        buttons: [
+                            {
+                                name: 'cta_url',
+                                buttonParamsJson: JSON.stringify({
+                                    display_text: '🌐 GitHub',
+                                    url: 'https://github.com/xhclintohn/Toxic-MD',
+                                    merchant_url: 'https://github.com/xhclintohn/Toxic-MD'
+                                })
+                            },
+                            {
+                                name: 'single_select',
+                                buttonParamsJson: JSON.stringify({
+                                    title: '📖 Browse Categories',
+                                    sections: sections
+                                })
+                            }
+                        ],
+                        messageParamsJson: ''
+                    }
+                }
+            }), { quoted: m, userJid: client.user.id });
+
+            await client.relayMessage(m.chat, interactiveMsg.message, { messageId: interactiveMsg.key.id });
+        } catch {
+            await client.sendMessage(m.chat, {
+                listMessage: {
+                    title: 'VIEW OPTIONS',
+                    description: 'Select a category to view its commands.',
+                    buttonText: '📖 Browse Commands',
+                    listType: 1,
+                    sections: sections.map(s => ({
+                        title: s.title,
+                        rows: s.rows.map(r => ({ title: r.title, description: r.description, rowId: r.id }))
+                    })),
+                    footer: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
+                },
+            }, { quoted: m });
+        }
 
         const xhClintonPaths = [
             path.join(__dirname, 'xh_clinton'),
@@ -112,40 +151,23 @@ module.exports = {
 
         let audioFolder = null;
         for (const folderPath of xhClintonPaths) {
-            if (fs.existsSync(folderPath)) {
-                audioFolder = folderPath;
-                break;
-            }
+            if (fs.existsSync(folderPath)) { audioFolder = folderPath; break; }
         }
 
         if (!audioFolder) return;
 
         const menuFiles = ['menu1.mp3', 'menu2.mp3', 'menu3.mp3', 'menu4.mp3'];
-        const possibleFiles = menuFiles
-            .map(f => path.join(audioFolder, f))
-            .filter(f => fs.existsSync(f));
-
+        const possibleFiles = menuFiles.map(f => path.join(audioFolder, f)).filter(f => fs.existsSync(f));
         if (possibleFiles.length === 0) return;
 
         const randomFile = possibleFiles[Math.floor(Math.random() * possibleFiles.length)];
-
         await new Promise(resolve => setTimeout(resolve, 500));
 
         try {
             const audioBuffer = fs.readFileSync(randomFile);
-            await client.sendMessage(m.chat, {
-                audio: audioBuffer,
-                ptt: true,
-                mimetype: 'audio/mpeg',
-                fileName: 'toxic-menu.m4a',
-            }, { quoted: m });
+            await client.sendMessage(m.chat, { audio: audioBuffer, ptt: true, mimetype: 'audio/mpeg', fileName: 'toxic-menu.m4a' }, { quoted: m });
         } catch {
-            await client.sendMessage(m.chat, {
-                audio: { url: randomFile },
-                ptt: true,
-                mimetype: 'audio/mpeg',
-                fileName: 'toxic-menu.m4a',
-            }, { quoted: m });
+            await client.sendMessage(m.chat, { audio: { url: randomFile }, ptt: true, mimetype: 'audio/mpeg', fileName: 'toxic-menu.m4a' }, { quoted: m });
         }
     },
 };
