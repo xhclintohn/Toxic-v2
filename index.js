@@ -596,6 +596,16 @@ app.get("/", (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.
 app.get("/health", (req, res) => res.json({ status: "ok", uptime: process.uptime() }));
 app.listen(port, () => console.log(`Server running on port ${port}`));
 
+// Keep dyno alive: ping /health every 25 min so Heroku never puts the process to sleep.
+// Set APP_URL env var to your app's public URL (e.g. https://my-bot.herokuapp.com)
+(function keepDynoAwake() {
+    const base = (process.env.APP_URL || '').replace(/\/$/, '');
+    if (!base) return;
+    const _ping = () => axios.get(base + '/health', { timeout: 10000 }).catch(() => {});
+    setInterval(_ping, 25 * 60 * 1000);
+    console.log('♻️  Dyno keep-alive active →', base + '/health');
+})();
+
 startBackupInterval(db);
 startToxic();
 
