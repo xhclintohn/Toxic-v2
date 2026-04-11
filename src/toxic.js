@@ -179,7 +179,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         let settings = fetchedSettings;
 
         if (!settings) {
-            console.error("Toxic-MD: Settings not found!");
+            console.log("Toxic-MD: Settings not found!");
             return;
         }
 
@@ -274,7 +274,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 m.metadata = await fastGroupMetadata(client, m.chat);
                 _groupParticipants = m.metadata?.participants || [];
             } catch (metaErr) {
-                console.error('❌ [GROUP METADATA]:', metaErr.message);
+                console.log('❌ [GROUP METADATA]:', metaErr.message);
             }
 
             const normSender = normalizeNumber(m.sender);
@@ -336,7 +336,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     m.msg.contextInfo.participant = lidToPN[m.msg.contextInfo.participant.split('@')[0].split(':')[0]] || m.msg.contextInfo.participant;
                 }
             } catch (lidErr) {
-                console.error('❌ [LID RESOLVE]:', lidErr.message);
+                console.log('❌ [LID RESOLVE]:', lidErr.message);
             }
         } else {
             m.isAdmin = isDev;
@@ -434,7 +434,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     const messageId = m.key.id;
                     const sender = m.key.participant || m.key.remoteJid || '';
                     const storedPayload = { key: m.key, message: m.message || {}, pushName: m.pushName || '' };
-                    msgStore.saveMessage(messageId, normalizedJid, sender, storedPayload);
+                    msgStore.saveMessage(messageId, normalizedJid, sender, storedPayload).catch(() => {});
                 }
             }
         }
@@ -537,7 +537,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             else if (msg.pollCreationMessage || msg.pollCreationMessageV3) { const poll = msg.pollCreationMessage || msg.pollCreationMessageV3; const options = (poll.options || []).map(o => o.optionName).join('\n々 '); await client.sendMessage(botJid, { text: hdr + `\n╰──────────☉\n\n📊 *Deleted Poll:*\n${poll.name || 'Poll'}\n々 ${options}`, mentions: [sender] }); }
                             else { await client.sendMessage(botJid, { text: hdr + `\n╰──────────☉\n\n⚠️ *Deleted content could not be recovered*`, mentions: [sender] }); }
                         }
-                    } catch (error) { console.error('❌ [ANTIDELETE ERROR]:', error); }
+                    } catch (error) { console.log('❌ [ANTIDELETE ERROR]:', error); }
                 }
             }
         }
@@ -575,7 +575,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                             }
                         }
                     }
-                } catch (error) { console.error('❌ [ANTIEDIT ERROR]:', error); }
+                } catch (error) { console.log('❌ [ANTIEDIT ERROR]:', error); }
             }
         }
 
@@ -586,15 +586,15 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         }
 
         const _featurePromises = [
-            status_saver(client, m, Owner, usedPrefix).catch(e => console.error('❌ [STATUS_SAVER]:', e)),
-            afkFeature(client, m).catch(e => console.error('❌ [AFK]:', e)),
+            status_saver(client, m, Owner, usedPrefix).catch(e => console.log('❌ [STATUS_SAVER]:', e)),
+            afkFeature(client, m).catch(e => console.log('❌ [AFK]:', e)),
         ];
         if (m.isGroup) {
             _featurePromises.push(
-                antilink(client, m, store).catch(e => console.error('❌ [ANTILINK]:', e)),
-                gcPresence(client, m).catch(e => console.error('❌ [GCPRESENCE]:', e)),
-                antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body).catch(e => console.error('❌ [ANTITAGGC]:', e)),
-                antistatusmention(client, m).catch(e => console.error('❌ [ANTISTATUSMENTION]:', e)),
+                antilink(client, m, store).catch(e => console.log('❌ [ANTILINK]:', e)),
+                gcPresence(client, m).catch(e => console.log('❌ [GCPRESENCE]:', e)),
+                antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body).catch(e => console.log('❌ [ANTITAGGC]:', e)),
+                antistatusmention(client, m).catch(e => console.log('❌ [ANTISTATUSMENTION]:', e)),
             );
         }
         Promise.all(_featurePromises).catch(() => {});
@@ -625,7 +625,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             try {
                 await cmd(context);
             } catch (error) {
-                console.error(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
+                console.log(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
             }
         } else if (isDev && !itsMe && (settings.toxicagent === true || settings.toxicagent === 'true')) {
             toxicaiFeature(context).catch(() => {});
@@ -633,7 +633,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             const _isDM = !m.isGroup;
             const _chatbotDMOn = _isDM && (chatbotpmSetting === true || chatbotpmSetting === 'true' || chatbotpmSetting === 'on');
             if (_chatbotDMOn) {
-                chatbotpm(client, m, store, chatbotpmSetting).catch(e => console.error('❌ [CHATBOTPM]:', e));
+                chatbotpm(client, m, store, chatbotpmSetting).catch(e => console.log('❌ [CHATBOTPM]:', e));
             } else if (settings.autoai && !itsMe) {
                 const _botNum = (botNumber || '').split('@')[0].split(':')[0];
                 const _bLidKey = m._botLidKey || '';
@@ -656,7 +656,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         }
 
     } catch (err) {
-        console.error('❌ [TOXIC] Error:', err);
+        console.log('❌ [TOXIC] Error:', err);
     }
 };
 
@@ -671,5 +671,5 @@ process.on('uncaughtException', function (err) {
     if (e.includes("Connection Closed")) return;
     if (e.includes("Timed Out")) return;
     if (e.includes("Value not found")) return;
-    console.error('❌ [UNCAUGHT EXCEPTION]:', err);
+    console.log('❌ [UNCAUGHT EXCEPTION]:', err);
 });
