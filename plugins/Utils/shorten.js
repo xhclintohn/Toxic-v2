@@ -1,99 +1,30 @@
 const axios = require('axios');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'shorten',
-    aliases: ['shortlink', 'tinyurl', 'short'],
-    description: 'Shorten URLs with TinyURL',
+    aliases: ['shorturl', 'tinyurl', 'shrinkurl'],
+    description: 'Shorten a URL',
     run: async (context) => {
         const { client, m, text } = context;
-
-        const formatStylishReply = (message) => {
-            return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
-        };
-
-        if (!text) {
+        const fq = getFakeQuoted(m);
+        const url = (text || '').trim();
+        if (!url || !url.startsWith('http')) {
             return client.sendMessage(m.chat, {
-                text: formatStylishReply("You forgot the URL, genius. 🤦🏻\nExample: .shorten https://github.com/xhclintohn/Toxic-MD")
-            }, { quoted: m });
+                text: '╭───(    TOXIC-MD    )───\n├───≫ URL Sʜᴏʀᴛᴇɴᴇʀ ≪───\n├\n├ Give me a valid URL to shorten.\n├ Usage: .shorten https://example.com/very/long/url\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
+            }, { quoted: fq });
         }
-
-        let url = text.trim();
-        
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            url = 'https://' + url;
-        }
-
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-
-            const encodedUrl = encodeURIComponent(url);
-            const apiUrl = `https://api.nekolabs.web.id/tools/shortlink/tinyurl?url=${encodedUrl}`;
-
-            const response = await axios.get(apiUrl, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept': 'application/json'
-                },
-                timeout: 10000
-            });
-
-            if (!response.data?.success || !response.data?.result) {
-                throw new Error('API returned invalid response');
-            }
-
-            const shortUrl = response.data.result;
-            const responseTime = response.data.responseTime || 'N/A';
-
+            const res = await axios.get(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`, { timeout: 8000 });
+            const short = res.data;
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-            await client.sendMessage(m.chat, {
-                interactiveMessage: {
-                    header: `✅ URL SHORTENED SUCCESSFULLY`,
-                    title: `Original URL:\n${url}\n\nShortened URL:\n${shortUrl}\n\nResponse Time: ${responseTime}`,
-                    buttons: [
-                        {
-                            name: "cta_copy",
-                            buttonParamsJson: JSON.stringify({
-                                display_text: "📋 Copy Short URL",
-                                id: "copy_shorturl",
-                                copy_code: shortUrl
-                            })
-                        },
-                        {
-                            name: "cta_copy",
-                            buttonParamsJson: JSON.stringify({
-                                display_text: "🌐 Open in Browser",
-                                id: "open_url",
-                                copy_code: shortUrl
-                            })
-                        }
-                    ]
-                }
-            }, { quoted: m });
-
-        } catch (error) {
-            console.error('Shorten error:', error);
+            return client.sendMessage(m.chat, {
+                text: `╭───(    TOXIC-MD    )───\n├───≫ URL Sʜᴏʀᴛᴇɴᴇʀ ≪───\n├\n├ 🔗 Original: ${url.slice(0,60)}${url.length>60?'...':''}\n├ ✅ Shortened: ${short}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            }, { quoted: fq });
+        } catch {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-
-            let errorMessage = "Failed to shorten URL, your link is probably trash. ";
-            
-            if (error.response?.status === 400) {
-                errorMessage += "Invalid URL format. 🔗";
-            } else if (error.response?.status === 429) {
-                errorMessage += "Rate limit exceeded. Try again later. ⏳";
-            } else if (error.message.includes('timeout')) {
-                errorMessage += "API timeout, your link is too heavy. ⏱️";
-            } else if (error.message.includes('ENOTFOUND')) {
-                errorMessage += "Can't reach API server. 🌐";
-            } else if (error.message.includes('Invalid response')) {
-                errorMessage += "API returned garbage. 🗑️";
-            } else {
-                errorMessage += `Error: ${error.message}`;
-            }
-
-            await client.sendMessage(m.chat, {
-                text: formatStylishReply(errorMessage)
-            }, { quoted: m });
+            return client.sendMessage(m.chat, { text: '╭───(    TOXIC-MD    )───\n├───≫ URL Sʜᴏʀᴛᴇɴᴇʀ ≪───\n├\n├ Couldn\'t shorten that. It stays long.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: fq });
         }
-    },
+    }
 };
