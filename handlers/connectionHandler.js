@@ -1,7 +1,8 @@
 const { Boom } = require("@hapi/boom");
 const { DateTime } = require("luxon");
 const { default: toxicConnect, DisconnectReason } = require("@whiskeysockets/baileys");
-const { getSettings, getSudoUsers, addSudoUser, getBackend } = require("../database/config");
+const { addSudoUser, getBackend } = require("../database/config");
+const { getCachedSettings, getCachedSudo } = require("../lib/settingsCache");
 const { commands, totalCommands } = require("../handlers/commandHandler");
 
 const botName = process.env.BOTNAME || "Toxic-MD";
@@ -54,8 +55,8 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
     try { await socket.groupAcceptInvite("GDcJihbSIYM0GzQJWKA6gS"); } catch (error) {}
 
     const userId = socket.user.id.split(":")[0].split("@")[0];
-    const settings = await getSettings();
-    const sudoUsers = await getSudoUsers();
+    const settings = await getCachedSettings();
+    const sudoUsers = await getCachedSudo();
 
     if (!hasSentStartMessage) {
       const isNewUser = !sudoUsers.includes(userId);
