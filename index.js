@@ -33,7 +33,7 @@ require('./features/cleanup');
 const { smsg } = require('./handlers/smsg');
 const { getBannedUsers, banUser, db } = require("./database/config");
 const { restoreFromGist, startBackupInterval } = require('./lib/dbBackup');
-const { getCachedSettings } = require('./lib/settingsCache');
+const { getCachedSettings, invalidateSettings } = require('./lib/settingsCache');
 const { botname } = require('./config/settings');
 const { DateTime } = require('luxon');
 const { commands, totalCommands } = require('./handlers/commandHandler');
@@ -60,8 +60,7 @@ process.on("uncaughtException", (error) => {
 });
 
 function invalidateSettingsCache() {
-  const { db } = require('./database/config');
-  try { db.prepare('SELECT 1').get(); } catch (e) {}
+  try { invalidateSettings(); } catch (e) {}
 }
 
 function cleanupSessionFiles() {
@@ -204,14 +203,12 @@ async function startToxic() {
     }
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
-    // ROOT-CAUSE FIX: toxic-baileys chats.js opens ev.buffer() when
-    // receivedPendingNotifications fires AND myAppStateKeyId is absent from creds.
-    // That buffer only flushes via appStateSyncKeyShare which never arrives when
-    // the key is missing → every messages.upsert event silently swallowed forever.
-    // Injecting a placeholder value prevents chats.js from opening the buffer at all.
+    // FIX: toxic-baileys opens ev.buffer() in chats.js when receivedPendingNotifications
+    // fires without myAppStateKeyId in creds — that buffer never closes if appStateSyncKeyShare
+    // never arrives. Setting any truthy placeholder prevents the buffer from being opened at all.
     if (state && state.creds && !state.creds.myAppStateKeyId) {
-      state.creds.myAppStateKeyId = 'toxic-placeholder-' + Date.now().toString(16);
-      console.log('⚠️ [CREDS] myAppStateKeyId was absent — placeholder injected. Event buffer deadlock prevented.');
+      state.creds.myAppStateKeyId = 'toxic-' + Date.now().toString(16);
+      console.log('🔑 [CREDS] myAppStateKeyId set — event buffer deadlock prevented');
       try { await saveCreds(); } catch (_) {}
     }
 
@@ -253,16 +250,6 @@ async function startToxic() {
     client.sessionConfig = { autoViewStatus: settingss?.autoview === true || settingss?.autoview === 'true' };
     global._toxicCurrentClient = client;
     store.bind(client.ev);
-
-    // RAW DIAGNOSTIC: log every consolidated event batch that flows out of the buffer.
-    // Fires synchronously inside flush() — if we see this but NOT 🔔 UPSERT, it's a handler bug.
-    // If we see nothing after the drain, events are being swallowed upstream.
-    client.ev.on('event', (map) => {
-      const keys = Object.keys(map);
-      if (keys.some(k => k.startsWith('messages.'))) {
-        process.stdout.write(`🔵 [RAW-EV] ${keys.join(',')} | msgs=${map['messages.upsert']?.messages?.length ?? '-'} type=${map['messages.upsert']?.type ?? '-'}\n`);
-      }
-    });
 
     if (!client.pinMessage) {
       client.pinMessage = async (jid, messageKey, type) => {
@@ -336,27 +323,20 @@ async function startToxic() {
     });
 
     client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
-      process.stdout.write(`🔔 UPSERT type=${type} msgs=${messages?.length}\n`);
       try {
       global._toxicLastActivity = Date.now();
-
-      // For real-time messages (type=notify), always process — don't filter by timestamp.
-      // For history-sync (type=append/set), apply a generous 90-second window.
-      if (type !== 'notify') {
-        const _ct = global._toxicConnectTime || 0;
-        const hasRecent = messages.some(msg => {
-          const ts = msg.messageTimestamp;
-          if (!ts) return false;
-          const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
-          return _ct > 0 ? tsNum * 1000 >= _ct - 90000 : (Date.now() - tsNum * 1000) < 90000;
-        });
-        if (!hasRecent) return;
-      }
+      const _ct = global._toxicConnectTime || 0;
+      const hasRecent = messages.some(msg => {
+        const ts = msg.messageTimestamp;
+        if (!ts) return type === 'notify';
+        const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
+        return _ct > 0 ? tsNum * 1000 >= _ct - 10000 : (Date.now() - tsNum * 1000) < 45000;
+      });
+      if (!hasRecent) return;
 
       let settings;
       try { settings = await getCachedSettings(); } catch(e) { console.log('❌ [SETTINGS FETCH]:', e.message); return; }
-      if (!settings) { console.log('⚠️ [MSG] settings null, dropping'); return; }
-      console.log(`📨 [MSG] type=${type} count=${messages.length} stealth=${settings.stealth} mode=${settings.mode} prefix=${settings.prefix}`);
+      if (!settings) { return; }
 
       client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
       const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
@@ -405,45 +385,41 @@ async function startToxic() {
             return;
           }
 
-          if (!mek.message) { console.log('⚠️ [MSG] no message field, skip'); return; }
+          if (!mek.message) return;
           mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
-          if (!mek.message) { console.log('⚠️ [MSG] ephemeral unwrap failed, skip'); return; }
+          if (!mek.message) return;
 
-          if (isStealthOn) { console.log('⚠️ [MSG] stealth=ON, dropping'); return; }
+          if (isStealthOn) return;
 
           if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
-            setImmediate(() => client.readMessages([mek.key]).catch(() => {}));
+            client.readMessages([mek.key]).catch(() => {});
           }
 
           if (remoteJid.endsWith('@s.whatsapp.net')) {
-            setImmediate(() => {
-              try {
-                if (presence === 'online') client.sendPresenceUpdate("available", remoteJid).catch(() => {});
-                else if (presence === 'typing') client.sendPresenceUpdate("composing", remoteJid).catch(() => {});
-                else if (presence === 'recording') client.sendPresenceUpdate("recording", remoteJid).catch(() => {});
-              } catch (error) {}
-            });
+            try {
+              if (presence === 'online') client.sendPresenceUpdate("available", remoteJid).catch(() => {});
+              else if (presence === 'typing') client.sendPresenceUpdate("composing", remoteJid).catch(() => {});
+              else if (presence === 'recording') client.sendPresenceUpdate("recording", remoteJid).catch(() => {});
+            } catch (error) {}
           }
 
-          if (!client.public && !mek.key.fromMe) { console.log('⚠️ [MSG] client.public=false and not fromMe, skip'); return; }
+          if (!client.public && !mek.key.fromMe) return;
 
           if (mek.message?.listResponseMessage) {
             const selectedCmd = mek.message.listResponseMessage.singleSelectReply?.selectedRowId;
             if (selectedCmd) {
               const effectivePrefix = settings?.prefix || '.';
-              const command = selectedCmd.startsWith('/') ? selectedCmd.slice(1).toLowerCase() : selectedCmd.replace(/^[.!#$?+\-*~@%&^=|]/, '').toLowerCase();
-              const listM = { ...mek, id: mek.key.id, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.participant || mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
-              require("./src/toxic")(client, listM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC LIST]:', e));
+              let command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
+              const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
+              require("./src/toxic")(client, listM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC LIST]:', e.message));
               return;
             }
           }
 
           try {
             const m = smsg(client, mek, store);
-            const _msgBody = m.body || m.text || '';
-            console.log(`🔧 [DISPATCH] from=${m.sender?.split('@')[0]} body=${_msgBody.slice(0,40)} chat=${m.chat?.slice(-15)}`);
-            require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e));
-          } catch (error) { console.log('❌ [TOXIC SYNC]:', error); }
+            require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
+          } catch (error) { console.log('❌ [TOXIC SYNC]:', error.message); }
         } catch (loopError) { console.log('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
       }));
       } catch (outerErr) { console.log('❌ [UPSERT OUTER]:', outerErr?.message || String(outerErr)); }
@@ -500,11 +476,6 @@ async function startToxic() {
       const { connection, lastDisconnect } = update;
       const reason = lastDisconnect?.error ? new Boom(lastDisconnect.error).output.statusCode : null;
 
-      // Log every field of connection.update so we can see reconnects, WS drops,
-      // receivedPendingNotifications re-fires, isOnline changes etc.
-      const _upKeys = Object.keys(update).filter(k => update[k] !== undefined);
-      if (_upKeys.length) console.log(`🌐 [CONN-UPDATE] ${_upKeys.map(k => `${k}=${JSON.stringify(update[k])}`).join(' | ')}`);
-
       if (connection === "open") {
         reconnectAttempts = 0;
         global._toxicLastActivity = Date.now();
@@ -515,31 +486,6 @@ async function startToxic() {
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
         console.log(chalk.green(`╰──────────────────☉\n`));
         global._toxicConnectTime = Date.now();
-
-        // CRITICAL FIX: chats.js opens ev.buffer() when receivedPendingNotifications fires
-        // without myAppStateKeyId in creds, and only releases via appStateSyncKeyShare which
-        // never arrives → every messages.upsert event silently swallowed.
-        // Solution: poll every 10 s and drain the counter with paired flush() calls so
-        // buffersInProgress hits 0. Using setInterval (not setTimeout) so the drain
-        // re-fires if the buffer gets re-opened by a second receivedPendingNotifications.
-        if (global._bufferDrainInterval) clearInterval(global._bufferDrainInterval);
-        let _drainFires = 0;
-        global._bufferDrainInterval = setInterval(() => {
-          try {
-            if (typeof client.ev.isBuffering !== 'function') return;
-            if (client.ev.isBuffering()) {
-              let n = 0;
-              while (client.ev.isBuffering() && n < 20) { try { client.ev.flush(); } catch (_) {} n++; }
-              console.log(`⚠️ [EV-DRAIN #${++_drainFires}] drained in ${n} flush(s). isBuffering=${client.ev.isBuffering()}`);
-            } else {
-              // Buffer clear — log first time, then silently continue
-              if (_drainFires === 0) {
-                console.log(`✅ [EV-DRAIN] Buffer already clear on first check — no action needed.`);
-                _drainFires = 1;
-              }
-            }
-          } catch (e) { console.log('⚠️ [EV-DRAIN] error:', e.message); }
-        }, 10000);
       }
 
       if (connection === "close") {
@@ -572,9 +518,7 @@ async function startToxic() {
         }
       }
 
-      // Fire-and-forget: NEVER await connectionHandler — it does DB calls that can stall
-      // the Baileys event queue and silently block ALL subsequent events (messages.upsert etc.)
-      connectionHandler(client, update, startToxic).catch(() => {});
+      try { await connectionHandler(client, update, startToxic); } catch (error) {}
     });
 
     client.sendText = (jid, text, quoted = "", options) => client.sendMessage(jid, { text, ...options }, { quoted });
