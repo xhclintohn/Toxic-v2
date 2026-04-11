@@ -168,6 +168,10 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const _fmBody = (m.text || m.body || m.message?.conversation || m.message?.extendedTextMessage?.text || '').trim();
         if (!_fmBody || !_allPfx.some(p => _fmBody.startsWith(p))) return;
     }
+    const _isDMChat = !m.chat?.endsWith('@g.us') && !m.chat?.endsWith('@broadcast') && !m.chat?.endsWith('@newsletter');
+    if (_isDMChat && !m.key?.fromMe && m.chat) {
+        client.sendPresenceUpdate('composing', m.chat).catch(() => {});
+    }
     try {
         const [rawSudoUsers, rawBannedUsers, fetchedSettings] = await Promise.all([
             getCachedSudo(),
