@@ -251,6 +251,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const resolvedCommandName = aliases[commandName] || commandName;
         const cmd = commands[resolvedCommandName];
 
+        if (body) console.log(`⚡ [CMD] body="${body.slice(0,40)}" parsed="${commandName||'none'}" resolved="${resolvedCommandName||'none'}" found=${!!cmd}`);
+
         const args = body.trim().split(/ +/).slice(1);
         const pushname = m.pushName || "No Name";
         if (!_cachedBotNumber && client?.user?.id) _cachedBotNumber = client.decodeJid(client.user.id);
