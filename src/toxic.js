@@ -385,6 +385,11 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         };
 
 
+        // Patch m.reply: use clean sendMessage (skips externalAdReply which WA may reject)
+        m.reply = (text, chatId = m.chat, options = {}) =>
+            client.sendMessage(chatId, { text }, { quoted: fakeQuoted, ...options });
+
+
 
         const trimmedBody = body.trim();
 
