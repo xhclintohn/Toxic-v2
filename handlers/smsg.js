@@ -130,22 +130,40 @@ function smsg(conn, m, store) {
 
   m.text = m.text || m.body || "";
 
-  m.reply = async (text, chatId = m.chat, options = {}) => {
+  m.reply = (text, chatId = m.chat, options = {}) => {
     const fakeQuoted = {
       key: {
         participant: "0@s.whatsapp.net",
         remoteJid: "0@s.whatsapp.net",
-        id: m.id || m.key?.id || "toxic-fq",
+        id: m.id,
       },
       message: {
         conversation: "Toxic",
       },
+      contextInfo: {
+        mentionedJid: [m.sender],
+        forwardingScore: 999,
+        isForwarded: true,
+      },
     };
-    try {
-      return await conn.sendMessage(chatId, { text: String(text ?? '') }, { quoted: fakeQuoted, ...options });
-    } catch (e) {
-      return await conn.sendMessage(chatId, { text: String(text ?? '') }, options);
-    }
+
+    return conn.sendMessage(
+      chatId,
+      {
+        text: text,
+        contextInfo: {
+          externalAdReply: {
+            title: `Toxic-MD`,
+            body: m.pushName,
+            previewType: "PHOTO",
+            thumbnailUrl: "https://github.com/xhclintohn/Toxic-MD",
+            thumbnail: kali,
+            sourceUrl: "https://github.com/xhclintohn/Toxic-MD",
+          },
+        },
+      },
+      { quoted: fakeQuoted, ...options }
+    );
   };
 
   m.copy = () => smsg(conn, M.fromObject(M.toObject(m)));
