@@ -243,6 +243,16 @@ async function startToxic() {
     global._toxicCurrentClient = client;
     store.bind(client.ev);
 
+    // RAW DIAGNOSTIC: log every consolidated event batch that flows out of the buffer.
+    // Fires synchronously inside flush() — if we see this but NOT 🔔 UPSERT, it's a handler bug.
+    // If we see nothing after the drain, events are being swallowed upstream.
+    client.ev.on('event', (map) => {
+      const keys = Object.keys(map);
+      if (keys.some(k => k.startsWith('messages.'))) {
+        process.stdout.write(`🔵 [RAW-EV] ${keys.join(',')} | msgs=${map['messages.upsert']?.messages?.length ?? '-'} type=${map['messages.upsert']?.type ?? '-'}\n`);
+      }
+    });
+
     if (!client.pinMessage) {
       client.pinMessage = async (jid, messageKey, type) => {
         const { jidNormalizedUser } = require('@whiskeysockets/baileys');
@@ -479,6 +489,11 @@ async function startToxic() {
       const { connection, lastDisconnect } = update;
       const reason = lastDisconnect?.error ? new Boom(lastDisconnect.error).output.statusCode : null;
 
+      // Log every field of connection.update so we can see reconnects, WS drops,
+      // receivedPendingNotifications re-fires, isOnline changes etc.
+      const _upKeys = Object.keys(update).filter(k => update[k] !== undefined);
+      if (_upKeys.length) console.log(`🌐 [CONN-UPDATE] ${_upKeys.map(k => `${k}=${JSON.stringify(update[k])}`).join(' | ')}`);
+
       if (connection === "open") {
         reconnectAttempts = 0;
         global._toxicLastActivity = Date.now();
@@ -490,33 +505,30 @@ async function startToxic() {
         console.log(chalk.green(`╰──────────────────☉\n`));
         global._toxicConnectTime = Date.now();
 
-        // CRITICAL FIX: toxic-baileys opens a second ev.buffer() when
-        // receivedPendingNotifications fires without myAppStateKeyId in creds.
-        // That buffer is ONLY flushed when appStateSyncKeyShare arrives — which
-        // never happens if the session creds lack myAppStateKeyId.
-        // Force-flush after 12 s to release any stuck buffer so messages.upsert fires.
-        if (global._bufferFlushTimer) clearTimeout(global._bufferFlushTimer);
-        global._bufferFlushTimer = setTimeout(() => {
-          global._bufferFlushTimer = null;
+        // CRITICAL FIX: chats.js opens ev.buffer() when receivedPendingNotifications fires
+        // without myAppStateKeyId in creds, and only releases via appStateSyncKeyShare which
+        // never arrives → every messages.upsert event silently swallowed.
+        // Solution: poll every 10 s and drain the counter with paired flush() calls so
+        // buffersInProgress hits 0. Using setInterval (not setTimeout) so the drain
+        // re-fires if the buffer gets re-opened by a second receivedPendingNotifications.
+        if (global._bufferDrainInterval) clearInterval(global._bufferDrainInterval);
+        let _drainFires = 0;
+        global._bufferDrainInterval = setInterval(() => {
           try {
-            if (typeof client.ev.isBuffering === 'function' && client.ev.isBuffering()) {
-              console.log('⚠️ [EV-BUFFER] Draining stuck event buffer (myAppStateKeyId absent)...');
-              // flush(true) emits queued events but does NOT decrement buffersInProgress,
-              // so new events would still be silently buffered. Instead drain the counter
-              // with paired flush() calls so buffersInProgress reaches 0 properly.
-              let drainAttempts = 0;
-              while (typeof client.ev.isBuffering === 'function' && client.ev.isBuffering() && drainAttempts < 20) {
-                try { client.ev.flush(); } catch (_) {}
-                drainAttempts++;
-              }
-              console.log(`✅ [EV-BUFFER] Buffer drained after ${drainAttempts} flush(s). isBuffering=${client.ev.isBuffering?.()}. Commands should now work.`);
+            if (typeof client.ev.isBuffering !== 'function') return;
+            if (client.ev.isBuffering()) {
+              let n = 0;
+              while (client.ev.isBuffering() && n < 20) { try { client.ev.flush(); } catch (_) {} n++; }
+              console.log(`⚠️ [EV-DRAIN #${++_drainFires}] drained in ${n} flush(s). isBuffering=${client.ev.isBuffering()}`);
             } else {
-              console.log('✅ [EV-BUFFER] Buffer already clear — no action needed.');
+              // Buffer clear — log first time, then silently continue
+              if (_drainFires === 0) {
+                console.log(`✅ [EV-DRAIN] Buffer already clear on first check — no action needed.`);
+                _drainFires = 1;
+              }
             }
-          } catch (e) {
-            console.log('⚠️ [EV-BUFFER] Force-flush error:', e.message);
-          }
-        }, 12000);
+          } catch (e) { console.log('⚠️ [EV-DRAIN] error:', e.message); }
+        }, 10000);
       }
 
       if (connection === "close") {
