@@ -12,7 +12,6 @@ const status_saver = require('../features/status_saver');
 const gcPresence = require('../features/gcPresence');
 const antitaggc = require('../features/antitag');
 const antilink = require('../features/antilink');
-const chatbotpm = require('../features/chatbotpm');
 const { getGroupSettings, updateSetting } = require('../database/config');
 const { getCachedSettings, getCachedSudo, getCachedBanned } = require('../lib/settingsCache');
 const { botname, mycode } = require('../config/settings');
@@ -639,30 +638,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             }
         } else if (isDev && !itsMe && (settings.toxicagent === true || settings.toxicagent === 'true')) {
             toxicaiFeature(context).catch(() => {});
-        } else {
-            const _isDM = !m.isGroup;
-            const _chatbotDMOn = _isDM && (chatbotpmSetting === true || chatbotpmSetting === 'true' || chatbotpmSetting === 'on');
-            if (_chatbotDMOn) {
-                chatbotpm(client, m, store, chatbotpmSetting).catch(e => console.log('❌ [CHATBOTPM]:', e));
-            } else if (settings.autoai && !itsMe) {
-                const _botNum = (botNumber || '').split('@')[0].split(':')[0];
-                const _bLidKey = m._botLidKey || '';
-                const _isMentioned = (m.mentionedJid || []).some(j => {
-                    const jk = (j || '').split('@')[0].split(':')[0];
-                    return jk === _botNum || (_bLidKey && jk === _bLidKey);
-                });
-                const _isReplyToBot = (() => {
-                    const qSender = m.msg?.contextInfo?.participant || m.quoted?.sender || '';
-                    if (!qSender) return false;
-                    const qk = qSender.split('@')[0].split(':')[0];
-                    return qk === _botNum || (_bLidKey && qk === _bLidKey);
-                })();
-                const _triggerT = /^t\s+/i.test((body || '').trim());
-                const _hasPrefix = !!(body && usedPrefix && body.startsWith(usedPrefix));
-                if ((_isDM && body && body.trim()) || _isMentioned || _isReplyToBot || _triggerT || _hasPrefix) {
-                    autoai(context).catch(() => {});
-                }
-            }
+        } else if (!itsMe) {
+            autoai(context).catch(() => {});
         }
 
     } catch (err) {
