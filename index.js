@@ -404,16 +404,16 @@ async function startToxic() {
             if (selectedCmd) {
               const effectivePrefix = settings?.prefix || '.';
               const command = selectedCmd.startsWith('/') ? selectedCmd.slice(1).toLowerCase() : selectedCmd.replace(/^[.!#$?+\-*~@%&^=|]/, '').toLowerCase();
-              const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
-              require("./src/toxic")(client, listM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC LIST]:', e.message));
+              const listM = { ...mek, id: mek.key.id, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.participant || mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
+              require("./src/toxic")(client, listM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC LIST]:', e));
               return;
             }
           }
 
           try {
             const m = smsg(client, mek, store);
-            require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
-          } catch (error) { console.log('❌ [TOXIC SYNC]:', error.message); }
+            require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e));
+          } catch (error) { console.log('❌ [TOXIC SYNC]:', error); }
         } catch (loopError) { console.log('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
       }));
       } catch (outerErr) { console.log('❌ [UPSERT OUTER]:', outerErr?.message || String(outerErr)); }
