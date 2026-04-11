@@ -62,7 +62,7 @@ module.exports = {
     for (const category of categories) {
       let commandFiles;
       try {
-        commandFiles = fs.readdirSync(`./plugins/${category.name}`).filter(file => file.endsWith('.js') && file !== 'links.js');
+        commandFiles = fs.readdirSync(`./plugins/${category.name}`).filter(file => file.endsWith('/js') && file !== 'links.js');
       } catch (e) { continue; }
 
       if (commandFiles.length === 0 && category.name !== 'NSFW') continue;
@@ -90,7 +90,7 @@ module.exports = {
             continue;
           }
         } catch (e) { /* fall through */ }
-        const commandName = file.replace('.js', '');
+        const commandName = file.replace('/js', '');
         menuText += `├ *${toFancyFont(commandName)}*\n`;
         commandCount++;
       }
@@ -115,7 +115,7 @@ module.exports = {
 
     const sections = categories
       .filter(cat => {
-        try { return fs.readdirSync(`./plugins/${cat.name}`).filter(f => f.endsWith('.js')).length > 0; } catch { return false; }
+        try { return fs.readdirSync(`./plugins/${cat.name}`).filter(f => f.endsWith('/js')).length > 0; } catch { return false; }
       })
       .map(cat => ({
         title: `${cat.emoji} ${cat.display}`,
