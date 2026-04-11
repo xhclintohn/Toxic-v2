@@ -500,8 +500,16 @@ async function startToxic() {
           global._bufferFlushTimer = null;
           try {
             if (typeof client.ev.isBuffering === 'function' && client.ev.isBuffering()) {
-              console.log('⚠️ [EV-BUFFER] Releasing stuck event buffer (myAppStateKeyId absent). Commands should now work.');
-              client.ev.flush(true);
+              console.log('⚠️ [EV-BUFFER] Draining stuck event buffer (myAppStateKeyId absent)...');
+              // flush(true) emits queued events but does NOT decrement buffersInProgress,
+              // so new events would still be silently buffered. Instead drain the counter
+              // with paired flush() calls so buffersInProgress reaches 0 properly.
+              let drainAttempts = 0;
+              while (typeof client.ev.isBuffering === 'function' && client.ev.isBuffering() && drainAttempts < 20) {
+                try { client.ev.flush(); } catch (_) {}
+                drainAttempts++;
+              }
+              console.log(`✅ [EV-BUFFER] Buffer drained after ${drainAttempts} flush(s). isBuffering=${client.ev.isBuffering?.()}. Commands should now work.`);
             } else {
               console.log('✅ [EV-BUFFER] Buffer already clear — no action needed.');
             }
