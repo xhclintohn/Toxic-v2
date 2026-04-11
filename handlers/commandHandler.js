@@ -226,8 +226,27 @@ commandFiles.forEach((file) => {
     const commandName = path.basename(file, '.js');
     try {
         const commandModule = require(file);
+        if (Array.isArray(commandModule)) {
+            for (const plugin of commandModule) {
+                if (!plugin || typeof plugin !== 'object') continue;
+                const handler = plugin.run;
+                if (typeof handler !== 'function') continue;
+                const name = plugin.name || commandName;
+                commands[name] = handler;
+                if (Array.isArray(plugin.aliases)) {
+                    for (const al of plugin.aliases) { if (al) aliases[al.toLowerCase()] = name; }
+                }
+                _loadedCount++;
+            }
+            return;
+        }
         const handler = commandModule.run || (typeof commandModule === 'function' ? commandModule : null);
         if (!handler) return;
+        const name = commandModule.name || commandName;
+        commands[name] = handler;
+        if (Array.isArray(commandModule.aliases)) {
+            for (const al of commandModule.aliases) { if (al) aliases[al.toLowerCase()] = name; }
+        }
         commands[commandName] = handler;
         _loadedCount++;
     } catch (err) {
