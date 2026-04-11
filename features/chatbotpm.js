@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
-  const { GROQ_API_KEY: GROQ_KEY } = require('../keys');
+  let GROQ_KEY = '';
+  try { GROQ_KEY = require('../keys').GROQ_API_KEY || ''; } catch {}
 
   module.exports = async (client, m, store, chatbotpmSetting) => {
       try {
