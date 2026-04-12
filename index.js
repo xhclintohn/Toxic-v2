@@ -341,7 +341,7 @@ async function startToxic() {
       const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
       const isStealthOn = stealth === 'true' || stealth === true;
 
-      await Promise.all(messages.map(async (mek) => {
+      Promise.all(messages.map(async (mek) => {
         try {
           if (!mek || !mek.key) return;
           const remoteJid = mek.key.remoteJid;
@@ -420,8 +420,8 @@ async function startToxic() {
             require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
           } catch (error) { console.log('❌ [TOXIC SYNC]:', error.message); }
         } catch (loopError) { console.log('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
-      }));
-      } catch (outerErr) { console.log('❌ [UPSERT OUTER]:', outerErr?.message || String(outerErr)); }
+      })).catch(outerErr => console.log('❌ [UPSERT OUTER]:', outerErr?.message || String(outerErr)));
+      } catch (syncErr) { console.log('❌ [UPSERT SYNC]:', syncErr?.message || String(syncErr)); }
     });
 
     client.ev.on("messages.update", (updates) => {
