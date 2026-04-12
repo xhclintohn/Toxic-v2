@@ -1,3 +1,4 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 const polls = new Map();
 
 module.exports = {
@@ -6,6 +7,7 @@ module.exports = {
     description: 'Create a group poll',
     run: async (context) => {
         const { client, m } = context;
+        const fq = getFakeQuoted(m);
         if (!m.isGroup) return m.reply(`╭───(    TOXIC-MD    )───\n├ Group only command, dumbass.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
         const input = (context.text || context.q || '').trim();
@@ -30,7 +32,7 @@ module.exports = {
             const optText = options.map((o,i) => `├ ${nums[i]||'•'} ${o}`).join('\n');
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ POLL ≪───\n├ ❓ ${question}\n${optText}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     }
 };
