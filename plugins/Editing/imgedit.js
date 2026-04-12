@@ -1,25 +1,5 @@
 const axios = require('axios');
-const FormData = require('form-data');
-
-async function uploadToCatbox(buffer) {
-    const form = new FormData();
-    form.append('reqtype', 'fileupload');
-    form.append('fileToUpload', buffer, { filename: 'image.jpg' });
-
-    const res = await axios.post(
-        'https://catbox.moe/user/api.php',
-        form,
-        {
-            headers: form.getHeaders()
-        }
-    );
-
-    if (typeof res.data !== 'string') {
-        throw new Error('Catbox upload failed');
-    }
-
-    return res.data.trim();
-}
+const { uploadTempUrl } = require('../../lib/toUrl');
 
 module.exports = async (context) => {
     const { client, m, text } = context;
@@ -42,7 +22,7 @@ module.exports = async (context) => {
             throw new Error('Failed to download image, network issue maybe?');
         }
 
-        const uploadedUrl = await uploadToCatbox(mediaBuffer);
+        const uploadedUrl = await uploadTempUrl(mediaBuffer, 'jpg');
 
         const apiUrl = `https://api.danzy.web.id/api/ai/editimg?url=${encodeURIComponent(uploadedUrl)}&prompt=${encodeURIComponent(prompt)}`;
 
