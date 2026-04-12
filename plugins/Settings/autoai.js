@@ -4,7 +4,7 @@ const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 module.exports = {
   name: 'autoai',
   aliases: ['groqai', 'aibot', 'autogpt'],
-  description: 'Toggle Auto AI replies in DMs and when tagged in groups',
+  description: 'Toggle Auto AI replies — responds to all DMs and when mentioned or replied to in groups',
   run: async (context) => {
     await ownerMiddleware(context, async () => {
       const { client, m, args, prefix } = context;
@@ -27,7 +27,7 @@ module.exports = {
           await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
           return client.sendMessage(m.chat, {
             text: fmt('AUTO AI', newState
-              ? ['Status: ✅ ON', 'Replying to DMs + @mentions in groups.', 'God help them 😒']
+              ? ['Status: ✅ ON', 'Replies to all DMs + @mentions in groups.', 'God help them 😒']
               : ['Status: ❌ OFF', 'Silent mode. Finally.'])
           }, { quoted: m });
         }
@@ -36,7 +36,8 @@ module.exports = {
         return client.sendMessage(m.chat, {
           text: fmt('AUTO AI', [
             `Status: ${isOn ? '✅ ON' : '❌ OFF'}`,
-            `Triggers: DMs · @mentions · replies to bot · prefix msgs`,
+            `DMs: replies to every message`,
+            `Groups: replies when @mentioned or when its message is replied to`,
             '',
             `Toggle: ${prefix}autoai on  /  ${prefix}autoai off`
           ])
