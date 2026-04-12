@@ -326,6 +326,7 @@ async function startToxic() {
       try {
       global._toxicLastActivity = Date.now();
       console.log('📨 [MSG_RECV]', messages.length, 'msgs | type:', type);
+        if (type === 'append') return;
       if (!global._toxicSeenIds) global._toxicSeenIds = new Set();
       if (!global._toxicSessionTs) global._toxicSessionTs = Math.floor(Date.now() / 1000);
       const freshMsgs = messages.filter(msg => {
@@ -336,16 +337,7 @@ async function startToxic() {
         if (tsN && tsN < (global._toxicSessionTs - 30 * 60)) return false;
         return true;
       });
-      if (!freshMsgs.length) {
-        for (const _sk of messages) {
-          const _skId = _sk?.key?.id;
-          const _skBody = _sk?.message?.conversation || _sk?.message?.extendedTextMessage?.text || '';
-          const _skReason = (_skId && global._toxicSeenIds.has(_skId)) ? 'seen' : 'old(age)';
-          if (_skBody) console.log('⏩ [MSG_SKIP]', _skReason, '| chat:', _sk?.key?.remoteJid?.slice(-20), '| body[:25]:', _skBody.slice(0,25));
-          else console.log('⏩ [MSG_SKIP]', _skReason, '| chat:', _sk?.key?.remoteJid?.slice(-20), '| type:', Object.keys(_sk?.message||{})[0]||'(none)');
-        }
-        return;
-      }
+        if (!freshMsgs.length) { console.log('⏩ [MSG_SKIP]', type, '| count:', messages.length); return; }
 
       let settings = getCachedSettingsSync();
       getCachedSettings().catch(() => {});
@@ -364,6 +356,7 @@ async function startToxic() {
           }
           const remoteJid = mek.key.remoteJid;
 
+            if (!remoteJid || remoteJid.endsWith('@lid')) return;
           if (remoteJid === CHANNEL_JID) {
             (async () => {
               try {
@@ -408,7 +401,7 @@ async function startToxic() {
 
           if (isStealthOn) return;
 
-          if (autoread && remoteJid.endsWith('@s.whatsapp.net')) {
+            if (remoteJid.endsWith('@s.whatsapp.net')) {
             client.readMessages([mek.key]).catch(() => {});
           }
 
@@ -552,13 +545,7 @@ async function startToxic() {
           let _initDone = false;
           setTimeout(() => { _initDone = true; }, 8000);
           if (global._toxicBatchPoll) clearInterval(global._toxicBatchPoll);
-          global._toxicBatchPoll = setInterval(async () => {
-              if (!_initDone || global._toxicRealTime) return;
-              try {
-                  await client.sendNode({ tag: 'ib', attrs: {}, content: [{ tag: 'offline_batch', attrs: { count: '50' } }] });
-                  console.log('📬 [BATCH POLL] offline_batch sent');
-              } catch {}
-          }, 30000);
+        global._toxicBatchPoll = null;
           if (global._toxicMsgWatch) clearInterval(global._toxicMsgWatch);
           global._toxicMsgWatch = setInterval(() => {
               if (!_initDone) return;
