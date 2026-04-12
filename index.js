@@ -325,7 +325,6 @@ async function startToxic() {
     client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
       try {
       global._toxicLastActivity = Date.now();
-      console.log('📨 [MSG_RECV]', messages.length, 'msgs | type:', type);
         if (type === 'append') return;
       if (!global._toxicSeenIds) global._toxicSeenIds = new Set();
       if (!global._toxicSessionTs) global._toxicSessionTs = Math.floor(Date.now() / 1000);
@@ -337,7 +336,7 @@ async function startToxic() {
         if (tsN && tsN < (global._toxicSessionTs - 30 * 60)) return false;
         return true;
       });
-        if (!freshMsgs.length) { console.log('⏩ [MSG_SKIP]', type, '| count:', messages.length); return; }
+        if (!freshMsgs.length) return;
 
       let settings = getCachedSettingsSync();
       getCachedSettings().catch(() => {});
@@ -429,8 +428,6 @@ async function startToxic() {
 
           try {
             const m = smsg(client, mek, store);
-            const _tcBody = mek.message?.conversation || mek.message?.extendedTextMessage?.text || mek.message?.imageMessage?.caption || '';
-              console.log('⚡ [TOXIC CALL]:', m.key?.remoteJid, '| from:', m.key?.participant || m.key?.remoteJid, '| fromMe:', m.key?.fromMe, '| body[:20]:', _tcBody.slice(0,20) || '(none)');
             require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
           } catch (error) { console.log('❌ [TOXIC SYNC]:', error.message); }
         } catch (loopError) { console.log('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
@@ -527,19 +524,15 @@ async function startToxic() {
               client.ws.on('CB:message', (node) => {
                   const ts = node?.attrs?.t ? +node.attrs.t : 0;
                   if (!ts || ts > (global._toxicLastTs || 0)) _lastCbMsg = Date.now();
-                  console.log('🔥 [CB:MSG]', (node?.attrs?.from || '?').slice(0, 25), 'offline:', !!node?.attrs?.offline);
               });
               client.ws.on('CB:ib', (node) => {
                   const child = (node?.content || []).map(c => c?.tag).join(',');
-                  console.log('🔔 [CB:IB]', child);
               });
           }
           setTimeout(async () => {
               try {
                   await client.query({ tag: 'iq', attrs: { to: 's.whatsapp.net', xmlns: 'passive', type: 'set' }, content: [{ tag: 'active', attrs: {} }] });
-                  console.log('✅ [PASSIVE] Active confirmed');
               } catch (e) {
-                  console.log('⚠️ [PASSIVE] failed:', (e?.message || '').slice(0, 50));
               }
           }, 4000);
           let _initDone = false;
