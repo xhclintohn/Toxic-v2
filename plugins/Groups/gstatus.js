@@ -1,11 +1,10 @@
-const { getSettings } = require('../../database/config');
 
 module.exports = {
   name: 'gstatus',
   aliases: ['groupstatus', 'gs'],
   description: 'Posts a group status with text, image, video, or audio.',
   run: async (context) => {
-    const { client, m, prefix, IsGroup, botname } = context;
+    const { client, m, prefix, IsGroup, botname, settings } = context;
 
     const formatMsg = (text) => `╭───(    TOXIC-MD    )───\n├ \n├ ${text}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
@@ -22,10 +21,7 @@ module.exports = {
         return client.sendText(m.chat, formatMsg(`This command can only be used in group chats.`), m);
       }
 
-      const settings = await getSettings();
-      if (!settings) {
-        return client.sendText(m.chat, formatMsg(`Failed to load settings. Try again later.`), m);
-      }
+      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
       const quoted = m.quoted ? m.quoted : m;
       const mime = (quoted.msg || quoted).mimetype || '';
@@ -52,6 +48,7 @@ module.exports = {
           }
         });
         await client.sendText(m.chat, formatMsg(`Image status has been posted successfully.`), m);
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
       } else if (/video/.test(mime)) {
         const buffer = await client.downloadMediaMessage(quoted);
         await client.sendMessage(m.chat, {
@@ -61,6 +58,7 @@ module.exports = {
           }
         });
         await client.sendText(m.chat, formatMsg(`Video status has been posted successfully.`), m);
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
       } else if (/audio/.test(mime)) {
         const buffer = await client.downloadMediaMessage(quoted);
         await client.sendMessage(m.chat, {
@@ -70,14 +68,17 @@ module.exports = {
           }
         });
         await client.sendText(m.chat, formatMsg(`Audio status has been posted successfully.`), m);
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
       } else if (caption) {
         await client.sendMessage(m.chat, {
           groupStatusMessage: { text: caption }
         });
         await client.sendText(m.chat, formatMsg(`Text status has been posted successfully.`), m);
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
       }
 
     } catch (error) {
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
       await client.sendText(
         m.chat,
         formatMsg(`An error occurred while posting status:\n${error.message}`),
