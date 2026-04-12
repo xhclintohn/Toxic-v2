@@ -331,7 +331,7 @@ async function startToxic() {
         const ts = msg.messageTimestamp;
         if (!ts) return type === 'notify';
         const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
-        return type === 'notify' ? true : (Date.now() - tsNum * 1000) < 45000;
+        return type === 'notify' ? true : tsNum >= Math.floor((_ct - 120000) / 1000);
       });
       if (!hasRecent) { console.log('⏩ [MSG_SKIP] old/irrelevant msgs, type:', type); return; }
 
@@ -510,13 +510,6 @@ async function startToxic() {
               });
               client.ws.on('CB:message', (node) => {
                   console.log('🔥 [CB:MSG]', (node?.attrs?.from || 'unknown').slice(0, 30), 'offline:', !!node?.attrs?.offline);
-              });
-              let _frameReady = false;
-              setTimeout(() => { _frameReady = true; }, 8000);
-              client.ws.on('frame', (node) => {
-                  if (!_frameReady || !node?.tag || node.tag === 'ack') return;
-                  const f = node.attrs?.from || node.attrs?.to || '';
-                  console.log(`🌐 [FRAME:${node.tag}]`, f.slice(0, 25), JSON.stringify(node.attrs || {}).slice(0, 50));
               });
           }
           setTimeout(async () => {
