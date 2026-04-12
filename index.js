@@ -153,20 +153,16 @@ async function startToxic() {
         if (!cl || global._toxicShuttingDown || global._toxicIsStarting) return;
         const silentMs = Date.now() - global._toxicLastActivity;
         if (silentMs < 90 * 1000) return;
-        try {
-          await Promise.race([
-            cl.sendPresenceUpdate('available'),
-            new Promise((_, rej) => setTimeout(() => rej(new Error('ping timeout')), 15000))
-          ]);
-          global._toxicLastActivity = Date.now();
-        } catch {
-          console.log('⚠️ [WATCHDOG] Connection appears dead — reconnecting...');
+        if (!cl.ws || cl.ws.readyState !== 1) {
+          console.log('⚠️ [WATCHDOG] WebSocket not open — reconnecting...');
           global._toxicCurrentClient = null;
           try { cl.ev.removeAllListeners(); } catch {}
-          try { cl.ws.close(); } catch {}
+          try { cl.ws?.close(); } catch {}
           if (!global._toxicReconnectTimer) {
             global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
           }
+        } else {
+          global._toxicLastActivity = Date.now();
         }
       } catch {}
     }, 30 * 1000);
@@ -499,14 +495,12 @@ async function startToxic() {
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
         console.log(chalk.green(`╰──────────────────☉\n`));
         global._toxicConnectTime = Date.now();
-        const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') client.ev.flush(true); client.sendPresenceUpdate('available').catch(() => {}); } catch {} };
-        setTimeout(_drainBuf, 3000);
-        setInterval(_drainBuf, 30000);
-  
+            if (global._toxicDrainTimer) clearTimeout(global._toxicDrainTimer);
+        if (global._toxicDrainInterval) clearInterval(global._toxicDrainInterval);
+        const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') client.ev.flush(true); } catch {} };
+        global._toxicDrainTimer = setTimeout(_drainBuf, 3000);
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
-        global._toxicKeepalive = setInterval(() => {
-            client.sendPresenceUpdate('available').catch(() => {});
-        }, 4 * 60 * 1000);
+        global._toxicKeepalive = null;
 
         if (global._toxicGhost) clearInterval(global._toxicGhost);
 if (client.ws && typeof client.ws.on === 'function') {
