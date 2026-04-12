@@ -91,8 +91,7 @@ module.exports = {
 
             const errorMsg = err.response
                 ? `API Error: ${err.response.status}`
-                : err.message.includes('timeout') ? 'API timed out.'
-                : `Failed: ${err.message}`;
+                : err.message.includes('timeout') ? 'API timed out.' : 'Failed. Try again later.';
 
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ ${errorMsg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }

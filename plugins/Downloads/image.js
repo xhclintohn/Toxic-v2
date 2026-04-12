@@ -1,144 +1,61 @@
-const fetch = require("node-fetch");
-const { generateWAMessageContent, generateWAMessageFromContent } = require("@whiskeysockets/baileys");
-const { getFakeQuoted } = require('../../lib/fakeQuoted');
+const axios = require('axios');
+  const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
-module.exports = {
-  name: 'image',
-  aliases: ['img', 'pic', 'searchimage'],
-  description: 'Searches for images based on your query',
-  run: async (context) => {
-    const { client, m, prefix } = context;
-    const fq = getFakeQuoted(m);
+  const GCSE_KEY = 'AIzaSyDMbI3nvmQUrfjoCJYLS69Lej1hSXQjnWI';
+  const GCSE_CX  = 'baf9bdb0c631236e5';
 
-    const query = m.body.replace(new RegExp(`^${prefix}(image|img|pic|searchimage)\\s*`, 'i'), '').trim();
-    if (!query) {
-      return client.sendMessage(m.chat, {
-        text: `╭───(    TOXIC-MD    )───\n├ Yo, @${m.sender.split('@')[0]}! 😤 You forgot the search query!\n├ Example: ${prefix}image cute cats\n╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-        mentions: [m.sender]
-      }, { quoted: fq });
-    }
+  module.exports = {
+      name: 'image',
+      aliases: ['img', 'pic', 'searchimage'],
+      description: 'Search and send images',
+      run: async (context) => {
+          const { client, m, prefix } = context;
+          const fq = getFakeQuoted(m);
 
-    try {
-      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-
-      const apiUrl = `https://api.baguss.xyz/api/search/gimage?q=${encodeURIComponent(query)}`;
-      const response = await fetch(apiUrl);
-      const data = await response.json();
-
-      if (!data.status || !data.result || data.result.length === 0) {
-        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        return client.sendMessage(m.chat, {
-          text: `╭───(    TOXIC-MD    )───\n├ No images found for "${query}"! 😢\n├ Try a different search term.\n╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: fq });
-      }
-
-      const images = data.result.slice(0, 10);
-      const cards = [];
-
-      for (const [index, img] of images.entries()) {
-        try {
-          const imageUrl = img.url;
-          const res = await fetch(imageUrl);
-          if (!res.ok) throw new Error('Image fetch failed');
-          const buffer = Buffer.from(await res.arrayBuffer());
-
-          const messageContent = await generateWAMessageContent(
-            { image: buffer },
-            { upload: client.waUploadToServer }
-          );
-
-          if (!messageContent.imageMessage) {
-            console.warn(`No imageMessage for ${index + 1}`);
-            continue;
+          const query = m.body.replace(new RegExp(`^${prefix}(image|img|pic|searchimage)\\s*`, 'i'), '').trim();
+          if (!query) {
+              return client.sendMessage(m.chat, {
+                  text: `╭───(    TOXIC-MD    )───\n├ Give me something to search, genius.\n├ Example: ${prefix}img cats\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+              }, { quoted: fq });
           }
 
-          cards.push({
-            header: {
-              title: `Image ${index + 1}`,
-              hasMediaAttachment: true,
-              imageMessage: messageContent.imageMessage
-            },
-            body: {
-              text: `Result ${index + 1} of ${images.length}`
-            },
-            nativeFlowMessage: {
-              buttons: [
-                {
-                  name: "cta_url",
-                  buttonParamsJson: JSON.stringify({
-                    display_text: "Open Image",
-                    url: imageUrl
-                  })
-                },
-                {
-                  name: "cta_copy",
-                  buttonParamsJson: JSON.stringify({
-                    display_text: "Copy Image URL",
-                    copy_code: imageUrl
-                  })
-                }
-              ]
-            }
-          });
+          try {
+              await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
-          await new Promise(resolve => setTimeout(resolve, 800));
+              const { data } = await axios.get('https://www.googleapis.com/customsearch/v1', {
+                  params: { q: query, key: GCSE_KEY, cx: GCSE_CX, searchType: 'image', num: 5, safe: 'off' },
+                  timeout: 15000
+              });
 
-        } catch (err) {
-          console.warn(`Failed to process image ${index + 1}:`, err.message);
-        }
-      }
-
-      if (cards.length === 0) {
-        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        return client.sendMessage(m.chat, {
-          text: `╭───(    TOXIC-MD    )───\n├ Failed to load any images for "${query}"! 😢\n╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: fq });
-      }
-
-      await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-      const carouselMsg = generateWAMessageFromContent(
-        m.chat,
-        {
-          viewOnceMessage: {
-            message: {
-              messageContextInfo: {
-                deviceListMetadata: {},
-                deviceListMetadataVersion: 2,
-              },
-              interactiveMessage: {
-                header: {
-                  title: `🎨 Image Search Results for "${query}"`
-                },
-                body: {
-                  text: ""
-                },
-                footer: {
-                  text: "Powered by Toxic-MD"
-                },
-                carouselMessage: {
-                  cards
-                }
+              if (!data.items || data.items.length === 0) {
+                  await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+                  return client.sendMessage(m.chat, {
+                      text: `╭───(    TOXIC-MD    )───\n├ No images found for "${query}".\n├ Your search is terrible.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+                  }, { quoted: fq });
               }
-            }
+
+              await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+
+              for (let i = 0; i < data.items.length; i++) {
+                  const item = data.items[i];
+                  try {
+                      await client.sendMessage(m.chat, {
+                          image: { url: item.link },
+                          caption: `╭───(    TOXIC-MD    )───\n├───≫ IMAGE ${i + 1}/${data.items.length} ≪───\n├ \n├ ${(item.title || query).slice(0, 80)}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+                      }, { quoted: fq });
+                      if (i < data.items.length - 1) await new Promise(r => setTimeout(r, 1200));
+                  } catch (imgErr) {
+                      console.warn(`Image ${i + 1} skipped: ${imgErr.message}`);
+                  }
+              }
+
+          } catch (error) {
+              console.error('Image search error:', error.message);
+              await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+              await client.sendMessage(m.chat, {
+                  text: `╭───(    TOXIC-MD    )───\n├ Image search failed. Try again later.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+              }, { quoted: fq });
           }
-        },
-        { quoted: fq }
-      );
-
-      await client.relayMessage(m.chat, carouselMsg.message, { messageId: carouselMsg.key.id });
-
-    } catch (error) {
-      console.error('Image search error:', error);
-      await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-      await client.sendMessage(m.chat, {
-        text: `╭───(    TOXIC-MD    )───\n├ Oops, @${m.sender.split('@')[0]}! 😤 Image search failed!\n├ Error: ${error.message}\n├ Try again later.\n╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-        mentions: [m.sender]
-      }, { quoted: fq });
-    }
-  }
-};
+      }
+  };
+  

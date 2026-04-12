@@ -58,7 +58,7 @@ module.exports = {
             } else if (error.message.includes('empty')) {
                 errorMessage = 'API returned empty image. Your text was too cringe even for the API.';
             } else {
-                errorMessage = `Even the error is embarrassed: ${error.message}`;
+                errorMessage = 'Failed to process. Try again later.';
             }
 
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ iPhone chat generation failed.\n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

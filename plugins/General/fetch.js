@@ -4,7 +4,7 @@ const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
   name: 'fetch',
-  aliases: ['get', 'url', 'web'],
+  aliases: ['get', 'web'],
   description: 'Fetches and displays information from a URL',
   run: async (context) => {
     const { client, m, prefix, botname } = context;
@@ -134,7 +134,7 @@ module.exports = {
       }
 
       await client.sendMessage(m.chat, {
-        text: `╭───(    TOXIC-MD    )───\n├───≫ FETCH FAILED ≪───\n├ \n├ URL: ${targetUrl}\n├ Error: ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+        text: `╭───(    TOXIC-MD    )───\n├───≫ FETCH FAILED ≪───\n├ \n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: fq });
     }
   }

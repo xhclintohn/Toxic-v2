@@ -80,7 +80,7 @@ module.exports = {
     } catch (error) {
       console.error('Play error:', error);
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-      await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ PLAY ERROR ≪───\n├ \n├ Play failed. The universe rejects your music taste.\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+      await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ PLAY ERROR ≪───\n├ \n├ Play failed. The universe rejects your music taste.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
   }
 };

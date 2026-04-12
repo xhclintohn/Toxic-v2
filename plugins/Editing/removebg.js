@@ -104,7 +104,7 @@ module.exports = {
             } else if (err.message.includes('ENOTFOUND')) {
                 errorMessage = 'Cannot connect to the background removal service.';
             } else {
-                errorMessage = err.message;
+                errorMessage = 'Service failed. Try again later.';
             }
 
             await client.sendMessage(m.chat, {

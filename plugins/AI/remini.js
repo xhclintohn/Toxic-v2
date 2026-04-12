@@ -90,7 +90,7 @@ module.exports = async (context) => {
         console.error(`Remini error: ${error.message}`);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         
-        let errorMsg = `Shit broke. Error: ${error.message}`;
+        let errorMsg = 'Shit broke. Try again later.';
         if (error.response?.status === 404) {
             errorMsg = 'API not found. Maybe your image URL is trash.';
         } else if (error.message.includes('timeout')) {

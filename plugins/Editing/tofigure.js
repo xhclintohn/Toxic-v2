@@ -38,6 +38,6 @@ module.exports = async (context) => {
         if (err.message.includes('Network Error')) userMessage = 'Network error. Are you on dial-up?';
         if (err.message.includes('Upload Refused')) userMessage = "Couldn't even upload your image. Pathetic.";
         if (err.message.includes('API vomited')) userMessage = 'The art service rejected your image. It has standards.';
-        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ ${userMessage}\n├ Error: ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ ${userMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };
