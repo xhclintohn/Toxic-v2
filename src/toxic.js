@@ -176,9 +176,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const bannedUsers = Array.isArray(rawBannedUsers) ? rawBannedUsers : [];
         let settings = fetchedSettings;
 
-        if (!settings) {
-            return;
-        }
+        if (!settings) { try { settings = await getCachedSettings(); } catch {} if (!settings) return; }
 
         const { prefix, mode, gcpresence, antitag, antidelete: antideleteSetting, antilink: antilinkSetting, chatbotpm: chatbotpmSetting, packname, multiprefix, stealth } = settings;
 
