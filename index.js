@@ -326,12 +326,12 @@ async function startToxic() {
       try {
       global._toxicLastActivity = Date.now();
       console.log('📨 [MSG_RECV]', messages.length, 'msgs | type:', type);
-      const _ct = global._toxicConnectTime || 0;
+      if (!global._toxicLastTs) global._toxicLastTs = Math.floor(Date.now() / 1000) - 30 * 60;
       const hasRecent = messages.some(msg => {
         const ts = msg.messageTimestamp;
         if (!ts) return type === 'notify';
         const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
-        return type === 'notify' ? true : tsNum >= Math.floor((_ct - 10 * 60 * 1000) / 1000);
+        return type === 'notify' ? true : tsNum > global._toxicLastTs;
       });
       if (!hasRecent) { console.log('⏩ [MSG_SKIP] old/irrelevant msgs, type:', type); return; }
 
@@ -423,6 +423,12 @@ async function startToxic() {
           } catch (error) { console.log('❌ [TOXIC SYNC]:', error.message); }
         } catch (loopError) { console.log('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
       })).catch(outerErr => console.log('❌ [UPSERT OUTER]:', outerErr?.message || String(outerErr)));
+      messages.forEach(msg => {
+        const ts = msg?.messageTimestamp;
+        if (!ts) return;
+        const tsN = typeof ts === 'object' ? Number(ts.low||0) + Number(ts.high||0)*4294967296 : Number(ts);
+        if (tsN > (global._toxicLastTs || 0)) global._toxicLastTs = tsN;
+      });
       } catch (syncErr) { console.log('❌ [UPSERT SYNC]:', syncErr?.message || String(syncErr)); }
     });
 
@@ -510,7 +516,8 @@ async function startToxic() {
                   }
               });
               client.ws.on('CB:message', (node) => {
-                  _lastCbMsg = Date.now();
+                  const ts = node?.attrs?.t ? +node.attrs.t : 0;
+                  if (!ts || ts > (global._toxicLastTs || 0)) _lastCbMsg = Date.now();
                   console.log('🔥 [CB:MSG]', (node?.attrs?.from || '?').slice(0, 25), 'offline:', !!node?.attrs?.offline);
               });
               client.ws.on('CB:ib', (node) => {
@@ -527,7 +534,7 @@ async function startToxic() {
               }
           }, 4000);
           let _initDone = false;
-          setTimeout(() => { _initDone = true; }, 15000);
+          setTimeout(() => { _initDone = true; }, 8000);
           if (global._toxicBatchPoll) clearInterval(global._toxicBatchPoll);
           global._toxicBatchPoll = setInterval(async () => {
               if (!_initDone) return;
