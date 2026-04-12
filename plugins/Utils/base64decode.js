@@ -39,7 +39,7 @@ module.exports = {
             const msg = await generateWAMessageFromContent(m.chat, proto.Message.fromObject({
                 interactiveMessage: {
                     body: { text: resultText },
-                    footer: { text: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
+                    footer: { text: '' },
                     nativeFlowMessage: {
                         buttons: [{
                             name: 'cta_copy',
