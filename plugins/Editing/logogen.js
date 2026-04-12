@@ -13,6 +13,7 @@ module.exports = async (context) => {
     return m.reply('╭───(    TOXIC-MD    )───\n├───≫ LOGO GEN ≪───\n├ \n├ Incorrect format, are you illiterate?\n├ Use: _logogen Title|Idea|Slogan_\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
   }
 
+  await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
   try {
     const payload = {
       ai_icon: [333276, 333279],
