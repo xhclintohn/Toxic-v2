@@ -331,7 +331,7 @@ async function startToxic() {
         const ts = msg.messageTimestamp;
         if (!ts) return type === 'notify';
         const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
-        return type === 'notify' ? true : tsNum >= Math.floor((_ct - 120000) / 1000);
+        return type === 'notify' ? true : tsNum >= Math.floor((_ct - 10 * 60 * 1000) / 1000);
       });
       if (!hasRecent) { console.log('⏩ [MSG_SKIP] old/irrelevant msgs, type:', type); return; }
 
@@ -501,25 +501,51 @@ async function startToxic() {
         }, 4 * 60 * 1000);
 
         if (global._toxicGhost) clearInterval(global._toxicGhost);
-        if (client.ws && typeof client.ws.on === 'function') {
+        let _lastCbMsg = Date.now();
+          if (client.ws && typeof client.ws.on === 'function') {
               client.ws.on('close', () => {
-                  console.log('🔌 [WS CLOSE] WebSocket closed — reconnecting...');
+                  console.log('🔌 [WS CLOSE] WebSocket closed');
                   if (!global._toxicShuttingDown && !global._toxicReconnectTimer) {
                       global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
                   }
               });
               client.ws.on('CB:message', (node) => {
-                  console.log('🔥 [CB:MSG]', (node?.attrs?.from || 'unknown').slice(0, 30), 'offline:', !!node?.attrs?.offline);
+                  _lastCbMsg = Date.now();
+                  console.log('🔥 [CB:MSG]', (node?.attrs?.from || '?').slice(0, 25), 'offline:', !!node?.attrs?.offline);
+              });
+              client.ws.on('CB:ib', (node) => {
+                  const child = (node?.content || []).map(c => c?.tag).join(',');
+                  console.log('🔔 [CB:IB]', child);
               });
           }
           setTimeout(async () => {
               try {
                   await client.query({ tag: 'iq', attrs: { to: 's.whatsapp.net', xmlns: 'passive', type: 'set' }, content: [{ tag: 'active', attrs: {} }] });
-                  console.log('✅ [PASSIVE] Active confirmed by WA');
+                  console.log('✅ [PASSIVE] Active confirmed');
               } catch (e) {
-                  console.log('⚠️ [PASSIVE] Active IQ failed:', (e?.message || e).toString().slice(0, 60));
+                  console.log('⚠️ [PASSIVE] failed:', (e?.message || '').slice(0, 50));
               }
-          }, 5000);
+          }, 4000);
+          let _initDone = false;
+          setTimeout(() => { _initDone = true; }, 15000);
+          if (global._toxicBatchPoll) clearInterval(global._toxicBatchPoll);
+          global._toxicBatchPoll = setInterval(async () => {
+              if (!_initDone) return;
+              try {
+                  await client.sendNode({ tag: 'ib', attrs: {}, content: [{ tag: 'offline_batch', attrs: { count: '50' } }] });
+                  console.log('📬 [BATCH POLL] offline_batch sent');
+              } catch {}
+          }, 30000);
+          if (global._toxicMsgWatch) clearInterval(global._toxicMsgWatch);
+          global._toxicMsgWatch = setInterval(() => {
+              if (!_initDone) return;
+              if (Date.now() - _lastCbMsg > 2 * 60 * 1000) {
+                  console.log('🔄 [MSG-WATCH] No CB:message in 2min — reconnecting for fresh batch');
+                  clearInterval(global._toxicMsgWatch); global._toxicMsgWatch = null;
+                  clearInterval(global._toxicBatchPoll); global._toxicBatchPoll = null;
+                  try { client.ws?.close?.(); } catch {}
+              }
+          }, 30000);
         global._toxicGhost = setInterval(() => {
             const lastMsg = global._toxicLastActivity || 0;
             if (Date.now() - lastMsg > 50 * 60 * 1000) {
