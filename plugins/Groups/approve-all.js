@@ -19,6 +19,8 @@ module.exports = async (context) => {
     return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ NO REQUESTS ≪───\n├ \n├ What a surprise, no one's\n├ begging to join this dumpster fire.\n├ No pending requests, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 
+  await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
+
   for (const participant of responseList) {
     try {
       const response = await client.groupRequestParticipantsUpdate(
