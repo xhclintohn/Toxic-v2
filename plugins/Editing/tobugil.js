@@ -91,7 +91,7 @@ module.exports = {
             } else if (error.message.includes('Network Error')) {
                 errorMessage += "Network issue, check your connection.";
             } else {
-                errorMessage += `Error: ${error.message}`;
+                errorMessage += "Try again later.";
             }
 
             await client.sendMessage(m.chat, {
