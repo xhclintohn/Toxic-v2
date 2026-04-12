@@ -1,8 +1,10 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const NEXRAY = 'https://api.nexray.web.id/downloader/snackvideo?url=';
 
   module.exports = async (context) => {
       const { client, m, text, prefix } = context;
+      const fq = getFakeQuoted(m);
       if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}snackvideo https://sck.io/xxxxx\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       if (!text.includes('sck.io') && !text.includes('snackvideo.com')) return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a SnackVideo link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -19,7 +21,7 @@ const fetch = require('node-fetch');
           await client.sendMessage(m.chat, {
               video: buf, mimetype: 'video/mp4',
               caption: `╭───(    TOXIC-MD    )───\n├───≫ SnackVideo DL ≪───\n├ 🎬 ${res.title || 'SnackVideo'}\n├ 👤 ${res.author || res.username || 'N/A'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-          }, { quoted: m });
+          }, { quoted: fq });
       } catch (e) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
           m.reply(`╭───(    TOXIC-MD    )───\n├ Failed: ${e.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
