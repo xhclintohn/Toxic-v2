@@ -109,8 +109,6 @@ const aliases = {
     px: "ping",
     redeploy: "update",
     whois: "profile",
-    ssweb: "ssweb",
-
     commands: "menu",
     list: "menu",
     owner: "dev",
