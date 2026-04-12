@@ -38,11 +38,23 @@ setInterval(() => {
 }, 30 * 60 * 1000);
 
 function boxWrap(text, title) {
-    const lines = String(text || '').split('\n').filter(l => l.trim());
-    const body = lines.map(l => `├ ${l}`).join('\n');
-    return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├\n${body}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
-}
-
+      const raw = String(text || '').replace(/\n{3,}/g, '\n\n').trim();
+      const lines = raw.split('\n');
+      const processed = [];
+      for (const line of lines) {
+          const t = line.trim();
+          if (!t) { processed.push('├'); continue; }
+          if (/https?:\/\/\S+/.test(t)) {
+              processed.push('├');
+              processed.push(`├ ${t}`);
+              processed.push('├');
+          } else {
+              processed.push(`├ ${line}`);
+          }
+      }
+      const body = processed.join('\n');
+      return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├\n${body}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+  }
 function isClearIntent(text) {
     return new RegExp('^(clear|reset|wipe|delete|flush|erase)\\s*(this\\s*)?(conv(ersation)?|chat|hist(ory)?|messages?|thread|memory|mem)$', 'i').test(text.trim());
 }
@@ -91,6 +103,8 @@ PERSONALITY:
 - When something fails: mildly offended on your own behalf. Just say there was an error, move on.
 - Light swearing: "damn", "hell", "wtf", "ngl", "bruh" — nothing heavy
 - NEVER start with "I" — start with the action, result, or attitude
+  - Put URLs and links on their own line (blank line before and after)
+  - Organize replies: what you did first, then the link separately on its own line
 - When your reply contains a URL or link, put it on its own line with a blank line before and after it
 - Organize your replies clearly: action first, then details, then the link on its own line
 - GitHub user is always xhclintohn unless they explicitly say someone else
