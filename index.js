@@ -327,7 +327,7 @@ async function startToxic() {
         const ts = msg.messageTimestamp;
         if (!ts) return type === 'notify';
         const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
-        return _ct > 0 ? tsNum * 1000 >= _ct - 10000 : (Date.now() - tsNum * 1000) < 45000;
+        return type === 'notify' ? true : (Date.now() - tsNum * 1000) < 45000;
       });
       if (!hasRecent) { console.log('⏩ [MSG_SKIP] old/irrelevant msgs, type:', type); return; }
 
@@ -414,6 +414,7 @@ async function startToxic() {
 
           try {
             const m = smsg(client, mek, store);
+            console.log('⚡ [TOXIC CALL]:', m.key?.remoteJid, '| from:', m.key?.participant || m.key?.remoteJid, '| fromMe:', m.key?.fromMe);
             require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
           } catch (error) { console.log('❌ [TOXIC SYNC]:', error.message); }
         } catch (loopError) { console.log('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
