@@ -404,6 +404,7 @@ async function startToxic() {
           }
 
           if (remoteJid.endsWith('@s.whatsapp.net')) {
+            client.presenceSubscribe(remoteJid).catch(() => {});
             try {
               if (presence === 'online') client.sendPresenceUpdate("available", remoteJid).catch(() => {});
               else if (presence === 'typing') client.sendPresenceUpdate("composing", remoteJid).catch(() => {});
@@ -492,6 +493,7 @@ async function startToxic() {
     if (connection === "open") {
         global._toxicSessionTs = Math.floor(Date.now() / 1000);
         global._toxicSeenIds = global._toxicSeenIds || new Set();
+        global._toxicRealTime = false;
         reconnectAttempts = 0;
         global._toxicLastActivity = Date.now();
         try { require("./src/toxic").prewarmCache(); } catch (e) {}
@@ -541,7 +543,7 @@ async function startToxic() {
           setTimeout(() => { _initDone = true; }, 8000);
           if (global._toxicBatchPoll) clearInterval(global._toxicBatchPoll);
           global._toxicBatchPoll = setInterval(async () => {
-              if (!_initDone) return;
+              if (!_initDone || global._toxicRealTime) return;
               try {
                   await client.sendNode({ tag: 'ib', attrs: {}, content: [{ tag: 'offline_batch', attrs: { count: '50' } }] });
                   console.log('📬 [BATCH POLL] offline_batch sent');
