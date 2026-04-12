@@ -206,7 +206,10 @@ module.exports = async (context) => {
 
         const rawMsg = m.message;
         const msgType = Object.keys(rawMsg || {})[0] || '';
-        if (msgType === 'videoMessage' || rawMsg?.videoMessage) return;
+        if (msgType === 'videoMessage' || rawMsg?.videoMessage ||
+            msgType === 'reactionMessage' || msgType === 'protocolMessage' ||
+            msgType === 'keepInChatMessage' || msgType === 'encReactionMessage' ||
+            msgType === 'senderKeyDistributionMessage' || msgType === 'messageContextInfo') return;
 
         const textContent = (
             rawMsg?.conversation ||
@@ -260,11 +263,18 @@ module.exports = async (context) => {
             userContent = textContent ? `[Document: "${fname}"] ${textContent}` : `[Document: "${fname}"] Help me with this.`;
         } else if (textContent) {
             userContent = textContent;
+        } else if (rawMsg?.stickerMessage || msgType === 'stickerMessage') {
+            userContent = '[The user sent a sticker]';
+        } else if (rawMsg?.audioMessage || rawMsg?.pttMessage || msgType === 'audioMessage' || msgType === 'pttMessage') {
+            userContent = '[The user sent a voice note or audio message]';
+        } else if (rawMsg?.pollCreationMessage || rawMsg?.pollCreationMessageV3 || msgType === 'pollCreationMessage' || msgType === 'pollCreationMessageV3') {
+            const poll = rawMsg?.pollCreationMessage || rawMsg?.pollCreationMessageV3;
+            userContent = poll ? `[A poll was created: "${poll.name || 'Poll'}"]` : '[The user created a poll]';
         } else {
             return;
         }
 
-        client.sendMessage(remoteJid, { react: { text: '🤔', key: m.key } }).catch(() => {});
+        client.sendMessage(remoteJid, { react: { text: '🤖', key: m.key } }).catch(() => {});
 
         let history = _getHist(senderNum);
         if (!history.length) {
