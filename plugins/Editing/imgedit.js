@@ -53,7 +53,7 @@ const Jimp = require('jimp');
               img.invert();
               appliedEffect = 'invert';
           } else if (prompt.includes('sepia') || prompt.includes('vintage') || prompt.includes('old')) {
-              img.grayscale().brightness(0.05).color([{ apply: 'mix', params: ['#704214', 30] }]);
+              img.grayscale().brightness(0.05).contrast(0.1);
               appliedEffect = 'sepia';
           } else if (prompt.includes('mirror')) {
               img.flip(false, true);
