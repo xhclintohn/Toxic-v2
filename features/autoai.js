@@ -202,6 +202,10 @@ function boxWrap(text) {
         if (!reply) return;
 
         _addHist(senderNum, 'assistant', reply);
-        await client.sendMessage(remoteJid, { text: reply }, { quoted: m });
-    } catch {}
+        const boxedReply = boxWrap(reply);
+        await client.sendMessage(remoteJid, { text: boxedReply }, { quoted: m });
+        try { await client.sendMessage(remoteJid, { react: { text: '✅', key: m.key } }); } catch {}
+    } catch {
+        try { await client.sendMessage(remoteJid, { react: { text: '❌', key: m.key } }); } catch {}
+    }
 };
