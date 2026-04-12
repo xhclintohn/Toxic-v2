@@ -88,6 +88,6 @@ module.exports = async (context) => {
 
     } catch (e) {
         console.error("Hentai fetch error:", e);
-        m.reply(formatStylishReply(`Yo, we hit a snag: ${e.message}. Check your query and try again! 😎`));
+        m.reply(formatStylishReply('Something went wrong. Check your query and try again! 😎'));
     }
 };
