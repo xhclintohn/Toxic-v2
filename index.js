@@ -152,7 +152,7 @@ async function startToxic() {
         const cl = global._toxicCurrentClient;
         if (!cl || global._toxicShuttingDown || global._toxicIsStarting) return;
         const silentMs = Date.now() - global._toxicLastActivity;
-        if (silentMs < 8 * 60 * 1000) return;
+        if (silentMs < 90 * 1000) return;
         try {
           await Promise.race([
             cl.sendPresenceUpdate('available'),
@@ -169,7 +169,7 @@ async function startToxic() {
           }
         }
       } catch {}
-    }, 3 * 60 * 1000);
+    }, 30 * 1000);
 
     if (global._toxicCurrentClient) {
       try {
@@ -487,7 +487,7 @@ async function startToxic() {
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
         console.log(chalk.green(`╰──────────────────☉\n`));
         global._toxicConnectTime = Date.now();
-        const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') for (let i = 0; i < 5; i++) client.ev.flush(); } catch {} };
+        const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') for (let i = 0; i < 5; i++) client.ev.flush(); client.sendPresenceUpdate('available').catch(() => {}); } catch {} };
         setTimeout(_drainBuf, 3000);
         setInterval(_drainBuf, 30000);
   
@@ -497,6 +497,14 @@ async function startToxic() {
         }, 4 * 60 * 1000);
 
         if (global._toxicGhost) clearInterval(global._toxicGhost);
+        if (client.ws && typeof client.ws.on === 'function') {
+            client.ws.on('close', () => {
+                console.log('🔌 [WS CLOSE] WebSocket closed — reconnecting...');
+                if (!global._toxicShuttingDown && !global._toxicReconnectTimer) {
+                    global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
+                }
+            });
+        }
         global._toxicGhost = setInterval(() => {
             const lastMsg = global._toxicLastActivity || 0;
             if (Date.now() - lastMsg > 50 * 60 * 1000) {
