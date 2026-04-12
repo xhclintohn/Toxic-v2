@@ -189,7 +189,9 @@ module.exports = async (context) => {
         if (isGroup) {
             const botNum = (botNumber || '').split('@')[0].split(':')[0];
             const bLidKey = m._botLidKey || '';
-            const isMentioned = (m.mentionedJid || m.msg?.contextInfo?.mentionedJid || []).some(j => {
+            const bodyStr = m.body || m.text || '';
+            const isMentionedInBody = botNum.length > 5 && bodyStr.includes('@' + botNum);
+            const isMentioned = isMentionedInBody || (m.mentionedJid || m.msg?.contextInfo?.mentionedJid || []).some(j => {
                 const jk = (j || '').split('@')[0].split(':')[0];
                 return jk === botNum || (bLidKey && jk === bLidKey);
             });
