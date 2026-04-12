@@ -509,19 +509,14 @@ async function startToxic() {
         }, 4 * 60 * 1000);
 
         if (global._toxicGhost) clearInterval(global._toxicGhost);
-        let _lastCbMsg = Date.now();
-          if (client.ws && typeof client.ws.on === 'function') {
+if (client.ws && typeof client.ws.on === 'function') {
               client.ws.on('close', () => {
                   console.log('🔌 [WS CLOSE] WebSocket closed');
                   if (!global._toxicShuttingDown && !global._toxicReconnectTimer) {
                       global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
                   }
               });
-              client.ws.on('CB:message', (node) => {
-                  const ts = node?.attrs?.t ? +node.attrs.t : 0;
-                  if (!ts || ts > (global._toxicLastTs || 0)) _lastCbMsg = Date.now();
-              });
-              client.ws.on('CB:ib', (node) => {
+client.ws.on('CB:ib', (node) => {
                   const child = (node?.content || []).map(c => c?.tag).join(',');
               });
           }
@@ -535,25 +530,7 @@ async function startToxic() {
           setTimeout(() => { _initDone = true; }, 8000);
           if (global._toxicBatchPoll) clearInterval(global._toxicBatchPoll);
         global._toxicBatchPoll = null;
-          if (global._toxicMsgWatch) clearInterval(global._toxicMsgWatch);
-          global._toxicMsgWatch = setInterval(() => {
-              if (!_initDone) return;
-              if (Date.now() - _lastCbMsg > 2 * 60 * 1000) {
-                  console.log('🔄 [MSG-WATCH] No CB:message in 2min — reconnecting for fresh batch');
-                  clearInterval(global._toxicMsgWatch); global._toxicMsgWatch = null;
-                  clearInterval(global._toxicBatchPoll); global._toxicBatchPoll = null;
-                  try { client.ws?.close?.(); } catch {}
-              }
-          }, 30000);
-        global._toxicGhost = setInterval(() => {
-            const lastMsg = global._toxicLastActivity || 0;
-            if (Date.now() - lastMsg > 50 * 60 * 1000) {
-                console.log('🔄 [WATCHDOG] No activity for 50min — reconnecting...');
-                global._toxicLastActivity = Date.now();
-                try { client.ws?.close?.(); } catch {}
-            }
-        }, 15 * 60 * 1000);
-      }
+}
 
       if (connection === "close") {
         if (global._toxicShuttingDown) return;
