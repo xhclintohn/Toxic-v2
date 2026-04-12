@@ -485,7 +485,8 @@ async function startToxic() {
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
         console.log(chalk.green(`╰──────────────────☉\n`));
         global._toxicConnectTime = Date.now();
-
+          setTimeout(() => { try { if (typeof client.ev.flush === 'function') client.ev.flush(); } catch {} }, 10000);
+  
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
         global._toxicKeepalive = setInterval(() => {
             client.sendPresenceUpdate('available').catch(() => {});
