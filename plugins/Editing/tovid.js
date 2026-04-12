@@ -27,7 +27,7 @@ module.exports = {
                 await client.sendMessage(m.chat, { delete: statusMsg.key });
                 return m.reply('╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Failed to download. Your sticker is\n├ as inaccessible as common sense.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             }
-            const stickerUrl = await uploadToCatbox(stickerBuffer);
+            const stickerUrl = await uploadTempUrl(stickerBuffer, 'webp');
             const encodedUrl = encodeURIComponent(stickerUrl);
             const convertApiUrl = `https://api.elrayyxml.web.id/api/maker/convert?url=${encodedUrl}&format=MP4`;
             const response = await axios.get(convertApiUrl, { headers: { 'accept': 'application/json', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }, timeout: 30000 });
@@ -45,7 +45,7 @@ module.exports = {
             let userMessage = 'The conversion failed utterly. What did you expect?';
             if (err.message.includes('timeout')) userMessage = 'The process timed out. Your sticker is likely more complex than your thoughts.';
             if (err.message.includes('Network Error')) userMessage = 'A network error. Are you connected to the void?';
-            if (err.message.includes('Upload Refused')) userMessage = "The upload service rejected your file. It has taste.";
+            if (err.message.includes('upload') || err.message.includes('Upload')) userMessage = "Upload failed on all services. Try again later.";
             if (err.message.includes('converter deemed')) userMessage = 'The conversion API refused to process this. Try a simpler sticker.';
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ ${userMessage}\n├ Error: ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
