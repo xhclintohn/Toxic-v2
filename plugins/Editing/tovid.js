@@ -1,16 +1,6 @@
 const axios = require('axios');
-const FormData = require('form-data');
-
-async function uploadToCatbox(buffer) {
-    const form = new FormData();
-    form.append('reqtype', 'fileupload');
-    form.append('fileToUpload', buffer, { filename: 'sticker.webp' });
-    const response = await axios.post('https://catbox.moe/user/api.php', form, { headers: form.getHeaders() });
-    if (!response.data || !response.data.includes('catbox')) throw new Error('Upload Refused');
-    return response.data;
-}
-
-module.exports = {
+  const { uploadTempUrl } = require('../../lib/toUrl');
+  module.exports = {
     name: 'tomp4',
     aliases: ['tovideo', 'stickertomp4', 'sticker2video'],
     description: 'Converts stickers to MP4 videos',
