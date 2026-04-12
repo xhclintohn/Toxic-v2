@@ -419,7 +419,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             const senderNumber = m.sender.replace(/@s\.whatsapp\.net$/, '').split(':')[0];
             if (bannedUsers.includes(senderNumber)) {
                 await client.sendMessage(m.chat, {
-                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Bᴀɴɴᴇᴅ ≪───\n々 You're banned from using\n々 my commands. Get lost.\n╰──────────────────☉`
+                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Bᴀɴɴᴇᴅ ≪───\n々 You're banned from using\n々 my commands. Get lost.\n╰────────────────���─☉`
                 }, { quoted: fakeQuoted });
                 return;
             }
@@ -643,7 +643,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 }
             });
             context.client = _fqClient;
-            cmd(context).catch(e => console.log(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, e));
+            try {
+                await cmd(context);
+            } catch (error) {
+                console.log(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
+            } finally {
+                context.client = client;
+            }
         } else if (isDev && !itsMe && (settings.toxicagent === true || settings.toxicagent === 'true')) {
             toxicaiFeature(context).catch(() => {});
         } else if (!itsMe) {
