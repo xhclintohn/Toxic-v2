@@ -400,9 +400,7 @@ async function startToxic() {
 
           if (isStealthOn) return;
 
-            if (remoteJid.endsWith('@s.whatsapp.net')) {
             client.readMessages([mek.key]).catch(() => {});
-          }
 
           if (remoteJid.endsWith('@s.whatsapp.net')) {
             client.presenceSubscribe(remoteJid).catch(() => {});
