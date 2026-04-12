@@ -334,21 +334,7 @@ async function startToxic() {
       });
       if (!hasRecent) return;
 
-      const _fastSettings = getCachedSettingsSync();
-      const _fastPresence = _fastSettings?.presence;
-      const _fastStealth = _fastSettings?.stealth === 'true' || _fastSettings?.stealth === true;
-      if (!_fastStealth && _fastPresence && _fastPresence !== 'offline' && _fastPresence !== 'unavailable') {
-        for (const _fmek of messages) {
-          const _fjid = _fmek.key?.remoteJid;
-          if (_fjid?.endsWith('@s.whatsapp.net') && !_fmek.key?.fromMe && _fmek.message) {
-            if (_fastPresence === 'typing') client.sendPresenceUpdate('composing', _fjid).catch(() => {});
-            else if (_fastPresence === 'recording') client.sendPresenceUpdate('recording', _fjid).catch(() => {});
-            else client.sendPresenceUpdate('available', _fjid).catch(() => {});
-          }
-        }
-      }
-
-      let settings = _fastSettings;
+      let settings = getCachedSettingsSync();
       getCachedSettings().catch(() => {});
 
       client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
