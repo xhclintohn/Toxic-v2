@@ -427,7 +427,8 @@ async function startToxic() {
 
           try {
             const m = smsg(client, mek, store);
-            console.log('⚡ [TOXIC CALL]:', m.key?.remoteJid, '| from:', m.key?.participant || m.key?.remoteJid, '| fromMe:', m.key?.fromMe);
+            const _tcBody = mek.message?.conversation || mek.message?.extendedTextMessage?.text || mek.message?.imageMessage?.caption || '';
+              console.log('⚡ [TOXIC CALL]:', m.key?.remoteJid, '| from:', m.key?.participant || m.key?.remoteJid, '| fromMe:', m.key?.fromMe, '| body[:20]:', _tcBody.slice(0,20) || '(none)');
             require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
           } catch (error) { console.log('❌ [TOXIC SYNC]:', error.message); }
         } catch (loopError) { console.log('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
