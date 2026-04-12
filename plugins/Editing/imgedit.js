@@ -1,6 +1,5 @@
 const Jimp = require('jimp');
-const { getFakeQuoted } = require('../../lib/fakeQuoted');
-  const { makeFakeQuoted } = require('../../lib/fakeQuoted');
+  const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
   const EFFECTS_HELP = [
     'blur', 'grayscale/bw/grey', 'invert/negative',
@@ -13,7 +12,6 @@ const { getFakeQuoted } = require('../../lib/fakeQuoted');
   module.exports = async (context) => {
       const { client, m, text } = context;
       const fq = getFakeQuoted(m);
-      const fq = makeFakeQuoted(m);
 
       try {
           await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -91,7 +89,6 @@ const { getFakeQuoted } = require('../../lib/fakeQuoted');
           }
 
           const resultBuffer = await img.getBufferAsync(Jimp.MIME_JPEG);
-
           await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
           await client.sendMessage(m.chat, {
               image: resultBuffer,
