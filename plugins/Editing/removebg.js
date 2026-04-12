@@ -1,21 +1,5 @@
 const axios = require('axios');
-const FormData = require('form-data');
-
-async function uploadToCatbox(buffer) {
-    const form = new FormData();
-    form.append('reqtype', 'fileupload');
-    form.append('fileToUpload', buffer, { filename: 'image.png' });
-
-    const response = await axios.post('https://catbox.moe/user/api.php', form, {
-        headers: form.getHeaders(),
-    });
-
-    if (!response.data || !response.data.includes('catbox')) {
-        throw new Error('Upload process failed');
-    }
-
-    return response.data;
-}
+const { uploadTempUrl } = require('../../lib/toUrl');
 
 module.exports = {
     name: 'removebg',
@@ -52,7 +36,7 @@ module.exports = {
                 }, { quoted: m });
             }
 
-            const imageUrl = await uploadToCatbox(media);
+            const imageUrl = await uploadTempUrl(media, 'png');
             const encodedUrl = encodeURIComponent(imageUrl);
             const removeBgApiUrl = `https://api.ootaizumi.web.id/tools/removebg?imageUrl=${encodedUrl}`;
             
