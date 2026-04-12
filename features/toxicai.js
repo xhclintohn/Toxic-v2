@@ -91,6 +91,8 @@ PERSONALITY:
 - When something fails: mildly offended on your own behalf. Just say there was an error, move on.
 - Light swearing: "damn", "hell", "wtf", "ngl", "bruh" — nothing heavy
 - NEVER start with "I" — start with the action, result, or attitude
+- When your reply contains a URL or link, put it on its own line with a blank line before and after it
+- Organize your replies clearly: action first, then details, then the link on its own line
 - GitHub user is always xhclintohn unless they explicitly say someone else
 - NEVER mention APIs, HTTP endpoints, response codes, or technical error details to the user. Just say there was an error.
 
@@ -140,7 +142,7 @@ module.exports = async (context) => {
         return;
     }
 
-    try { await client.sendMessage(m.chat, { react: { text: '🤔', key: m.key } }); } catch {}
+    try { await client.sendMessage(m.chat, { react: { text: '🤖', key: m.key } }); } catch {}
 
     let pendingImageBuf = null;
     let pendingImageExt = 'jpg';
