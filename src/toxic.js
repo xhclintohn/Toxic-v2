@@ -168,7 +168,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         if (!_fmBody || !_allPfx.some(p => _fmBody.startsWith(p))) return;
     }
     try {
-        // Sync reads — always instant; background refresh keeps cache warm for next call
         const rawSudoUsers = getCachedSudoSync();
         const rawBannedUsers = getCachedBannedSync();
         const fetchedSettings = getCachedSettingsSync();
@@ -178,7 +177,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         let settings = fetchedSettings;
 
         if (!settings) {
-            // getCachedSettingsSync always returns _DEFAULTS so this is a safety guard only
             return;
         }
 
@@ -383,7 +381,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         };
 
 
-        // Patch m.reply: clean sendMessage with fallback if quoted fails
         m.reply = async (text, chatId = m.chat, options = {}) => {
             try {
                 return await client.sendMessage(chatId, { text: String(text ?? '') }, { quoted: fakeQuoted, ...options });
