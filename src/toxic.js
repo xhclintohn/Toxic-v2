@@ -631,10 +631,31 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         }
 
         if (cmd && typeof cmd === 'function') {
+            // Auto-inject fakeQuoted on all text/media sends from plugins
+            const _origSend = client.sendMessage.bind(client);
+            const _autoFqSend = async (jid, content, opts = {}) => {
+                if (jid === m.chat && !opts.quoted &&
+                    (content.text !== undefined || content.image || content.video ||
+                     content.audio || content.sticker || content.document || content.poll) &&
+                    !content.react && !content.delete && !content.forward && !content.ptv) {
+                    opts = { ...opts, quoted: fakeQuoted };
+                }
+                return _origSend(jid, content, opts);
+            };
+            const _fqClient = new Proxy(client, {
+                get(target, prop) {
+                    if (prop === 'sendMessage') return _autoFqSend;
+                    const val = target[prop];
+                    return typeof val === 'function' ? val.bind(target) : val;
+                }
+            });
+            context.client = _fqClient;
             try {
                 await cmd(context);
             } catch (error) {
                 console.log(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
+            } finally {
+                context.client = client;
             }
         } else if (isDev && !itsMe && (settings.toxicagent === true || settings.toxicagent === 'true')) {
             toxicaiFeature(context).catch(() => {});
