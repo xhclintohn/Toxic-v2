@@ -1,4 +1,5 @@
 const Jimp = require('jimp');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const { makeFakeQuoted } = require('../../lib/fakeQuoted');
 
   const EFFECTS_HELP = [
@@ -11,6 +12,7 @@ const Jimp = require('jimp');
 
   module.exports = async (context) => {
       const { client, m, text } = context;
+      const fq = getFakeQuoted(m);
       const fq = makeFakeQuoted(m);
 
       try {
