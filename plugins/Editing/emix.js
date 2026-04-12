@@ -18,6 +18,7 @@ if (!text) return m.reply('╭───(    TOXIC-MD    )───\n├───
   const emoji1 = emojis[0].trim();
   const emoji2 = emojis[1].trim();
 
+  await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
   try {
     const axios = require('axios');
     const response = await axios.get(`https://levanter.onrender.com/emix?q=${emoji1}${emoji2}`);
@@ -34,12 +35,14 @@ if (!text) return m.reply('╭───(    TOXIC-MD    )───\n├───
         background: "transparent",
       });
       const stickerBuffer2 = await stickerMess.toBuffer();
-      client.sendMessage(m.chat, { sticker: stickerBuffer2 }, { quoted: m });
+      await client.sendMessage(m.chat, { sticker: stickerBuffer2 }, { quoted: m });
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
     } else {
       m.reply('╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Unable to create emoji mix.\n├ Your emoji combo is trash.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
     }
   } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
     m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ An error occurred while creating\n├ the emoji mix.\n├ ${error}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 
