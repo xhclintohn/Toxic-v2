@@ -1,4 +1,5 @@
 const { generateWAMessageFromContent, proto } = require('@whiskeysockets/baileys');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'base64',
@@ -6,6 +7,7 @@ module.exports = {
     description: 'Encodes text to Base64. Reply to text or provide it after the command.',
     run: async (context) => {
         const { client, m, text } = context;
+        const fq = getFakeQuoted(m);
 
         let input = (text || '').trim();
         if (!input && m.quoted) {
@@ -39,7 +41,7 @@ module.exports = {
                         messageParamsJson: ''
                     }
                 }
-            }), { quoted: m, userJid: client.user.id });
+            }), { quoted: fq, userJid: client.user.id });
             await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
         } catch {
             await m.reply(resultText);
