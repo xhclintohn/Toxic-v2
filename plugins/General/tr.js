@@ -1,4 +1,5 @@
 const { translate } = require('@vitalets/google-translate-api');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'translate',
@@ -6,13 +7,14 @@ module.exports = {
     description: 'Translates text to different languages',
     run: async (context) => {
         const { client, m, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         const fullText = m.body.replace(new RegExp(`^[^a-zA-Z]*(translate|tr|trans)\\s*`, 'i'), '').trim();
 
         if (!fullText && !m.quoted?.text) {
             return client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Tʀᴀɴsʟᴀᴛᴇ ≪───\n├ \n├ Usage:\n├ ${prefix}tr ja Hello\n├ ${prefix}tr es How are you?\n├ Or reply to msg: ${prefix}tr en\n├ \n├ Codes: ja es fr de zh ar hi sw ko ru\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         let lang, text;
@@ -37,7 +39,7 @@ module.exports = {
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Tʀᴀɴsʟᴀᴛɪᴏɴ ≪───\n├ \n├ ${result.text}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         } catch (error) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             let errorMessage = 'Translation failed. Try again.';
@@ -46,7 +48,7 @@ module.exports = {
             }
             return client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     }
 };

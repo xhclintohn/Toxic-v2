@@ -1,3 +1,4 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = {
     slap: 'https://files.catbox.moe/it6901.webp',
     kiss: 'https://files.catbox.moe/0vdy7y.webp',

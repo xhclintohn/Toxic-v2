@@ -1,5 +1,7 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async (context) => {
     const { client, m, text, fetchJson } = context;
+    const fq = getFakeQuoted(m);
 
     try {
         if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Provide an app name, you brainless creature!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
@@ -28,7 +30,7 @@ module.exports = async (context) => {
                 fileName: `${app.name}.apk`,
                 mimetype: "application/vnd.android.package-archive"
             },
-            { quoted: m }
+            { quoted: fq }
         );
 
         await client.sendMessage(m.chat, { react: { text: "✅", key: m.key } });

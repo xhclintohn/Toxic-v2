@@ -2,10 +2,12 @@ const axios = require("axios");
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 
 const { herokuAppName: HEROKU_APP_NAME, getHerokuApiKey } = require('../../config/settings');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 const HEROKU_API_KEY = getHerokuApiKey();
 
 module.exports = async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
 
     const formatStylishReply = (message) => {
         return (
@@ -30,7 +32,7 @@ module.exports = async (context) => {
                             "Fix your setup before crying for updates. 🙄"
                         ),
                     },
-                    { quoted: m }
+                    { quoted: fq }
                 );
             }
 
@@ -42,7 +44,7 @@ module.exports = async (context) => {
                         "Don’t complain if the bot restarts in your face. 😒"
                     ),
                 },
-                { quoted: m }
+                { quoted: fq }
             );
 
             await axios.post(
@@ -69,7 +71,7 @@ module.exports = async (context) => {
                         "Sit tight while Toxic-MD resurrects with fresh upgrades. 🔥"
                     ),
                 },
-                { quoted: m }
+                { quoted: fq }
             );
 
         } catch (error) {
@@ -92,7 +94,7 @@ module.exports = async (context) => {
             await client.sendMessage(
                 m.chat,
                 { text: formatStylishReply(msg) },
-                { quoted: m }
+                { quoted: fq }
             );
         }
     });

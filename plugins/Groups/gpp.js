@@ -1,5 +1,6 @@
 const { getSettings } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const formatStylishReply = (message) => {
     return `╭───(    TOXIC-MD    )───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
@@ -8,6 +9,7 @@ const formatStylishReply = (message) => {
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, text, quoted, isBotAdmin, IsGroup } = context;
+        const fq = getFakeQuoted(m);
         
         if (!IsGroup) return m.reply(formatStylishReply("Group only command idiot"));
         

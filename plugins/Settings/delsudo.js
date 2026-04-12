@@ -1,9 +1,11 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 const { getSettings, getSudoUsers, removeSudoUser } = require('../../database/config');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, args } = context;
+        const fq = getFakeQuoted(m);
 
         let numberToRemove;
 

@@ -1,7 +1,9 @@
 const fs = require('fs');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
 
     if (!m.quoted) return;
 

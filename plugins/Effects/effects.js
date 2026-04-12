@@ -1,4 +1,5 @@
 const { makeEffect } = require('../../lib/toxicApi');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const EFFECTS = [
     { id: 'glossysilver', name: 'glossysilver', aliases: ['silverglossy', 'shinysilver'], label: 'GLOSSY SILVER 3D', desc: 'Generate glossy silver 3D text' },
@@ -42,6 +43,7 @@ for (const eff of EFFECTS) {
         run: (function(effect) {
             return async (context) => {
                 const { client, m, text, prefix } = context;
+                const fq = getFakeQuoted(m);
                 if (!text) return m.reply(
                     `╭───(    TOXIC-MD    )───\n├───≫ ${effect.label} ≪───\n├ \n├ Usage: ${prefix}${effect.name} YourText\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 );
@@ -53,7 +55,7 @@ for (const eff of EFFECTS) {
                     await client.sendMessage(m.chat, {
                         image: imgBuffer,
                         caption: `╭───(    TOXIC-MD    )───\n├───≫ ${effect.label} ≪───\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-                    }, { quoted: m });
+                    }, { quoted: fq });
                 } catch (err) {
                     await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                     await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ${effect.label} ≪───\n├ Failed: ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

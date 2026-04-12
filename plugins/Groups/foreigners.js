@@ -1,4 +1,5 @@
 const middleware = require("../../utils/botUtil/middleware");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async _0x4dc5e7 => {
   await middleware(_0x4dc5e7, async () => {
     const { client: _cl_, m: _m_ } = _0x4dc5e7;

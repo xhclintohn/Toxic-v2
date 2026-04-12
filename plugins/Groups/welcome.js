@@ -1,9 +1,11 @@
 const { getGroupSettings, updateGroupSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, args, prefix } = context;
+        const fq = getFakeQuoted(m);
         const jid = m.chat;
 
         const fmt = (msg) =>
@@ -11,7 +13,7 @@ module.exports = async (context) => {
 
         try {
             if (!jid.endsWith('@g.us')) {
-                return await client.sendMessage(m.chat, { text: fmt("Oi! 😤 This only works in groups. Not your personal DM, genius. 🖕") }, { quoted: m });
+                return await client.sendMessage(m.chat, { text: fmt("Oi! 😤 This only works in groups. Not your personal DM, genius. 🖕") }, { quoted: fq });
             }
 
             const groupSettings = await getGroupSettings(jid);
@@ -21,12 +23,12 @@ module.exports = async (context) => {
             if (value === 'on' || value === 'off') {
                 const action = value === 'on';
                 if (isEnabled === action) {
-                    return await client.sendMessage(m.chat, { text: fmt(`Bruh 🙄 Welcome is already ${value.toUpperCase()} in this group. Pay attention!`) }, { quoted: m });
+                    return await client.sendMessage(m.chat, { text: fmt(`Bruh 🙄 Welcome is already ${value.toUpperCase()} in this group. Pay attention!`) }, { quoted: fq });
                 }
                 await updateGroupSetting(jid, 'welcome', action);
                 return await client.sendMessage(m.chat, {
                     text: fmt(`Welcome messages ${value.toUpperCase()}! 🔥 ${action ? "New members better brace themselves 😈" : "No more warm welcomes. Cold group energy 🧊"}`)
-                }, { quoted: m });
+                }, { quoted: fq });
             }
 
             await client.sendMessage(m.chat, {
@@ -37,10 +39,10 @@ module.exports = async (context) => {
                 ],
                 headerType: 1,
                 viewOnce: true,
-            }, { quoted: m });
+            }, { quoted: fq });
         } catch (error) {
             console.error('Toxic-MD: Error in welcome.js:', error);
-            await client.sendMessage(m.chat, { text: fmt(`Something crashed. Typical. 💀 Error: ${error.message}`) }, { quoted: m });
+            await client.sendMessage(m.chat, { text: fmt(`Something crashed. Typical. 💀 Error: ${error.message}`) }, { quoted: fq });
         }
     });
 };

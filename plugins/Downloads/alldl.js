@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const NEXRAY = 'https://api.nexray.web.id/downloader';
 
   function extractYtId(url) {
@@ -8,6 +9,7 @@ const fetch = require('node-fetch');
 
   module.exports = async (context) => {
       const { client, m, text } = context;
+      const fq = getFakeQuoted(m);
       if (!text) return m.reply('╭───(    TOXIC-MD    )───\n├ Supports: YouTube, TikTok, Instagram, Twitter/X, Facebook\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
       const url = text.trim();
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -30,7 +32,7 @@ const fetch = require('node-fetch');
                   video: { url: d.result.url },
                   mimetype: 'video/mp4',
                   caption: `╭───(    TOXIC-MD    )───\n├ 🎬 ${d.result.title || 'YouTube Video'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-              }, { quoted: m });
+              }, { quoted: fq });
               return await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
           } else if (isTT) {
@@ -78,7 +80,7 @@ const fetch = require('node-fetch');
               await client.sendMessage(m.chat, sendAsVideo
                   ? { video: sendBuf, caption, mimetype: 'video/mp4', gifPlayback: false }
                   : { image: sendBuf, caption }
-              , { quoted: m });
+              , { quoted: fq });
           }
           await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
       } catch (e) {

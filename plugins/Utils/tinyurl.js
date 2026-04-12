@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'shorten',
@@ -6,6 +7,7 @@ module.exports = {
     description: 'Shorten URLs with TinyURL',
     run: async (context) => {
         const { client, m, text } = context;
+        const fq = getFakeQuoted(m);
 
         const formatStylishReply = (message) => {
             return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
@@ -14,7 +16,7 @@ module.exports = {
         if (!text) {
             return client.sendMessage(m.chat, {
                 text: formatStylishReply("You forgot the URL, genius. 🤦🏻\nExample: .shorten https://github.com/xhclintohn/Toxic-MD")
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         let url = text.trim();
@@ -69,7 +71,7 @@ module.exports = {
                         }
                     ]
                 }
-            }, { quoted: m });
+            }, { quoted: fq });
 
         } catch (error) {
             console.error('Shorten error:', error);
@@ -93,7 +95,7 @@ module.exports = {
 
             await client.sendMessage(m.chat, {
                 text: formatStylishReply(errorMessage)
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     },
 };

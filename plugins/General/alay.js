@@ -1,9 +1,11 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = {
     name: 'alay',
     alias: ['leet', 'l33t'],
     description: 'Convert text to alay/leet style',
     run: async (context) => {
         const { client, m, text } = context;
+        const fq = getFakeQuoted(m);
         const input = text || m.quoted?.text;
         if (!input) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ALAY TEXT ≪───\n├ \n├ Give me text to alay-ify, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         const alay = input.split('').map(v => {

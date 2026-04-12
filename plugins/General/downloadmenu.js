@@ -1,6 +1,7 @@
 const { DateTime } = require('luxon');
 const fs = require('fs');
 const { getSettings } = require('../../database/config');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
   name: 'downloadmenu',
@@ -8,6 +9,7 @@ module.exports = {
   description: 'Displays only the Download/Media menu',
   run: async (context) => {
     const { client, m, pict } = context;
+    const fq = getFakeQuoted(m);
     const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃';
 
     const settings = await getSettings();
@@ -51,6 +53,6 @@ module.exports = {
           renderLargerThumbnail: true
         }
       }
-    }, { quoted: m });
+    }, { quoted: fq });
   }
 };

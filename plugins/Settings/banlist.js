@@ -1,9 +1,11 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 const { getBannedUsers } = require('../../database/config');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { m } = context;
+        const fq = getFakeQuoted(m);
 
         const bannedUsers = await getBannedUsers();
 

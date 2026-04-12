@@ -1,6 +1,7 @@
 const { getSettings, updateSetting } = require('../../database/config');
 const { generateWAMessageFromContent, proto } = require('@whiskeysockets/baileys');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const MODES = {
     public:  { emoji: '🌐', label: 'PUBLIC',  desc: 'Everyone can use commands, anywhere.' },
@@ -23,6 +24,7 @@ module.exports = {
     run: async (context) => {
         await ownerMiddleware(context, async () => {
             const { client, m, args, prefix } = context;
+            const fq = getFakeQuoted(m);
 
             const fmt = (title, lines) => {
                 const body = (Array.isArray(lines) ? lines : [lines]).map(l => `├ ${l}`).join('\n');
@@ -57,7 +59,7 @@ module.exports = {
                                 messageParamsJson: ''
                             }
                         }
-                    }), { quoted: m, userJid: client.user.id });
+                    }), { quoted: fq, userJid: client.user.id });
                     await client.relayMessage(m.chat, interactiveMsg.message, { messageId: interactiveMsg.key.id });
                 } catch {
                     await client.sendMessage(m.chat, {
@@ -69,7 +71,7 @@ module.exports = {
                             sections: sections.map(s => ({ title: s.title, rows: s.rows.map(r => ({ title: r.title, description: r.description, rowId: r.id })) })),
                             footer: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
                         },
-                    }, { quoted: m });
+                    }, { quoted: fq });
                 }
             };
 
@@ -86,7 +88,7 @@ module.exports = {
                                 `Nothing changed. Still the same.`,
                                 `Pick a different one if you actually want to do something.`
                             ])
-                        }, { quoted: m });
+                        }, { quoted: fq });
                         return sendModeButtons(current);
                     }
                     await updateSetting('mode', input);
@@ -97,7 +99,7 @@ module.exports = {
                             ``,
                             CRANKY[input]
                         ])
-                    }, { quoted: m });
+                    }, { quoted: fq });
                     return sendModeButtons(input);
                 }
 
@@ -111,13 +113,13 @@ module.exports = {
                         `GROUP   — Groups only, DMs ignored`,
                         `INBOX   — DMs only, groups ignored`
                     ])
-                }, { quoted: m });
+                }, { quoted: fq });
                 return sendModeButtons(current);
 
             } catch {
                 client.sendMessage(m.chat, {
                     text: fmt('BOT MODE', 'Something broke. The database is sulking. Try again.')
-                }, { quoted: m });
+                }, { quoted: fq });
             }
         });
     }

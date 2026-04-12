@@ -1,8 +1,10 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const NEXRAY = 'https://api.nexray.web.id/downloader/facebook?url=';
 
   module.exports = async (context) => {
       const { client, m, text, prefix } = context;
+      const fq = getFakeQuoted(m);
       if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}fbdl https://fb.watch/xxxxx\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       if (!text.includes('facebook.com') && !text.includes('fb.watch')) return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a Facebook link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -20,7 +22,7 @@ const fetch = require('node-fetch');
           await client.sendMessage(m.chat, {
               video: buf, mimetype: 'video/mp4',
               caption: `╭───(    TOXIC-MD    )───\n├───≫ Facebook DL ≪───\n├ ${title || 'Facebook Video'}\n├ Quality: ${video_hd ? 'HD' : 'SD'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-          }, { quoted: m });
+          }, { quoted: fq });
       } catch (e) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
           m.reply(`╭───(    TOXIC-MD    )───\n├ Failed: ${e.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

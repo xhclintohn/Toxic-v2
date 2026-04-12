@@ -1,9 +1,11 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = {
   name: 'spotify',
   aliases: ['spotifydl', 'spoti', 'spt'],
   description: 'Downloads songs from Spotify',
   run: async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
 
     try {
       const query = m.text.trim();
@@ -42,14 +44,14 @@ module.exports = {
             renderLargerThumbnail: true,
           },
         },
-      }, { quoted: m });
+      }, { quoted: fq });
 
       await client.sendMessage(m.chat, {
         document: { url: audioUrl },
         mimetype: "audio/mpeg",
         fileName: `${filename.replace(/[<>:"/\\|?*]/g, '_')}.mp3`,
         caption: `╭───(    TOXIC-MD    )───\n├───≫ SPOTIFY ≪───\n├ \n├ ${filename} - ${artist}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      }, { quoted: m });
+      }, { quoted: fq });
 
     } catch (error) {
       console.error('Spotify error:', error);

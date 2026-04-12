@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { getSettings } = require('../../database/config');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'animemenu',
@@ -8,6 +9,7 @@ module.exports = {
     description: 'Displays the Anime commands menu',
     run: async (context) => {
         const { client, m, pict, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         const toFancyFont = (text) => {
             const fonts = {
@@ -40,6 +42,6 @@ module.exports = {
                     renderLargerThumbnail: false,
                 }
             }
-        }, { quoted: m });
+        }, { quoted: fq });
     }
 };

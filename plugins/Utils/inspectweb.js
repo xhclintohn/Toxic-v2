@@ -1,8 +1,10 @@
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { m, text } = context;
+    const fq = getFakeQuoted(m);
 
     if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Provide a valid web link to inspect, dimwit.\n├ Bot will crawl HTML, CSS, JS, and media.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 

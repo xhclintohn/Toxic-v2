@@ -1,8 +1,10 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware'); 
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, Owner, participants, botname } = context;
+        const fq = getFakeQuoted(m);
 
         if (!botname) {
             console.error(`Botname not set, you incompetent fuck.`);
@@ -24,7 +26,7 @@ module.exports = async (context) => {
             await client.sendMessage(m.chat, { 
                 text: `╭───(    TOXIC-MD    )───\n├───≫ LEAVING ≪───\n├ \n├ Fuck this shithole ${botname} is OUT!\n├ Good luck rotting without me,\n├ you nobodies. ${mentions.length < participants.length ? 'Too many losers to tag, pathetic.' : ''}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, 
                 mentions 
-            }, { quoted: m });
+            }, { quoted: fq });
             console.log(`[LEAVE-DEBUG] Leaving group ${m.chat}, mentioned ${mentions.length} participants`);
             await client.groupLeave(m.chat);
         } catch (error) {

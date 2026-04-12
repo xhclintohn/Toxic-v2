@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { generateWAMessageFromContent, proto } = require('@whiskeysockets/baileys');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'menu',
@@ -8,6 +9,7 @@ module.exports = {
     description: 'Displays the Toxic-MD command menu',
     run: async (context) => {
         const { client, m, mode, pict, botname, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         await client.sendMessage(m.chat, { react: { text: '🤖', key: m.key } });
 
@@ -18,7 +20,7 @@ module.exports = {
             const commandName = cleanText.split(' ')[0];
             return client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo ${m.pushName}, chill.\n├ Extra trash after "${commandName}"?\n├ Just type *${prefix}menu* properly.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         const menuText =
@@ -114,7 +116,7 @@ module.exports = {
                         messageParamsJson: ''
                     }
                 }
-            }), { quoted: m, userJid: client.user.id });
+            }), { quoted: fq, userJid: client.user.id });
             await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
         } catch {
             await client.sendMessage(m.chat, {
@@ -133,7 +135,7 @@ module.exports = {
                         renderLargerThumbnail: false,
                     }
                 }
-            }, { quoted: m });
+            }, { quoted: fq });
             await client.sendMessage(m.chat, {
                 listMessage: {
                     title: 'VIEW OPTIONS',
@@ -146,7 +148,7 @@ module.exports = {
                     })),
                     footer: '',
                 },
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         const xhClintonPaths = [
@@ -166,9 +168,9 @@ module.exports = {
         await new Promise(resolve => setTimeout(resolve, 500));
         try {
             const audioBuffer = fs.readFileSync(randomFile);
-            await client.sendMessage(m.chat, { audio: audioBuffer, ptt: true, mimetype: 'audio/mpeg', fileName: 'toxic-menu.m4a' }, { quoted: m });
+            await client.sendMessage(m.chat, { audio: audioBuffer, ptt: true, mimetype: 'audio/mpeg', fileName: 'toxic-menu.m4a' }, { quoted: fq });
         } catch {
-            await client.sendMessage(m.chat, { audio: { url: randomFile }, ptt: true, mimetype: 'audio/mpeg', fileName: 'toxic-menu.m4a' }, { quoted: m });
+            await client.sendMessage(m.chat, { audio: { url: randomFile }, ptt: true, mimetype: 'audio/mpeg', fileName: 'toxic-menu.m4a' }, { quoted: fq });
         }
     },
 };

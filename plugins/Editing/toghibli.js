@@ -2,6 +2,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 async function uploadImage(buffer) {
     const tempFilePath = path.join(__dirname, `temp_${Date.now()}.jpg`);
@@ -28,6 +29,7 @@ async function uploadImage(buffer) {
 
 module.exports = async (context) => {
     const { client, mime, m } = context;
+    const fq = getFakeQuoted(m);
 
     const quoted = m.quoted ? m.quoted : m;
     const quotedMime = quoted.mimetype || mime || '';
@@ -66,7 +68,7 @@ module.exports = async (context) => {
                 image: ghibliImage,
                 caption: '╭───(    TOXIC-MD    )───\n├───≫ GHIBLI STYLE ≪───\n├ \n├ Your image has been reimagined in\n├ *Studio Ghibli* style!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
             },
-            { quoted: m }
+            { quoted: fq }
         );
     } catch (err) {
         await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Error while generating Ghibli-style\n├ image: ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

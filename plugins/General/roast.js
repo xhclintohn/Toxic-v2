@@ -1,4 +1,5 @@
 const { getAnime } = require('../../lib/toxicApi');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const ROASTS = [
     "Your WiFi password is probably 'password123'. Clown behaviour.",
@@ -29,6 +30,7 @@ module.exports = {
     description: 'Roast someone (or yourself) with a savage line',
     run: async (context) => {
         const { client, m, prefix } = context;
+        const fq = getFakeQuoted(m);
         const mentioned = m.mentionedJid?.length ? m.mentionedJid[0] : null;
         const target = mentioned ? `@${mentioned.split('@')[0]}` : m.pushName;
         const roast = ROASTS[Math.floor(Math.random() * ROASTS.length)];
@@ -37,6 +39,6 @@ module.exports = {
         await client.sendMessage(m.chat, {
             text: `╭───(    TOXIC-MD    )───\n├───≫ Rᴏᴀsᴛ ≪───\n├ \n├ 🎯 Target: ${target}\n├ \n├ ${roast}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
             mentions: mentioned ? [mentioned] : []
-        }, { quoted: m });
+        }, { quoted: fq });
     }
 };

@@ -1,9 +1,11 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = {
     name: 'checkid',
     aliases: ['cekid', 'getid', 'id', 'idch'],
     description: 'Get the JID of a WhatsApp group or channel from its invite link',
     run: async (context) => {
         const { client, m, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         try {
             const text = m.body.trim();
@@ -40,7 +42,7 @@ module.exports = {
                             buttonParamsJson: JSON.stringify({ display_text: '📋 Copy Group ID', copy_code: id })
                         }]
                     }
-                }, { quoted: m });
+                }, { quoted: fq });
 
             } else if (url.hostname === 'whatsapp.com' && url.pathname.startsWith('/channel/')) {
                 const code = url.pathname.split('/channel/')[1]?.split('/')[0];
@@ -63,7 +65,7 @@ module.exports = {
                             buttonParamsJson: JSON.stringify({ display_text: '📋 Copy Channel ID', copy_code: id })
                         }]
                     }
-                }, { quoted: m });
+                }, { quoted: fq });
 
             } else {
                 await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });

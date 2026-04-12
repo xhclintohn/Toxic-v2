@@ -1,9 +1,11 @@
 const { Sticker, createSticker, StickerTypes } = require('wa-sticker-formatter')
 
 let canvacord = null; try { canvacord = require("canvacord"); } catch {}
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
         const { client, m, Tag, botname } = context;
+        const fq = getFakeQuoted(m);
 
 let cap = `╭───(    TOXIC-MD    )───\n├───≫ TRIGGER ≪───\n├ \n├ Converted By ${botname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
@@ -34,7 +36,7 @@ try {
             background: 'transparent'
         })
         const stikk = await sticker.toBuffer()
-       await client.sendMessage(m.chat, {sticker: stikk}, {quoted: m})
+       await client.sendMessage(m.chat, {sticker: stikk}, { quoted: fq })
 
 
         

@@ -1,9 +1,11 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = {
   name: 'sticker',
   aliases: ['s', 'stick'],
   description: 'Fetches GIF stickers from Tenor with your search term',
   run: async (context) => {
     const { client, m, text, botname } = context;
+    const fq = getFakeQuoted(m);
     const axios = require('axios');
     const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 
@@ -63,7 +65,7 @@ module.exports = {
         });
 
         const stickerBuffer = await stickerMess.toBuffer();
-        await client.sendMessage(m.sender, { sticker: stickerBuffer }, { quoted: m });
+        await client.sendMessage(m.sender, { sticker: stickerBuffer }, { quoted: fq });
       }
 
     } catch (error) {

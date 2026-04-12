@@ -1,5 +1,7 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async (context) => {
   const { client, m, prefix, text } = context;
+  const fq = getFakeQuoted(m);
 
   const toFancyFont = (text, isUpperCase = false) => {
     const fonts = {
@@ -15,7 +17,7 @@ module.exports = async (context) => {
   };
 
   if (text) {
-    return client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo, ${m.pushName}, what's with the extra\n├ bullshit? Just say ${prefix}credits, you moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: m });
+    return client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo, ${m.pushName}, what's with the extra\n├ bullshit? Just say ${prefix}credits, you moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
   }
 
   try {
@@ -29,9 +31,9 @@ module.exports = async (context) => {
       ],
       headerType: 1,
       viewOnce: true
-    }, { quoted: m });
+    }, { quoted: fq });
   } catch (error) {
     console.error('Error in credits command:', error);
-    await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Shit went sideways, can't show credits.\n├ Try again later, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: m });
+    await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Shit went sideways, can't show credits.\n├ Try again later, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
   }
 };

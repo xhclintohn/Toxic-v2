@@ -1,8 +1,10 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m, text } = context;
+    const fq = getFakeQuoted(m);
 
     if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ You dumb fuck, type something.\n├ I'm not psychic.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     if (text.length > 150) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Your search is longer than your dick.\n├ Keep it under 150 chars, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
@@ -65,7 +67,7 @@ module.exports = async (context) => {
                     renderLargerThumbnail: true,
                 },
             },
-        }, { quoted: m });
+        }, { quoted: fq });
 
     } catch (error) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });

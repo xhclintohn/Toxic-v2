@@ -2,6 +2,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 async function uploadImage(buffer) {
     const tempFilePath = path.join(__dirname, `temp_${Date.now()}.jpg`);
@@ -32,6 +33,7 @@ module.exports = {
     description: 'Convert a replied image to anime style',
     run: async (context) => {
         const { client, m } = context;
+        const fq = getFakeQuoted(m);
 
         const quoted = m.message?.imageMessage ? m : m.quoted ? m.quoted : null;
 
@@ -81,7 +83,7 @@ module.exports = {
                 image: animeBuffer,
                 caption: `╭───(    TOXIC-MD    )───\n├───≫ ANIME TRANSFORMATION ≪───\n├ \n├ ANIME TRANSFORMATION COMPLETE!\n├ Look at this weeb result.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 mentions: [m.sender]
-            }, { quoted: m });
+            }, { quoted: fq });
 
         } catch (err) {
             console.error('ToAnime Error:', err.message);

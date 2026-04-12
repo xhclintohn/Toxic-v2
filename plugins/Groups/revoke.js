@@ -1,8 +1,10 @@
 const middleware = require('../../utils/botUtil/middleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     await middleware(context, async () => {
         const { client, m, groupMetadata } = context;
+        const fq = getFakeQuoted(m);
 
 await client.groupRevokeInvite(m.chat); 
    await client.sendText(m.chat, `╭───(    TOXIC-MD    )───\n├───≫ REVOKED ≪───\n├ \n├ Group link revoked!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, m); 

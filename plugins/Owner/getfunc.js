@@ -1,5 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const normalizeNumber = (jid) => {
     if (!jid) return '';
@@ -12,11 +13,12 @@ const FEATURES_DIR = path.join(__dirname, '..', '..', 'features');
 
 module.exports = async (context) => {
     const { client, m, text, prefix } = context;
+    const fq = getFakeQuoted(m);
 
     if (normalizeNumber(m.sender) !== DEVELOPER) {
         return await client.sendMessage(m.chat, {
             text: `╭───(    TOXIC-MD    )───\n├───≫ ACCESS DENIED ≪───\n├ \n├ This command is restricted to the bot owner.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: m });
+        }, { quoted: fq });
     }
 
     if (!text) {
@@ -25,7 +27,7 @@ module.exports = async (context) => {
         const fileList = files.map(f => `├ • ${f.replace('.js', '')}`).join('\n');
         return await client.sendMessage(m.chat, {
             text: `╭───(    TOXIC-MD    )───\n├───≫ GETFUNC ≪───\n├ \n├ Usage: ${prefix}getfunc <name>\n├ \n├ Available features:\n${fileList || '├ (none found)'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: m });
+        }, { quoted: fq });
     }
 
     const funcName = text.trim().endsWith('.js') ? text.trim().slice(0, -3) : text.trim();
@@ -38,7 +40,7 @@ module.exports = async (context) => {
         if (data.length <= MAX_TEXT_SIZE) {
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ FEATURE FILE ≪───\n├ \n├ File: ${funcName}.js\n├ Size: ${data.length} chars\n├ \n\`\`\`javascript\n${data}\n\`\`\`\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         await client.sendMessage(m.chat, {
@@ -46,7 +48,7 @@ module.exports = async (context) => {
             fileName: `${funcName}.js`,
             mimetype: 'application/javascript',
             caption: `╭───(    TOXIC-MD    )───\n├ 📄 ${funcName}.js\n├ Folder: features/\n├ Size: ${data.length} chars\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: m });
+        }, { quoted: fq });
 
     } catch (err) {
         if (err.code === 'ENOENT') {
@@ -55,10 +57,10 @@ module.exports = async (context) => {
             const fileList = files.map(f => `├ • ${f.replace('.js', '')}`).join('\n');
             return await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ NOT FOUND ≪───\n├ \n├ "${funcName}" not found in features/.\n├ \n├ Available:\n${fileList || '├ (none found)'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
         return await client.sendMessage(m.chat, {
             text: `╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Error reading file: ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: m });
+        }, { quoted: fq });
     }
 };

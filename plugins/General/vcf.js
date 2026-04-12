@@ -1,7 +1,9 @@
 const fs = require('fs');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m, participants } = context;
+    const fq = getFakeQuoted(m);
 
     if (!m.isGroup) {
         return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Command meant for groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
@@ -31,7 +33,7 @@ module.exports = async (context) => {
                 fileName: 'Group contacts.vcf',
                 caption: `╭───(    TOXIC-MD    )───\n├───≫ VCF ≪───\n├ \n├ VCF for ${gcdata.subject}\n├ ${gcdata.participants.length} contacts\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             },
-            { ephemeralExpiration: 86400, quoted: m }
+            { ephemeralExpiration: 86400, quoted: fq }
         );
 
         await fs.promises.unlink(cont);

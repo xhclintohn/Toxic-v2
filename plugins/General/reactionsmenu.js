@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { getSettings } = require('../../database/config');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
   name: 'reactionsmenu',
@@ -7,6 +8,7 @@ module.exports = {
   description: 'Displays the reactions commands menu',
   run: async (context) => {
     const { client, m, pict } = context;
+    const fq = getFakeQuoted(m);
 
     const settings = await getSettings();
     const effectivePrefix = settings.prefix || '';
@@ -43,6 +45,6 @@ module.exports = {
           renderLargerThumbnail: true
         }
       }
-    }, { quoted: m });
+    }, { quoted: fq });
   }
 };

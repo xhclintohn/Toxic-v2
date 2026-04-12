@@ -1,5 +1,7 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
 
     function convertTimestamp(timestamp) {
         const d = new Date(timestamp * 1000);
@@ -54,5 +56,5 @@ module.exports = async (context) => {
     await client.sendMessage(m.chat, { 
         image: { url: pp }, 
         caption: caption
-    }, { quoted: m });
+    }, { quoted: fq });
 };

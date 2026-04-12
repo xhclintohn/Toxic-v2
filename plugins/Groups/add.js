@@ -1,8 +1,10 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, participants, botname, groupMetadata, text, pushname } = context;
+        const fq = getFakeQuoted(m);
 
         const { getBinaryNodeChild, getBinaryNodeChildren } = require('@whiskeysockets/baileys');
 
@@ -58,7 +60,7 @@ module.exports = async (context) => {
 
             let links = `╭───(    TOXIC-MD    )───\n├───≫ GROUP INVITE ≪───\n├ \n├ ${pushname} is trying to add you to\n├ ${groupMetadata.subject}\n├ \n├ https://chat.whatsapp.com/${respon}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
-            await client.sendMessage(jid, { text: links }, { quoted: m });
+            await client.sendMessage(jid, { text: links }, { quoted: fq });
         }
     });
 };

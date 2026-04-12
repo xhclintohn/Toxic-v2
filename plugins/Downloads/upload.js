@@ -1,7 +1,9 @@
 const { uploadToUrl } = require('../../lib/toUrl');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
 
     try {
         const q = m.quoted ? m.quoted : m;

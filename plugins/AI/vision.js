@@ -1,7 +1,9 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m, text } = context;
+    const fq = getFakeQuoted(m);
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -71,7 +73,7 @@ module.exports = async (context) => {
             {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Iᴍᴀɢᴇ Aɴᴀʟʏsɪs ≪───\n├ \n${result.split('\n').map(l => `├ ${l}`).join('\n')}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
             },
-            { quoted: m }
+            { quoted: fq }
         );
 
     } catch (err) {

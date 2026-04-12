@@ -1,9 +1,11 @@
 const { getGroupSettings, updateGroupSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, args, prefix } = context;
+        const fq = getFakeQuoted(m);
         const value = args[0]?.toLowerCase();
         const jid = m.chat;
 
@@ -12,7 +14,7 @@ module.exports = async (context) => {
         };
 
         if (!jid.endsWith('@g.us')) {
-            return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", "This command can only be used in groups, fool!") }, { quoted: m });
+            return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", "This command can only be used in groups, fool!") }, { quoted: fq });
         }
 
         let groupSettings = await getGroupSettings(jid);
@@ -24,19 +26,19 @@ module.exports = async (context) => {
         const isBotAdmin = userAdmins.includes(Myself);
 
         if (value === 'on' && !isBotAdmin) {
-            return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", "I need admin privileges to enable Antitag, you clown!") }, { quoted: m });
+            return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", "I need admin privileges to enable Antitag, you clown!") }, { quoted: fq });
         }
 
         if (value === 'on' || value === 'off') {
             const action = value === 'on';
 
             if (isEnabled === action) {
-                return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag is already ${value.toUpperCase()}, genius!`) }, { quoted: m });
+                return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag is already ${value.toUpperCase()}, genius!`) }, { quoted: fq });
             }
 
             await updateGroupSetting(jid, 'antitag', action ? 'true' : 'false');
             await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
-            return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag has been turned ${value.toUpperCase()} for this group.`) }, { quoted: m });
+            return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag has been turned ${value.toUpperCase()} for this group.`) }, { quoted: fq });
         }
 
         const buttons = [
@@ -49,6 +51,6 @@ module.exports = async (context) => {
             buttons,
             headerType: 1,
             viewOnce: true,
-        }, { quoted: m });
+        }, { quoted: fq });
     });
 };

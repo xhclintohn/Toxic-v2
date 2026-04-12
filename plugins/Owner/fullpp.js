@@ -1,5 +1,6 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 const { S_WHATSAPP_NET } = require('@whiskeysockets/baileys');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'fullpp',
@@ -7,6 +8,7 @@ module.exports = {
     run: async (context) => {
         await ownerMiddleware(context, async () => {
             const { client, m, msgToxic, generateProfilePicture } = context;
+            const fq = getFakeQuoted(m);
 
             try {
                 const fs = require('fs');

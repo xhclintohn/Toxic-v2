@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const FormData = require('form-data');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'stt',
@@ -12,6 +13,7 @@ module.exports = {
     description: 'Transcribes voice notes and audio messages to text',
     run: async (context) => {
         const { client, m, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         let GROQ_API_KEY = '';
         try { GROQ_API_KEY = require('../../keys').GROQ_API_KEY || ''; } catch {}

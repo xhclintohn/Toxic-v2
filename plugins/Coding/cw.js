@@ -1,7 +1,9 @@
 const axios = require('axios');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m, text, prefix } = context;
+    const fq = getFakeQuoted(m);
 
     if (!text) {
         return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Wᴇʙ2Zɪᴩ ≪───\n├ \n├ Downloads entire websites as ZIP files\n├ Example: ${prefix}web2zip https://example.com\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
@@ -39,7 +41,7 @@ module.exports = async (context) => {
 
         const caption = `╭───(    TOXIC-MD    )───\n├───≫ Wᴇʙsɪᴛᴇ Zɪᴩ ≪───\n├ \n├ *URL:* ${result.url}\n├ *Files Copied:* ${result.copiedFilesAmount}\n├ *Download Link:*\n├ ${result.downloadUrl}\n├\n├ Click the link above to download the ZIP\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
-        await client.sendMessage(m.chat, { text: caption }, { quoted: m });
+        await client.sendMessage(m.chat, { text: caption }, { quoted: fq });
 
     } catch (error) {
         console.error("Web2Zip error:", error.response?.status, error.message);

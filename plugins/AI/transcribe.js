@@ -1,9 +1,11 @@
 const axios = require('axios');
 const FormData = require('form-data');
 const crypto = require('crypto');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   const { client, m } = context;
+  const fq = getFakeQuoted(m);
   const quoted = m.quoted || m;
   const mime = (quoted.msg || quoted).mimetype || '';
 

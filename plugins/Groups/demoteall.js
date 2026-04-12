@@ -1,4 +1,5 @@
 const middleware = require('../../utils/botUtil/middleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const BOX = (title, lines) => {
     const body = (Array.isArray(lines) ? lines : [lines]).map(l => `├ ${l}`).join('\n');
@@ -12,9 +13,10 @@ module.exports = {
     run: async (context) => {
         await middleware(context, async () => {
             const { client, m, isBotAdmin } = context;
+            const fq = getFakeQuoted(m);
 
-            if (!m.isGroup) return client.sendMessage(m.chat, { text: BOX('ERROR', ['Group only command.']) }, { quoted: m });
-            if (!isBotAdmin) return client.sendMessage(m.chat, { text: BOX('ERROR', ['Make me admin first.']) }, { quoted: m });
+            if (!m.isGroup) return client.sendMessage(m.chat, { text: BOX('ERROR', ['Group only command.']) }, { quoted: fq });
+            if (!isBotAdmin) return client.sendMessage(m.chat, { text: BOX('ERROR', ['Make me admin first.']) }, { quoted: fq });
 
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
             try {
@@ -26,9 +28,9 @@ module.exports = {
                 });
                 const jids = demotable.map(p => (p.jid || p.id).split(':')[0].replace(/\D(?=\d{10})/, '') + '@s.whatsapp.net').filter(Boolean);
 
-                if (!jids.length) return client.sendMessage(m.chat, { text: BOX('DEMOTEALL', ['No admins to demote (other than me).']) }, { quoted: m });
+                if (!jids.length) return client.sendMessage(m.chat, { text: BOX('DEMOTEALL', ['No admins to demote (other than me).']) }, { quoted: fq });
 
-                await client.sendMessage(m.chat, { text: BOX('DEMOTEALL', [`Demoting ${jids.length} admin(s)...`]) }, { quoted: m });
+                await client.sendMessage(m.chat, { text: BOX('DEMOTEALL', [`Demoting ${jids.length} admin(s)...`]) }, { quoted: fq });
 
                 const batchSize = 5;
                 let demoted = 0;
@@ -41,10 +43,10 @@ module.exports = {
                 await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
                 await client.sendMessage(m.chat, {
                     text: BOX('DEMOTEALL', [`Done. ${demoted} admin(s) stripped of power.`, `Nobody special anymore. Back to being regular.`])
-                }, { quoted: m });
+                }, { quoted: fq });
             } catch (err) {
                 await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-                await client.sendMessage(m.chat, { text: BOX('ERROR', [`Failed: ${err.message?.slice(0, 60)}`]) }, { quoted: m });
+                await client.sendMessage(m.chat, { text: BOX('ERROR', [`Failed: ${err.message?.slice(0, 60)}`]) }, { quoted: fq });
             }
         });
     }

@@ -1,10 +1,12 @@
 module.exports = async (context) => {
 
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
     await ownerMiddleware(context, async () => {
 
     const { client, m, text} = context;
+    const fq = getFakeQuoted(m);
 
 if (!text) {
       m.reply("╭───(    TOXIC-MD    )───\n├ Provide a setting to update, you clueless fool.\n├ Example: mystatus all\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");

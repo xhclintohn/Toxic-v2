@@ -1,3 +1,4 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
   name: 'gstatus',
@@ -5,6 +6,7 @@ module.exports = {
   description: 'Posts a group status with text, image, video, or audio.',
   run: async (context) => {
     const { client, m, prefix, IsGroup, botname, settings } = context;
+    const fq = getFakeQuoted(m);
 
     const formatMsg = (text) => `╭───(    TOXIC-MD    )───\n├ \n├ ${text}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 

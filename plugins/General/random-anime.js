@@ -1,7 +1,9 @@
 module.exports = async (context) => {
         const { client, m, text } = context;
+        const fq = getFakeQuoted(m);
 
 const axios = require("axios");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
   const link = "https://api.jikan.moe/v4/random/anime";
 
@@ -26,7 +28,7 @@ const axios = require("axios");
 ╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
-    await client.sendMessage(m.chat, { image: { url: imageUrl }, caption: message }, { quoted: m });
+    await client.sendMessage(m.chat, { image: { url: imageUrl }, caption: message }, { quoted: fq });
   } catch (error) {
    m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ An error occurred fetching anime.\n├ Try again, weeb.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }

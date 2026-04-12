@@ -1,5 +1,7 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async (context) => {
 const { client, m, text, botname, prefix = '' } = context;
+const fq = getFakeQuoted(m);
 
 const toFancyFont = (text, isUpperCase = false) => {
 const fonts = {
@@ -67,12 +69,12 @@ await client.sendMessage(m.chat, {
       renderLargerThumbnail: true  
     }  
   }  
-}, { quoted: m });
+}, { quoted: fq });
 
 } catch (error) {
 console.error('Error in repo command:', error);
 await client.sendMessage(m.chat, { 
     text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Couldn't fetch repo data\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-}, { quoted: m });
+}, { quoted: fq });
 }
 };

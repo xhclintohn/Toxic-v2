@@ -1,6 +1,8 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async (context) => {
 
 const { client, m, text, botname } = context;
+const fq = getFakeQuoted(m);
 
 
 
@@ -11,7 +13,7 @@ if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Provide 
 
 const image = `https://image.thum.io/get/fullpage/${text}`
 
-await client.sendMessage(m.chat, { image: { url: image }, caption: cap}, {quoted: m });
+await client.sendMessage(m.chat, { image: { url: image }, caption: cap}, { quoted: fq });
 
 
 } catch (error) {

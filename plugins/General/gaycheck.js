@@ -1,9 +1,11 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = {
   name: 'gaycheck',
   aliases: ['gaymeter', 'gcheck', 'howgay'],
   description: 'Checks gay percentage with toxic, violent, and realistic roasts',
   run: async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
 
     try {
     
@@ -46,7 +48,7 @@ module.exports = {
           text: `╭───(    TOXIC-MD    )───\n├───≫ Sᴄᴀɴɴɪɴɢ ≪───\n├ \n├ Cracking open @${targetNumber}'s soul\n├ for gay vibes...\n├ This is gonna hurt like hell,\n├ you weakling!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
           mentions: [targetUser],
         },
-        { quoted: m }
+        { quoted: fq }
       );
 
      
@@ -265,7 +267,7 @@ module.exports = {
           text: resultMsg,
           mentions: [targetUser],
         },
-        { quoted: m }
+        { quoted: fq }
       );
 
       if (checkingMsg && checkingMsg.key) {

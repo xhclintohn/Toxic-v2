@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 function emojiToTwemojiUrl(emoji) {
     const codepoints = [...emoji]
@@ -9,6 +10,7 @@ function emojiToTwemojiUrl(emoji) {
 
 module.exports = async (context) => {
     const { client, m, text } = context;
+    const fq = getFakeQuoted(m);
 
     try {
         if (!text) {
@@ -34,7 +36,7 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, {
             image: buffer,
             caption: `╭───(    TOXIC-MD    )───\n├───≫ EMOJI ART ≪───\n├ \n├ ${emoji}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: m });
+        }, { quoted: fq });
 
     } catch (error) {
         console.error("togif command error:", error);

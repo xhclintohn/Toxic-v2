@@ -1,9 +1,11 @@
 const { getSettings, getGroupSettings, updateGroupSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args } = context;
+    const fq = getFakeQuoted(m);
     const value = args[0]?.toLowerCase();
     const jid = m.chat;
 
@@ -12,7 +14,7 @@ module.exports = async (context) => {
     };
 
     if (!jid.endsWith('@g.us')) {
-      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", "Epic fail, loser!\n├ This command is for groups only, moron!") }, { quoted: m });
+      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", "Epic fail, loser!\n├ This command is for groups only, moron!") }, { quoted: fq });
     }
 
     const settings = await getSettings();
@@ -25,12 +27,12 @@ module.exports = async (context) => {
       const action = value === 'on';
 
       if (isEnabled === action) {
-        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote is already ${value.toUpperCase()}, you brainless fool!\n├ Quit wasting my time!`) }, { quoted: m });
+        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote is already ${value.toUpperCase()}, you brainless fool!\n├ Quit wasting my time!`) }, { quoted: fq });
       }
 
       await updateGroupSetting(jid, 'antidemote', action ? 'true' : 'false');
       await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
-      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote ${value.toUpperCase()}!\n├ Demotions are under my watch, king!`) }, { quoted: m });
+      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote ${value.toUpperCase()}!\n├ Demotions are under my watch, king!`) }, { quoted: fq });
     }
 
     const buttons = [
@@ -43,6 +45,6 @@ module.exports = async (context) => {
       buttons,
       headerType: 1,
       viewOnce: true,
-    }, { quoted: m });
+    }, { quoted: fq });
   });
 };

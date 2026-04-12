@@ -1,8 +1,10 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const NEXRAY = 'https://api.nexray.web.id/downloader/tiktok?url=';
 
   module.exports = async (context) => {
       const { client, m, text, prefix } = context;
+      const fq = getFakeQuoted(m);
       if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}tikaudio https://vt.tiktok.com/xxx\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       if (!text.includes('tiktok.com')) return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a TikTok link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -21,7 +23,7 @@ const fetch = require('node-fetch');
               mimetype: 'audio/mpeg',
               ptt: false,
               fileName: `${music_info.title || title || 'tiktok-audio'}.mp3`
-          }, { quoted: m });
+          }, { quoted: fq });
           await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ TikTok Audio ≪───\n├ 🎵 ${music_info.title || title || 'N/A'}\n├ 👤 ${music_info.author || 'N/A'}\n├ ⏱ ${music_info.duration || 'N/A'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       } catch (e) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });

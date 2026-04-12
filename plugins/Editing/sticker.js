@@ -2,6 +2,7 @@ const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const fs = require('fs').promises;
 const path = require('path');
 const { queue } = require('async');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const commandQueue = queue(async (task, callback) => {
     try {
@@ -14,6 +15,7 @@ const commandQueue = queue(async (task, callback) => {
 
 module.exports = async (context) => {
     const { client, m, packname, author } = context;
+    const fq = getFakeQuoted(m);
 
     await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
@@ -78,7 +80,7 @@ module.exports = async (context) => {
                 const buffer = await sticker.toBuffer();
 
                 await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-                await client.sendMessage(m.chat, { sticker: buffer }, { quoted: m });
+                await client.sendMessage(m.chat, { sticker: buffer }, { quoted: fq });
 
                 await fs.unlink(mediaPath).catch(() => {});
                 if (mediaPath !== tempFile) await fs.unlink(tempFile).catch(() => {});

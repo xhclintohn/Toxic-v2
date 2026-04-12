@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'npm',
@@ -6,6 +7,7 @@ module.exports = {
     description: 'Search for NPM packages',
     run: async (context) => {
         const { client, m, text } = context;
+        const fq = getFakeQuoted(m);
 
         try {
             const query = (text || '').trim();

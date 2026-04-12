@@ -1,4 +1,5 @@
 const middleware = require('../../utils/botUtil/middleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'pin',
@@ -7,6 +8,7 @@ module.exports = {
     run: async (context) => {
         await middleware(context, async () => {
             const { client, m, args } = context;
+            const fq = getFakeQuoted(m);
 
             if (!m.quoted) {
                 return m.reply('╭───(    TOXIC-MD    )───\n├───≥ PIN ≤───\n├ \n├ Quote a message to pin it,\n├ you absolute muppet.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');

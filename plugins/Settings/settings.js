@@ -1,6 +1,7 @@
 const { getSettings, getSudoUsers, getBannedUsers } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 const { botname } = require('../../config/settings');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
   name: 'settings',
@@ -9,6 +10,7 @@ module.exports = {
   run: async (context) => {
     await ownerMiddleware(context, async () => {
       const { client, m, prefix } = context;
+      const fq = getFakeQuoted(m);
       const bName = botname || 'Toxic-MD';
 
       const settings = await getSettings();
@@ -155,7 +157,7 @@ module.exports = {
         `├ Settings save instantly to database.\n` +
         `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
-      await client.sendMessage(m.chat, { text: message }, { quoted: m });
+      await client.sendMessage(m.chat, { text: message }, { quoted: fq });
     });
   }
 };

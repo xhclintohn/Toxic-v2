@@ -1,8 +1,10 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const { GROQ_API_KEY: GROQ_KEY } = require('../../keys');
 
   module.exports = async (context) => {
       const { client, m, text } = context;
+      const fq = getFakeQuoted(m);
 
       if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Provide a query, you walnut.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       if (!GROQ_KEY || GROQ_KEY === 'REPLACE_WITH_YOUR_GROQ_API_KEY_HERE') return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ GROQ_API_KEY not set in keys.js\n├ Get one free at console.groq.com\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
@@ -26,7 +28,7 @@ const fetch = require('node-fetch');
           const content = data.choices?.[0]?.message?.content?.trim();
           if (!content) throw new Error('No response received.');
           await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-          await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Gʀᴏǫ Rᴇsᴘᴏɴsᴇ ≪───\n├ \n├ ${content}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: m });
+          await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Gʀᴏǫ Rᴇsᴘᴏɴsᴇ ≪───\n├ \n├ ${content}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
       } catch (error) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
           m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

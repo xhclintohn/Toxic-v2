@@ -1,4 +1,5 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const toBlockJid = (jid) => {
     if (!jid) return null;
@@ -10,6 +11,7 @@ const toBlockJid = (jid) => {
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, text } = context;
+        const fq = getFakeQuoted(m);
 
         if (!m.quoted && (!m.mentionedJid || m.mentionedJid.length === 0) && !text) {
             return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Tag or reply to a user to unblock.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'boobs',
@@ -6,6 +7,7 @@ module.exports = {
     description: 'Get some boobs (NSFW)',
     run: async (context) => {
         const { client, m } = context;
+        const fq = getFakeQuoted(m);
 
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -21,7 +23,7 @@ module.exports = {
             await client.sendMessage(m.chat, {
                 image: { url: data.message },
                 caption: `╭───(    TOXIC-MD    )───\n├───≫ NSFW ≪───\n├ \n├ Here's your boobs, you horny bastard.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
 
         } catch (error) {
             console.error('Boobs error:', error);

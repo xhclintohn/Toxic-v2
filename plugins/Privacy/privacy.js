@@ -1,9 +1,11 @@
 module.exports = async (context) => {
 
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
     await ownerMiddleware(context, async () => {
 
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
 
 const Myself = await client.decodeJid(client.user.id);
     
@@ -22,7 +24,7 @@ const Myself = await client.decodeJid(client.user.id);
 
 const avatar = await client.profilePictureUrl(Myself, 'image').catch(_ => 'https://telegra.ph/file/b34645ca1e3a34f1b3978.jpg');
 
-await client.sendMessage(m.chat, { image: { url: avatar}, caption: fnn}, { quoted: m}) 
+await client.sendMessage(m.chat, { image: { url: avatar}, caption: fnn}, { quoted: fq }) 
 
 
 })

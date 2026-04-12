@@ -1,4 +1,5 @@
 const { default: makeWASocket } = require('@whiskeysockets/baileys');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
   name: 'buttonz',
@@ -6,6 +7,7 @@ module.exports = {
   description: 'Displays a list selection menu',
   run: async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
 
     try {
       await client.sendMessage(m.chat, {
@@ -31,7 +33,7 @@ module.exports = {
         buttonText: 'Open Menu',
         headerType: 1,
         viewOnce: true
-      }, { quoted: m });
+      }, { quoted: fq });
 
     } catch (error) {
       console.error(`Menu command error: ${error.stack}`);

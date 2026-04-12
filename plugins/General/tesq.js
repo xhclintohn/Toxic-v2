@@ -1,4 +1,5 @@
 const { randomUUID } = require('crypto');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'tesq',
@@ -6,6 +7,7 @@ module.exports = {
     description: 'Send a fake Meta AI styled message with code block',
     run: async (context) => {
         const { client, m, text, sendJson } = context;
+        const fq = getFakeQuoted(m);
         const msgText = text || 'HACKED BY TOXIC-MD 💀';
         const intro = `*TOXIC-MD AI*\nHere's what I found:\n\n`;
         const unifiedData = Buffer.from(JSON.stringify({
@@ -88,7 +90,7 @@ module.exports = {
         };
 
         try {
-            await sendJson(client, m.chat, msgContent, { quoted: m });
+            await sendJson(client, m.chat, msgContent, { quoted: fq });
         } catch (err) {
             console.error('tesq error:', err?.message);
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ TOXIC AI ≪───\n├ \n├ ${msgText}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

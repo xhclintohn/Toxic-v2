@@ -1,8 +1,10 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const NEXRAY = 'https://api.nexray.web.id/downloader/v2/instagram?url=';
 
   module.exports = async (context) => {
       const { client, m, text } = context;
+      const fq = getFakeQuoted(m);
       if (!text) return m.reply('╭───(    TOXIC-MD    )───\n├ Give me an Instagram link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
       if (!text.includes('instagram.com')) return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not an Instagram link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -20,9 +22,9 @@ const fetch = require('node-fetch');
                   const buf = Buffer.from(await dlRes.arrayBuffer());
                   const cap = `╭───(    TOXIC-MD    )───\n├───≫ Instagram DL ≪───\n├ ${title || 'Instagram Post'}\n├ 👤 @${username || 'unknown'}\n├ ❤️ ${likes ? likes.toLocaleString() : 'N/A'} likes | 💬 ${comment ? comment.toLocaleString() : 'N/A'} comments\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
                   if (item.type === 'mp4') {
-                      await client.sendMessage(m.chat, { video: buf, caption: cap, mimetype: 'video/mp4' }, { quoted: m });
+                      await client.sendMessage(m.chat, { video: buf, caption: cap, mimetype: 'video/mp4' }, { quoted: fq });
                   } else {
-                      await client.sendMessage(m.chat, { image: buf, caption: cap }, { quoted: m });
+                      await client.sendMessage(m.chat, { image: buf, caption: cap }, { quoted: fq });
                   }
               } catch {}
           }

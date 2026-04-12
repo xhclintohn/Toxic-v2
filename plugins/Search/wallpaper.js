@@ -1,8 +1,10 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   const { client, m, text } = context;
+  const fq = getFakeQuoted(m);
 
   if (!text) {
     return m.reply("╭───(    TOXIC-MD    )───\n├ You forgot the query, dumbass.\n├ Try: .wallpaper anime girl, 5\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
@@ -44,7 +46,7 @@ module.exports = async (context) => {
       await client.sendMessage(m.chat, {
         image: { url: wp.image },
         caption,
-      }, { quoted: m });
+      }, { quoted: fq });
 
       if (i < toSend.length - 1) await new Promise(res => setTimeout(res, 1500));
     }

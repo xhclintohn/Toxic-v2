@@ -1,7 +1,9 @@
 const yts = require("yt-search");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   const { client, m, text } = context;
+  const fq = getFakeQuoted(m);
 
   const formatStylishReply = (message) => {
     return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉
@@ -12,7 +14,7 @@ module.exports = async (context) => {
     return client.sendMessage(
       m.chat,
       { text: formatStylishReply("Yo, drop a search term, fam! 🔍 Ex: .yts Alan Walker Alone") },
-      { quoted: m, ad: true }
+      { quoted: fq, ad: true }
     );
   }
 
@@ -24,7 +26,7 @@ module.exports = async (context) => {
       return client.sendMessage(
         m.chat,
         { text: formatStylishReply("Bruh, no YouTube results found! 😕 Try another search.") },
-        { quoted: m, ad: true }
+        { quoted: fq, ad: true }
       );
     }
 
@@ -51,7 +53,7 @@ module.exports = async (context) => {
     await client.sendMessage(
       m.chat,
       { text: replyText },
-      { quoted: m, ad: true }
+      { quoted: fq, ad: true }
     );
 
     // Optionally send thumbnail of the first result
@@ -62,14 +64,14 @@ module.exports = async (context) => {
         image: { url: videos[0].thumbnail },
         caption: formatStylishReply(`🎬 First result: *${videos[0].title}*\n📎 ${videos[0].url}`),
       },
-      { quoted: m }
+      { quoted: fq }
     );
 
   } catch (error) {
     await client.sendMessage(
       m.chat,
       { text: formatStylishReply(`Error: ${error.message}`) },
-      { quoted: m, ad: true }
+      { quoted: fq, ad: true }
     );
   }
 };

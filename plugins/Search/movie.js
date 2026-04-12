@@ -1,5 +1,7 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async (context) => {
   const { client, m, text } = context;
+  const fq = getFakeQuoted(m);
   const axios = require("axios");
 
   if (!text) return m.reply("🚫 Please provide a movie name or TV show");
@@ -38,7 +40,7 @@ module.exports = async (context) => {
         },
         caption: imdbt,
       },
-      { quoted: m }
+      { quoted: fq }
     );
   } catch (e) {
     m.reply("❌ I cannot find that movie\n\n" + e);

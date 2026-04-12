@@ -1,5 +1,6 @@
 const { getSettings, getGroupSettings, updateGroupSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const formatStylishReply = (message) => {
     return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉
@@ -9,6 +10,7 @@ const formatStylishReply = (message) => {
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, args } = context;
+        const fq = getFakeQuoted(m);
         const value = args[0]?.toLowerCase();
         const jid = m.chat;
         
@@ -62,7 +64,7 @@ module.exports = async (context) => {
                         }
                     ]
                 }
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     });
 };

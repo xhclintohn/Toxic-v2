@@ -1,9 +1,11 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 const { getSudoUsers } = require('../../database/config');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   
     const { m } = context;
+    const fq = getFakeQuoted(m);
 
     const sudoUsers = await getSudoUsers();
 

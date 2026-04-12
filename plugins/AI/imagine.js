@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'imagine',
@@ -6,6 +7,7 @@ module.exports = {
     description: 'Generates AI images from text prompts using Pollinations.ai',
     run: async (context) => {
         const { client, m, prefix, botname } = context;
+        const fq = getFakeQuoted(m);
 
         const prompt = m.body.replace(new RegExp(`^${prefix}(imagine|aiimage|dream|generate)\\s*`, 'i'), '').trim();
 
@@ -13,7 +15,7 @@ module.exports = {
             return client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Forgot the prompt? Typical.\n├ Example: ${prefix}imagine a cat playing football\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 mentions: [m.sender]
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         try {
@@ -34,7 +36,7 @@ module.exports = {
                     image: buffer,
                     caption: `╭───(    TOXIC-MD    )───\n├───≫ Aɪ Iᴍᴀɢᴇ ≪───\n├ \n├ Prompt: ${prompt}\n├ Powered by ${botname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 },
-                { quoted: m }
+                { quoted: fq }
             );
 
         } catch (error) {
@@ -42,7 +44,7 @@ module.exports = {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Image generation failed.\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     }
 };

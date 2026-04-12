@@ -1,7 +1,9 @@
 const fetch = require("node-fetch");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m, text, botname } = context;
+    const fq = getFakeQuoted(m);
 
     const formatStylishReply = (message) => {
         return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
@@ -80,7 +82,7 @@ module.exports = async (context) => {
                         `🎨 Hentai Content\n\n📌 *Title:* ${title}\n📝 *Description:* ${description}\n👀 *Views:* ${views}\n📅 *Date:* ${date}\n🖼️ *Image:* ${image.alt}`
                     ),
                 },
-                { quoted: m }
+                { quoted: fq }
             );
         }
 

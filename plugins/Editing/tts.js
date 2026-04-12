@@ -1,6 +1,8 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async (context) => {
 
   const { client, m, text } = context;
+  const fq = getFakeQuoted(m);
 
   const googleTTS = require('google-tts-api');
 
@@ -15,7 +17,7 @@ module.exports = async (context) => {
       host: 'https://translate.google.com',
     });
 
-    await client.sendMessage(m.chat, { audio: { url:url},mimetype:'audio/mp4', ptt: true }, { quoted: m });
+    await client.sendMessage(m.chat, { audio: { url:url},mimetype:'audio/mp4', ptt: true }, { quoted: fq });
     await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
   } catch (e) {
     await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });

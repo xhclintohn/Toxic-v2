@@ -1,9 +1,11 @@
 module.exports = async (context) => {
 
 const { client, m, text, botname  } = context;
+const fq = getFakeQuoted(m);
 
 const axios = require('axios');
 const cheerio = require('cheerio');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 async function MediaFire(url, options) {
   try {
@@ -61,7 +63,7 @@ if (!fileInfo || !fileInfo.length) {
                 mimetype: fileInfo[0].mime,
                 caption: `╭───(    TOXIC-MD    )───\n├───≫ MEDIAFIRE DL ≪───\n├ \n├ File: ${fileInfo[0].nama}\n├ Downloaded by ${botname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, 
             },
-            { quoted: m }
+            { quoted: fq }
 
 
    );

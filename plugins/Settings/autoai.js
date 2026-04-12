@@ -1,5 +1,6 @@
 const { getSettings, updateSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
   name: 'autoai',
@@ -8,6 +9,7 @@ module.exports = {
   run: async (context) => {
     await ownerMiddleware(context, async () => {
       const { client, m, args, prefix } = context;
+      const fq = getFakeQuoted(m);
 
       const fmt = (title, lines) => {
         const body = (Array.isArray(lines) ? lines : [lines]).map(l => `├ ${l}`).join('\n');
@@ -21,7 +23,7 @@ module.exports = {
         if (value === 'on' || value === 'off') {
           const newState = value === 'on';
           if (settings.autoai === newState) {
-            return client.sendMessage(m.chat, { text: fmt('AUTO AI', `already ${value.toUpperCase()} 🙄 stop pressing buttons`) }, { quoted: m });
+            return client.sendMessage(m.chat, { text: fmt('AUTO AI', `already ${value.toUpperCase()} 🙄 stop pressing buttons`) }, { quoted: fq });
           }
           await updateSetting('autoai', newState);
           await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
@@ -29,7 +31,7 @@ module.exports = {
             text: fmt('AUTO AI', newState
               ? ['Status: ✅ ON', 'Replies to all DMs + @mentions in groups.', 'God help them 😒']
               : ['Status: ❌ OFF', 'Silent mode. Finally.'])
-          }, { quoted: m });
+          }, { quoted: fq });
         }
 
         const isOn = settings.autoai === true || settings.autoai === 'true';
@@ -41,10 +43,10 @@ module.exports = {
             '',
             `Toggle: ${prefix}autoai on  /  ${prefix}autoai off`
           ])
-        }, { quoted: m });
+        }, { quoted: fq });
 
       } catch {
-        client.sendMessage(m.chat, { text: fmt('AUTO AI', 'something broke. try again.') }, { quoted: m });
+        client.sendMessage(m.chat, { text: fmt('AUTO AI', 'something broke. try again.') }, { quoted: fq });
       }
     });
   }

@@ -1,6 +1,7 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 const axios = require("axios");
 const { herokuAppName, getHerokuApiKey } = require("../../config/settings");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const SENSITIVE = ['heroku_api_key', 'api_key', 'database_url', 'session', 'secret', 'password', 'token', 'private_key', 'auth', 'key'];
 
@@ -12,6 +13,7 @@ function isSensitive(key) {
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m } = context;
+        const fq = getFakeQuoted(m);
         const herokuApiKey = getHerokuApiKey();
 
         if (!herokuAppName || !herokuApiKey) {

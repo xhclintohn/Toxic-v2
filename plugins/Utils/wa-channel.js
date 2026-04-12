@@ -8,6 +8,7 @@ try {
 if (!text) return m.reply('Provide a WhatsApp channel link to stalk');
 
 const fetch = require("node-fetch");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 if (!text.includes('whatsapp.com/channel')) {
         return m.reply(`Doesnt look like a WhatsApp channel link, uh?`);
@@ -20,7 +21,7 @@ const data = await response.json()
 const img = data.data.img;
 const name = data.data.title
 
-await client.sendMessage(m.chat, { image: { url: img}, caption: `Channel Name:- ${data.data.title}\n\nFollowers:- ${data.data.followers}\n\nDescription:- ${data.data.description}`}, {quoted: m})
+await client.sendMessage(m.chat, { image: { url: img}, caption: `Channel Name:- ${data.data.title}\n\nFollowers:- ${data.data.followers}\n\nDescription:- ${data.data.description}`}, { quoted: fq })
 
 } catch (error) {
 

@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
   name: 'pinterest',
@@ -6,6 +7,7 @@ module.exports = {
   description: 'Fetches Pinterest images for your basic needs',
   run: async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
 
     try {
       const query = m.text.trim();

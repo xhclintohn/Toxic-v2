@@ -8,6 +8,7 @@ const {
 const fs = require('fs');
 const path = require('path');
 const pino = require('pino');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 function cleanNumber(input) {
     let num = input.replace(/[\s\-\(\)\+\.]/g, '');
@@ -33,12 +34,13 @@ module.exports = {
     description: 'Generates a pairing code for WhatsApp multi-device linking',
     run: async (context) => {
         const { client, m, text, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         try {
             if (!text) {
                 return await client.sendMessage(m.chat, {
                     text: `╭───(    TOXIC-MD    )───\n├───≫ Pᴀɪʀɪɴɢ ≪───\n├ \n├ Oi genius, give me a number\n├ to pair with. You think I can\n├ read your mind?\n├ \n├ Usage: *${prefix}pair <number>*\n├ Example: *${prefix}pair 254712345678*\n├ Example: *${prefix}pair +1 234 567 8901*\n├ \n├ Spaces, dashes, plus signs...\n├ I'll clean that mess up for you.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-                }, { quoted: m });
+                }, { quoted: fq });
             }
 
             const number = cleanNumber(text);
@@ -46,14 +48,14 @@ module.exports = {
             if (number.length < 6 || number.length > 15) {
                 return await client.sendMessage(m.chat, {
                     text: `╭───(    TOXIC-MD    )───\n├───≫ Iɴᴠᴀʟɪᴅ Nᴜᴍʙᴇʀ ≪───\n├ \n├ That number is garbage.\n├ Cleaned: ${number}\n├ Need 6-15 digits with country code.\n├ Try again with a real number.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-                }, { quoted: m });
+                }, { quoted: fq });
             }
 
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Pᴀɪʀɪɴɢ ≪───\n├ \n├ Generating code for: ${number}\n├ Hold on, this takes a sec...\n├ Don't spam the command, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
 
             const sessionId = makeid(8);
             let tempPath;
@@ -136,14 +138,14 @@ module.exports = {
                             })
                         }
                     }
-                }, { quoted: m });
+                }, { quoted: fq });
 
                 await client.relayMessage(m.chat, ctaMsg.message, { messageId: ctaMsg.key.id });
 
             } catch (btnErr) {
                 await client.sendMessage(m.chat, {
                     text: `╭───(    TOXIC-MD    )───\n├───≫ Pᴀɪʀɪɴɢ Cᴏᴅᴇ ≪───\n├ \n├ Number: ${number}\n├ Code: *${formattedCode}*\n├ \n├ Copy the code above and paste\n├ it in your WhatsApp linked\n├ devices section. Hurry up,\n├ it expires quick.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-                }, { quoted: m });
+                }, { quoted: fq });
             }
 
             setTimeout(async () => {
@@ -160,7 +162,7 @@ module.exports = {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Pᴀɪʀɪɴɢ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Couldn't generate the code.\n├ ${error.message || 'Unknown error'}\n├ \n├ Make sure the number is valid\n├ and actually on WhatsApp.\n├ Then try again, if you can\n├ manage that.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     }
 };

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'help',
@@ -7,6 +8,7 @@ module.exports = {
     description: 'Shows help and usage for a specific command',
     run: async (context) => {
         const { client, m, args, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         const effectivePrefix = prefix || '.';
 
@@ -28,7 +30,7 @@ module.exports = {
             const body = allCommands.map(cmd => `├ *${effectivePrefix}${cmd}*`).join('\n');
             return await client.sendMessage(m.chat, {
                 text: fmt('ALL COMMANDS', `├ Total: ${allCommands.length} commands\n├ Use *${effectivePrefix}help <command>* for usage\n├ \n${body}`)
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         const cmdName = args[0].toLowerCase().replace(/^\./, '');
@@ -284,7 +286,7 @@ module.exports = {
         if (helpData[cmdName]) {
             const info = helpData[cmdName];
             const body = `├ 📌 *Command:* ${cmdName}\n├ 📖 *Usage:* ${info.usage}\n├ ℹ️ *Description:*\n├ ${info.desc}`;
-            return await client.sendMessage(m.chat, { text: fmt(`HELP: ${cmdName.toUpperCase()}`, body) }, { quoted: m });
+            return await client.sendMessage(m.chat, { text: fmt(`HELP: ${cmdName.toUpperCase()}`, body) }, { quoted: fq });
         }
 
         const pluginsDir = path.join(__dirname, '..');
@@ -295,14 +297,14 @@ module.exports = {
             if (files.includes(cmdName + '.js')) {
                 found = true;
                 const body = `├ 📌 *Command:* ${cmdName}\n├ 📁 *Category:* ${cat}\n├ 📖 *Usage:* ${effectivePrefix}${cmdName}\n├ ℹ️ No detailed help available for this command yet.`;
-                return await client.sendMessage(m.chat, { text: fmt(`HELP: ${cmdName.toUpperCase()}`, body) }, { quoted: m });
+                return await client.sendMessage(m.chat, { text: fmt(`HELP: ${cmdName.toUpperCase()}`, body) }, { quoted: fq });
             }
         }
 
         if (!found) {
             await client.sendMessage(m.chat, {
                 text: fmt('HELP', `├ ❌ Command "*${cmdName}*" not found.\n├ Use *${effectivePrefix}help* to list all commands.`)
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     }
 };

@@ -1,4 +1,5 @@
 const axios = require("axios");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'tempinbox',
@@ -6,6 +7,7 @@ module.exports = {
     description: 'Check your temporary email inbox',
     run: async (context) => {
         const { client, m, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         const args = m.body?.split(" ") || [];
         const sessionId = args[1];
@@ -13,7 +15,7 @@ module.exports = {
         if (!sessionId) {
             return client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Tᴇᴍᴘ Iɴʙᴏx ≪───\n├ \n├ Yo, where's the session ID?\n├ You created the temp mail, right?\n├ Usage: ${prefix}tempinbox YOUR_SESSION_ID\n├ Example: ${prefix}tempinbox U2Vzc2lvbjoc5LI1OhFHh4tv21skV965\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -34,7 +36,7 @@ module.exports = {
             if (totalEmails === 0) {
                 return client.sendMessage(m.chat, {
                     text: `╭───(    TOXIC-MD    )───\n├───≫ Tᴇᴍᴘ Iɴʙᴏx ≪───\n├ \n├ Inbox is empty, genius.\n├ No emails yet.\n├ Use your temp email somewhere\n├ and check back.\n├ Total Emails: 0\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-                }, { quoted: m });
+                }, { quoted: fq });
             }
 
             let inboxText = `╭───(    TOXIC-MD    )───\n├───≫ Tᴇᴍᴘ Iɴʙᴏx ≪───\n├ \n├ Inbox: ${totalEmails} email${totalEmails > 1 ? 's' : ''} found\n`;
@@ -58,10 +60,10 @@ module.exports = {
                 const firstPart = inboxText.substring(0, 4000);
                 const secondPart = inboxText.substring(4000);
 
-                await client.sendMessage(m.chat, { text: firstPart }, { quoted: m });
+                await client.sendMessage(m.chat, { text: firstPart }, { quoted: fq });
                 await client.sendMessage(m.chat, { text: secondPart });
             } else {
-                await client.sendMessage(m.chat, { text: inboxText }, { quoted: m });
+                await client.sendMessage(m.chat, { text: inboxText }, { quoted: fq });
             }
 
         } catch (error) {
@@ -81,7 +83,7 @@ module.exports = {
 
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     },
 };

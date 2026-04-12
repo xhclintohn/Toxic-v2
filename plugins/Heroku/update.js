@@ -3,10 +3,12 @@ const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
 const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
 
 const { herokuAppName: HEROKU_APP_NAME, getHerokuApiKey } = require('../../config/settings');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 const HEROKU_API_KEY = getHerokuApiKey();
 
 module.exports = async (context) => {
     const { client, m, prefix } = context;
+    const fq = getFakeQuoted(m);
 
     const formatStylishReply = (message) => {
         return (
@@ -31,7 +33,7 @@ module.exports = async (context) => {
                             "Fix your setup before crying for updates. 🙄"
                         ),
                     },
-                    { quoted: m }
+                    { quoted: fq }
                 );
             }
 
@@ -92,7 +94,7 @@ module.exports = async (context) => {
                             }
                         }
                     },
-                    { quoted: m }
+                    { quoted: fq }
                 );
 
                 return await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
@@ -134,7 +136,7 @@ module.exports = async (context) => {
                         }
                     }
                 },
-                { quoted: m }
+                { quoted: fq }
             );
 
             await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
@@ -159,7 +161,7 @@ module.exports = async (context) => {
             await client.sendMessage(
                 m.chat,
                 { text: formatStylishReply(msg) },
-                { quoted: m }
+                { quoted: fq }
             );
         }
     });

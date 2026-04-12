@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'npmdl',
@@ -6,6 +7,7 @@ module.exports = {
     description: 'Download NPM package as .tgz file',
     run: async (context) => {
         const { client, m } = context;
+        const fq = getFakeQuoted(m);
 
         try {
             let query = m.text.trim();
@@ -47,7 +49,7 @@ module.exports = {
                 fileName: fileName,
                 mimetype: 'application/gzip',
                 caption: `╭───(    TOXIC-MD    )───\n├───≫ NPM ≪───\n├ \n├ ${query} v${latest}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
 
         } catch (error) {
             console.error('NPM download error:', error);

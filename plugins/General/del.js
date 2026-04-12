@@ -1,9 +1,11 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = {
   name: 'del',
   aliases: ['delete', 'd'],
   description: 'Deletes the replied-to or quoted message, you lazy fuck',
   run: async (context) => {
     const { client, m, botname } = context;
+    const fq = getFakeQuoted(m);
 
     try {
       if (!m || !m.key) {

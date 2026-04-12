@@ -1,5 +1,7 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async (context) => {
   const { client, m, chatUpdate, store, isBotAdmin, isAdmin } = context;
+  const fq = getFakeQuoted(m);
 
   if (!m.isGroup) {
     return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Yo, dumbass, this command's\n├ for groups only.\n├ Stop screwing around.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

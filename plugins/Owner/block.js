@@ -1,4 +1,5 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const getMentionedJid = (m) => {
     if (m.msg?.contextInfo?.mentionedJid?.length > 0) return m.msg.contextInfo.mentionedJid[0];
@@ -30,6 +31,7 @@ const resolveTarget = (jid, participants) => {
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, text } = context;
+        const fq = getFakeQuoted(m);
 
         let rawJid = null;
 

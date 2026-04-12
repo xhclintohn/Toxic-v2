@@ -1,7 +1,9 @@
 const axios = require('axios');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   const { client, m, text } = context;
+  const fq = getFakeQuoted(m);
 
   if (!text) {
     return m.reply('╭───(    TOXIC-MD    )───\n├───≫ LOGO GEN ≪───\n├ \n├ Enter title, idea, and slogan.\n├ Format: _logogen Title|Idea|Slogan_\n├ \n├ Example: _logogen ToxicTech|AI-Powered\n├ Services|Innovation Meets Simplicity_\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
@@ -39,7 +41,7 @@ module.exports = async (context) => {
       await client.sendMessage(m.chat, {
         image: { url: logo.logo_thumb },
         caption: `╭───(    TOXIC-MD    )───\n├───≫ LOGO ≪───\n├ \n├ Generated Logo for "${title}"\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      }, { quoted: m });
+      }, { quoted: fq });
     }
   } catch (err) {
     console.error("Logo generation error:", err);

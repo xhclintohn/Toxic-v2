@@ -1,5 +1,6 @@
 const axios = require('axios');
 const FormData = require('form-data');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 async function uploadToCatbox(buffer) {
     const form = new FormData();
@@ -24,6 +25,7 @@ async function uploadToCatbox(buffer) {
 
 module.exports = async (context) => {
     const { client, m, text } = context;
+    const fq = getFakeQuoted(m);
 
     if (!text && !m.quoted && !(m.mtype === 'imageMessage' && m.body.includes('.remini'))) {
         return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Mɪssɪɴɢ Iᴍᴀɢᴇ ≪───\n├ \n├ Give me an image you dumbass\n├ Example: .remini https://image.com/trash.png\n├ Or reply to an image\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
@@ -81,7 +83,7 @@ module.exports = async (context) => {
                 image: response.data,
                 caption: `╭───(    TOXIC-MD    )───\n├───≫ Eɴʜᴀɴᴄᴇᴅ Iᴍᴀɢᴇ ≪───\n├ \n├ Your shitty image is now HD.\n├ Still looks like garbage though.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             },
-            { quoted: m }
+            { quoted: fq }
         );
 
     } catch (error) {

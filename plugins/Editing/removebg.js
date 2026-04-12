@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { uploadTempUrl } = require('../../lib/toUrl');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'removebg',
@@ -7,6 +8,7 @@ module.exports = {
     description: 'Removes background from images using AI',
     run: async (context) => {
         const { client, m, mime } = context;
+        const fq = getFakeQuoted(m);
         
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
@@ -17,7 +19,7 @@ module.exports = {
             return client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ REMOVE BG ≪───\n├ \n├ Do you have eyes? That's clearly\n├ not an image. Quote an actual image\n├ file, you incompetent fool.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 mentions: [m.sender]
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         try {
@@ -26,14 +28,14 @@ module.exports = {
                 await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                 return client.sendMessage(m.chat, {
                     text: '╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Failed to download the image.\n├ Your device is probably as defective\n├ as your judgment.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
-                }, { quoted: m });
+                }, { quoted: fq });
             }
 
             if (media.length > 10 * 1024 * 1024) {
                 await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                 return client.sendMessage(m.chat, {
                     text: '╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Image exceeds 10MB limit.\n├ Do you think I have infinite storage?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
-                }, { quoted: m });
+                }, { quoted: fq });
             }
 
             const imageUrl = await uploadTempUrl(media, 'png');
@@ -68,7 +70,7 @@ module.exports = {
                     image: transparentImage, 
                     caption: '╭───(    TOXIC-MD    )───\n├───≫ REMOVE BG ≪───\n├ \n├ Background successfully removed.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
                 },
-                { quoted: m }
+                { quoted: fq }
             );
 
             if (transparentResponse.headers['content-type']?.includes('png')) {
@@ -80,7 +82,7 @@ module.exports = {
                         fileName: `transparent_bg_${Date.now()}.png`,
                         caption: '╭───(    TOXIC-MD    )───\n├───≫ PNG FILE ≪───\n├ \n├ PNG version for higher quality.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
                     },
-                    { quoted: m }
+                    { quoted: fq }
                 );
             }
 
@@ -107,7 +109,7 @@ module.exports = {
 
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Background removal failed.\n├ Error: ${errorMessage}\n├ \n├ Suggestions:\n├ Use clear, high-contrast images\n├ Ensure subject has defined edges\n├ Try a simpler composition\n├ Check your internet connection\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     }
 };

@@ -1,5 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const normalizeNumber = (jid) => {
     if (!jid) return '';
@@ -13,18 +14,19 @@ const PLUGINS_DIR = path.join(__dirname, '..', '..', 'plugins');
 
 module.exports = async (context) => {
     const { client, m, text, prefix } = context;
+    const fq = getFakeQuoted(m);
 
     if (normalizeNumber(m.sender) !== DEVELOPER) {
         return await client.sendMessage(m.chat, {
             text: `╭───(    TOXIC-MD    )───\n├───≫ ACCESS DENIED ≪───\n├ \n├ This command is restricted to the bot owner.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: m });
+        }, { quoted: fq });
     }
 
     if (!text) {
         const categoryList = CATEGORIES.map(c => `├ • ${c}`).join('\n');
         return await client.sendMessage(m.chat, {
             text: `╭───(    TOXIC-MD    )───\n├───≫ GETCMD ≪───\n├ \n├ Usage: ${prefix}getcmd <name>\n├ \n├ Categories:\n${categoryList}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: m });
+        }, { quoted: fq });
     }
 
     const commandName = text.trim().endsWith('.js') ? text.trim().slice(0, -3) : text.trim();
@@ -39,7 +41,7 @@ module.exports = async (context) => {
             if (data.length <= MAX_TEXT_SIZE) {
                 await client.sendMessage(m.chat, {
                     text: `╭───(    TOXIC-MD    )───\n├───≫ COMMAND FILE ≪───\n├ \n├ File: ${commandName}.js\n├ Category: ${category}\n├ Size: ${data.length} chars\n├ \n\`\`\`javascript\n${data}\n\`\`\`\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-                }, { quoted: m });
+                }, { quoted: fq });
             }
 
             await client.sendMessage(m.chat, {
@@ -47,7 +49,7 @@ module.exports = async (context) => {
                 fileName: `${commandName}.js`,
                 mimetype: 'application/javascript',
                 caption: `╭───(    TOXIC-MD    )───\n├ 📄 ${commandName}.js\n├ Category: ${category}\n├ Size: ${data.length} chars\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
 
             fileFound = true;
             break;
@@ -55,7 +57,7 @@ module.exports = async (context) => {
             if (err.code !== 'ENOENT') {
                 return await client.sendMessage(m.chat, {
                     text: `╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Error reading file: ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-                }, { quoted: m });
+                }, { quoted: fq });
             }
         }
     }
@@ -63,6 +65,6 @@ module.exports = async (context) => {
     if (!fileFound) {
         await client.sendMessage(m.chat, {
             text: `╭───(    TOXIC-MD    )───\n├───≫ NOT FOUND ≪───\n├ \n├ "${commandName}" not found in any category.\n├ \n├ Tip: use ${prefix}getcmd with no args\n├ to see all categories.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: m });
+        }, { quoted: fq });
     }
 };

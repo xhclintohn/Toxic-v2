@@ -1,7 +1,9 @@
 module.exports = async (context) => {
   const { client, m, text, botname } = context;
+  const fq = getFakeQuoted(m);
 
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
   let cap = `╭───(    TOXIC-MD    )───\n├───≫ CARBON ≪───\n├ \n├ Converted By ${botname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
@@ -24,7 +26,7 @@ const fetch = require('node-fetch');
 
       let per = await response.buffer();
 
-      await client.sendMessage(m.chat, { image: per, caption: cap }, { quoted: m });
+      await client.sendMessage(m.chat, { image: per, caption: cap }, { quoted: fq });
     } catch (error) {
       m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ An error occured, you broke it.\n├ ${error}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`)
     }

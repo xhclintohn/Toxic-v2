@@ -1,8 +1,10 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, text } = context;
+        const fq = getFakeQuoted(m);
 
         const options = ['all', 'known', 'none'];
 

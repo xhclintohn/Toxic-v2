@@ -1,9 +1,11 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const { GROQ_API_KEY: GROQ_KEY } = require('../../keys');
   const { getConversationHistory, addConversationMessage, clearConversationHistory } = require('../../database/config');
 
   module.exports = async (context) => {
       const { client, m, text, prefix } = context;
+      const fq = getFakeQuoted(m);
       const num = m.sender;
 
       if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Give me something to work with.\n├ Chats are stored for context.\n├ To clear history: ${prefix}chat --reset\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

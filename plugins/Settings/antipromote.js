@@ -1,9 +1,11 @@
 const { getSettings, getGroupSettings, updateGroupSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args } = context;
+    const fq = getFakeQuoted(m);
     const value = args[0]?.toLowerCase();
     const jid = m.chat;
 
@@ -12,7 +14,7 @@ module.exports = async (context) => {
     };
 
     if (!jid.endsWith('@g.us')) {
-      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", "Nice try, idiot!\n├ This command is for groups only, you moron!") }, { quoted: m });
+      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", "Nice try, idiot!\n├ This command is for groups only, you moron!") }, { quoted: fq });
     }
 
     const settings = await getSettings();
@@ -25,12 +27,12 @@ module.exports = async (context) => {
       const action = value === 'on';
 
       if (isEnabled === action) {
-        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote is already ${value.toUpperCase()}, you clueless moron!\n├ Stop spamming my commands!`) }, { quoted: m });
+        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote is already ${value.toUpperCase()}, you clueless moron!\n├ Stop spamming my commands!`) }, { quoted: fq });
       }
 
       await updateGroupSetting(jid, 'antipromote', action ? 'true' : 'false');
       await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
-      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote ${value.toUpperCase()}!\n├ Promotions are under my control, king!`) }, { quoted: m });
+      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote ${value.toUpperCase()}!\n├ Promotions are under my control, king!`) }, { quoted: fq });
     }
 
     const buttons = [
@@ -43,6 +45,6 @@ module.exports = async (context) => {
       buttons,
       headerType: 1,
       viewOnce: true,
-    }, { quoted: m });
+    }, { quoted: fq });
   });
 };

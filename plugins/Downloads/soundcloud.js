@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const NEXRAY = 'https://api.nexray.web.id/downloader/soundcloud?url=';
 
   module.exports = {
@@ -6,6 +7,7 @@ const fetch = require('node-fetch');
       alias: ['scloud', 'scdl'],
       run: async (context) => {
           const { client, m, text, prefix } = context;
+          const fq = getFakeQuoted(m);
           if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}soundcloud https://soundcloud.com/user/track\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
           if (!text.includes('soundcloud.com')) return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a SoundCloud link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
           await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -17,7 +19,7 @@ const fetch = require('node-fetch');
               const audioUrl = audio || d.result.url || d.result.download;
               if (!audioUrl) throw new Error('No audio URL returned');
               if (thumbnail) {
-                  await client.sendMessage(m.chat, { image: { url: thumbnail }, caption: `🎵 ${title || 'SoundCloud Track'}` }, { quoted: m });
+                  await client.sendMessage(m.chat, { image: { url: thumbnail }, caption: `🎵 ${title || 'SoundCloud Track'}` }, { quoted: fq });
               }
               const dlRes = await fetch(audioUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 35000 });
               const buf = Buffer.from(await dlRes.arrayBuffer());
@@ -25,7 +27,7 @@ const fetch = require('node-fetch');
               await client.sendMessage(m.chat, {
                   audio: buf, mimetype: 'audio/mpeg', ptt: false,
                   fileName: `${title || 'soundcloud-track'}.mp3`
-              }, { quoted: m });
+              }, { quoted: fq });
           } catch (e) {
               await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
               m.reply(`╭───(    TOXIC-MD    )───\n├ Failed: ${e.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

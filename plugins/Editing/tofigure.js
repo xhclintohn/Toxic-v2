@@ -1,5 +1,6 @@
 const axios = require('axios');
 const FormData = require('form-data');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 async function uploadToCatbox(buffer) {
     const form = new FormData();
@@ -12,6 +13,7 @@ async function uploadToCatbox(buffer) {
 
 module.exports = async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
         const quoted = m.quoted ? m.quoted : m;
@@ -27,7 +29,7 @@ module.exports = async (context) => {
         const resultUrl = response.data.result;
         const figureBuffer = (await axios.get(resultUrl, { responseType: 'arraybuffer' })).data;
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-        await client.sendMessage(m.chat, { image: Buffer.from(figureBuffer), caption: '╭───(    TOXIC-MD    )───\n├───≫ TO FIGURE ≪───\n├ \n├ Here. It is now a "figure".\n├ You are welcome.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: m });
+        await client.sendMessage(m.chat, { image: Buffer.from(figureBuffer), caption: '╭───(    TOXIC-MD    )───\n├───≫ TO FIGURE ≪───\n├ \n├ Here. It is now a "figure".\n├ You are welcome.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: fq });
     } catch (err) {
         console.error('tofigur error:', err);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });

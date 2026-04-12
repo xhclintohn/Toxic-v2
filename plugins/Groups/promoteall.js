@@ -1,4 +1,5 @@
 const middleware = require('../../utils/botUtil/middleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const BOX = (title, lines) => {
     const body = (Array.isArray(lines) ? lines : [lines]).map(l => `├ ${l}`).join('\n');
@@ -12,18 +13,19 @@ module.exports = {
     run: async (context) => {
         await middleware(context, async () => {
             const { client, m, isBotAdmin } = context;
+            const fq = getFakeQuoted(m);
 
-            if (!m.isGroup) return client.sendMessage(m.chat, { text: BOX('ERROR', ['Group only command.']) }, { quoted: m });
-            if (!isBotAdmin) return client.sendMessage(m.chat, { text: BOX('ERROR', ['Make me admin first.']) }, { quoted: m });
+            if (!m.isGroup) return client.sendMessage(m.chat, { text: BOX('ERROR', ['Group only command.']) }, { quoted: fq });
+            if (!isBotAdmin) return client.sendMessage(m.chat, { text: BOX('ERROR', ['Make me admin first.']) }, { quoted: fq });
 
             try {
                 const meta = await client.groupMetadata(m.chat);
                 const nonAdmins = meta.participants.filter(p => p.admin !== 'admin' && p.admin !== 'superadmin');
                 const jids = nonAdmins.map(p => (p.jid || p.id).split(':')[0].replace(/\D(?=\d{10})/, '') + '@s.whatsapp.net').filter(Boolean);
 
-                if (!jids.length) return client.sendMessage(m.chat, { text: BOX('PROMOTEALL', ['Everyone\'s already an admin. Nothing to do.']) }, { quoted: m });
+                if (!jids.length) return client.sendMessage(m.chat, { text: BOX('PROMOTEALL', ['Everyone\'s already an admin. Nothing to do.']) }, { quoted: fq });
 
-                await client.sendMessage(m.chat, { text: BOX('PROMOTEALL', [`Promoting ${jids.length} members...`]) }, { quoted: m });
+                await client.sendMessage(m.chat, { text: BOX('PROMOTEALL', [`Promoting ${jids.length} members...`]) }, { quoted: fq });
 
                 const batchSize = 5;
                 let promoted = 0;
@@ -35,9 +37,9 @@ module.exports = {
 
                 await client.sendMessage(m.chat, {
                     text: BOX('PROMOTEALL', [`Done. ${promoted} member(s) promoted to admin.`, `You made everyone a boss. Congrats on the chaos.`])
-                }, { quoted: m });
+                }, { quoted: fq });
             } catch (err) {
-                await client.sendMessage(m.chat, { text: BOX('ERROR', [`Failed: ${err.message?.slice(0, 60)}`]) }, { quoted: m });
+                await client.sendMessage(m.chat, { text: BOX('ERROR', [`Failed: ${err.message?.slice(0, 60)}`]) }, { quoted: fq });
             }
         });
     }

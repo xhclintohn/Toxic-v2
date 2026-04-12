@@ -1,4 +1,5 @@
 const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 const fancyStyles = {
   0: {"0":"0","1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9","a":"ค","b":"๖","c":"¢","d":"໓","e":"ē","f":"f","g":"ງ","h":"h","i":"i","j":"ว","k":"k","l":"l","m":"๓","n":"ຖ","o":"໐","p":"p","q":"๑","r":"r","s":"Ş","t":"t","u":"น","v":"ง","w":"ຟ","x":"x","y":"ฯ","z":"ຊ","A":"ค","B":"๖","C":"¢","D":"໓","E":"ē","F":"f","G":"ງ","H":"h","I":"i","J":"ว","K":"k","L":"l","M":"๓","N":"ຖ","O":"໐","P":"p","Q":"๑","R":"r","S":"Ş","T":"t","U":"น","V":"ง","W":"ຟ","X":"x","Y":"ฯ","Z":"ຊ" },
   1: {"0":"0","1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9","a":"ą","b":"ც","c":"ƈ","d":"ɖ","e":"ɛ","f":"ʄ","g":"ɠ","h":"ɧ","i":"ı","j":"ʝ","k":"ƙ","l":"Ɩ","m":"ɱ","n":"ŋ","o":"ơ","p":"℘","q":"զ","r":"ཞ","s":"ʂ","t":"ɬ","u":"ų","v":"۷","w":"ῳ","x":"ҳ","y":"ყ","z":"ʑ","A":"ą","B":"ც","C":"ƈ","D":"ɖ","E":"ɛ","F":"ʄ","G":"ɠ","H":"ɧ","I":"ı","J":"ʝ","K":"ƙ","L":"Ɩ","M":"ɱ","N":"ŋ","O":"ơ","P":"℘","Q":"զ","R":"ཞ","S":"ʂ","T":"ɬ","U":"ų","V":"۷","W":"ῳ","X":"ҳ","Y":"ყ","Z":"ʑ" },
@@ -63,6 +64,7 @@ module.exports = {
   category: 'Fun',
   run: async (context) => {
     const { client, m, text, prefix } = context;
+    const fq = getFakeQuoted(m);
 
     if (!text) {
       const example = 'Toxic';
@@ -72,7 +74,7 @@ module.exports = {
         if (styled) preview += `├ ${i + 1}. ${styled}\n`;
       }
       preview += `╰──────────────────☉`;
-      return client.sendMessage(m.chat, { text: preview }, { quoted: m });
+      return client.sendMessage(m.chat, { text: preview }, { quoted: fq });
     }
 
     const args = text.trim().split(/\s+/);
@@ -81,14 +83,14 @@ module.exports = {
     if (isNaN(styleNum) || styleNum < 1 || styleNum > totalStyles) {
       return client.sendMessage(m.chat, {
         text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├\n├ Invalid style number!\n├ Use 1-${totalStyles}\n├ Example: ${prefix}fancy 1 Toxic-MD\n╰──────────────────☉`
-      }, { quoted: m });
+      }, { quoted: fq });
     }
 
     const inputText = args.slice(1).join(' ');
     if (!inputText) {
       return client.sendMessage(m.chat, {
         text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├\n├ No text provided!\n├ ${prefix}fancy ${styleNum} Your Text Here\n╰──────────────────☉`
-      }, { quoted: m });
+      }, { quoted: fq });
     }
 
     try {
@@ -109,14 +111,14 @@ module.exports = {
             }
           }
         },
-        { quoted: m }
+        { quoted: fq }
       );
       await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
 
     } catch (error) {
       await client.sendMessage(m.chat, {
         text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├\n├ Failed to apply fancy style.\n├ Try again or use a different number.\n╰──────────────────☉`
-      }, { quoted: m });
+      }, { quoted: fq });
     }
   }
 };

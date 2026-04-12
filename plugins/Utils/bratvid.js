@@ -2,6 +2,7 @@ const axios = require('axios');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const fs = require('fs').promises;
 const path = require('path');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'bratvid',
@@ -9,6 +10,7 @@ module.exports = {
     description: 'Makes animated brat stickers for your attention-seeking ass',
     run: async (context) => {
         const { client, m, prefix, packname, author } = context;
+        const fq = getFakeQuoted(m);
 
         const text = m.body.replace(new RegExp(`^${prefix}(bratvid|bratvideo|bratanimated)\\s*`, 'i'), '').trim();
 
@@ -49,7 +51,7 @@ module.exports = {
             const stickerBuffer = await sticker.toBuffer();
 
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-            await client.sendMessage(m.chat, { sticker: stickerBuffer }, { quoted: m });
+            await client.sendMessage(m.chat, { sticker: stickerBuffer }, { quoted: fq });
 
             await fs.unlink(tempFile).catch(() => {});
 

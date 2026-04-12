@@ -1,5 +1,6 @@
 const { getBuffer } = require('../../lib/botFunctions');
 const links = require('./links');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const getTarget = (m) => {
     const jid = (m.mentionedJid && m.mentionedJid[0]) || (m.quoted && m.quoted.sender) || null;
@@ -14,6 +15,7 @@ module.exports = {
     description: 'Hug a tagged or quoted user',
     run: async (context) => {
         const { client, m } = context;
+        const fq = getFakeQuoted(m);
         try {
             const target = getTarget(m);
             if (!target) return m.reply(`╭───(    TOXIC-MD    )───\n├ Tag or quote someone to hug.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
@@ -22,7 +24,7 @@ module.exports = {
             if (links.hug) {
                 try {
                     const buf = await getBuffer(links.hug);
-                    await client.sendMessage(m.chat, { sticker: buf }, { quoted: m });
+                    await client.sendMessage(m.chat, { sticker: buf }, { quoted: fq });
                     await client.sendMessage(m.chat, { text: `@${sNum} hugged @${tNum} 🤗`, mentions: [m.sender, target] });
                     return;
                 } catch {}
@@ -35,7 +37,7 @@ module.exports = {
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├ ${lines[Math.floor(Math.random() * lines.length)]}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 mentions: [m.sender, target]
-            }, { quoted: m });
+            }, { quoted: fq });
         } catch {
             await m.reply(`╭───(    TOXIC-MD    )───\n├ Hug failed. Try again.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }

@@ -1,7 +1,9 @@
 const axios = require("axios");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m, text } = context;
+    const fq = getFakeQuoted(m);
 
     if (!text) {
         return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Cᴏᴅᴇɢᴇɴ ≪───\n├ \n├ Example usage:\n├ .codegen Function to calculate triangle area|Python\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

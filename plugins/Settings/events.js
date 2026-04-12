@@ -1,9 +1,11 @@
 const { getSettings, getGroupSettings, updateGroupSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
+    const fq = getFakeQuoted(m);
     const jid = m.chat;
 
     const formatStylishReply = (message) => {
@@ -16,7 +18,7 @@ module.exports = async (context) => {
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("Yo, dumbass! 😈 This command only works in groups, not your sad DMs. 🖕") },
-          { quoted: m, ad: true }
+          { quoted: fq, ad: true }
         );
       }
 
@@ -25,7 +27,7 @@ module.exports = async (context) => {
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser. 💀") },
-          { quoted: m, ad: true }
+          { quoted: fq, ad: true }
         );
       }
 
@@ -44,7 +46,7 @@ module.exports = async (context) => {
                 `Yo, genius! 😈 Events are already ${value.toUpperCase()} in this group! Stop wasting my time, moron. 🖕`
               ),
             },
-            { quoted: m, ad: true }
+            { quoted: fq, ad: true }
           );
         }
 
@@ -57,7 +59,7 @@ module.exports = async (context) => {
               `Events ${value.toUpperCase()}! 🔥 ${action ? 'Group events are live, let’s make some chaos! 💥' : 'Events off, you boring loser. 😴'}`
             ),
           },
-          { quoted: m, ad: true }
+          { quoted: fq, ad: true }
         );
       }
 
@@ -76,7 +78,7 @@ module.exports = async (context) => {
           headerType: 1,
           viewOnce: true,
         },
-        { quoted: m, ad: true }
+        { quoted: fq, ad: true }
       );
     } catch (error) {
       console.error('Toxic-MD: Error in events.js:', error.stack);
@@ -87,7 +89,7 @@ module.exports = async (context) => {
             `Shit broke, couldn’t update events. Database error: ${error.message}. Try later, moron. 💀`
           ),
         },
-        { quoted: m, ad: true }
+        { quoted: fq, ad: true }
       );
     }
   });

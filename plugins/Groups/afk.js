@@ -1,4 +1,5 @@
 const afkFeature = require('../../features/afk');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'afk',
@@ -6,6 +7,7 @@ module.exports = {
     description: 'Set yourself as AFK',
     run: async (context) => {
         const { client, m } = context;
+        const fq = getFakeQuoted(m);
         const senderNum = m.sender.split('@')[0].split(':')[0];
         const reason = context.text || context.q || 'no reason';
 

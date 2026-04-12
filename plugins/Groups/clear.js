@@ -1,4 +1,5 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'clear',
@@ -7,6 +8,7 @@ module.exports = {
     run: async (context) => {
         await ownerMiddleware(context, async () => {
             const { client, m } = context;
+            const fq = getFakeQuoted(m);
 
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
             try {

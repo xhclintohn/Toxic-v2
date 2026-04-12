@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { botname } = require('../../config/settings');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
   name: 'alive',
@@ -8,6 +9,7 @@ module.exports = {
   description: 'Checks if the bot is alive and running',
   run: async (context) => {
     const { client, m, prefix, pict } = context;
+    const fq = getFakeQuoted(m);
     const bName = botname || 'Toxic-MD';
 
     try {
@@ -25,12 +27,12 @@ module.exports = {
           image: pict,
           caption: caption,
           mentions: [m.sender]
-        }, { quoted: m });
+        }, { quoted: fq });
       } else {
         await client.sendMessage(m.chat, {
           text: caption,
           mentions: [m.sender]
-        }, { quoted: m });
+        }, { quoted: fq });
       }
 
       const possibleAudioPaths = [
@@ -47,7 +49,7 @@ module.exports = {
               ptt: true,
               mimetype: 'audio/mpeg',
               fileName: 'toxic-alive.mp3'
-            }, { quoted: m });
+            }, { quoted: fq });
             break;
           }
         } catch (err) {}

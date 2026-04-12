@@ -1,9 +1,11 @@
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const fs = require('fs').promises;
 const path = require('path');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m, pushname } = context;
+    const fq = getFakeQuoted(m);
 
     await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
@@ -70,7 +72,7 @@ module.exports = async (context) => {
 
         const stickerBuffer = await stickerResult.toBuffer();
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-        await client.sendMessage(m.chat, { sticker: stickerBuffer }, { quoted: m });
+        await client.sendMessage(m.chat, { sticker: stickerBuffer }, { quoted: fq });
 
         await fs.unlink(tempFile).catch(() => {});
 

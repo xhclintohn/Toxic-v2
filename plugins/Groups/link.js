@@ -1,8 +1,10 @@
 const linkMiddleware = require('../../utils/botUtil/linkMiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     await linkMiddleware(context, async () => {
         const { client, m } = context;
+        const fq = getFakeQuoted(m);
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
         try {

@@ -1,9 +1,11 @@
 const { getSettings, updateSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, args } = context;
+        const fq = getFakeQuoted(m);
         const newStickerWM = args.join(" ") || null;  
 
         let settings = await getSettings();

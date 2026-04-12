@@ -1,4 +1,5 @@
 const https = require('https');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const GH_OWNER = 'xhclintohn';
 const GH_REPO  = 'Toxic-v2';
@@ -63,6 +64,7 @@ module.exports = {
     description: 'Upload replied sticker/image/video to GitHub and get the link',
     run: async (context) => {
         const { client, m, args } = context;
+        const fq = getFakeQuoted(m);
 
         let token = '';
         try { token = require('../../keys').GITHUB_TOKEN || ''; } catch {}
@@ -70,7 +72,7 @@ module.exports = {
         if (!token) {
             return client.sendMessage(m.chat, {
                 text: BOX('UPX ERROR', ['No GITHUB_TOKEN set. Add it to keys.js or environment variables.'])
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         if (!m.quoted) {
@@ -81,14 +83,14 @@ module.exports = {
                     '',
                     'Example: .upx slap_sticker'
                 ])
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         const msgType = m.quoted?.mtype;
         if (!['imageMessage', 'videoMessage', 'stickerMessage'].includes(msgType)) {
             return client.sendMessage(m.chat, {
                 text: BOX('UPX ERROR', ['Reply must be a sticker, image, or video.'])
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         await client.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
@@ -133,12 +135,12 @@ module.exports = {
                     ``,
                     `Paste in reaction plugin as the sticker URL.`
                 ])
-            }, { quoted: m });
+            }, { quoted: fq });
         } catch (err) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             await client.sendMessage(m.chat, {
                 text: BOX('UPX ERROR', [`Upload failed: ${err.message?.slice(0, 80)}`])
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     }
 };

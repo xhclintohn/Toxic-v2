@@ -1,7 +1,9 @@
 const axios = require('axios');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
         const { data } = await axios.get('https://uselessfacts.jsph.pl/api/v2/facts/random?language=en', { timeout: 8000 });

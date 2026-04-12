@@ -1,6 +1,7 @@
 const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'iqc',
@@ -8,6 +9,7 @@ module.exports = {
     description: 'Generates a fake iPhone chat screenshot',
     run: async (context) => {
         const { client, m, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         let text = m.body.replace(new RegExp(`^${prefix}(iqc|iphonechat|fakechat|chatmock)\\s*`, 'i'), '').trim();
 
@@ -40,7 +42,7 @@ module.exports = {
             await client.sendMessage(m.chat, {
                 image: imageResponse.data,
                 caption: `╭───(    TOXIC-MD    )───\n├───≫ IPHONE CHAT ≪───\n├ \n├ There's your fake chat screenshot.\n├ Now you can pretend someone actually\n├ talks to you.\n├ \n├ Text: "${text}"\n├ Time: ${currentTime}\n├ \n├ _Don't use this to catfish people,\n├ you weirdo._\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
 
         } catch (error) {
             console.error('IQC command error:', error);

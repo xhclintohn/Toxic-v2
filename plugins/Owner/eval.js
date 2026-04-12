@@ -1,4 +1,5 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const BLOCKED_PATTERNS = [
     /process\.env/,
@@ -9,6 +10,7 @@ const BLOCKED_PATTERNS = [
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, text } = context;
+        const fq = getFakeQuoted(m);
         try {
             const trimmedText = text.trim();
             if (!trimmedText) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ No command provided for eval!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

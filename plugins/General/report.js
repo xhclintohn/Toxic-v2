@@ -1,3 +1,4 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 const DEV_JID = '254114885159@s.whatsapp.net';
 
 module.exports = {
@@ -6,6 +7,7 @@ module.exports = {
     description: 'Report a bug or issue directly to the developer',
     run: async (context) => {
         const { client, m, text, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         const box = (lines) => {
             const body = (Array.isArray(lines) ? lines : [lines]).map(l => `├ ${l}`).join('\n');
@@ -22,7 +24,7 @@ module.exports = {
                     ``,
                     `Example: *${prefix}report play cmd not working*`
                 ])
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         const senderNum = m.sender.replace(/@s\.whatsapp\.net$/, '').split(':')[0];
@@ -45,12 +47,12 @@ module.exports = {
                     ``,
                     `The dev will look into it. Thanks for reporting.`
                 ])
-            }, { quoted: m });
+            }, { quoted: fq });
         } catch {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             await client.sendMessage(m.chat, {
                 text: box([`Failed to send report. Try again later.`])
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     }
 };

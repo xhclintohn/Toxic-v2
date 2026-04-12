@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const { GROQ_API_KEY } = require('../../keys');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'darkgpt',
@@ -7,6 +8,7 @@ module.exports = {
     description: 'Uncensored, rude AI with zero filters',
     run: async (context) => {
         const { client, m, text, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         if (!text) {
             return m.reply(

@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 async function uploadToCatbox(buffer) {
     const FormData = require('form-data');
@@ -24,11 +25,12 @@ module.exports = {
     description: 'Apply tobugil filter to images',
     run: async (context) => {
         const { client, m } = context;
+        const fq = getFakeQuoted(m);
 
         if (!m.quoted) {
             return client.sendMessage(m.chat, {
                 text: '╭───(    TOXIC-MD    )───\n├───≫ TOBUGIL ≪───\n├ \n├ Quote an image, you blind moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         const q = m.quoted || m;
@@ -37,7 +39,7 @@ module.exports = {
         if (!mime.startsWith("image/")) {
             return client.sendMessage(m.chat, {
                 text: '╭───(    TOXIC-MD    )───\n├───≫ TOBUGIL ≪───\n├ \n├ That\'s not an image, you\n├ illiterate fool.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         try {
@@ -71,7 +73,7 @@ module.exports = {
                     image: { url: resultUrl },
                     caption: '╭───(    TOXIC-MD    )───\n├───≫ TOBUGIL ≪───\n├ \n├ Wkwk.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
                 },
-                { quoted: m }
+                { quoted: fq }
             );
 
         } catch (error) {
@@ -94,7 +96,7 @@ module.exports = {
 
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     },
 };

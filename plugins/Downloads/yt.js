@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const NEXRAY_MP3 = 'https://api.nexray.web.id/downloader/ytmp3?url=';
   const NEXRAY_MP4 = 'https://api.nexray.web.id/downloader/ytmp4?url=';
 
@@ -9,6 +10,7 @@ const fetch = require('node-fetch');
 
   module.exports = async (context) => {
       const { client, m, text, prefix, args } = context;
+      const fq = getFakeQuoted(m);
       if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}yt https://youtu.be/xxxx [mp3/mp4]\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       const parts = text.trim().split(/\s+/);
       const ytUrl = parts[0];
@@ -26,7 +28,7 @@ const fetch = require('node-fetch');
               await client.sendMessage(m.chat, {
                   video: { url: d.result.url }, mimetype: 'video/mp4',
                   caption: `╭───(    TOXIC-MD    )───\n├ 🎬 ${d.result.title || 'YouTube Video'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-              }, { quoted: m });
+              }, { quoted: fq });
           } else {
               const r = await fetch(NEXRAY_MP3 + encodeURIComponent(fullUrl), { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 30000 });
               const d = await r.json();
@@ -37,7 +39,7 @@ const fetch = require('node-fetch');
               await client.sendMessage(m.chat, {
                   audio: buf, mimetype: 'audio/mpeg', ptt: false,
                   fileName: `${title || 'yt-audio'}.mp3`
-              }, { quoted: m });
+              }, { quoted: fq });
           }
           await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
       } catch (e) {

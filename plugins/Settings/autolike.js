@@ -1,9 +1,11 @@
 const { getSettings, updateSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args } = context;
+    const fq = getFakeQuoted(m);
 
     try {
       const settings = await getSettings();
@@ -67,7 +69,7 @@ module.exports = async (context) => {
             }
           ]
         }
-      }, { quoted: m });
+      }, { quoted: fq });
 
     } catch (error) {
       console.error('Autolike command error:', error);

@@ -1,5 +1,7 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async (context) => {
   const { client, m, text } = context;
+  const fq = getFakeQuoted(m);
   const yts = require("yt-search");
 
   const formatStylishReply = (message) => {

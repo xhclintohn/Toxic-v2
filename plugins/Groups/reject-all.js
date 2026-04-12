@@ -1,8 +1,10 @@
 const middleware = require('../../utils/botUtil/middleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   await middleware(context, async () => {
     const { client, m, isBotAdmin, isAdmin } = context;
+    const fq = getFakeQuoted(m);
 
     if (!m.isGroup) {
       return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Yo, genius, this command's\n├ for groups. Quit embarrassing\n├ yourself.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

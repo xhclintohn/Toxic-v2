@@ -1,7 +1,9 @@
 const acrcloud = require("acrcloud");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
 
     try {
         const acr = new acrcloud({

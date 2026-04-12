@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const NEXRAY = 'https://api.nexray.web.id/downloader/threads?url=';
 
   module.exports = {
@@ -6,6 +7,7 @@ const fetch = require('node-fetch');
       alias: ['threadsdl', 'tdl'],
       run: async (context) => {
           const { client, m, text, prefix } = context;
+          const fq = getFakeQuoted(m);
           if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}threads https://www.threads.net/@user/post/xxx\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
           if (!text.includes('threads.net')) return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a Threads link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
           await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -20,14 +22,14 @@ const fetch = require('node-fetch');
                       video: { url: res.video },
                       caption: `╭───(    TOXIC-MD    )───\n├───≫ Threads Video ≪───\n├ ${res.author || ''}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                       mimetype: 'video/mp4'
-                  }, { quoted: m });
+                  }, { quoted: fq });
               } else if (res.image) {
                   const imgs = Array.isArray(res.image) ? res.image : [res.image];
                   for (const img of imgs.slice(0, 5)) {
                       await client.sendMessage(m.chat, {
                           image: { url: img },
                           caption: `╭───(    TOXIC-MD    )───\n├───≫ Threads Image ≪───\n├ ${res.author || ''}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-                      }, { quoted: m });
+                      }, { quoted: fq });
                   }
               } else throw new Error('No media found in this Threads post');
           } catch (e) {

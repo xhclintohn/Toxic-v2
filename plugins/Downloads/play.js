@@ -1,9 +1,11 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = {
   name: 'play',
   aliases: ['ply', 'playy', 'pl'],
   description: 'Downloads songs from YouTube and sends audio',
   run: async (context) => {
     const { client, m, text } = context;
+    const fq = getFakeQuoted(m);
 
     try {
       const query = text ? text.trim() : '';
@@ -66,14 +68,14 @@ module.exports = {
             renderLargerThumbnail: true,
           },
         } : undefined,
-      }, { quoted: m });
+      }, { quoted: fq });
 
       await client.sendMessage(m.chat, {
         document: { url: audioUrl },
         mimetype: "audio/mpeg",
         fileName: `${filename.replace(/[<>:"/\\|?*]/g, '_')}.mp3`,
         caption: `╭───(    TOXIC-MD    )───\n├───≫ PLAY ≪───\n├ \n├ ${filename}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      }, { quoted: m });
+      }, { quoted: fq });
 
     } catch (error) {
       console.error('Play error:', error);

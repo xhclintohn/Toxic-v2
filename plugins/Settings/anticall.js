@@ -1,9 +1,11 @@
 const { getSettings, updateSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
+    const fq = getFakeQuoted(m);
 
     const formatStylishReply = (title, message) => {
       return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
@@ -15,7 +17,7 @@ module.exports = async (context) => {
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("ANTICALL", "Database is fucked, no settings found. Fix it, loser.") },
-          { quoted: m, ad: true }
+          { quoted: fq, ad: true }
         );
       }
 
@@ -28,7 +30,7 @@ module.exports = async (context) => {
           return await client.sendMessage(
             m.chat,
             { text: formatStylishReply("ANTICALL", `Yo, genius! Anticall is already ${value.toUpperCase()}! Stop wasting my time, moron.`) },
-            { quoted: m, ad: true }
+            { quoted: fq, ad: true }
           );
         }
 
@@ -37,7 +39,7 @@ module.exports = async (context) => {
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("ANTICALL", `Anticall ${value.toUpperCase()}! Callers will get wrecked!`) },
-          { quoted: m, ad: true }
+          { quoted: fq, ad: true }
         );
       }
 
@@ -54,13 +56,13 @@ module.exports = async (context) => {
           headerType: 1,
           viewOnce: true,
         },
-        { quoted: m, ad: true }
+        { quoted: fq, ad: true }
       );
     } catch (error) {
       await client.sendMessage(
         m.chat,
         { text: formatStylishReply("ANTICALL", "Shit broke, couldn't update anticall. Database or something's fucked. Try later.") },
-        { quoted: m, ad: true }
+        { quoted: fq, ad: true }
       );
     }
   });

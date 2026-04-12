@@ -3,9 +3,11 @@ const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const fs = require('fs').promises;
 const path = require('path');
 const { queue } = require('async');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m, text, prefix, packname, author } = context;
+    const fq = getFakeQuoted(m);
 
     try {
         if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Tᴇʟᴇɢʀᴀᴍ Sᴛɪᴄᴋᴇʀ ≪───\n├ \n├ Give me a Telegram sticker pack name or link!\n├ \n├ Example: ${prefix}telesticker itzel39\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
@@ -85,7 +87,7 @@ module.exports = async (context) => {
                     });
 
                     const stickerBufferFinal = await waSticker.toBuffer();
-                    await client.sendMessage(m.chat, { sticker: stickerBufferFinal }, { quoted: m });
+                    await client.sendMessage(m.chat, { sticker: stickerBufferFinal }, { quoted: fq });
                     sentCount++;
 
                     await fs.unlink(tempFile).catch(() => {});

@@ -1,5 +1,6 @@
 const { getWarnCount, getWarnLimit } = require('../../database/config');
 const middleware = require('../../utils/botUtil/middleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const getMentionedJid = (m) => {
     if (m.msg?.contextInfo?.mentionedJid?.length > 0) return m.msg.contextInfo.mentionedJid[0];
@@ -33,6 +34,7 @@ const resolveTarget = (jid, participants) => {
 module.exports = async (context) => {
     await middleware(context, async () => {
         const { client, m, args } = context;
+        const fq = getFakeQuoted(m);
 
         const fmt = (msg) => `╭───(    TOXIC-MD    )───\n├───≫ WARN COUNT ≪───\n├ \n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
@@ -49,12 +51,12 @@ module.exports = async (context) => {
         if (!rawJid && args[0]) rawJid = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
 
         if (!rawJid) {
-            return await client.sendMessage(m.chat, { text: fmt("Tag someone or reply to their message. I can't read minds, fool. 😒") }, { quoted: m });
+            return await client.sendMessage(m.chat, { text: fmt("Tag someone or reply to their message. I can't read minds, fool. 😒") }, { quoted: fq });
         }
 
         const target = resolveTarget(rawJid, participants);
         if (!target) {
-            return await client.sendMessage(m.chat, { text: fmt("Couldn't find that person in this group. 🙄") }, { quoted: m });
+            return await client.sendMessage(m.chat, { text: fmt("Couldn't find that person in this group. 🙄") }, { quoted: fq });
         }
 
         const targetInGroup = participants.find(p => {
@@ -62,7 +64,7 @@ module.exports = async (context) => {
             return pid === target.split('@')[0];
         });
         if (!targetInGroup) {
-            return await client.sendMessage(m.chat, { text: fmt("That person isn't even in this group. Are you seeing ghosts? 👻") }, { quoted: m });
+            return await client.sendMessage(m.chat, { text: fmt("That person isn't even in this group. Are you seeing ghosts? 👻") }, { quoted: fq });
         }
 
         const username = target.split('@')[0];
@@ -73,6 +75,6 @@ module.exports = async (context) => {
         await client.sendMessage(m.chat, {
             text: `╭───(    TOXIC-MD    )───\n├───≫ WARN COUNT ≪───\n├ \n├ 📊 @${username}\n├ Warns: *${count}/${limit}*\n├ Remaining: *${remaining}*\n├ ${count === 0 ? 'Clean record. For now. 😏' : remaining <= 1 ? "One more and they're OUT. 💀" : 'Walking on thin ice. ⚠️'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
             mentions: [target]
-        }, { quoted: m });
+        }, { quoted: fq });
     });
 };

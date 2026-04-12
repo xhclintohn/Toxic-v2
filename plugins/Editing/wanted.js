@@ -1,7 +1,9 @@
 let canvacord = null; try { canvacord = require("canvacord"); } catch {}
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
         const { client, m, Tag, botname } = context;
+        const fq = getFakeQuoted(m);
 
 let cap = `╭───(    TOXIC-MD    )───\n├───≫ WANTED ≪───\n├ \n├ Converted By ${botname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
@@ -26,7 +28,7 @@ try {
         } 
 
 
-        await client.sendMessage(m.chat, { image: result, caption: cap }, { quoted: m });
+        await client.sendMessage(m.chat, { image: result, caption: cap }, { quoted: fq });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
 } catch (e) {

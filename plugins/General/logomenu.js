@@ -1,4 +1,5 @@
 const { DateTime } = require('luxon');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const { getSettings } = require('../../lib/fastSettings');
 
   module.exports = {
@@ -7,6 +8,7 @@ const { DateTime } = require('luxon');
     description: 'Displays all available logo & effects commands',
     run: async (context) => {
       const { client, m, fakeQuoted } = context;
+      const fq = getFakeQuoted(m);
 
       const settings = await getSettings();
       const effectivePrefix = settings.prefix || '';
@@ -39,7 +41,7 @@ const { DateTime } = require('luxon');
       menuText += `╰──────────────────☉\n`;
       menuText += `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
-      await client.sendMessage(m.chat, { text: menuText }, { quoted: fakeQuoted });
+      await client.sendMessage(m.chat, { text: menuText }, { quoted: fq });
     }
   };
   

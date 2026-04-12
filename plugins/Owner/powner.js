@@ -1,3 +1,4 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 const DEVELOPER_NUMBER = "254114885159";
 
 const normalizeNumber = (jid) => {
@@ -37,6 +38,7 @@ module.exports = {
     description: 'Promotes the owner to admin',
     run: async (context) => {
         const { client, m, isBotAdmin } = context;
+        const fq = getFakeQuoted(m);
 
         if (!m.isGroup) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ This command only works in groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 

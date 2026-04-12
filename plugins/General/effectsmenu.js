@@ -1,4 +1,5 @@
 const { generateWAMessageFromContent, proto } = require('@whiskeysockets/baileys');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const EFFECT_CMDS = [
     'glossysilver','glitchtext','advancedglow','neonglitch','gradienttext','glowingtext',
@@ -14,6 +15,7 @@ module.exports = {
     description: 'Displays all text effect commands',
     run: async (context) => {
         const { client, m, pict, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         const toFancyFont = (text) => {
             const fonts = {
@@ -43,6 +45,6 @@ module.exports = {
                     renderLargerThumbnail: false,
                 }
             }
-        }, { quoted: m });
+        }, { quoted: fq });
     }
 };

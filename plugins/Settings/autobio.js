@@ -1,9 +1,11 @@
 const { getSettings, updateSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
+    const fq = getFakeQuoted(m);
 
     const formatStylishReply = (title, message) => {
       return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
@@ -15,7 +17,7 @@ module.exports = async (context) => {
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("AUTOBIO", "Database is fucked, no settings found. Fix it, loser.") },
-          { quoted: m, ad: true }
+          { quoted: fq, ad: true }
         );
       }
 
@@ -27,7 +29,7 @@ module.exports = async (context) => {
           return await client.sendMessage(
             m.chat,
             { text: formatStylishReply("AUTOBIO", `Autobio's already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time.`) },
-            { quoted: m, ad: true }
+            { quoted: fq, ad: true }
           );
         }
 
@@ -36,7 +38,7 @@ module.exports = async (context) => {
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("AUTOBIO", `Autobio ${value.toUpperCase()} activated! ${action ? 'Bot\'s flexing status updates every 10 seconds, bow down!' : 'No more status flexing, you\'re not worth it.'}`) },
-          { quoted: m, ad: true }
+          { quoted: fq, ad: true }
         );
       }
 
@@ -53,13 +55,13 @@ module.exports = async (context) => {
           headerType: 1,
           viewOnce: true,
         },
-        { quoted: m, ad: true }
+        { quoted: fq, ad: true }
       );
     } catch (error) {
       await client.sendMessage(
         m.chat,
         { text: formatStylishReply("AUTOBIO", "Shit broke, couldn't mess with autobio. Database or something's fucked. Try later.") },
-        { quoted: m, ad: true }
+        { quoted: fq, ad: true }
       );
     }
   });

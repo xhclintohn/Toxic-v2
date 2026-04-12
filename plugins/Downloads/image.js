@@ -1,5 +1,6 @@
 const fetch = require("node-fetch");
 const { generateWAMessageContent, generateWAMessageFromContent } = require("@whiskeysockets/baileys");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
   name: 'image',
@@ -7,6 +8,7 @@ module.exports = {
   description: 'Searches for images based on your query',
   run: async (context) => {
     const { client, m, prefix } = context;
+    const fq = getFakeQuoted(m);
 
     const query = m.body.replace(new RegExp(`^${prefix}(image|img|pic|searchimage)\\s*`, 'i'), '').trim();
     if (!query) {
@@ -14,7 +16,7 @@ module.exports = {
         text: `╭───(    TOXIC-MD    )───\n├ Yo, @${m.sender.split('@')[0]}! 😤 You forgot the search query!\n├ Example: ${prefix}image cute cats\n╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
         mentions: [m.sender]
-      }, { quoted: m });
+      }, { quoted: fq });
     }
 
     try {
@@ -29,7 +31,7 @@ module.exports = {
         return client.sendMessage(m.chat, {
           text: `╭───(    TOXIC-MD    )───\n├ No images found for "${query}"! 😢\n├ Try a different search term.\n╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: m });
+        }, { quoted: fq });
       }
 
       const images = data.result.slice(0, 10);
@@ -93,7 +95,7 @@ module.exports = {
         return client.sendMessage(m.chat, {
           text: `╭───(    TOXIC-MD    )───\n├ Failed to load any images for "${query}"! 😢\n╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: m });
+        }, { quoted: fq });
       }
 
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
@@ -124,7 +126,7 @@ module.exports = {
             }
           }
         },
-        { quoted: m }
+        { quoted: fq }
       );
 
       await client.relayMessage(m.chat, carouselMsg.message, { messageId: carouselMsg.key.id });
@@ -136,7 +138,7 @@ module.exports = {
         text: `╭───(    TOXIC-MD    )───\n├ Oops, @${m.sender.split('@')[0]}! 😤 Image search failed!\n├ Error: ${error.message}\n├ Try again later.\n╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
         mentions: [m.sender]
-      }, { quoted: m });
+      }, { quoted: fq });
     }
   }
 };

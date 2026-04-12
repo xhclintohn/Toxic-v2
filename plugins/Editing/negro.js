@@ -1,7 +1,9 @@
 const axios = require('axios');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, mime, m, text, botname } = context;
+    const fq = getFakeQuoted(m);
 
     if (m.quoted && /image/.test(mime)) {
         const buffer = await m.quoted.download();
@@ -25,7 +27,7 @@ module.exports = async (context) => {
             await client.sendMessage(m.chat, {
                 image: resultBuffer,
                 caption: `╭───(    TOXIC-MD    )───\n├───≫ NEGRO FILTER ≪───\n├ \n├ Done! Your image now has the\n├ *black* filter applied.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         } catch (error) {
             const errorMessage = error.message || 'An error occurred while processing the image.';
             const replyMessage = errorMessage.length > 200

@@ -1,4 +1,5 @@
 const { botname } = require('../../config/settings');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
   name: 'dev',
@@ -6,6 +7,7 @@ module.exports = {
   description: 'Sends the developer contact as a vCard',
   run: async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
     const bName = botname || 'Toxic-MD';
 
     try {
@@ -19,19 +21,19 @@ module.exports = {
 
       await client.sendMessage(m.chat, {
         text: `╭───(    TOXIC-MD    )───\n├───≫ Cᴏɴᴛᴀᴄᴛ Cᴀʀᴅ ≪───\n├ \n├ Developer: ${devContact.fullName}\n├ Don't spam the dev or you'll\n├ regret your existence.\n├ Contact card sent below.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      }, { quoted: m });
+      }, { quoted: fq });
 
       await client.sendMessage(m.chat, {
         contacts: {
           displayName: devContact.fullName,
           contacts: [{ vcard }]
         }
-      }, { quoted: m });
+      }, { quoted: fq });
 
     } catch (error) {
       await client.sendMessage(m.chat, {
         text: `╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Couldn't send contact card.\n├ Error: ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      }, { quoted: m });
+      }, { quoted: fq });
     }
   }
 };

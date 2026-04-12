@@ -1,8 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
 
     if (!m.quoted) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Reply to a view-once image or video.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
@@ -26,9 +28,9 @@ module.exports = async (context) => {
         const caption = `╭───(    TOXIC-MD    )───\n├───≫ VIEW ONCE ≪───\n├ \n├ Here's your media, perv.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
         if (imageMsg) {
-            await client.sendMessage(chatId, { image: buffer, caption }, { quoted: m });
+            await client.sendMessage(chatId, { image: buffer, caption }, { quoted: fq });
         } else {
-            await client.sendMessage(chatId, { video: buffer, caption }, { quoted: m });
+            await client.sendMessage(chatId, { video: buffer, caption }, { quoted: fq });
         }
 
         try {

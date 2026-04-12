@@ -1,9 +1,11 @@
 const { getSettings, updateSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
+    const fq = getFakeQuoted(m);
 
     const formatStylishReply = (message) => {
       return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉
@@ -16,7 +18,7 @@ module.exports = async (context) => {
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
-          { quoted: m, ad: true }
+          { quoted: fq, ad: true }
         );
       }
 
@@ -28,7 +30,7 @@ module.exports = async (context) => {
           return await client.sendMessage(
             m.chat,
             { text: formatStylishReply(`Start message is already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time. 😈`) },
-            { quoted: m, ad: true }
+            { quoted: fq, ad: true }
           );
         }
 
@@ -37,7 +39,7 @@ module.exports = async (context) => {
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply(`Start message ${value.toUpperCase()} activated! 🔥 ${action ? 'Welcome messages will be sent on connection! 🎉' : 'No more annoying welcome messages, you antisocial prick! 🚫'}`) },
-          { quoted: m, ad: true }
+          { quoted: fq, ad: true }
         );
       }
 
@@ -54,13 +56,13 @@ module.exports = async (context) => {
           headerType: 1,
           viewOnce: true,
         },
-        { quoted: m, ad: true }
+        { quoted: fq, ad: true }
       );
     } catch (error) {
       await client.sendMessage(
         m.chat,
         { text: formatStylishReply("Shit broke, couldn't mess with start message. Database or something's fucked. Try later.") },
-        { quoted: m, ad: true }
+        { quoted: fq, ad: true }
       );
     }
   });

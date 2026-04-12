@@ -1,9 +1,11 @@
 const { getSettings, getGroupSettings, updateGroupSetting } = require('../../database/config');
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
+    const fq = getFakeQuoted(m);
     const value = args[0]?.toLowerCase();
     const jid = m.chat;
 
@@ -12,18 +14,18 @@ module.exports = async (context) => {
     };
 
     if (!jid.endsWith('@g.us')) {
-      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Yo, dumbass, this command's for groups only. Get lost.") }, { quoted: m });
+      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Yo, dumbass, this command's for groups only. Get lost.") }, { quoted: fq });
     }
 
     try {
       const settings = await getSettings();
       if (!settings) {
-        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Database is fucked, no settings found. Fix it, loser.") }, { quoted: m });
+        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Database is fucked, no settings found. Fix it, loser.") }, { quoted: fq });
       }
 
       let groupSettings = await getGroupSettings(jid);
       if (!groupSettings) {
-        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "No group settings found. Database's acting up, try again.") }, { quoted: m });
+        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "No group settings found. Database's acting up, try again.") }, { quoted: fq });
       }
 
       let isEnabled = groupSettings?.antiforeign === true;
@@ -35,18 +37,18 @@ module.exports = async (context) => {
 
       if (value === 'on' || value === 'off') {
         if (!isBotAdmin) {
-          return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Make me an admin first, you clown. Can't touch antiforeign without juice.") }, { quoted: m });
+          return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Make me an admin first, you clown. Can't touch antiforeign without juice.") }, { quoted: fq });
         }
 
         const action = value === 'on';
 
         if (isEnabled === action) {
-          return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's already ${value.toUpperCase()}, genius. Stop wasting my time.`) }, { quoted: m });
+          return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's already ${value.toUpperCase()}, genius. Stop wasting my time.`) }, { quoted: fq });
         }
 
         await updateGroupSetting(jid, 'antiforeign', action);
         await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
-        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's now ${value.toUpperCase()}. Foreigners better watch out or get yeeted!`) }, { quoted: m });
+        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's now ${value.toUpperCase()}. Foreigners better watch out or get yeeted!`) }, { quoted: fq });
       }
 
       const buttons = [
@@ -59,10 +61,10 @@ module.exports = async (context) => {
         buttons,
         headerType: 1,
         viewOnce: true,
-      }, { quoted: m });
+      }, { quoted: fq });
     } catch (error) {
       console.error('[Antiforeign] Error in command:', error);
-      await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Shit broke, couldn't mess with antiforeign. Database or something's fucked. Try later.") }, { quoted: m });
+      await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Shit broke, couldn't mess with antiforeign. Database or something's fucked. Try later.") }, { quoted: fq });
     }
   });
 };

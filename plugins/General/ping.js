@@ -1,4 +1,5 @@
 const { botname } = require('../../config/settings');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 function detectPlatform() {
     if (process.env.DYNO)                                          return 'Heroku 🟣';
@@ -24,6 +25,7 @@ module.exports = {
     description: 'Checks the bot response time and server status',
     run: async (context) => {
         const { client, m, toxicspeed } = context;
+        const fq = getFakeQuoted(m);
         const bName = botname || 'Toxic-MD';
         try {
             await client.sendMessage(m.chat, { react: { text: '⚡', key: m.key } });
@@ -47,7 +49,7 @@ module.exports = {
 
             const text = `╭───(    TOXIC-MD    )───\n├───≫ Pɪɴɢ ≪───\n├ \n├ 𝐋𝐚𝐭𝐞𝐧𝐜𝐲 : ${responseSpeed}ms\n├ 𝐒𝐞𝐫𝐯𝐞𝐫 𝐓𝐢𝐦𝐞 : ${new Date().toLocaleString()}\n├ 𝐔𝐩𝐭𝐢𝐦𝐞 : ${formatUptime(process.uptime())}\n├ 𝐌𝐞𝐦𝐨𝐫𝐲 : ${usedMB}/${totalMB} MB\n├ 𝐍𝐨𝐝𝐞𝐉𝐒 : ${process.version}\n├ 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦 : ${platform}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
-            await client.sendMessage(m.chat, { text }, { quoted: m });
+            await client.sendMessage(m.chat, { text }, { quoted: fq });
         } catch (error) {
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Pɪɴɢ Fᴀɪʟᴇᴅ ≪───\n├ \n├ The ping command crashed.\n├ Much like your life choices.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }

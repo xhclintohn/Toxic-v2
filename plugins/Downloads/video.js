@@ -1,8 +1,10 @@
 const yts = require("yt-search");
 const fetch = require("node-fetch");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m, text } = context;
+    const fq = getFakeQuoted(m);
 
     if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Give me a video name, it's not rocket science.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
     if (text.length > 100) return m.reply("╭───(    TOXIC-MD    )───\n├ Title longer than your attention span. Under 100 chars!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
@@ -35,7 +37,7 @@ module.exports = async (context) => {
                     renderLargerThumbnail: true,
                 },
             },
-        }, { quoted: m });
+        }, { quoted: fq });
     } catch (error) {
         console.error(`Video error:`, error);
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });

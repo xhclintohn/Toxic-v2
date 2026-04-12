@@ -1,4 +1,5 @@
 const { getWarnCount, addWarn, resetWarn, getGroupSettings } = require('../../database/config');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'warn',
@@ -6,6 +7,7 @@ module.exports = {
     description: 'Warn a group member',
     run: async (context) => {
         const { client, m, isAdmin, isBotAdmin } = context;
+        const fq = getFakeQuoted(m);
 
         if (!m.isGroup) return m.reply(`╭───(    TOXIC-MD    )───\n├ Group only command.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         if (!isAdmin && !isBotAdmin) return m.reply(`╭───(    TOXIC-MD    )───\n├ Admin only.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

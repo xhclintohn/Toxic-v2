@@ -1,7 +1,9 @@
 const { getGroupSettings, updateGroupSetting } = require('../../database/config');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m, args, prefix, isAdmin } = context;
+    const fq = getFakeQuoted(m);
     const jid = m.chat;
 
     const fmt = (msg) => {
@@ -10,11 +12,11 @@ module.exports = async (context) => {
 
     try {
         if (!jid.endsWith('@g.us')) {
-            return await client.sendMessage(m.chat, { text: fmt("Oi! This only works in groups. Not your personal DM, genius.") }, { quoted: m });
+            return await client.sendMessage(m.chat, { text: fmt("Oi! This only works in groups. Not your personal DM, genius.") }, { quoted: fq });
         }
 
         if (!isAdmin) {
-            return await client.sendMessage(m.chat, { text: fmt("Only group admins can toggle goodbye messages.\n├ You're not special.") }, { quoted: m });
+            return await client.sendMessage(m.chat, { text: fmt("Only group admins can toggle goodbye messages.\n├ You're not special.") }, { quoted: fq });
         }
 
         const groupSettings = await getGroupSettings(jid);
@@ -24,12 +26,12 @@ module.exports = async (context) => {
         if (value === 'on' || value === 'off') {
             const action = value === 'on';
             if (isEnabled === action) {
-                return await client.sendMessage(m.chat, { text: fmt(`Bruh 🙄 Goodbye is already ${value.toUpperCase()} in this group. Were you dropped as a kid?`) }, { quoted: m });
+                return await client.sendMessage(m.chat, { text: fmt(`Bruh 🙄 Goodbye is already ${value.toUpperCase()} in this group. Were you dropped as a kid?`) }, { quoted: fq });
             }
             await updateGroupSetting(jid, 'goodbye', action);
             return await client.sendMessage(m.chat, {
                 text: fmt(`Goodbye messages ${value.toUpperCase()}! 🔥 ${action ? "Leavers will get roasted on their way out 😈" : "Let them leave in silence like the nobodies they are 🧊"}`)
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         await client.sendMessage(m.chat, {
@@ -40,9 +42,9 @@ module.exports = async (context) => {
             ],
             headerType: 1,
             viewOnce: true,
-        }, { quoted: m });
+        }, { quoted: fq });
     } catch (error) {
         console.error('Toxic-MD: Error in goodbye.js:', error);
-        await client.sendMessage(m.chat, { text: fmt(`Something crashed. Typical. 💀 Error: ${error.message}`) }, { quoted: m });
+        await client.sendMessage(m.chat, { text: fmt(`Something crashed. Typical. 💀 Error: ${error.message}`) }, { quoted: fq });
     }
 };

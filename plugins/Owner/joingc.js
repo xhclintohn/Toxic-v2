@@ -1,8 +1,10 @@
 const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, text, args, Owner, botname } = context;
+        const fq = getFakeQuoted(m);
 
         if (!botname) {
             console.error(`Join-Error: botname missing in context.`);

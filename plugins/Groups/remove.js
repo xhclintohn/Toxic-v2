@@ -1,4 +1,5 @@
 const middleware = require('../../utils/botUtil/middleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
   name: 'remove',
@@ -7,6 +8,7 @@ module.exports = {
   run: async (context) => {
     await middleware(context, async () => {
       const { client, m, prefix } = context;
+      const fq = getFakeQuoted(m);
 
       const normalizeJid = (jid) => {
         if (!jid) return '';
@@ -34,7 +36,7 @@ module.exports = {
         await client.sendMessage(m.chat, {
           text: `╭───(    TOXIC-MD    )───\n├───≫ KICKED ≪───\n├ \n├ @${actualJid.split('@')[0]} got yeeted out.\n├ Good riddance, trash.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
           mentions: [actualJid]
-        }, { quoted: m });
+        }, { quoted: fq });
       } catch (error) {
         await m.reply(`╭───(    TOXIC-MD    )───\n├ Couldn't kick @${actualJid.split('@')[0]}.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }

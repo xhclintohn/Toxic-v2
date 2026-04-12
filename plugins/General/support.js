@@ -1,5 +1,7 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async (context) => {
   const { client, m } = context;
+  const fq = getFakeQuoted(m);
 
   const message = `╭───(    TOXIC-MD    )───
 ├───≫ Sᴜᴘᴘᴏʀᴛ Lɪɴᴋs ≪───
@@ -19,7 +21,7 @@ module.exports = async (context) => {
     await client.sendMessage(
       m.chat,
       { text: message },
-      { quoted: m }
+      { quoted: fq }
     );
   } catch (error) {
     console.error("Support command error:", error);

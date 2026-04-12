@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
 const { getSettings } = require('../../database/config');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'start',
@@ -9,6 +10,7 @@ module.exports = {
     description: 'Check if bot is alive',
     run: async (context) => {
         const { client, m, mode, pict, botname, text, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         await client.sendMessage(m.chat, { react: { text: '🤖', key: m.key } });
 
@@ -50,7 +52,7 @@ module.exports = {
                         mimetype: 'audio/mpeg',
                         fileName: 'toxic-start.mp3',
                     },
-                    { quoted: m }
+                    { quoted: fq }
                 );
             }
         }
@@ -87,7 +89,7 @@ module.exports = {
                     },  
                 },  
             },  
-            { quoted: m }  
+            { quoted: fq }  
         );  
 
         await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });

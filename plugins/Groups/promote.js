@@ -1,4 +1,5 @@
 const middleware = require('../../utils/botUtil/middleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const getMentionedJid = (m) => {
     if (m.msg?.contextInfo?.mentionedJid?.length > 0) return m.msg.contextInfo.mentionedJid[0];
@@ -34,6 +35,7 @@ module.exports = {
     run: async (context) => {
         await middleware(context, async () => {
             const { client, m, prefix } = context;
+            const fq = getFakeQuoted(m);
 
             const groupMetadata = await client.groupMetadata(m.chat);
             const participants = groupMetadata.participants;
@@ -60,7 +62,7 @@ module.exports = {
                 await client.sendMessage(m.chat, {
                     text: `╭───(    TOXIC-MD    )───\n├───≫ PROMOTED ≪───\n├ \n├ @${target.split('@')[0]} is now an admin.\n├ Don't let the power go to\n├ your empty head.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                     mentions: [target]
-                }, { quoted: m });
+                }, { quoted: fq });
             } catch (error) {
                 await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Failed to promote: ${error.message?.slice(0, 60)}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
             }

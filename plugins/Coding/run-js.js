@@ -1,5 +1,7 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async (context) => {
     const { m, text } = context;
+    const fq = getFakeQuoted(m);
     const { node } = require('compile-run');
 
     let code = text;

@@ -1,4 +1,5 @@
 const { getSettings, updateSetting } = require('../../database/config');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 const DEV_NUMBER = '254114885159';
 
@@ -8,6 +9,7 @@ module.exports = {
     description: 'Toggle ToxicAgent GitHub AI (dev only)',
     run: async (context) => {
         const { client, m, args, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         const senderNum = (m.sender || '').split('@')[0].split(':')[0];
         const fmt = (title, lines) => {
@@ -18,7 +20,7 @@ module.exports = {
         if (senderNum !== DEV_NUMBER) {
             return client.sendMessage(m.chat, {
                 text: fmt('TOXICAGENT', ['Access denied.', 'Dev-only feature. Not your toy.'])
-            }, { quoted: m });
+            }, { quoted: fq });
         }
 
         try {
@@ -33,7 +35,7 @@ module.exports = {
                     text: fmt('TOXICAGENT', newState
                         ? ['Status: ✅ ON', 'GitHub AI agent active. Just text me GitHub tasks.']
                         : ['Status: ❌ OFF', 'GitHub AI disabled.'])
-                }, { quoted: m });
+                }, { quoted: fq });
             }
 
             const isOn = settings.toxicagent === true || settings.toxicagent === 'true';
@@ -46,9 +48,9 @@ module.exports = {
                     `Toggle: ${prefix}toxicai on  /  ${prefix}toxicai off`,
                     'Say "clear conversation" to reset memory'
                 ])
-            }, { quoted: m });
+            }, { quoted: fq });
         } catch {
-            client.sendMessage(m.chat, { text: fmt('TOXICAGENT', 'something broke. try again.') }, { quoted: m });
+            client.sendMessage(m.chat, { text: fmt('TOXICAGENT', 'something broke. try again.') }, { quoted: fq });
         }
     }
 };

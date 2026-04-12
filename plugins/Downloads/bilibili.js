@@ -1,8 +1,10 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const NEXRAY = 'https://api.nexray.web.id/downloader/bilibili?url=';
 
   module.exports = async (context) => {
       const { client, m, text, prefix } = context;
+      const fq = getFakeQuoted(m);
       if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}bilibili https://www.bilibili.com/video/BVxxxxxx\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       if (!text.includes('bilibili.com') && !text.includes('b23.tv')) return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a Bilibili link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -17,7 +19,7 @@ const fetch = require('node-fetch');
               video: { url: videoUrl },
               mimetype: 'video/mp4',
               caption: `╭───(    TOXIC-MD    )───\n├───≫ Bilibili DL ≪───\n├ 🎬 ${res.title || 'Bilibili Video'}\n├ 👤 ${res.author || res.owner || 'N/A'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-          }, { quoted: m });
+          }, { quoted: fq });
           await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
       } catch (e) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });

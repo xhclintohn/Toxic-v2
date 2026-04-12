@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const { uploadTempUrl } = require('../../lib/toUrl');
   module.exports = {
     name: 'tomp4',
@@ -6,6 +7,7 @@ const axios = require('axios');
     description: 'Converts stickers to MP4 videos',
     run: async (context) => {
         const { client, m, mime } = context;
+        const fq = getFakeQuoted(m);
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
             if (!m.quoted) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO VIDEO ≪───\n├ \n├ The command requires a STICKER.\n├ Your empty reply suggests you\n├ cannot read.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
@@ -27,8 +29,8 @@ const axios = require('axios');
             const videoBuffer = Buffer.from(videoResponse.data);
             await client.sendMessage(m.chat, { delete: statusMsg.key });
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-            await client.sendMessage(m.chat, { video: videoBuffer, caption: '╭───(    TOXIC-MD    )───\n├───≫ TO VIDEO ≪───\n├ \n├ Behold, your motionless "video".\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: m });
-            await client.sendMessage(m.chat, { document: videoBuffer, mimetype: 'video/mp4', fileName: `sticker_${Date.now()}.mp4`, caption: '╭───(    TOXIC-MD    )───\n├───≫ MP4 FILE ≪───\n├ \n├ Document version. Marginally\n├ more useful.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: m });
+            await client.sendMessage(m.chat, { video: videoBuffer, caption: '╭───(    TOXIC-MD    )───\n├───≫ TO VIDEO ≪───\n├ \n├ Behold, your motionless "video".\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: fq });
+            await client.sendMessage(m.chat, { document: videoBuffer, mimetype: 'video/mp4', fileName: `sticker_${Date.now()}.mp4`, caption: '╭───(    TOXIC-MD    )───\n├───≫ MP4 FILE ≪───\n├ \n├ Document version. Marginally\n├ more useful.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: fq });
         } catch (err) {
             console.error('ToMP4 error:', err);
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });

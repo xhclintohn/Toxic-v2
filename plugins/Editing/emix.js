@@ -1,10 +1,12 @@
 module.exports = async (context) => {
         const { client, m, botname, text } = context;
+        const fq = getFakeQuoted(m);
 
 
 const { Sticker, createSticker, StickerTypes } = require('wa-sticker-formatter');
 
 const axios = require("axios");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 if (!text) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ EMIX ≪───\n├ \n├ No emojis provided?\n├ Are you braindead?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧')
 
 
@@ -35,7 +37,7 @@ if (!text) return m.reply('╭───(    TOXIC-MD    )───\n├───
         background: "transparent",
       });
       const stickerBuffer2 = await stickerMess.toBuffer();
-      await client.sendMessage(m.chat, { sticker: stickerBuffer2 }, { quoted: m });
+      await client.sendMessage(m.chat, { sticker: stickerBuffer2 }, { quoted: fq });
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
     } else {

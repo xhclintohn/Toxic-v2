@@ -1,5 +1,7 @@
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 module.exports = async (context) => {
     const { client, m, text, pict } = context;
+    const fq = getFakeQuoted(m);
 
     try {
         let targetUser = m.sender;
@@ -48,7 +50,7 @@ module.exports = async (context) => {
             image: { url: ppUrl },
             caption: `╭───(    TOXIC-MD    )───\n├───≫ Pʀᴏꜰɪʟᴇ ≪───\n├ \n├ ${displayName}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
             mentions: targetUser !== m.sender ? [targetUser] : []
-        }, { quoted: m });
+        }, { quoted: fq });
 
     } catch (error) {
         console.error('Profile error:', error);

@@ -1,5 +1,6 @@
 const axios = require("axios");
 const fetch = require("node-fetch");
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'tempmail',
@@ -7,6 +8,7 @@ module.exports = {
     description: 'Create temporary email for disposable inbox',
     run: async (context) => {
         const { client, m, prefix } = context;
+        const fq = getFakeQuoted(m);
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
@@ -49,7 +51,7 @@ module.exports = {
                         ]
                     }
                 },
-                { quoted: m }
+                { quoted: fq }
             );
 
         } catch (error) {
@@ -69,7 +71,7 @@ module.exports = {
 
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ ${errorMessage}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
     },
 };

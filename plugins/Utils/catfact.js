@@ -1,7 +1,9 @@
 const axios = require('axios');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = async (context) => {
     const { client, m } = context;
+    const fq = getFakeQuoted(m);
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
         const { data } = await axios.get('https://catfact.ninja/fact', { timeout: 8000 });

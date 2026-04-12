@@ -2,6 +2,7 @@ const fs = require('fs');
 const { exec } = require('child_process');
 const path = require('path');
 const { tmpdir } = require('os');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'toimg',
@@ -9,6 +10,7 @@ module.exports = {
     description: 'Converts stickers to images',
     run: async (context) => {
         const { client, m } = context;
+        const fq = getFakeQuoted(m);
         let mediaPath = null;
         let outPath = null;
         
@@ -42,14 +44,14 @@ module.exports = {
             await client.sendMessage(m.chat, { 
                 image: imageBuffer, 
                 caption: '╭───(    TOXIC-MD    )───\n├───≫ TO IMAGE ≪───\n├ \n├ Your sticker is now an image.\n├ A miraculous achievement.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' 
-            }, { quoted: m });
+            }, { quoted: fq });
             
             await client.sendMessage(m.chat, { 
                 document: imageBuffer, 
                 mimetype: 'image/png', 
                 fileName: `sticker_${Date.now()}.png`, 
                 caption: '╭───(    TOXIC-MD    )───\n├───≫ PNG FILE ≪───\n├ \n├ PNG version. Slightly less terrible.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' 
-            }, { quoted: m });
+            }, { quoted: fq });
             
             try {
                 fs.unlinkSync(tempFile);

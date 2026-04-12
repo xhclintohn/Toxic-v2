@@ -1,5 +1,6 @@
 const { readdirSync, statSync, unlinkSync, existsSync } = require('fs');
 const { join } = require('path');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
 module.exports = {
     name: 'cleartmp',
@@ -7,6 +8,7 @@ module.exports = {
     description: 'Delete all temporary files (Owner only)',
     run: async (context) => {
         const { client, m, isOwner } = context;
+        const fq = getFakeQuoted(m);
         if (!isOwner) return m.reply('Owner only command.');
         const tmpDirs = ['./tmp', './temp'].filter(d => existsSync(d));
         if (!tmpDirs.length) return m.reply('No tmp directories found.');
