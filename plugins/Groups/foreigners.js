@@ -1,6 +1,8 @@
 const middleware = require("../../utils/botUtil/middleware");
 module.exports = async _0x4dc5e7 => {
   await middleware(_0x4dc5e7, async () => {
+    const { client: _cl_, m: _m_ } = _0x4dc5e7;
+    await _cl_.sendMessage(_m_.chat, { react: { text: '⌛', key: _m_.key } }).catch(()=>{});
     const {
       client: _0x5377ad,
       m: _0x4ac4f8,
