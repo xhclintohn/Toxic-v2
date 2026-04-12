@@ -166,7 +166,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const _allPfx = ['.','!','#','/','$','?','+','-','*','~','@','%','&','^','=','|'];
         const _fmBody = (m.text || m.body || m.message?.conversation || m.message?.extendedTextMessage?.text || '').trim();
         if (!_fmBody || !_allPfx.some(p => _fmBody.startsWith(p))) return;
-        console.log('🔬[T1] fromMe cmd passed filter, body[:25]:', (m.text||m.message?.conversation||'').slice(0,25));
     }
     try {
         const rawSudoUsers = getCachedSudoSync();
@@ -246,7 +245,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         const resolvedCommandName = aliases[commandName] || commandName;
         const cmd = commands[resolvedCommandName];
-        console.log('🔬[T2] parsed: body[:30]=', JSON.stringify(body.slice(0,30)), 'cmdName=', resolvedCommandName, 'cmdFound=', !!cmd);
 
 
         const args = body.trim().split(/ +/).slice(1);
@@ -430,7 +428,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
 
         if (cmd && !itsMe && !isDev && !Owner) {
             if (mode === 'private') return;
-            console.log('🔬[T3] mode check: mode='+mode+' itsMe='+itsMe+' isDev='+isDev+' Owner='+Owner+' isGroup='+m.isGroup);
             if (mode === 'group' && !m.isGroup) return;
             if (mode === 'inbox' && m.isGroup) return;
         }
@@ -629,7 +626,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         })().catch(() => {});
 
         if (cmd && typeof cmd === 'function') {
-            console.log('🔬[T4] about to exec cmd:', resolvedCommandName);
             const _origSend = client.sendMessage.bind(client);
             const _autoFqSend = async (jid, content, opts = {}) => {
                 if (jid === m.chat && !opts.quoted &&
@@ -646,7 +642,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             try {
                 await cmd(context);
             } catch (error) {
-                console.log('✅[T5] cmd done:', resolvedCommandName);
                 console.log(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
             } finally {
                 context.client = client;
