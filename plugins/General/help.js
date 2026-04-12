@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { getSettings } = require('../../lib/fastSettings');
 
 module.exports = {
     name: 'help',
@@ -9,8 +8,7 @@ module.exports = {
     run: async (context) => {
         const { client, m, args, prefix } = context;
 
-        const settings = await getSettings();
-        const effectivePrefix = settings.prefix || prefix || '.';
+        const effectivePrefix = prefix || '.';
 
         const fmt = (title, body) =>
             `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├ \n${body}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
