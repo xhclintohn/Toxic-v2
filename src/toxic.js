@@ -368,8 +368,13 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const IsGroup = m.isGroup;
 
         const fakeQuoted = {
-            key: { participant: '0@s.whatsapp.net', remoteJid: '0@s.whatsapp.net', id: m.id || m.key?.id || 'toxic-fq' },
-            message: { conversation: "Verified" }
+            key: {
+                participant: m.key?.participant || m.key?.remoteJid,
+                remoteJid: m.key?.remoteJid,
+                fromMe: m.key?.fromMe || false,
+                id: m.key?.id || m.id || 'toxic-fq'
+            },
+            message: m.message || { conversation: body || '✓' }
         };
 
         const context = {
