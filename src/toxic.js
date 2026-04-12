@@ -168,17 +168,17 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         if (!_fmBody || !_allPfx.some(p => _fmBody.startsWith(p))) return;
     }
     try {
-        const [rawSudoUsers, rawBannedUsers, fetchedSettings] = await Promise.all([
-            getCachedSudo(),
-            getCachedBanned(),
-            getCachedSettings()
-        ]);
+        // Sync reads — always instant; background refresh keeps cache warm for next call
+        const rawSudoUsers = getCachedSudoSync();
+        const rawBannedUsers = getCachedBannedSync();
+        const fetchedSettings = getCachedSettingsSync();
+        Promise.all([getCachedSudo(), getCachedBanned(), getCachedSettings()]).catch(() => {});
         const sudoUsers = Array.isArray(rawSudoUsers) ? rawSudoUsers : [];
         const bannedUsers = Array.isArray(rawBannedUsers) ? rawBannedUsers : [];
         let settings = fetchedSettings;
 
         if (!settings) {
-            console.log("Toxic-MD: Settings not found!");
+            // getCachedSettingsSync always returns _DEFAULTS so this is a safety guard only
             return;
         }
 
