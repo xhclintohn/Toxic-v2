@@ -28,16 +28,19 @@ function _addHist(uid, role, content) {
 }
 
 function isClearIntent(t) {
-    return /^(clear|reset|wipe|delete|flush|erase)\s*(this\s*)?(conv(ersation)?|chat|hist(ory)?|messages?|thread|memory|mem)$/i.test((t||'').trim());
+    return /^(clear|reset|wipe|delete|flush|erase)\s*(this\s*)?(conv(ersation)?|chat|hist(ory)?|messages?|thread|memory|mem)$/i.test((t || '').trim());
 }
 
-const SYSTEM_PROMPT = `You are TOXIC-MD, a WhatsApp AI assistant built by xh_clinton. Personality: sharp, witty, brutally honest - like a brilliant friend who doesn't sugarcoat things. Rules:
-- Be genuinely helpful but with attitude and dry humor when appropriate
-- Concise: 1-3 sentences for simple things, more only when truly needed
+const SYSTEM_PROMPT = `You are TOXIC-MD, a WhatsApp AI built by xh_clinton. Personality: sharp, witty, brutally honest — like a brilliant friend who doesn't sugarcoat anything.
+Rules:
+- Always COMPLETE the task. Never just comment on it or say you'll do it — actually do it.
+- Straight to the point. No fluff, no filler, no "Great question!".
+- Keep it concise: 1-3 sentences for simple things, more only when genuinely needed.
+- A bit cranky and sarcastic when appropriate — but still helpful.
 - No markdown (no **, ##). Plain text only.
-- If you see an image, describe it clearly and answer questions about it
-- If a document is shared, acknowledge the filename and assist with it
-- You remember this conversation
+- If you see an image, describe it clearly and answer questions about it.
+- If a document is shared, acknowledge the filename and help with it.
+- You remember this conversation.
 - Never say you're an AI or name your model. You are TOXIC-MD.
 - If asked who made you: xh_clinton`;
 
@@ -48,7 +51,7 @@ async function callGroq(messages, useVision) {
         const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model, messages, max_tokens: useVision ? 400 : 250, temperature: 0.75, stream: false })
+            body: JSON.stringify({ model, messages, max_tokens: useVision ? 500 : 350, temperature: 0.75, stream: false })
         });
         if (!res.ok) return null;
         const data = await res.json();
@@ -69,37 +72,36 @@ async function _downloadBuf(client, m, type) {
     }
 }
 
-const ALL_PREFIXES = ['.','!','#','/','$','?','+','-','*','~','%','&','^','=','|'];
+const ALL_PREFIXES = ['.', '!', '#', '/', '$', '?', '+', '-', '*', '~', '%', '&', '^', '=', '|'];
 
 function boxWrap(text) {
-      const raw = String(text || '').replace(/\n{3,}/g, '\n\n').trim();
-      const lines = raw.split('\n');
-      const processed = [];
-      for (const line of lines) {
-          const t = line.trim();
-          if (!t) { processed.push('├'); continue; }
-          if (/https?:\/\/\S+/.test(t)) {
-              processed.push('├');
-              processed.push(`├ ${t}`);
-              processed.push('├');
-          } else {
-              processed.push(`├ ${line}`);
-          }
-      }
-      const body = processed.join('\n');
-      return `╭───(    TOXIC-MD    )───\n├───≫ TOXIC-AI ≪───\n├\n${body}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
-  }
+    const raw = String(text || '').replace(/\n{3,}/g, '\n\n').trim();
+    const lines = raw.split('\n');
+    const processed = [];
+    for (const line of lines) {
+        const t = line.trim();
+        if (!t) { processed.push('├'); continue; }
+        if (/https?:\/\/\S+/.test(t)) {
+            processed.push('├');
+            processed.push(`├ ${t}`);
+            processed.push('├');
+        } else {
+            processed.push(`├ ${line}`);
+        }
+    }
+    const body = processed.join('\n');
+    return `╭───(    TOXIC-MD    )───\n├───≫ TOXIC-AI ≪───\n├\n${body}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+}
 
-  module.exports = async (context) => {
+module.exports = async (context) => {
+    const remoteJid = context?.m?.key?.remoteJid || context?.m?.chat;
     try {
         const { client, m, settings, botNumber } = context;
         if (!m || !m.key || !m.message) return;
         if (m.key.fromMe) return;
 
         const autoaiOn = settings.autoai === true || settings.autoai === 'true' || settings.autoai === 'on';
-        const chatbotOn = settings.chatbotpm === true || settings.chatbotpm === 'true' || settings.chatbotpm === 'on';
         const isGroup = !!m.isGroup;
-        const remoteJid = m.key.remoteJid || m.chat;
 
         if (isGroup) {
             if (!autoaiOn) return;
@@ -117,7 +119,7 @@ function boxWrap(text) {
             })();
             if (!isMentioned && !isReplyToBot) return;
         } else {
-            if (!chatbotOn) return;
+            if (!autoaiOn) return;
             if (!remoteJid?.endsWith('@s.whatsapp.net')) return;
         }
 
@@ -141,13 +143,13 @@ function boxWrap(text) {
 
         if (textContent && isClearIntent(textContent)) {
             _mem.delete(senderNum);
-            try { await client.sendMessage(remoteJid, { react: { text: '🗑️', key: m.key } }); } catch {}
-              await client.sendMessage(remoteJid, { text: '╭───(    TOXIC-MD    )───\n├ Memory cleared. Fresh start!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: m });
+            client.sendMessage(remoteJid, { react: { text: '🗑️', key: m.key } }).catch(() => {});
+            await client.sendMessage(remoteJid, { text: '╭───(    TOXIC-MD    )───\n├ Memory wiped. Fresh start.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: m });
             return;
         }
 
-        try { await client.sendMessage(remoteJid, { react: { text: '🤖', key: m.key } }); } catch {}
-          client.sendPresenceUpdate('composing', remoteJid).catch(() => {});
+        client.sendPresenceUpdate('composing', remoteJid).catch(() => {});
+        client.sendMessage(remoteJid, { react: { text: '🤖', key: m.key } }).catch(() => {});
 
         const hasImage = !!(rawMsg?.imageMessage || msgType === 'imageMessage');
         const hasDoc = !!(rawMsg?.documentMessage || rawMsg?.documentWithCaptionMessage ||
@@ -180,7 +182,7 @@ function boxWrap(text) {
             const fname = doc?.fileName || 'document';
             userContent = textContent
                 ? `[Document: "${fname}"] ${textContent}`
-                : `[Document: "${fname}"] Can you help me with this?`;
+                : `[Document: "${fname}"] Help me with this.`;
         } else if (textContent) {
             userContent = textContent;
         } else {
@@ -199,13 +201,16 @@ function boxWrap(text) {
 
         const reply = await callGroq(apiMessages, useVision);
         client.sendPresenceUpdate('paused', remoteJid).catch(() => {});
-        if (!reply) return;
+        if (!reply) {
+            client.sendMessage(remoteJid, { react: { text: '❌', key: m.key } }).catch(() => {});
+            return;
+        }
 
         _addHist(senderNum, 'assistant', reply);
         const boxedReply = boxWrap(reply);
         await client.sendMessage(remoteJid, { text: boxedReply }, { quoted: m });
-        try { await client.sendMessage(remoteJid, { react: { text: '✅', key: m.key } }); } catch {}
+        client.sendMessage(remoteJid, { react: { text: '✅', key: m.key } }).catch(() => {});
     } catch {
-        try { await client.sendMessage(remoteJid, { react: { text: '❌', key: m.key } }); } catch {}
+        try { client.sendMessage(remoteJid, { react: { text: '❌', key: m.key } }).catch(() => {}); } catch {}
     }
 };
