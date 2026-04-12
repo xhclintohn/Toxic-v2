@@ -287,7 +287,7 @@ module.exports = async (context) => {
             } catch {}
         }
 
-        const model = useVision ? 'llama-3.2-11b-vision-preview' : 'llama-3.1-8b-instant';
+        const model = useVision ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.1-8b-instant';
 
         let response = null;
         try {
