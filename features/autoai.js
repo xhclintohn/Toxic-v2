@@ -71,7 +71,26 @@ async function _downloadBuf(client, m, type) {
 
 const ALL_PREFIXES = ['.','!','#','/','$','?','+','-','*','~','%','&','^','=','|'];
 
-module.exports = async (context) => {
+function boxWrap(text) {
+      const raw = String(text || '').replace(/\n{3,}/g, '\n\n').trim();
+      const lines = raw.split('\n');
+      const processed = [];
+      for (const line of lines) {
+          const t = line.trim();
+          if (!t) { processed.push('├'); continue; }
+          if (/https?:\/\/\S+/.test(t)) {
+              processed.push('├');
+              processed.push(`├ ${t}`);
+              processed.push('├');
+          } else {
+              processed.push(`├ ${line}`);
+          }
+      }
+      const body = processed.join('\n');
+      return `╭───(    TOXIC-MD    )───\n├───≫ TOXIC-AI ≪───\n├\n${body}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+  }
+
+  module.exports = async (context) => {
     try {
         const { client, m, settings, botNumber } = context;
         if (!m || !m.key || !m.message) return;
@@ -122,11 +141,13 @@ module.exports = async (context) => {
 
         if (textContent && isClearIntent(textContent)) {
             _mem.delete(senderNum);
-            await client.sendMessage(remoteJid, { text: 'Memory cleared. Fresh start!' }, { quoted: m });
+            try { await client.sendMessage(remoteJid, { react: { text: '🗑️', key: m.key } }); } catch {}
+              await client.sendMessage(remoteJid, { text: '╭───(    TOXIC-MD    )───\n├ Memory cleared. Fresh start!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: m });
             return;
         }
 
-        client.sendPresenceUpdate('composing', remoteJid).catch(() => {});
+        try { await client.sendMessage(remoteJid, { react: { text: '🤖', key: m.key } }); } catch {}
+          client.sendPresenceUpdate('composing', remoteJid).catch(() => {});
 
         const hasImage = !!(rawMsg?.imageMessage || msgType === 'imageMessage');
         const hasDoc = !!(rawMsg?.documentMessage || rawMsg?.documentWithCaptionMessage ||
