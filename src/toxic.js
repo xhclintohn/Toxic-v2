@@ -378,7 +378,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
             packname, generateProfilePicture, groupMetadata, toxicspeed, mycode, fetchJson, exec,
             getRandom, UploadFileUgu, TelegraPh, prefix: usedPrefix, cmd, botname, mode, gcpresence, antitag,
-            antidelete: antideleteSetting, fetchBuffer, store, chatUpdate, sendJson,
+            antidelete: antideleteSetting, fetchBuffer, store, chatUpdate, sendJson, settings,
             getGroupAdmins: () => [], pict, Tag, stealth, multiprefix, isDev, fakeQuoted, fq: fakeQuoted
         };
 
