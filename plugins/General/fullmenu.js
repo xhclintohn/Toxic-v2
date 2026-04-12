@@ -1,4 +1,5 @@
 const { DateTime } = require('luxon');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const fs = require('fs');
   const path = require('path');
   const { getSettings } = require('../../lib/fastSettings');
@@ -9,6 +10,7 @@ const { DateTime } = require('luxon');
     description: 'Displays the full bot command menu by category',
     run: async (context) => {
       const { client, m, totalCommands, mode, pict, fakeQuoted } = context;
+      const fq = getFakeQuoted(m);
       const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃';
 
       const settings = await getSettings();
@@ -103,7 +105,7 @@ const { DateTime } = require('luxon');
       await client.sendMessage(m.chat, {
         text: menuText,
         contextInfo: { mentionedJid: [m.sender] }
-      }, { quoted: fakeQuoted });
+      }, { quoted: fq });
 
       const sections = categories
         .filter(cat => {
@@ -128,7 +130,7 @@ const { DateTime } = require('luxon');
               messageParamsJson: ''
             }
           }
-        }), { quoted: fakeQuoted, userJid: client.user.id });
+        }), { quoted: fq, userJid: client.user.id });
         await client.relayMessage(m.chat, interactiveMsg.message, { messageId: interactiveMsg.key.id });
       } catch {
         await client.sendMessage(m.chat, {
@@ -143,7 +145,7 @@ const { DateTime } = require('luxon');
             })),
             footer: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
           },
-        }, { quoted: fakeQuoted });
+        }, { quoted: fq });
       }
     }
   };
