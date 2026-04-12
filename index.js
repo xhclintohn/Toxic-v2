@@ -326,14 +326,17 @@ async function startToxic() {
       try {
       global._toxicLastActivity = Date.now();
       console.log('📨 [MSG_RECV]', messages.length, 'msgs | type:', type);
-      if (!global._toxicLastTs) global._toxicLastTs = Math.floor(Date.now() / 1000) - 30 * 60;
-      const hasRecent = messages.some(msg => {
-        const ts = msg.messageTimestamp;
-        if (!ts) return type === 'notify';
-        const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
-        return type === 'notify' ? true : tsNum > global._toxicLastTs;
+      if (!global._toxicSeenIds) global._toxicSeenIds = new Set();
+      if (!global._toxicSessionTs) global._toxicSessionTs = Math.floor(Date.now() / 1000);
+      const freshMsgs = messages.filter(msg => {
+        const id = msg?.key?.id;
+        if (id && global._toxicSeenIds.has(id)) return false;
+        const ts = msg?.messageTimestamp;
+        const tsN = ts ? (typeof ts === 'object' ? Number(ts.low||0)+Number(ts.high||0)*4294967296 : Number(ts)) : 0;
+        if (tsN && tsN < (global._toxicSessionTs - 30 * 60)) return false;
+        return true;
       });
-      if (!hasRecent) { console.log('⏩ [MSG_SKIP] old/irrelevant msgs, type:', type); return; }
+      if (!freshMsgs.length) { console.log('⏩ [MSG_SKIP] old/seen msgs, type:', type); return; }
 
       let settings = getCachedSettingsSync();
       getCachedSettings().catch(() => {});
@@ -342,9 +345,14 @@ async function startToxic() {
       const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
       const isStealthOn = stealth === 'true' || stealth === true;
 
-      await Promise.all(messages.map(async (mek) => {
+      await Promise.all(freshMsgs.map(async (mek) => {
         try {
           if (!mek || !mek.key) return;
+          const _msgId = mek?.key?.id;
+          if (_msgId) {
+            global._toxicSeenIds.add(_msgId);
+            if (global._toxicSeenIds.size > 1200) { const _old = global._toxicSeenIds.values().next().value; global._toxicSeenIds.delete(_old); }
+          }
           const remoteJid = mek.key.remoteJid;
 
           if (remoteJid === CHANNEL_JID) {
@@ -423,12 +431,6 @@ async function startToxic() {
           } catch (error) { console.log('❌ [TOXIC SYNC]:', error.message); }
         } catch (loopError) { console.log('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
       })).catch(outerErr => console.log('❌ [UPSERT OUTER]:', outerErr?.message || String(outerErr)));
-      messages.forEach(msg => {
-        const ts = msg?.messageTimestamp;
-        if (!ts) return;
-        const tsN = typeof ts === 'object' ? Number(ts.low||0) + Number(ts.high||0)*4294967296 : Number(ts);
-        if (tsN > (global._toxicLastTs || 0)) global._toxicLastTs = tsN;
-      });
       } catch (syncErr) { console.log('❌ [UPSERT SYNC]:', syncErr?.message || String(syncErr)); }
     });
 
@@ -488,6 +490,8 @@ async function startToxic() {
         if (global._toxicGhost) { clearInterval(global._toxicGhost); global._toxicGhost = null; }
     }
     if (connection === "open") {
+        global._toxicSessionTs = Math.floor(Date.now() / 1000);
+        global._toxicSeenIds = global._toxicSeenIds || new Set();
         reconnectAttempts = 0;
         global._toxicLastActivity = Date.now();
         try { require("./src/toxic").prewarmCache(); } catch (e) {}
