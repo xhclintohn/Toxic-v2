@@ -16,6 +16,7 @@ module.exports = async (context) => {
     );
   }
 
+  await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
   try {
     const searchResult = await yts(text);
 
@@ -54,6 +55,7 @@ module.exports = async (context) => {
     );
 
     // Optionally send thumbnail of the first result
+    await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     await client.sendMessage(
       m.chat,
       {
