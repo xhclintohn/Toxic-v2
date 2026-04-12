@@ -321,6 +321,7 @@ async function startToxic() {
     client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
       try {
       global._toxicLastActivity = Date.now();
+      console.log('📨 [MSG_RECV]', messages.length, 'msgs | type:', type);
       const _ct = global._toxicConnectTime || 0;
       const hasRecent = messages.some(msg => {
         const ts = msg.messageTimestamp;
@@ -328,7 +329,7 @@ async function startToxic() {
         const tsNum = typeof ts === 'object' ? Number(ts.low || 0) + Number(ts.high || 0) * 4294967296 : Number(ts);
         return _ct > 0 ? tsNum * 1000 >= _ct - 10000 : (Date.now() - tsNum * 1000) < 45000;
       });
-      if (!hasRecent) return;
+      if (!hasRecent) { console.log('⏩ [MSG_SKIP] old/irrelevant msgs, type:', type); return; }
 
       let settings = getCachedSettingsSync();
       getCachedSettings().catch(() => {});
@@ -485,7 +486,9 @@ async function startToxic() {
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
         console.log(chalk.green(`╰──────────────────☉\n`));
         global._toxicConnectTime = Date.now();
-          setTimeout(() => { try { if (typeof client.ev.flush === 'function') client.ev.flush(); } catch {} }, 10000);
+        [3000, 7000, 15000].forEach(ms => setTimeout(() => {
+            try { if (typeof client.ev.flush === 'function') client.ev.flush(true); } catch {}
+          }, ms));
   
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
         global._toxicKeepalive = setInterval(() => {
