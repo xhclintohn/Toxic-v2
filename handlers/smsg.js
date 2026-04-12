@@ -131,40 +131,21 @@ function smsg(conn, m, store) {
   m.text = m.text || m.body || "";
 
   m.reply = (text, chatId = m.chat, options = {}) => {
-    const fakeQuoted = {
-      key: {
-        participant: "0@s.whatsapp.net",
-        remoteJid: "0@s.whatsapp.net",
-        id: m.id,
-      },
-      message: {
-        conversation: "Toxic",
-      },
-      contextInfo: {
-        mentionedJid: [m.sender],
-        forwardingScore: 999,
-        isForwarded: true,
-      },
-    };
-
-    return conn.sendMessage(
-      chatId,
-      {
-        text: text,
-        contextInfo: {
-          externalAdReply: {
-            title: `Toxic-MD`,
-            body: m.pushName,
-            previewType: "PHOTO",
-            thumbnailUrl: "https://github.com/xhclintohn/Toxic-MD",
-            thumbnail: kali,
-            sourceUrl: "https://github.com/xhclintohn/Toxic-MD",
-          },
+      const fakeQuoted = {
+        key: {
+          participant: m.key?.participant || m.key?.remoteJid,
+          remoteJid: m.key?.remoteJid,
+          fromMe: m.key?.fromMe || false,
+          id: m.key?.id || m.id || 'toxic-fq',
         },
-      },
-      { quoted: fakeQuoted, ...options }
-    );
-  };
+        message: m.message || { conversation: text || '✓' },
+      };
+      return conn.sendMessage(
+        chatId,
+        { text },
+        { quoted: fakeQuoted, ...options }
+      );
+    };
 
   m.copy = () => smsg(conn, M.fromObject(M.toObject(m)));
   m.copyNForward = (jid = m.chat, forceForward = false, options = {}) =>
