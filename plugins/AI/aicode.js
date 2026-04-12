@@ -1,8 +1,10 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
   const { GROQ_API_KEY: GROQ_KEY } = require('../../keys');
 
   module.exports = async (context) => {
       const { client, m, text, prefix } = context;
+      const fq = getFakeQuoted(m);
 
       if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Provide a language and prompt.\n├ Usage: ${prefix}aicode <language> <prompt>\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
