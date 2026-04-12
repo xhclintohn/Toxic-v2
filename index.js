@@ -243,6 +243,10 @@ async function startToxic() {
       }
     });
 
+    if (client?.ev && typeof client.ev.buffer === 'function') {
+        client.ev.buffer = () => {};
+    }
+
     client.sessionConfig = { autoViewStatus: settingss?.autoview === true || settingss?.autoview === 'true' };
     global._toxicCurrentClient = client;
     store.bind(client.ev);
@@ -487,7 +491,7 @@ async function startToxic() {
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
         console.log(chalk.green(`╰──────────────────☉\n`));
         global._toxicConnectTime = Date.now();
-        const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') for (let i = 0; i < 5; i++) client.ev.flush(); client.sendPresenceUpdate('available').catch(() => {}); } catch {} };
+        const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') client.ev.flush(true); client.sendPresenceUpdate('available').catch(() => {}); } catch {} };
         setTimeout(_drainBuf, 3000);
         setInterval(_drainBuf, 30000);
   
@@ -503,6 +507,9 @@ async function startToxic() {
                 if (!global._toxicShuttingDown && !global._toxicReconnectTimer) {
                     global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
                 }
+            });
+            client.ws.on('CB:message', (node) => {
+                console.log('🔥 [CB:MSG]', (node?.attrs?.from || 'unknown').slice(0, 30), 'offline:', !!node?.attrs?.offline);
             });
         }
         global._toxicGhost = setInterval(() => {
