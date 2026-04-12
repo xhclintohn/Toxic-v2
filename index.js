@@ -203,12 +203,8 @@ async function startToxic() {
     }
     const { saveCreds, state } = await useMultiFileAuthState(sessionName);
 
-    // FIX: toxic-baileys opens ev.buffer() in chats.js when receivedPendingNotifications
-    // fires without myAppStateKeyId in creds — that buffer never closes if appStateSyncKeyShare
-    // never arrives. Setting any truthy placeholder prevents the buffer from being opened at all.
     if (state && state.creds && !state.creds.myAppStateKeyId) {
       state.creds.myAppStateKeyId = 'toxic-' + Date.now().toString(16);
-      console.log('🔑 [CREDS] myAppStateKeyId set — event buffer deadlock prevented');
       try { await saveCreds(); } catch (_) {}
     }
 
@@ -341,7 +337,7 @@ async function startToxic() {
       const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
       const isStealthOn = stealth === 'true' || stealth === true;
 
-      Promise.all(messages.map(async (mek) => {
+      await Promise.all(messages.map(async (mek) => {
         try {
           if (!mek || !mek.key) return;
           const remoteJid = mek.key.remoteJid;
@@ -490,13 +486,11 @@ async function startToxic() {
         console.log(chalk.green(`╰──────────────────☉\n`));
         global._toxicConnectTime = Date.now();
 
-        // Keepalive: send WhatsApp presence every 4 minutes to prevent ghost WS
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
         global._toxicKeepalive = setInterval(() => {
             client.sendPresenceUpdate('available').catch(() => {});
         }, 4 * 60 * 1000);
 
-        // Ghost watchdog: if no message events for 50 minutes, force a reconnect
         if (global._toxicGhost) clearInterval(global._toxicGhost);
         global._toxicGhost = setInterval(() => {
             const lastMsg = global._toxicLastActivity || 0;
