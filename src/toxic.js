@@ -172,7 +172,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const rawSudoUsers = getCachedSudoSync();
         const rawBannedUsers = getCachedBannedSync();
         const fetchedSettings = getCachedSettingsSync();
-        Promise.all([getCachedSudo(), getCachedBanned(), getCachedSettings()]).catch(() => {});
+        getCachedSettings().catch(() => {});
         const sudoUsers = Array.isArray(rawSudoUsers) ? rawSudoUsers : [];
         const bannedUsers = Array.isArray(rawBannedUsers) ? rawBannedUsers : [];
         let settings = fetchedSettings;
@@ -643,13 +643,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 }
             });
             context.client = _fqClient;
-            try {
-                await cmd(context);
-            } catch (error) {
-                console.log(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
-            } finally {
-                context.client = client;
-            }
+            cmd(context).catch(e => console.log(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, e));
         } else if (isDev && !itsMe && (settings.toxicagent === true || settings.toxicagent === 'true')) {
             toxicaiFeature(context).catch(() => {});
         } else if (!itsMe) {
