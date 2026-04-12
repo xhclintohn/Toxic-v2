@@ -16,6 +16,7 @@ module.exports = {
             if (!m.isGroup) return client.sendMessage(m.chat, { text: BOX('ERROR', ['Group only command.']) }, { quoted: m });
             if (!isBotAdmin) return client.sendMessage(m.chat, { text: BOX('ERROR', ['Make me admin first.']) }, { quoted: m });
 
+            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
             try {
                 const meta = await client.groupMetadata(m.chat);
                 const botJid = client.user?.id ? client.user.id.split(':')[0] + '@s.whatsapp.net' : '';
@@ -37,10 +38,12 @@ module.exports = {
                     if (i + batchSize < jids.length) await new Promise(r => setTimeout(r, 1500));
                 }
 
+                await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
                 await client.sendMessage(m.chat, {
                     text: BOX('DEMOTEALL', [`Done. ${demoted} admin(s) stripped of power.`, `Nobody special anymore. Back to being regular.`])
                 }, { quoted: m });
             } catch (err) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                 await client.sendMessage(m.chat, { text: BOX('ERROR', [`Failed: ${err.message?.slice(0, 60)}`]) }, { quoted: m });
             }
         });
