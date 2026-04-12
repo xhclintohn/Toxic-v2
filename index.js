@@ -486,9 +486,9 @@ async function startToxic() {
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
         console.log(chalk.green(`╰──────────────────☉\n`));
         global._toxicConnectTime = Date.now();
-        [3000, 7000, 15000].forEach(ms => setTimeout(() => {
-            try { if (typeof client.ev.flush === 'function') client.ev.flush(true); } catch {}
-          }, ms));
+        const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') for (let i = 0; i < 5; i++) client.ev.flush(); } catch {} };
+        setTimeout(_drainBuf, 3000);
+        setInterval(_drainBuf, 30000);
   
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
         global._toxicKeepalive = setInterval(() => {
