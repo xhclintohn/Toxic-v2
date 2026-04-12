@@ -325,15 +325,13 @@ async function startToxic() {
     client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
       try {
       global._toxicLastActivity = Date.now();
-        if (type === 'append') return;
       if (!global._toxicSeenIds) global._toxicSeenIds = new Set();
-      if (!global._toxicSessionTs) global._toxicSessionTs = Math.floor(Date.now() / 1000);
       const freshMsgs = messages.filter(msg => {
         const id = msg?.key?.id;
         if (id && global._toxicSeenIds.has(id)) return false;
         const ts = msg?.messageTimestamp;
         const tsN = ts ? (typeof ts === 'object' ? Number(ts.low||0)+Number(ts.high||0)*4294967296 : Number(ts)) : 0;
-        if (tsN && tsN < (global._toxicSessionTs - 30 * 60)) return false;
+        if (tsN && tsN < (Math.floor(Date.now() / 1000) - 300)) return false;
         return true;
       });
         if (!freshMsgs.length) return;
