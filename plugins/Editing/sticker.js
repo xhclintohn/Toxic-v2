@@ -15,7 +15,7 @@ const commandQueue = queue(async (task, callback) => {
 module.exports = async (context) => {
     const { client, m, packname, author } = context;
 
-    await client.sendMessage(m.chat, { react: { text: '🔃', key: m.key } });
+    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
     commandQueue.push({
         context,
