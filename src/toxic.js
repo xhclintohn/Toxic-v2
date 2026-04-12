@@ -13,7 +13,7 @@ const gcPresence = require('../features/gcPresence');
 const antitaggc = require('../features/antitag');
 const antilink = require('../features/antilink');
 const { getGroupSettings, updateSetting } = require('../database/config');
-const { makeFakeQuoted } = require('../lib/fakeQuoted');
+const { getFakeQuoted } = require('../lib/fakeQuoted');
 const { getCachedSettings, getCachedSudo, getCachedBanned, getCachedSettingsSync, getCachedSudoSync, getCachedBannedSync } = require('../lib/settingsCache');
 const { botname, mycode } = require('../config/settings');
 const { cleanupOldMessages } = require('../lib/Store');
@@ -366,7 +366,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const isAdmin = m.isAdmin;
         const IsGroup = m.isGroup;
 
-        const fakeQuoted = makeFakeQuoted(m);
+        const fakeQuoted = getFakeQuoted(m);
 
         const context = {
             client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
