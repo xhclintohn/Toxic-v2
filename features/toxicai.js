@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { getFakeQuoted } = require('../lib/fakeQuoted');
 
 const DEV_NUMBER = '254114885159';
 const GH_USERNAME = 'xhclintohn';
@@ -127,6 +128,7 @@ Today: ${new Date().toDateString()}. Working for: ${GH_USERNAME}.`;
 
 module.exports = async (context) => {
     const { client, m, body: msgBody, isDev } = context;
+    const fq = getFakeQuoted(m);
 
     if (!isDev) return;
 
@@ -152,7 +154,7 @@ module.exports = async (context) => {
     if (body && isClearIntent(body)) {
         clearHistory(m.sender);
         try { await client.sendMessage(m.chat, { react: { text: '🗑️', key: m.key } }); } catch {}
-        await client.sendMessage(m.chat, { text: boxWrap('conversation wiped. gone. zero memory. fresh hell starts now 🗑️', 'MEMORY CLEARED') }, { quoted: m });
+        await client.sendMessage(m.chat, { text: boxWrap('conversation wiped. gone. zero memory. fresh hell starts now 🗑️', 'MEMORY CLEARED') }, { quoted: fq });
         return;
     }
 
@@ -433,11 +435,11 @@ module.exports = async (context) => {
         }
 
         pushHistory(m.sender, 'assistant', finalReply);
-        await client.sendMessage(m.chat, { text: boxWrap(finalReply, 'TOXICAGENT') }, { quoted: m });
+        await client.sendMessage(m.chat, { text: boxWrap(finalReply, 'TOXICAGENT') }, { quoted: fq });
         if (imageUploadedUrl) {
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ IMAGE UPLOADED ≪───\n├\n├ 🔗 ${imageUploadedUrl}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: m });
+            }, { quoted: fq });
         }
         try { await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } }); } catch {}
     } catch {
