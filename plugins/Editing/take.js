@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = async (context) => {
     const { client, m, pushname } = context;
 
-    await client.sendMessage(m.chat, { react: { text: '🔃', key: m.key } });
+    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
 
     try {
         let mediaMsg = null;
