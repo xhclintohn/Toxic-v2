@@ -1,4 +1,5 @@
 const Jimp = require('jimp');
+  const { makeFakeQuoted } = require('../../lib/fakeQuoted');
 
   const EFFECTS_HELP = [
     'blur', 'grayscale/bw/grey', 'invert/negative',
@@ -10,6 +11,7 @@ const Jimp = require('jimp');
 
   module.exports = async (context) => {
       const { client, m, text } = context;
+      const fq = makeFakeQuoted(m);
 
       try {
           await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
@@ -22,7 +24,7 @@ const Jimp = require('jimp');
                   `├ Reply to an image with an effect.\n` +
                   `├ \n` +
                   `├ *Available effects:*\n` +
-                  ${EFFECTS_HELP.map(e => `├ • ${e}`).join('\n')} +
+                  EFFECTS_HELP.map(e => `├ • ${e}`).join('\n') +
                   `\n╰──────────────────☉\n` +
                   `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
               );
@@ -41,7 +43,6 @@ const Jimp = require('jimp');
           if (!mediaBuffer || !Buffer.isBuffer(mediaBuffer)) throw new Error('Download failed');
 
           const img = await Jimp.read(mediaBuffer);
-
           let appliedEffect = prompt;
 
           if (prompt.includes('blur')) {
@@ -90,11 +91,10 @@ const Jimp = require('jimp');
           const resultBuffer = await img.getBufferAsync(Jimp.MIME_JPEG);
 
           await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
           await client.sendMessage(m.chat, {
               image: resultBuffer,
               caption: `╭───(    TOXIC-MD    )───\n├───≫ IMG EDIT ≪───\n├ \n├ Effect: ${appliedEffect}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-          });
+          }, { quoted: fq });
 
       } catch (err) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
