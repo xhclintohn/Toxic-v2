@@ -224,7 +224,12 @@ module.exports = async (context) => {
 
         if (textContent && ALL_PREFIXES.some(p => textContent.startsWith(p))) return;
 
-        const senderNum = (m.sender || m.key.remoteJid || '').split('@')[0].split(':')[0];
+        const _rawSender = m.sender || m.key?.remoteJid || '';
+        let senderNum = _rawSender.split('@')[0].split(':')[0];
+        if (_rawSender.endsWith('@lid') && m.metadata?.participants) {
+            const _rp = m.metadata.participants.find(p => (p.lid || '').split(':')[0] === senderNum);
+            if (_rp) senderNum = (_rp.jid || _rp.id || '').split('@')[0].split(':')[0] || senderNum;
+        }
         const fq = getFakeQuoted(m);
 
         if (textContent && /^(clear|reset|wipe|delete|flush|erase)\s*(this\s*)?(conv(ersation)?|chat|hist(ory)?|messages?|thread|memory|mem)$/i.test(textContent.trim())) {
