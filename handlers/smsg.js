@@ -10,6 +10,7 @@ const {
   getContentType,
 } = require("@whiskeysockets/baileys");
 const { readFileSync } = require("fs");
+const { makeFakeQuoted } = require('../lib/fakeQuoted');
 const path = require("path");
 
 const filePath = path.resolve(__dirname, "../toxic.jpg");
@@ -131,19 +132,10 @@ function smsg(conn, m, store) {
   m.text = m.text || m.body || "";
 
   m.reply = (text, chatId = m.chat, options = {}) => {
-      const fakeQuoted = {
-        key: {
-          participant: m.key?.participant || m.key?.remoteJid,
-          remoteJid: m.key?.remoteJid,
-          fromMe: m.key?.fromMe || false,
-          id: m.key?.id || m.id || 'toxic-fq',
-        },
-        message: m.message || { conversation: text || '✓' },
-      };
       return conn.sendMessage(
         chatId,
         { text },
-        { quoted: fakeQuoted, ...options }
+        { quoted: makeFakeQuoted(m), ...options }
       );
     };
 
