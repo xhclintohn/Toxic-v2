@@ -13,6 +13,7 @@ const gcPresence = require('../features/gcPresence');
 const antitaggc = require('../features/antitag');
 const antilink = require('../features/antilink');
 const { getGroupSettings, updateSetting } = require('../database/config');
+const { makeFakeQuoted } = require('../lib/fakeQuoted');
 const { getCachedSettings, getCachedSudo, getCachedBanned, getCachedSettingsSync, getCachedSudoSync, getCachedBannedSync } = require('../lib/settingsCache');
 const { botname, mycode } = require('../config/settings');
 const { cleanupOldMessages } = require('../lib/Store');
@@ -365,15 +366,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const isAdmin = m.isAdmin;
         const IsGroup = m.isGroup;
 
-        const fakeQuoted = {
-            key: {
-                participant: m.key?.participant || m.key?.remoteJid,
-                remoteJid: m.key?.remoteJid,
-                fromMe: m.key?.fromMe || false,
-                id: m.key?.id || m.id || 'toxic-fq'
-            },
-            message: m.message || { conversation: body || '✓' }
-        };
+        const fakeQuoted = makeFakeQuoted(m);
 
         const context = {
             client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
@@ -628,7 +621,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         if (cmd && typeof cmd === 'function') {
             const _origSend = client.sendMessage.bind(client);
             const _autoFqSend = async (jid, content, opts = {}) => {
-                  if (jid === m.chat &&
+                if (jid === m.chat && !opts.quoted &&
                     (content.text !== undefined || content.image || content.video ||
                      content.audio || content.sticker || content.document || content.poll) &&
                     !content.react && !content.delete && !content.forward && !content.ptv) {
