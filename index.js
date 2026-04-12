@@ -502,16 +502,31 @@ async function startToxic() {
 
         if (global._toxicGhost) clearInterval(global._toxicGhost);
         if (client.ws && typeof client.ws.on === 'function') {
-            client.ws.on('close', () => {
-                console.log('🔌 [WS CLOSE] WebSocket closed — reconnecting...');
-                if (!global._toxicShuttingDown && !global._toxicReconnectTimer) {
-                    global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
-                }
-            });
-            client.ws.on('CB:message', (node) => {
-                console.log('🔥 [CB:MSG]', (node?.attrs?.from || 'unknown').slice(0, 30), 'offline:', !!node?.attrs?.offline);
-            });
-        }
+              client.ws.on('close', () => {
+                  console.log('🔌 [WS CLOSE] WebSocket closed — reconnecting...');
+                  if (!global._toxicShuttingDown && !global._toxicReconnectTimer) {
+                      global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
+                  }
+              });
+              client.ws.on('CB:message', (node) => {
+                  console.log('🔥 [CB:MSG]', (node?.attrs?.from || 'unknown').slice(0, 30), 'offline:', !!node?.attrs?.offline);
+              });
+              let _frameReady = false;
+              setTimeout(() => { _frameReady = true; }, 8000);
+              client.ws.on('frame', (node) => {
+                  if (!_frameReady || !node?.tag || node.tag === 'ack') return;
+                  const f = node.attrs?.from || node.attrs?.to || '';
+                  console.log(`🌐 [FRAME:${node.tag}]`, f.slice(0, 25), JSON.stringify(node.attrs || {}).slice(0, 50));
+              });
+          }
+          setTimeout(async () => {
+              try {
+                  await client.query({ tag: 'iq', attrs: { to: 's.whatsapp.net', xmlns: 'passive', type: 'set' }, content: [{ tag: 'active', attrs: {} }] });
+                  console.log('✅ [PASSIVE] Active confirmed by WA');
+              } catch (e) {
+                  console.log('⚠️ [PASSIVE] Active IQ failed:', (e?.message || e).toString().slice(0, 60));
+              }
+          }, 5000);
         global._toxicGhost = setInterval(() => {
             const lastMsg = global._toxicLastActivity || 0;
             if (Date.now() - lastMsg > 50 * 60 * 1000) {
