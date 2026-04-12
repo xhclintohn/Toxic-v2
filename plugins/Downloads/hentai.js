@@ -29,6 +29,7 @@ module.exports = async (context) => {
         return m.reply(formatStylishReply("Yo, drop a search query, fam! 🔍 Ex: .hentai hinata"));
     }
 
+    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
     try {
         // Step 1: Search using thehentai-search API
         const encodedQuery = encodeURIComponent(text);
