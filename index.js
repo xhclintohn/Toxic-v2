@@ -336,7 +336,16 @@ async function startToxic() {
         if (tsN && tsN < (global._toxicSessionTs - 30 * 60)) return false;
         return true;
       });
-      if (!freshMsgs.length) { console.log('⏩ [MSG_SKIP] old/seen msgs, type:', type); return; }
+      if (!freshMsgs.length) {
+        for (const _sk of messages) {
+          const _skId = _sk?.key?.id;
+          const _skBody = _sk?.message?.conversation || _sk?.message?.extendedTextMessage?.text || '';
+          const _skReason = (_skId && global._toxicSeenIds.has(_skId)) ? 'seen' : 'old(age)';
+          if (_skBody) console.log('⏩ [MSG_SKIP]', _skReason, '| chat:', _sk?.key?.remoteJid?.slice(-20), '| body[:25]:', _skBody.slice(0,25));
+          else console.log('⏩ [MSG_SKIP]', _skReason, '| chat:', _sk?.key?.remoteJid?.slice(-20), '| type:', Object.keys(_sk?.message||{})[0]||'(none)');
+        }
+        return;
+      }
 
       let settings = getCachedSettingsSync();
       getCachedSettings().catch(() => {});
