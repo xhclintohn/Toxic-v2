@@ -13,6 +13,7 @@ module.exports = async (context) => {
         return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Invalid format!\n├ Use the format: .codegen <prompt>|<language>\n├ Example: .codegen Check for prime number|JavaScript\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
+    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
     try {
         const payload = {
             customInstructions: prompt,
@@ -25,9 +26,11 @@ module.exports = async (context) => {
             return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Failed to retrieve code from API.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Cᴏᴅᴇɢᴇɴ (${language}) ≪───\n├ \n` + "```" + language.toLowerCase() + "\n" + data.trim() + "\n```" + `\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
     } catch (error) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         console.error(error);
         m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ An error occurred while processing your request.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
