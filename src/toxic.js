@@ -338,6 +338,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             m.isAdmin = isDev;
             m.isBotAdmin = false;
             m._botLidKey = '';
+            setImmediate(() => { client.presenceSubscribe(m.chat).catch(() => {}); });
         }
 
         let clint = m.quoted || m;
@@ -632,13 +633,8 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 }
                 return _origSend(jid, content, opts);
             };
-            const _fqClient = new Proxy(client, {
-                get(target, prop) {
-                    if (prop === 'sendMessage') return _autoFqSend;
-                    const val = target[prop];
-                    return typeof val === 'function' ? val.bind(target) : val;
-                }
-            });
+            const _fqClient = Object.create(client);
+            _fqClient.sendMessage = _autoFqSend;
             context.client = _fqClient;
             try {
                 await cmd(context);
