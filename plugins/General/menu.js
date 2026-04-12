@@ -78,7 +78,7 @@ module.exports = {
             const msg = await generateWAMessageFromContent(m.chat, proto.Message.fromObject({
                 interactiveMessage: {
                     body: { text: menuText },
-                    footer: { text: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
+                    footer: { text: '' },
                     header: { hasMediaAttachment: false },
                     contextInfo: {
                         mentionedJid: [m.sender],
@@ -144,7 +144,7 @@ module.exports = {
                         title: s.title,
                         rows: s.rows.map(r => ({ title: r.title, description: r.description, rowId: r.id }))
                     })),
-                    footer: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
+                    footer: '',
                 },
             }, { quoted: m });
         }
