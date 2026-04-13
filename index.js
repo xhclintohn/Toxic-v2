@@ -215,7 +215,8 @@ async function startToxic() {
       generateHighQualityLinkPreview: true,
       emitOwnEvents: true,
       fireInitQueries: true,
-      retryRequestDelayMs: 250,
+      retryRequestDelayMs: 0,
+      maxMsgRetryCount: 2,
       getMessage: async (key) => {
         const msg = store.loadMessage(key.remoteJid, key.id);
         return msg?.message || undefined;
@@ -326,6 +327,7 @@ async function startToxic() {
           if (!mek || !mek.key || !mek.message) return;
           const remoteJid = mek.key.remoteJid;
           if (!remoteJid || remoteJid.endsWith('@lid')) return;
+          if (type !== 'notify') return;
           const ts = mek?.messageTimestamp;
           const tsN = ts ? (typeof ts === 'object' ? Number(ts.low||0)+Number(ts.high||0)*4294967296 : Number(ts)) : 0;
           if (tsN && tsN < (Math.floor(Date.now() / 1000) - 300)) return;
