@@ -373,7 +373,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const mime = quoted?.msg ? quoted.msg.mimetype : quoted?.mimetype || "";
         const qmsg = quoted?.msg ? quoted.msg : quoted;
         const normalizedSenderForOwner = normalizeNumber(m.sender);
-        const Owner = isDev || sudoUsers.some((v) => normalizeNumber(v) === normalizedSenderForOwner);
+        const Owner = isDev || itsMe || sudoUsers.some((v) => normalizeNumber(v) === normalizedSenderForOwner);
 
         const groupMetadata = m.isGroup ? m.metadata : {};
         const participants = m.isGroup && groupMetadata ? groupMetadata.participants || [] : [];
