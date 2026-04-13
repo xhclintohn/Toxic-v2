@@ -473,7 +473,7 @@ async function startToxic() {
             if (global._toxicDrainTimer) clearTimeout(global._toxicDrainTimer);
         if (global._toxicDrainInterval) clearInterval(global._toxicDrainInterval);
         const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') client.ev.flush(true); } catch {} };
-        global._toxicDrainTimer = setTimeout(_drainBuf, 3000);
+        global._toxicDrainTimer = setTimeout(_drainBuf, 500);
         global._toxicDrainInterval = setInterval(() => { try { if (client.ws && client.ws.isOpen) client.ws.socket?.ping?.(); } catch {} }, 20 * 1000);
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
         global._toxicKeepalive = null;
@@ -495,9 +495,9 @@ client.ws.on('CB:ib', (node) => {
                   await client.query({ tag: 'iq', attrs: { to: 's.whatsapp.net', xmlns: 'passive', type: 'set' }, content: [{ tag: 'active', attrs: {} }] });
               } catch (e) {
               }
-          }, 4000);
+          }, 500);
           let _initDone = false;
-          setTimeout(() => { _initDone = true; }, 8000);
+          setTimeout(() => { _initDone = true; }, 2000);
           if (global._toxicBatchPoll) clearInterval(global._toxicBatchPoll);
         global._toxicBatchPoll = null;
 }
