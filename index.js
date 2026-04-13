@@ -318,38 +318,45 @@ async function startToxic() {
       } catch (callError) {}
     });
 
-    client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
-      try {
-      global._toxicLastActivity = Date.now();
-      if (!global._toxicSeenIds) global._toxicSeenIds = new Set();
-      const freshMsgs = messages.filter(msg => {
-        const id = msg?.key?.id;
-        if (id && global._toxicSeenIds.has(id)) return false;
-        const ts = msg?.messageTimestamp;
-        const tsN = ts ? (typeof ts === 'object' ? Number(ts.low||0)+Number(ts.high||0)*4294967296 : Number(ts)) : 0;
-        if (tsN && tsN < (Math.floor(Date.now() / 1000) - 300)) return false;
-        return true;
-      });
-        if (!freshMsgs.length) return;
-
-      let settings = getCachedSettingsSync();
-      getCachedSettings().catch(() => {});
-
-      client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
-      const { autoread, autolike, autoview, presence, autolikeemoji, stealth } = settings;
-      const isStealthOn = stealth === 'true' || stealth === true;
-
-      await Promise.all(freshMsgs.map(async (mek) => {
+    client.ev.on("messages.upsert", async ({ messages, type }) => {
         try {
-          if (!mek || !mek.key) return;
+          global._toxicLastActivity = Date.now();
+          if (!messages || !messages.length) return;
+          const mek = messages[0];
+          if (!mek || !mek.key || !mek.message) return;
+          const remoteJid = mek.key.remoteJid;
+          if (!remoteJid || remoteJid.endsWith('@lid')) return;
+          const ts = mek?.messageTimestamp;
+          const tsN = ts ? (typeof ts === 'object' ? Number(ts.low||0)+Number(ts.high||0)*4294967296 : Number(ts)) : 0;
+          if (tsN && tsN < (Math.floor(Date.now() / 1000) - 300)) return;
+          if (!global._toxicSeenIds) global._toxicSeenIds = new Set();
           const _msgId = mek?.key?.id;
           if (_msgId) {
+            if (global._toxicSeenIds.has(_msgId)) return;
             global._toxicSeenIds.add(_msgId);
-            if (global._toxicSeenIds.size > 1200) { const _old = global._toxicSeenIds.values().next().value; global._toxicSeenIds.delete(_old); }
+            if (global._toxicSeenIds.size > 500) { const _old = global._toxicSeenIds.values().next().value; global._toxicSeenIds.delete(_old); }
           }
-          const remoteJid = mek.key.remoteJid;
-
-            if (!remoteJid || remoteJid.endsWith('@lid')) return;
+          const settings = getCachedSettingsSync();
+          getCachedSettings().catch(() => {});
+          const { autolike, autoview, presence, autolikeemoji } = settings;
+          try { client.sessionConfig.autoViewStatus = autoview === true || autoview === 'true'; } catch {}
+          if (remoteJid === "status@broadcast") {
+            (async () => {
+              try {
+                await handleAutoViewStatus(client, mek);
+                if (autolike === true || autolike === 'true') {
+                  const nickk = client.decodeJid(client.user.id);
+                  const posterJid = resolveStatusPosterJid(mek.key);
+                  if (posterJid) {
+                    let reactEmoji = autolikeemoji || '❤️';
+                    if (reactEmoji === 'random') { const _e = ['❤️','🩶','🔥','🤍','♦️','🎉','💚','💯','✨','☢️']; reactEmoji = _e[Math.floor(Math.random() * _e.length)]; }
+                    await client.sendMessage(remoteJid, { react: { text: reactEmoji, key: { ...mek.key, participant: posterJid } } }, { statusJidList: [posterJid, nickk] }).catch(() => {});
+                  }
+                }
+              } catch (e) {}
+            })();
+            return;
+          }
           if (remoteJid === CHANNEL_JID) {
             (async () => {
               try {
@@ -366,36 +373,11 @@ async function startToxic() {
             })();
             return;
           }
-
-          if (remoteJid === "status@broadcast") {
-            (async () => {
-              try {
-                const isAutolike = autolike === true || autolike === 'true';
-                await handleAutoViewStatus(client, mek);
-                const posterJid = resolveStatusPosterJid(mek.key);
-                if (isAutolike && posterJid) {
-                  const nickk = client.decodeJid(client.user.id);
-                  let reactEmoji = autolikeemoji || '❤️';
-                  if (reactEmoji === 'random') {
-                    const emojis = ['❤️', '🩶', '🔥', '🤍', '♦️', '🎉', '💚', '💯', '✨', '☢️'];
-                    reactEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-                  }
-                  const reactKey = { ...mek.key, participant: posterJid };
-                  await client.sendMessage(remoteJid, { react: { text: reactEmoji, key: reactKey } }, { statusJidList: [posterJid, nickk] }).catch(() => {});
-                }
-              } catch (e) {}
-            })();
-            return;
-          }
-
-          if (!mek.message) return;
           mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
           if (!mek.message) return;
-
+          const isStealthOn = settings.stealth === 'true' || settings.stealth === true;
           if (isStealthOn) return;
-
-            client.readMessages([mek.key]).catch(() => {});
-
+          client.readMessages([mek.key]).catch(() => {});
           if (remoteJid.endsWith('@s.whatsapp.net')) {
             client.presenceSubscribe(remoteJid).catch(() => {});
             try {
@@ -404,29 +386,21 @@ async function startToxic() {
               else if (presence === 'recording') client.sendPresenceUpdate("recording", remoteJid).catch(() => {});
             } catch (error) {}
           }
-
           if (!client.public && !mek.key.fromMe) return;
-
           if (mek.message?.listResponseMessage) {
             const selectedCmd = mek.message.listResponseMessage.singleSelectReply?.selectedRowId;
             if (selectedCmd) {
               const effectivePrefix = settings?.prefix || '.';
-              let command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
+              const command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
               const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
               require("./src/toxic")(client, listM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC LIST]:', e.message));
               return;
             }
           }
-
-          try {
-            const m = smsg(client, mek, store);
-            require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
-          } catch (error) { console.log('❌ [TOXIC SYNC]:', error.message); }
-        } catch (loopError) { console.log('❌ [LOOP ERROR]:', loopError?.message || String(loopError)); }
-      })).catch(outerErr => console.log('❌ [UPSERT OUTER]:', outerErr?.message || String(outerErr)));
-      } catch (syncErr) { console.log('❌ [UPSERT SYNC]:', syncErr?.message || String(syncErr)); }
-    });
-
+          const m = smsg(client, mek, store);
+          require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
+        } catch (syncErr) { console.log('❌ [UPSERT SYNC]:', syncErr?.message || String(syncErr)); }
+      });
     client.ev.on("messages.update", (updates) => {
       Promise.all(updates.map(async (update) => {
         try {
