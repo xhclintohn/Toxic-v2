@@ -499,8 +499,9 @@ async function startToxic() {
         if (global._toxicDrainInterval) clearInterval(global._toxicDrainInterval);
         const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') client.ev.flush(true); } catch {} };
         global._toxicDrainTimer = setTimeout(_drainBuf, 3000);
+        global._toxicDrainInterval = setInterval(() => { try { client.sendPresenceUpdate('available').catch(() => {}); } catch {} }, 30 * 1000);
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
-        global._toxicKeepalive = null;
+        global._toxicKeepalive = setInterval(() => { try { client.sendPresenceUpdate('available').catch(() => {}); } catch {} }, 4 * 60 * 1000);
 
         if (global._toxicGhost) clearInterval(global._toxicGhost);
 if (client.ws && typeof client.ws.on === 'function') {
