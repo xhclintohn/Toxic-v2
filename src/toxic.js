@@ -45,27 +45,28 @@ async function fastGroupMetadata(client, jid) {
       const now = Date.now();
       const cached = _groupMetaCache.get(jid);
       if (cached && (now - cached.time) < GROUP_META_TTL) return cached.data;
-      try {
-          const meta = await Promise.race([
-              client.groupMetadata(jid),
-              new Promise((_, rej) => setTimeout(() => rej(new Error('meta_timeout')), 5000))
-          ]);
-          _groupMetaCache.set(jid, { data: meta, time: now });
-          if (_groupMetaCache.size > 200) {
-              const oldest = _groupMetaCache.keys().next().value;
-              _groupMetaCache.delete(oldest);
+      if (_groupMetaInFlight.has(jid)) return _groupMetaInFlight.get(jid);
+      const p = (async () => {
+          try {
+              const meta = await Promise.race([
+                  client.groupMetadata(jid),
+                  new Promise((_, rej) => setTimeout(() => rej(new Error('meta_timeout')), 5000))
+              ]);
+              _groupMetaCache.set(jid, { data: meta, time: Date.now() });
+              if (_groupMetaCache.size > 200) {
+                  const oldest = _groupMetaCache.keys().next().value;
+                  _groupMetaCache.delete(oldest);
+              }
+              return meta;
+          } catch (e) {
+              return cached?.data || {};
+          } finally {
+              _groupMetaInFlight.delete(jid);
           }
-          return meta;
-      } catch (e) {
-          return cached?.data || {};
-      }
+      })();
+      _groupMetaInFlight.set(jid, p);
+      return p;
   }
-
-async function prewarmCache() {
-    try {
-        await Promise.all([getCachedSettings(), getCachedSudo(), getCachedBanned()]);
-    } catch (e) {}
-}
 
 async function downloadMedia(client, message, type) {
     try {
