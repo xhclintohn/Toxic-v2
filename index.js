@@ -153,7 +153,7 @@ async function startToxic() {
         if (!cl || global._toxicShuttingDown || global._toxicIsStarting) return;
         const silentMs = Date.now() - global._toxicLastActivity;
         if (silentMs < 5 * 60 * 1000) return;
-        if (!cl.ws || cl.ws.readyState !== 1) {
+        if (!cl.ws || !cl.ws.isOpen) {
           console.log('⚠️ [WATCHDOG] WebSocket not open — reconnecting...');
           global._toxicCurrentClient = null;
           try { cl.ev.removeAllListeners(); } catch {}
@@ -501,7 +501,7 @@ async function startToxic() {
         if (global._toxicDrainInterval) clearInterval(global._toxicDrainInterval);
         const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') client.ev.flush(true); } catch {} };
         global._toxicDrainTimer = setTimeout(_drainBuf, 3000);
-        global._toxicDrainInterval = setInterval(() => { try { if (client.ws && client.ws.readyState === 1) client.ws.ping(); } catch {} }, 20 * 1000);
+        global._toxicDrainInterval = setInterval(() => { try { if (client.ws && client.ws.isOpen) client.ws.socket?.ping?.(); } catch {} }, 20 * 1000);
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
         global._toxicKeepalive = null;
 
