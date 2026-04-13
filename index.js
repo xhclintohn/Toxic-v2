@@ -210,7 +210,7 @@ async function startToxic() {
       markOnlineOnConnect: !(settingss.presence === 'offline' || settingss.presence === 'unavailable'),
       connectTimeoutMs: 60000,
       userDevicesCache: new Map(),
-      defaultQueryTimeoutMs: undefined,
+      defaultQueryTimeoutMs: 20000,
       keepAliveIntervalMs: 25000,
       generateHighQualityLinkPreview: true,
       emitOwnEvents: true,
