@@ -39,6 +39,7 @@ setInterval(() => cleanupOldMessages(), 12 * 60 * 60 * 1000);
 
 let _cachedBotNumber = '';
 const _groupMetaCache = new Map();
+const _groupMetaInFlight = new Map();
 const GROUP_META_TTL = 300000;
 
 async function fastGroupMetadata(client, jid) {
