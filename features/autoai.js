@@ -294,29 +294,33 @@ module.exports = async (context) => {
             } catch {}
         }
 
-        const model = useVision ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.1-8b-instant';
-
-        let response = null;
-        try {
-            const result = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                model,
-                messages: [
-                    { role: 'system', content: SYSTEM_PROMPT },
-                    ...history.slice(-16),
-                    { role: 'user', content: userContent }
-                ],
-                max_tokens: useVision ? 500 : 300,
-                temperature: 0.7
+        const _callGroq = async (mdl, msgs, maxTok) => {
+            const r = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                model: mdl, messages: msgs, max_tokens: maxTok, temperature: 0.7
             }, {
                 headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
                 timeout: 15000
             });
-            const content = result.data?.choices?.[0]?.message?.content?.trim();
-            if (!content) {
+            return r.data?.choices?.[0]?.message?.content?.trim() || null;
+        };
+
+        let response = null;
+        try {
+            const baseHistory = [{ role: 'system', content: SYSTEM_PROMPT }, ...history.slice(-16)];
+            if (useVision) {
+                try {
+                    response = await _callGroq('meta-llama/llama-4-scout-17b-16e-instruct', [...baseHistory, { role: 'user', content: userContent }], 500);
+                } catch {
+                    const fallback = textContent ? `[Image received] ${textContent}` : '[Image received]';
+                    response = await _callGroq('llama-3.1-8b-instant', [...baseHistory, { role: 'user', content: fallback }], 300);
+                }
+            } else {
+                response = await _callGroq('llama-3.1-8b-instant', [...baseHistory, { role: 'user', content: userContent }], 300);
+            }
+            if (!response) {
                 client.sendMessage(remoteJid, { react: { text: '❌', key: m.key } }).catch(() => {});
                 return;
             }
-            response = content;
         } catch (e) {
             console.error(`❌ [AUTOAI] Groq error: ${e.response?.data?.error?.message || e.message}`);
             client.sendMessage(remoteJid, { react: { text: '❌', key: m.key } }).catch(() => {});
