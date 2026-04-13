@@ -211,7 +211,7 @@ async function startToxic() {
       connectTimeoutMs: 60000,
       userDevicesCache: new Map(),
       defaultQueryTimeoutMs: 20000,
-      keepAliveIntervalMs: 25000,
+      keepAliveIntervalMs: 10000,
       generateHighQualityLinkPreview: true,
       emitOwnEvents: true,
       fireInitQueries: true,
@@ -486,7 +486,7 @@ async function startToxic() {
     }
     if (connection === "open") {
         global._toxicSessionTs = Math.floor(Date.now() / 1000);
-        global._toxicSeenIds = global._toxicSeenIds || new Set();
+        global._toxicSeenIds = new Set();
         global._toxicRealTime = false;
         reconnectAttempts = 0;
         global._toxicLastActivity = Date.now();
