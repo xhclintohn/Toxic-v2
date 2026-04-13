@@ -654,7 +654,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
     }
 };
 
-module.exports.prewarmCache = prewarmCache;
 
 process.on('uncaughtException', function (err) {
     let e = String(err);
