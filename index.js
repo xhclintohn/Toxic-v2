@@ -152,7 +152,7 @@ async function startToxic() {
         const cl = global._toxicCurrentClient;
         if (!cl || global._toxicShuttingDown || global._toxicIsStarting) return;
         const silentMs = Date.now() - global._toxicLastActivity;
-        if (silentMs < 90 * 1000) return;
+        if (silentMs < 5 * 60 * 1000) return;
         if (!cl.ws || cl.ws.readyState !== 1) {
           console.log('⚠️ [WATCHDOG] WebSocket not open — reconnecting...');
           global._toxicCurrentClient = null;
@@ -319,7 +319,6 @@ async function startToxic() {
     });
 
     client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
-      if (type !== "notify") return;
       try {
       global._toxicLastActivity = Date.now();
       if (!global._toxicSeenIds) global._toxicSeenIds = new Set();
@@ -502,7 +501,7 @@ async function startToxic() {
         if (global._toxicDrainInterval) clearInterval(global._toxicDrainInterval);
         const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') client.ev.flush(true); } catch {} };
         global._toxicDrainTimer = setTimeout(_drainBuf, 3000);
-        global._toxicDrainInterval = setInterval(() => { try { client.query({ tag: 'iq', attrs: { to: 's.whatsapp.net', type: 'get', xmlns: 'w:p' }, content: [{ tag: 'ping', attrs: {} }] }).catch(() => {}); } catch {} }, 30 * 1000);
+        global._toxicDrainInterval = setInterval(() => { try { const _kp = getCachedSettingsSync()?.presence; if (_kp === 'online') { client.sendPresenceUpdate('available').catch(() => {}); } else if (_kp === 'typing' || _kp === 'recording') { } else { client.sendPresenceUpdate('unavailable').catch(() => {}); } } catch {} }, 30 * 1000);
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
         global._toxicKeepalive = null;
 
