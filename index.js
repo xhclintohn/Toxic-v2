@@ -501,7 +501,7 @@ async function startToxic() {
         if (global._toxicDrainInterval) clearInterval(global._toxicDrainInterval);
         const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') client.ev.flush(true); } catch {} };
         global._toxicDrainTimer = setTimeout(_drainBuf, 3000);
-        global._toxicDrainInterval = setInterval(() => { try { const _kp = getCachedSettingsSync()?.presence; if (_kp === 'online') { client.sendPresenceUpdate('available').catch(() => {}); } else if (_kp === 'typing' || _kp === 'recording') { } else { client.sendPresenceUpdate('unavailable').catch(() => {}); } } catch {} }, 30 * 1000);
+        global._toxicDrainInterval = setInterval(() => { try { if (client.ws && client.ws.readyState === 1) client.ws.ping(); } catch {} }, 20 * 1000);
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
         global._toxicKeepalive = null;
 
