@@ -490,7 +490,6 @@ async function startToxic() {
         global._toxicRealTime = false;
         reconnectAttempts = 0;
         global._toxicLastActivity = Date.now();
-        try { require("./src/toxic").prewarmCache(); } catch (e) {}
         console.log(chalk.green(`\n╭───(    `) + chalk.bold.cyan(`𝐓𝐨𝐱𝐢𝐜-𝐌D`) + chalk.green(`    )───`));
         console.log(chalk.green(`> ───≫ `) + chalk.yellow(`🚀 Started Successfully`) + chalk.green(`<<───`));
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐒𝐭𝐚𝐭𝐮𝐬 : `) + chalk.green(`Started Successfully`));
