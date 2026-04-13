@@ -480,6 +480,8 @@ async function startToxic() {
 
       if (connection !== "open") {
         if (global._toxicKeepalive) { clearInterval(global._toxicKeepalive); global._toxicKeepalive = null; }
+        if (global._toxicDrainInterval) { clearInterval(global._toxicDrainInterval); global._toxicDrainInterval = null; }
+        if (global._toxicDrainTimer) { clearTimeout(global._toxicDrainTimer); global._toxicDrainTimer = null; }
         if (global._toxicGhost) { clearInterval(global._toxicGhost); global._toxicGhost = null; }
     }
     if (connection === "open") {
