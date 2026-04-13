@@ -215,7 +215,7 @@ async function startToxic() {
       generateHighQualityLinkPreview: true,
       emitOwnEvents: true,
       fireInitQueries: true,
-      retryRequestDelayMs: 3000,
+      retryRequestDelayMs: 250,
       getMessage: async (key) => {
         const msg = store.loadMessage(key.remoteJid, key.id);
         return msg?.message || undefined;
