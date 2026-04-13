@@ -319,6 +319,7 @@ async function startToxic() {
     });
 
     client.ev.on("messages.upsert", async ({ messages = [], type } = {}) => {
+      if (type !== "notify") return;
       try {
       global._toxicLastActivity = Date.now();
       if (!global._toxicSeenIds) global._toxicSeenIds = new Set();
@@ -501,9 +502,9 @@ async function startToxic() {
         if (global._toxicDrainInterval) clearInterval(global._toxicDrainInterval);
         const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') client.ev.flush(true); } catch {} };
         global._toxicDrainTimer = setTimeout(_drainBuf, 3000);
-        global._toxicDrainInterval = setInterval(() => { try { client.sendPresenceUpdate('available').catch(() => {}); } catch {} }, 30 * 1000);
+        global._toxicDrainInterval = setInterval(() => { try { client.query({ tag: 'iq', attrs: { to: 's.whatsapp.net', type: 'get', xmlns: 'w:p' }, content: [{ tag: 'ping', attrs: {} }] }).catch(() => {}); } catch {} }, 30 * 1000);
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
-        global._toxicKeepalive = setInterval(() => { try { client.sendPresenceUpdate('available').catch(() => {}); } catch {} }, 4 * 60 * 1000);
+        global._toxicKeepalive = null;
 
         if (global._toxicGhost) clearInterval(global._toxicGhost);
 if (client.ws && typeof client.ws.on === 'function') {
