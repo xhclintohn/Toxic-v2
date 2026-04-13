@@ -378,13 +378,13 @@ async function startToxic() {
           const isStealthOn = settings.stealth === 'true' || settings.stealth === true;
           if (isStealthOn) return;
           client.readMessages([mek.key]).catch(() => {});
-          if (remoteJid.endsWith('@s.whatsapp.net')) {
+          if (remoteJid.endsWith('@s.whatsapp.net') && presence && presence !== 'off') {
             client.presenceSubscribe(remoteJid).catch(() => {});
             try {
               if (presence === 'online') client.sendPresenceUpdate("available", remoteJid).catch(() => {});
               else if (presence === 'typing') client.sendPresenceUpdate("composing", remoteJid).catch(() => {});
               else if (presence === 'recording') client.sendPresenceUpdate("recording", remoteJid).catch(() => {});
-            } catch (error) {}
+            } catch {}
           }
           if (!client.public && !mek.key.fromMe) return;
           if (mek.message?.listResponseMessage) {
