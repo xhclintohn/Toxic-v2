@@ -352,7 +352,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             m.isAdmin = isDev;
             m.isBotAdmin = false;
             m._botLidKey = '';
-            setImmediate(() => { client.presenceSubscribe(m.chat).catch(() => {}); });
         }
 
         let clint = m.quoted || m;
