@@ -636,14 +636,10 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         if (cmd && typeof cmd === 'function') {
             const _origSend = client.sendMessage.bind(client);
             const _autoFqSend = async (jid, content, opts = {}) => {
-                if (content.react || content.delete) {
-                    _origSend(jid, content, opts).catch(() => {});
-                    return {};
-                }
                 if (jid === m.chat && !opts.quoted &&
                     (content.text !== undefined || content.image || content.video ||
                      content.audio || content.sticker || content.document || content.poll) &&
-                    !content.forward && !content.ptv) {
+                    !content.react && !content.delete && !content.forward && !content.ptv) {
                     opts = { ...opts, quoted: fakeQuoted };
                 }
                 return _origSend(jid, content, opts);
