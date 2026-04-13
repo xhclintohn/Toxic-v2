@@ -37,6 +37,7 @@
     "node-webpmux": "^3.1.7",
     "performance-now": "^2.1.0",
     "pino": "^8.19.0",
+    "readable-stream": "latest",
     "wa-sticker-formatter": "^4.4.4",
     "wikipedia": "^2.1.2",
     "yt-search": "^2.10.4",
