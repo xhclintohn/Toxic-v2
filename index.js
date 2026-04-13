@@ -207,7 +207,7 @@ async function startToxic() {
     const client = toxicConnect({
       printQRInTerminal: false,
       syncFullHistory: false,
-      markOnlineOnConnect: !(settingss.presence === 'offline' || settingss.presence === 'unavailable'),
+      markOnlineOnConnect: settingss.presence === 'online',
       connectTimeoutMs: 60000,
       userDevicesCache: new Map(),
       defaultQueryTimeoutMs: 20000,
@@ -379,15 +379,6 @@ async function startToxic() {
           if (!mek.message) return;
           const isStealthOn = settings.stealth === 'true' || settings.stealth === true;
           if (isStealthOn) return;
-          client.readMessages([mek.key]).catch(() => {});
-          if (remoteJid.endsWith('@s.whatsapp.net') && presence && presence !== 'off') {
-            client.presenceSubscribe(remoteJid).catch(() => {});
-            try {
-              if (presence === 'online') client.sendPresenceUpdate("available", remoteJid).catch(() => {});
-              else if (presence === 'typing') client.sendPresenceUpdate("composing", remoteJid).catch(() => {});
-              else if (presence === 'recording') client.sendPresenceUpdate("recording", remoteJid).catch(() => {});
-            } catch {}
-          }
           if (!client.public && !mek.key.fromMe) return;
           if (mek.message?.listResponseMessage) {
             const selectedCmd = mek.message.listResponseMessage.singleSelectReply?.selectedRowId;
@@ -396,11 +387,31 @@ async function startToxic() {
               const command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
               const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
               require("./src/toxic")(client, listM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC LIST]:', e.message));
+              setImmediate(() => {
+                  client.readMessages([mek.key]).catch(() => {});
+                  if (remoteJid.endsWith('@s.whatsapp.net') && presence && presence !== 'off') {
+                    try {
+                      if (presence === 'online') client.sendPresenceUpdate('available', remoteJid).catch(() => {});
+                      else if (presence === 'typing') client.sendPresenceUpdate('composing', remoteJid).catch(() => {});
+                      else if (presence === 'recording') client.sendPresenceUpdate('recording', remoteJid).catch(() => {});
+                    } catch {}
+                  }
+                });
               return;
             }
           }
           const m = smsg(client, mek, store);
           require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
+              setImmediate(() => {
+                  client.readMessages([mek.key]).catch(() => {});
+                  if (remoteJid.endsWith('@s.whatsapp.net') && presence && presence !== 'off') {
+                    try {
+                      if (presence === 'online') client.sendPresenceUpdate('available', remoteJid).catch(() => {});
+                      else if (presence === 'typing') client.sendPresenceUpdate('composing', remoteJid).catch(() => {});
+                      else if (presence === 'recording') client.sendPresenceUpdate('recording', remoteJid).catch(() => {});
+                    } catch {}
+                  }
+                });
         } catch (syncErr) { console.log('❌ [UPSERT SYNC]:', syncErr?.message || String(syncErr)); }
       });
     client.ev.on("messages.update", (updates) => {
