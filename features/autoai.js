@@ -182,7 +182,11 @@ module.exports = async (context) => {
         if (!GROQ_KEY) return;
 
         const autoaiOn = settings?.autoai === true || settings?.autoai === 'true' || settings?.autoai === 'on';
-        if (!autoaiOn) return;
+        if (!autoaiOn) {
+              const _quickSender = (m.sender || m.key?.remoteJid || '').split('@')[0].split(':')[0];
+              const _allowed = await getAllowedUsers();
+              if (!_allowed.some(u => u === _quickSender)) return;
+          }
 
         const isGroup = !!m.isGroup;
 
