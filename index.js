@@ -388,7 +388,7 @@ async function startToxic() {
               const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: mek.key.remoteJid, from: mek.key.remoteJid, chat: mek.key.remoteJid, isGroup: mek.key.remoteJid.endsWith('@g.us') };
               require("./src/toxic")(client, listM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC LIST]:', e.message));
               setImmediate(() => {
-                  client.readMessages([mek.key]).catch(() => {});
+                  if (settings?.autoread === true || settings?.autoread === 'true') { client.readMessages([mek.key]).catch(() => {}); }
                   if (remoteJid.endsWith('@s.whatsapp.net') && presence && presence !== 'off') {
                     try {
                       if (presence === 'online') client.sendPresenceUpdate('available', remoteJid).catch(() => {});
@@ -403,7 +403,7 @@ async function startToxic() {
           const m = smsg(client, mek, store);
           require("./src/toxic")(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
               setImmediate(() => {
-                  client.readMessages([mek.key]).catch(() => {});
+                  if (settings?.autoread === true || settings?.autoread === 'true') { client.readMessages([mek.key]).catch(() => {}); }
                   if (remoteJid.endsWith('@s.whatsapp.net') && presence && presence !== 'off') {
                     try {
                       if (presence === 'online') client.sendPresenceUpdate('available', remoteJid).catch(() => {});
