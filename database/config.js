@@ -23,7 +23,8 @@ let Database = null;
       groups: new Map(),
       history: [],
       warns: new Map(),
-      msgs: new Map()
+      msgs: new Map(),
+      allowed: new Set()
   };
 
   function initMemory() {
@@ -33,6 +34,11 @@ let Database = null;
 
   function _memOp(type, sql, params) {
       const s = (sql || '').toLowerCase().trim();
+      if (s.includes('allowed_users')) {
+          if (type === 'all') return [..._mem.allowed].map(num => ({ num }));
+          if (type === 'run' && s.includes('delete')) { _mem.allowed.delete(params[0]); return; }
+          if (type === 'run') { _mem.allowed.add(params[0]); return; }
+      }
       if (s.includes('settings') && !s.includes('group_settings')) {
           if (type === 'all') { const r = []; _mem.settings.forEach((v, k) => r.push({ key: k, value: v })); return r; }
           if (type === 'run') { _mem.settings.set(params[0], params[1]); return; }
@@ -114,6 +120,7 @@ let Database = null;
       );
       CREATE TABLE IF NOT EXISTS sudo_users (num TEXT PRIMARY KEY);
       CREATE TABLE IF NOT EXISTS banned_users (num TEXT PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS allowed_users (num TEXT PRIMARY KEY);
       CREATE TABLE IF NOT EXISTS warn_data (jid TEXT NOT NULL, user TEXT NOT NULL, warns INTEGER DEFAULT 0, PRIMARY KEY (jid, user));
       CREATE TABLE IF NOT EXISTS msg_store (
           id TEXT NOT NULL, jid TEXT NOT NULL, sender TEXT, message TEXT NOT NULL,
@@ -138,6 +145,7 @@ let Database = null;
       )`,
       `CREATE TABLE IF NOT EXISTS sudo_users (num TEXT PRIMARY KEY)`,
       `CREATE TABLE IF NOT EXISTS banned_users (num TEXT PRIMARY KEY)`,
+      `CREATE TABLE IF NOT EXISTS allowed_users (num TEXT PRIMARY KEY)`,
       `CREATE TABLE IF NOT EXISTS warn_data (jid TEXT NOT NULL, user TEXT NOT NULL, warns INTEGER DEFAULT 0, PRIMARY KEY (jid, user))`,
       `CREATE TABLE IF NOT EXISTS msg_store (
           id TEXT NOT NULL, jid TEXT NOT NULL, sender TEXT, message TEXT NOT NULL,
@@ -180,7 +188,6 @@ let Database = null;
               new Promise((_, rej) => setTimeout(() => rej(new Error('PG connect timeout')), 20000))
           ]);
           for (const sql of PG_SCHEMA) { try { await pool.query(sql); } catch {} }
-          // Keepalive: ping DB every 3 minutes to prevent idle connection drops
           setInterval(() => { pool.query('SELECT 1').catch(() => {}); }, 3 * 60 * 1000);
           _pg = pool;
           _backend = 'pg';
@@ -352,6 +359,23 @@ let Database = null;
       return data;
   }
 
+  async function getAllowedUsers() {
+      const rows = await qAll('SELECT num FROM allowed_users', 'SELECT num FROM allowed_users');
+      return rows.map(r => r.num);
+  }
+
+  async function addAllowedUser(num) {
+      await qRun(
+          'INSERT OR IGNORE INTO allowed_users (num) VALUES (?)',
+          'INSERT INTO allowed_users (num) VALUES ($1) ON CONFLICT DO NOTHING',
+          [num]
+      );
+  }
+
+  async function removeAllowedUser(num) {
+      await qRun('DELETE FROM allowed_users WHERE num = ?', 'DELETE FROM allowed_users WHERE num = $1', [num]);
+  }
+
   async function getConversationHistory(num, limit = 20) {
       const rows = await qAll(
           'SELECT role, message FROM conversation_history WHERE num = ? ORDER BY timestamp DESC LIMIT ?',
@@ -490,6 +514,7 @@ let Database = null;
       getGroupSettings, updateGroupSetting,
       banUser, unbanUser, getBannedUsers,
       addSudoUser, removeSudoUser, getSudoUsers,
+      getAllowedUsers, addAllowedUser, removeAllowedUser,
       getConversationHistory, addConversationMessage, clearConversationHistory, clearOldConversationHistory,
       getWarnCount, addWarn, resetWarn, setWarnLimit, getWarnLimit,
       saveMessage, getMessage, deleteMessage, cleanupOldMsgStore
