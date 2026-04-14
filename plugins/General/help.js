@@ -283,6 +283,24 @@ module.exports = {
             'reject-all': { usage: `${effectivePrefix}reject-all`, desc: 'Reject all pending join requests.' },
         };
 
+
+              canvas: { usage: `${effectivePrefix}canvas Title | type | text | watermark`, desc: 'Generate a themed canvas card from a replied image. Types: spotify, youtube, google, tiktok, duckduckgo, brave, applemusic, soundcloud, pinterest, playstore, happymod, apkpure, unsplash, wallpaper, wattpad, weather, sticker, lyrics, shazam, web, image. Aliases: canvascard, spotifycard, youtubecard, tiktokcard' },
+              canvascard: { usage: `${effectivePrefix}canvas Title | type | text | watermark`, desc: 'Alias for canvas — themed canvas card generator.' },
+              spotifycard: { usage: `${effectivePrefix}canvas Title | spotify | text | watermark`, desc: 'Alias for canvas with spotify type.' },
+              remini: { usage: `${effectivePrefix}remini`, desc: 'Enhance and upscale a replied image using AI. Reply to an image. Aliases: hd, enhance, upscale' },
+              hd: { usage: `${effectivePrefix}hd`, desc: 'Alias for remini — AI image enhancement.' },
+              enhance: { usage: `${effectivePrefix}enhance`, desc: 'Alias for remini — AI image enhancement.' },
+              upscale: { usage: `${effectivePrefix}upscale`, desc: 'Alias for remini — AI image upscaling.' },
+              imgedit: { usage: `${effectivePrefix}imgedit <prompt>`, desc: 'AI-edit a replied image using a text prompt. E.g: .imgedit make it look like anime. Aliases: imageedit, aiedit, editimg' },
+              imageedit: { usage: `${effectivePrefix}imgedit <prompt>`, desc: 'Alias for imgedit — AI image editing via prompt.' },
+              aiedit: { usage: `${effectivePrefix}aiedit <prompt>`, desc: 'Alias for imgedit — AI image editing.' },
+              rc: { usage: `${effectivePrefix}rc <prompt>`, desc: 'Generate an AI image from a text prompt. E.g: .rc a futuristic city at night. Aliases: imagine, texttoimage, tti' },
+              imagine: { usage: `${effectivePrefix}imagine <prompt>`, desc: 'Alias for rc — AI image generation.' },
+              tti: { usage: `${effectivePrefix}tti <prompt>`, desc: 'Alias for rc — text-to-image.' },
+              aisong: { usage: `${effectivePrefix}aisong <description>`, desc: 'Generate an AI-created song from a description. E.g: .aisong a sad lofi song about loneliness. Aliases: gensong, makesong' },
+              gensong: { usage: `${effectivePrefix}gensong <description>`, desc: 'Alias for aisong — AI song generation.' },
+              makesong: { usage: `${effectivePrefix}makesong <description>`, desc: 'Alias for aisong — AI song generator.' },
+              allow: { usage: `${effectivePrefix}allow add|remove|list [@user]`, desc: 'Owner only. Manage the bot whitelist. Sub-commands: add @user — add to whitelist, remove @user — remove, list — show all allowed users.' },
         if (helpData[cmdName]) {
             const info = helpData[cmdName];
             const body = `├ 📌 *Command:* ${cmdName}\n├ 📖 *Usage:* ${info.usage}\n├ ℹ️ *Description:*\n├ ${info.desc}`;
