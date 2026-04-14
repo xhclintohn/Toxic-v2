@@ -17,7 +17,7 @@ module.exports = {
 
         if (!prompt) {
             return client.sendMessage(m.chat, {
-                text: '╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Give me something to work with.\n├ Example: ' + prefix + 'aisong a sad love song about rain\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀoʀ ≪───\n├ \n├ Give me something to work with.\n├ Example: ${prefix}aisong a sad love song about rain\n╰──────────────────☉\n> ©𝒯𝓎𝓌𝓂𝓃𝓁 𝒱𝒵 𝓽𝓵_𝓬𝓵𝓲𝓷𝓼𝓸𝓷`
             }, { quoted: fq });
         }
 
@@ -37,13 +37,20 @@ module.exports = {
                     ptt: false,
                     fileName: 'song.mp3'
                 }, { quoted: fq });
+                await client.sendMessage(m.chat, {
+                    text: `╭───(    TOXIC-MD    )───\n├───≫ AI Sᴏɴɢ ≪───\n├ \n├ Prompt: ${prompt}\n├ Generated successfully.\n╰──────────────────☉\n> ©𝒯𝓎𝓌𝓂𝓃𝓁 𝒱𝒵 𝓽𝓵_𝓬𝓵𝓲𝓷𝓼𝓸𝓷`
+                }, { quoted: fq });
             } else {
                 const display = typeof result === 'string' ? result : JSON.stringify(result);
-                await client.sendMessage(m.chat, { text: '╭───(    TOXIC-MD    )───\n├───≫ AI Sᴏɴɢ ≪───\n├ \n├ Prompt: ' + prompt + '\n├ \n├ ' + display + '\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: fq });
+                await client.sendMessage(m.chat, {
+                    text: `╭───(    TOXIC-MD    )───\n├───≫ AI Sᴏɴɢ ≪───\n├ \n├ Prompt: ${prompt}\n├ \n├ ${display}\n╰──────────────────☉\n> ©𝒯𝓎𝓌𝓂𝓃𝓁 𝒱𝒵 𝓽𝓵_𝓬𝓵𝓲𝓷𝓼𝓸𝓷`
+                }, { quoted: fq });
             }
         } catch {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            await client.sendMessage(m.chat, { text: '╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Song generation failed. Try again.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: fq });
+            await client.sendMessage(m.chat, {
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Song generation failed. Try again.\n╰──────────────────☉\n> ©𝒯𝓎𝓌𝓂𝓃𝓁 𝒱𝒵 𝓽𝓵_𝓬𝓵𝓲𝓷𝓼𝓸𝓷`
+            }, { quoted: fq });
         }
     }
 };
