@@ -278,14 +278,11 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     fastGroupMetadata(client, m.chat).catch(() => {});
                 }
             } else {
-                try {
-                    m.metadata = await Promise.race([
-                        fastGroupMetadata(client, m.chat),
-                        new Promise(r => setTimeout(() => r({}), 600))
-                    ]);
-                } catch { m.metadata = {}; }
-                _groupParticipants = m.metadata?.participants || [];
-            }
+                  fastGroupMetadata(client, m.chat).then(meta => {
+                      if (meta?.participants) _groupMetaCache.set(m.chat, { data: meta, time: Date.now() });
+                  }).catch(() => {});
+                  _groupParticipants = [];
+              }
 
             const normSender = normalizeNumber(m.sender);
             const normBot = normalizeNumber(botNumber);
