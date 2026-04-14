@@ -38,7 +38,8 @@ try {
 setInterval(() => cleanupOldMessages(), 12 * 60 * 60 * 1000);
 
 let _cachedBotNumber = '';
-const _groupMetaCache = new Map();
+if (!global._toxicGroupMetaCache) global._toxicGroupMetaCache = new Map();
+const _groupMetaCache = global._toxicGroupMetaCache;
 const _groupMetaInFlight = new Map();
 const GROUP_META_TTL = 300000;
 
