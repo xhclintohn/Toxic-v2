@@ -511,6 +511,15 @@ client.ws.on('CB:ib', (node) => {
           }, 500);
           let _initDone = false;
           setTimeout(() => { _initDone = true; }, 2000);
+            setTimeout(async () => {
+              try {
+                const groups = await client.groupFetchAllParticipating();
+                if (!global._toxicGroupMetaCache) global._toxicGroupMetaCache = new Map();
+                for (const [jid, meta] of Object.entries(groups || {})) {
+                  global._toxicGroupMetaCache.set(jid, { data: meta, time: Date.now() });
+                }
+              } catch {}
+            }, 4000);
           if (global._toxicBatchPoll) clearInterval(global._toxicBatchPoll);
         global._toxicBatchPoll = null;
 }
