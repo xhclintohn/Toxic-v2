@@ -58,7 +58,7 @@ const { getFakeQuoted } = require('../../lib/fakeQuoted');
           .join('');
       };
 
-      let menuText = `╭───(    TOXIC-MD    )───\n├───≫ Fᴜʟʟ Mᴇɴᴜ ≪───\n├ \n├ Greetings, @${m.pushName}\n├ \n├ Bot: ${botname}\n├ Total Commands: ${totalCommands}\n├ Time: ${getCurrentTimeInNairobi()}\n├ Prefix: ${effectivePrefix || 'None'}\n├ Mode: ${mode}\n├ Library: Baileys\n╰──────────────────☉\n\n`;
+      let menuText = `╭───(    TOXIC-MD    )───\n├───≫ Fᴜʟʟ Mᴇɴᴜ ≪───\n├ \n├ Greetings, @${m.sender.split('@')[0].split(':')[0]}\n├ \n├ Bot: ${botname}\n├ Total Commands: ${totalCommands}\n├ Time: ${getCurrentTimeInNairobi()}\n├ Prefix: ${effectivePrefix || 'None'}\n├ Mode: ${mode}\n├ Library: Baileys\n╰──────────────────☉\n\n`;
 
       for (const category of categories) {
         let commandFiles;

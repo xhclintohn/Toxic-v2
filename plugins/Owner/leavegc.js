@@ -31,7 +31,7 @@ module.exports = async (context) => {
             await client.groupLeave(m.chat);
         } catch (error) {
             console.error(`[LEAVE-ERROR] Couldn't ditch the group: ${error.stack}`);
-            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Shit broke, ${m.pushName}!\n├ Can't escape this dumpster fire:\n├ ${error.message}. Try again, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Shit broke, @${m.sender.split('@')[0].split(':')[0]}!\n├ Can't escape this dumpster fire:\n├ ${error.message}. Try again, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     });
 };

@@ -34,7 +34,7 @@ module.exports = {
         const mentioned = m.mentionedJid?.length ? m.mentionedJid[0]
             : m.quoted?.sender ? m.quoted.sender
             : m.sender;
-        const target = `@${mentioned.split('@')[0]}`;
+        const target = `@${mentioned.split('@')[0].split(':')[0]}`;
         const roast = ROASTS[Math.floor(Math.random() * ROASTS.length)];
 
         await client.sendMessage(m.chat, { react: { text: '🔥', key: m.key } });

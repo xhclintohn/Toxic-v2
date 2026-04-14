@@ -32,7 +32,7 @@ module.exports = async (context) => {
   const videoUrl = song.url;
 
   const response = `╭───(    TOXIC-MD    )───\n` +
-                  `├ *${title}* found for ${m.pushName}! 🎶\n` +
+                  `├ *${title}* found for @${m.sender.split('@')[0].split(':')[0]}! 🎶\n` +
                   `│🎤 *Artist*: ${artist}\n` +
                   `│👀 *Views*: ${views}\n` +
                   `│⏱ *Duration*: ${duration}\n` +

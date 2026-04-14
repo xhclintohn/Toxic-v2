@@ -56,7 +56,7 @@ module.exports = {
       }
 
     } catch (error) {
-      await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Cʀᴀsʜᴇᴅ ≪───\n├ \n├ Something broke, ${m.pushName}.\n├ Error: ${error.message}\n├ Try again when I feel like it.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+      await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Cʀᴀsʜᴇᴅ ≪───\n├ \n├ Something broke, @${m.sender.split('@')[0].split(':')[0]}.\n├ Error: ${error.message}\n├ Try again when I feel like it.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
   }
 };

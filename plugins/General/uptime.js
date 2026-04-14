@@ -4,7 +4,7 @@ module.exports = async (context) => {
   const fq = getFakeQuoted(m);
 
   if (text) {
-    return client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ What's with the extra crap, ${m.pushName}?\n├ Just say !uptime, dumbass.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
+    return client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ What's with the extra crap, @${m.sender.split('@')[0].split(':')[0]}?\n├ Just say !uptime, dumbass.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq, mentions: [m.sender] });
   }
 
   try {

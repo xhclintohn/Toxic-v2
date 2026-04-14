@@ -17,7 +17,7 @@ module.exports = async (context) => {
   };
 
   if (text) {
-    return client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo, ${m.pushName}, what's with the extra\n├ bullshit? Just say ${prefix}credits, you moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
+    return client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo, @${m.sender.split('@')[0].split(':')[0]}, what's with the extra\n├ bullshit? Just say ${prefix}credits, you moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq, mentions: [m.sender] });
   }
 
   try {
