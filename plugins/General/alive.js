@@ -20,7 +20,7 @@ module.exports = {
       const secs = Math.floor(uptime % 60);
       const uptimeStr = `${days}d ${hours}h ${mins}m ${secs}s`;
 
-      const caption = `╭───(    TOXIC-MD    )───\n├───≫ I'ᴍ Aʟɪᴠᴇ ≪───\n├ \n├ Yo ${m.pushName}, I'm up and running.\n├ Been alive for ${uptimeStr}.\n├ Type *${prefix}menu* if you need\n├ help, which you probably do.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+      const caption = `╭───(    TOXIC-MD    )───\n├───≫ I'ᴍ Aʟɪᴠᴇ ≪───\n├ \n├ @${m.sender.split('@')[0]}, I'm up and running.\n├ Been alive for ${uptimeStr}.\n├ Type *${prefix}menu* if you need\n├ help, which you probably do.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
       if (pict && Buffer.isBuffer(pict)) {
         await client.sendMessage(m.chat, {

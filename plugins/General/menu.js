@@ -19,7 +19,7 @@ module.exports = {
         if (cleanText !== '' && !['menu', 'commands', 'list'].includes(cleanText.split(' ')[0].toLowerCase())) {
             const commandName = cleanText.split(' ')[0];
             return client.sendMessage(m.chat, {
-                text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo ${m.pushName}, chill.\n├ Extra trash after "${commandName}"?\n├ Just type *${prefix}menu* properly.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ @${m.sender.split('@')[0]}, chill.\n├ Extra trash after "${commandName}"?\n├ Just type *${prefix}menu* properly.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: fq });
         }
 
@@ -27,7 +27,7 @@ module.exports = {
             `╭───(    TOXIC-MD    )───\n` +
             `├───≫ Mᴇɴᴜ ≪───\n` +
             `├ \n` +
-            `├ Hello, @${m.pushName}\n` +
+            `├ @${m.sender.split('@')[0]}\n` +
             `├ \n` +
             `├ Bot: TOXIC-MD\n` +
             `├ Prefix: ${prefix}\n` +
@@ -86,7 +86,7 @@ module.exports = {
                         mentionedJid: [m.sender],
                         externalAdReply: {
                             title: `${botname}`,
-                            body: `Yo, ${m.pushName}! Ready to cause chaos?`,
+                            body: `Ready to cause chaos, @${m.sender.split('@')[0]}?`,
                             mediaType: 1,
                             thumbnail: pict,
                             mediaUrl: '',
@@ -126,7 +126,7 @@ module.exports = {
                 contextInfo: {
                     externalAdReply: {
                         title: `${botname}`,
-                        body: `Yo, ${m.pushName}! Ready to cause chaos?`,
+                        body: `Ready to cause chaos, @${m.sender.split('@')[0]}?`,
                         mediaType: 1,
                         thumbnail: pict,
                         mediaUrl: '',

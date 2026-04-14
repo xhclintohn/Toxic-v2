@@ -25,26 +25,13 @@ module.exports = {
 
     let menuText = `╭───(    TOXIC-MD    )───\n├───≫ REACTIONS MENU ≪───\n├ \n├ Prefix: ${effectivePrefix || 'None'}\n├ \n`;
 
-    const commandFiles = fs.readdirSync('./plugins/Reactions').filter(f => f.endsWith('/js') && f !== 'links.js');
+    const commandFiles = fs.readdirSync('./plugins/Reactions').filter(f => f.endsWith('.js') && f !== 'links.js');
     for (const file of commandFiles) {
-      menuText += `├ *${toFancyFont(file.replace('/js', ''))}*\n`;
+      menuText += `├ *${toFancyFont(file.replace('.js', ''))}*\n`;
     }
 
     menuText += `╰──────────────────☉\n`;
 
-    await client.sendMessage(m.chat, {
-      text: menuText,
-      contextInfo: {
-        externalAdReply: {
-          showAdAttribution: false,
-          title: 'Toxic-MD WA bot',
-          body: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
-          thumbnail: pict,
-          sourceUrl: 'https://github.com/xhclintohn/Toxic-MD',
-          mediaType: 1,
-          renderLargerThumbnail: true
-        }
-      }
-    }, { quoted: fq });
+        await client.sendMessage(m.chat, { text: menuText }, { quoted: fq });
   }
 };

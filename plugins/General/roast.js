@@ -31,14 +31,16 @@ module.exports = {
     run: async (context) => {
         const { client, m, prefix } = context;
         const fq = getFakeQuoted(m);
-        const mentioned = m.mentionedJid?.length ? m.mentionedJid[0] : null;
-        const target = mentioned ? `@${mentioned.split('@')[0]}` : m.pushName;
+        const mentioned = m.mentionedJid?.length ? m.mentionedJid[0]
+            : m.quoted?.sender ? m.quoted.sender
+            : m.sender;
+        const target = `@${mentioned.split('@')[0]}`;
         const roast = ROASTS[Math.floor(Math.random() * ROASTS.length)];
 
         await client.sendMessage(m.chat, { react: { text: '🔥', key: m.key } });
         await client.sendMessage(m.chat, {
             text: `╭───(    TOXIC-MD    )───\n├───≫ Rᴏᴀsᴛ ≪───\n├ \n├ 🎯 Target: ${target}\n├ \n├ ${roast}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-            mentions: mentioned ? [mentioned] : []
+            mentions: [mentioned]
         }, { quoted: fq });
     }
 };

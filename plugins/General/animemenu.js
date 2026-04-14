@@ -21,27 +21,14 @@ module.exports = {
 
         const animeDir = path.join(__dirname, '..', 'Anime');
         let commandFiles = [];
-        try { commandFiles = fs.readdirSync(animeDir).filter(f => f.endsWith('/js')); } catch {}
+        try { commandFiles = fs.readdirSync(animeDir).filter(f => f.endsWith('.js')); } catch {}
 
         let menuText = `╭───(    TOXIC-MD    )───\n├───≫ ANIMEMENU ≪───\n├ \n`;
         for (const file of commandFiles) {
-            menuText += `├ *${toFancyFont(file.replace('/js', ''))}*\n`;
+            menuText += `├ *${toFancyFont(file.replace('.js', ''))}*\n`;
         }
         menuText += `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
-        await client.sendMessage(m.chat, {
-            text: menuText,
-            contextInfo: {
-                externalAdReply: {
-                    title: 'TOXIC-MD — Anime',
-                    body: 'Your anime fix, served toxic.',
-                    mediaType: 1,
-                    thumbnail: pict,
-                    sourceUrl: 'https://github.com/xhclintohn/Toxic-MD',
-                    showAdAttribution: false,
-                    renderLargerThumbnail: false,
-                }
-            }
-        }, { quoted: fq });
+                await client.sendMessage(m.chat, { text: menuText }, { quoted: fq });
     }
 };

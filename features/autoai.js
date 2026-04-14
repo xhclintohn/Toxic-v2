@@ -187,16 +187,25 @@ module.exports = async (context) => {
         const isGroup = !!m.isGroup;
 
         if (isGroup) {
-            const botNum = (botNumber || '').split('@')[0].split(':')[0];
+            const botNum = (botNumber || client.user?.id || '').split('@')[0].split(':')[0];
             const bLidKey = m._botLidKey || '';
             const bodyStr = m.body || m.text || '';
             const isMentionedInBody = botNum.length > 5 && bodyStr.includes('@' + botNum);
-            const isMentioned = isMentionedInBody || (m.mentionedJid || m.msg?.contextInfo?.mentionedJid || []).some(j => {
-                const jk = (j || '').split('@')[0].split(':')[0];
-                return jk === botNum || (bLidKey && jk === bLidKey);
-            });
+            const _allMentioned = [
+                  ...(m.mentionedJid || []),
+                  ...(m.msg?.contextInfo?.mentionedJid || []),
+                  ...(m.message?.extendedTextMessage?.contextInfo?.mentionedJid || []),
+              ];
+              const isMentioned = isMentionedInBody || _allMentioned.some(j => {
+                  const jk = (j || '').split('@')[0].split(':')[0];
+                  return jk === botNum || (bLidKey && jk === bLidKey);
+              });
             const isReplyToBot = (() => {
-                const qSender = m.msg?.contextInfo?.participant || m.quoted?.sender || '';
+                  const qSender = m.msg?.contextInfo?.participant ||
+                      m.message?.imageMessage?.contextInfo?.participant ||
+                      m.message?.extendedTextMessage?.contextInfo?.participant ||
+                      m.message?.documentMessage?.contextInfo?.participant ||
+                      m.quoted?.sender || '';
                 if (!qSender) return false;
                 const qk = qSender.split('@')[0].split(':')[0];
                 return qk === botNum || (bLidKey && qk === bLidKey);
