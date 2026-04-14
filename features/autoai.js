@@ -169,8 +169,12 @@ COMMAND MAPPING (STRICT):
 - "open group" → CMD:open
 - "add <number>" → CMD:add <number>
 - "shorten <url>" → CMD:shorten <url>
+  - "generate song about X" / "make a song about X" / "create music X" → CMD:aisong X
+  - "edit this image X" / "make this look like X" / "ai edit image X" / "photo edit X" → CMD:imgedit X
+  - "rc edit X" / "rc X" / "rc image with X" → CMD:rc X
+  - "make canvas card X" / "canvas X" / "spotify card X" / "youtube card X" → CMD:canvas X
 
-FULL COMMAND LIST:
+  FULL COMMAND LIST:
 ${COMMAND_CATALOG}`;
 
 module.exports = async (context) => {
