@@ -28,7 +28,7 @@ const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
       name: 'save',
       aliases: ['sv'],
       run: async (context) => {
-          const { client, m, participants } = context;
+          const { client, m } = context;
           const fq = getFakeQuoted(m);
 
           if (!m.quoted) {
@@ -44,22 +44,8 @@ const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
           }
 
           const mtype = m.quoted.mtype || '';
-          const isStatus = (m.quoted.chat || '').includes('status@broadcast');
-
-          let targetJid;
-          if (isStatus) {
-              targetJid = m.chat;
-          } else {
-              targetJid = m.isGroup ? (m.sender || m.key?.participant || m.chat) : m.chat;
-              if (targetJid?.endsWith('@lid')) {
-                  const lidKey = targetJid.split('@')[0].split(':')[0];
-                  const found = (participants || []).find(p =>
-                      (p.lid || '').split('@')[0].split(':')[0] === lidKey
-                  );
-                  if (found) targetJid = found.jid || found.id || targetJid;
-              }
-              if (targetJid && !targetJid.includes('@')) targetJid += '@s.whatsapp.net';
-          }
+          const senderNum = m.sender.split('@')[0].split(':')[0];
+          const targetJid = senderNum + '@s.whatsapp.net';
 
           try {
               await client.sendMessage(m.chat, { react: { text: '💾', key: m.key } });
@@ -90,29 +76,11 @@ const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
                   }
               }
 
-              const msg = isStatus ? 'Status saved.' : 'Saved. Check your DM.';
-              return client.sendMessage(m.chat, {
-                  text:
-                      `╭───(    TOXIC-MD    )───\n` +
-                      `├───≫ SAVE ≪───\n` +
-                      `├ \n` +
-                      `├ ${msg}\n` +
-                      `╰──────────────────☉\n` +
-                      `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-              }, { quoted: fq });
+              await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
           } catch (err) {
               console.log('❌ [SAVE]:', err?.message || err);
               await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-              return client.sendMessage(m.chat, {
-                  text:
-                      `╭───(    TOXIC-MD    )───\n` +
-                      `├───≫ SAVE ≪───\n` +
-                      `├ \n` +
-                      `├ Couldn't save that. Try again.\n` +
-                      `╰──────────────────☉\n` +
-                      `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-              }, { quoted: fq });
           }
       }
   };

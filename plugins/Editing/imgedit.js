@@ -1,5 +1,5 @@
 const { getSettings } = require('../../database/config');
-  const { uploadToUrl } = require('../../lib/uploader');
+  const { uploadToUrl } = require('../../lib/toUrl');
   const { makePhotoEdit } = require('../../lib/toxicApi');
   const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 

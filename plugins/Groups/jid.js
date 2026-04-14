@@ -18,8 +18,10 @@ const { generateWAMessageFromContent, proto } = require('@whiskeysockets/baileys
               targetJid = m.chat;
               displayLabel = 'Group JID';
           } else if (input && input.includes('chat.whatsapp.com/')) {
+              await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
               const code = input.split('chat.whatsapp.com/')[1]?.split(/[\s?]/)[0];
               if (!code) {
+                  await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                   return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ That's not a valid invite link, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞᠊ᴅ 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
               }
               try {
@@ -27,6 +29,7 @@ const { generateWAMessageFromContent, proto } = require('@whiskeysockets/baileys
                   targetJid = info.id;
                   displayLabel = info.subject || 'Group JID';
               } catch {
+                  await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
                   return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Couldn't fetch that group info.\n├ Invalid link or I'm not in that group.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞᠊ᴅ 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
               }
           } else {
@@ -62,6 +65,8 @@ const { generateWAMessageFromContent, proto } = require('@whiskeysockets/baileys
           } catch {
               await m.reply(bodyText);
           }
+
+          await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
       }
   };
   
