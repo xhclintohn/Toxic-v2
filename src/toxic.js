@@ -282,7 +282,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                   try {
                       m.metadata = await Promise.race([
                           fastGroupMetadata(client, m.chat),
-                          new Promise(r => setTimeout(() => r({}), 600))
+                          new Promise(r => setTimeout(() => r({}), 500))
                       ]);
                   } catch { m.metadata = {}; }
                   _groupParticipants = m.metadata?.participants || [];
