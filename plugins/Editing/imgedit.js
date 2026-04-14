@@ -1,4 +1,4 @@
-const { getSettings } = require('../../lib/settings');
+const { getSettings } = require('../../database/config');
   const { uploadToUrl } = require('../../lib/uploader');
   const { makePhotoEdit } = require('../../lib/toxicApi');
   const { downloadMediaMessage } = require('@whiskeysockets/baileys');
@@ -24,7 +24,7 @@ const { getSettings } = require('../../lib/settings');
           }
 
           await client.sendMessage(m.chat, {
-              text: `╭───(    TOXIC-MD    )───\n├───≫ Pʀᴏᴄᴇssɪɴɢ ≪───\n├ \n├ Editing your trash photo...\n├ Prompt: ${prompt}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞᠊ᴅ 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+              text: `╭───(    TOXIC-MD    )───\n├───≫ Pʀᴏᴄᴇssɪɴɢ ≪───\n├ \n├ Editing your trash photo...\n├ Prompt: ${prompt}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
           }, { quoted: fq });
 
           try {
