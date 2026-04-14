@@ -107,8 +107,8 @@ const ALL_PREFIXES = ['.', '!', '#', '/', '$', '?', '+', '-', '*', '~', '%', '&'
 
 const COMMAND_CATALOG = `COMMANDS (exact names):
 MEDIA: play <song> | ytmp3 <url> | ytmp4 <url> | spotify <url> | tikdl <url> | tikaudio <url> | igdl <url> | fbdl <url> | twtdl <url> | alldl <url> | shazam | image <q> | pinterest <q> | wallpaper <q>
-AI: gpt <prompt> | groq <prompt> | gemini <prompt> | imagine <prompt> | vision | remini | aicode <lang> <prompt> | transcribe | sora <prompt>
-EDIT: sticker | toimg | tts <text> | removebg | togif | brat <text> | rip | trigger | trash | wanted | wasted | emix <emoji> | logogen <title> | carbon <code> | encrypt <text>
+AI: gpt <prompt> | groq <prompt> | gemini <prompt> | imagine <prompt> | vision | remini | aicode <lang> <prompt> | transcribe | sora <prompt> | aisong <description> | imgedit <prompt> | rc <prompt>
+EDIT: sticker | toimg | tts <text> | removebg | togif | brat <text> | rip | trigger | trash | wanted | wasted | emix <emoji> | logogen <title> | carbon <code> | encrypt <text> | canvas <title>|<type>|<text>|<wm>
 SEARCH: google <q> | wiki <q> | lyrics <song> | movie <title> | weather <city> | npm <pkg> | technews | screenshot <url> | shorten <url> | github <user> | yts <q>
 GENERAL: menu | ping | alive | uptime | tr <lang> <text> | fancy <n> <text> | tempmail | profile | advice | catfact | fact | quote | joke | coinflip | dice | calc <expr>
 GROUP: tagall [msg] | hidetag [msg] | add <num> | remove @user | promote @user | demote @user | link | revoke | close | open | poll <q|opt1|opt2> | pin | afk [reason] | warn @user | listonline | xkill | foreigners
