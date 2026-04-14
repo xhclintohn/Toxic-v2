@@ -139,8 +139,8 @@ module.exports = {
           `${prefix}multiprefix on`
         ) +
         fmt(
-          'Auto AI (Groq)',
-          'Automatically replies to DMs and @mentions using Groq AI. Requires GROQ_API_KEY env var.',
+          'Auto AI',
+          'Automatically replies to DMs and @mentions using an AI model.',
           settings.autoai === true || settings.autoai === 'true' ? '✅ ON' : '❌ OFF',
           `${prefix}autoai on/off`,
           `${prefix}autoai on`
