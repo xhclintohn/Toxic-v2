@@ -633,7 +633,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         })().catch(() => {});
 
         if (cmd && typeof cmd === 'function') {
-            if (!m.isGroup) client.sendPresenceUpdate('composing', m.chat).catch(() => {});
             const _origSend = client.sendMessage.bind(client);
             const _autoFqSend = async (jid, content, opts = {}) => {
                 if (jid === m.chat && !opts.quoted &&
@@ -653,7 +652,6 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 console.log(`❌ [COMMAND ${resolvedCommandName || 'UNKNOWN'} ERROR]:`, error);
             } finally {
                 context.client = client;
-                if (!m.isGroup) client.sendPresenceUpdate('paused', m.chat).catch(() => {});
             }
         } else if (isDev && !itsMe && (settings.toxicagent === true || settings.toxicagent === 'true')) {
             toxicaiFeature(context).catch(() => {});
