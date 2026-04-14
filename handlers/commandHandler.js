@@ -230,9 +230,8 @@ const aliases = {
     youtubecard: "canvas",
     tiktokcard: "canvas",
     makesong: "aisong",
-    imagine: "rc",
-    tti: "rc",
-    texttoimage: "rc",
+    tti: "imagine",
+    texttoimage: "imagine",
     imageedit: "imgedit",
     aiedit: "imgedit",
 };
