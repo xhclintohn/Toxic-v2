@@ -28,7 +28,7 @@ module.exports = {
             `╭───(    TOXIC-MD    )───\n` +
             `├───≫ Mᴇɴᴜ ≪───\n` +
             `├ \n` +
-            `├ @${m.sender.split('@')[0].split(':')[0]}\n` +
+            `Hoi  @${m.sender.split('@')[0].split(':')[0]}\n` +
             `├ \n` +
             `├ Bot: TOXIC-MD\n` +
             `├ Prefix: ${prefix}\n` +
