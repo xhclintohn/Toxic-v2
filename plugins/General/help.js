@@ -281,9 +281,6 @@ module.exports = {
             requests: { usage: `${effectivePrefix}requests`, desc: 'View pending join requests in the group.' },
             'approve-all': { usage: `${effectivePrefix}approve-all`, desc: 'Approve all pending join requests.' },
             'reject-all': { usage: `${effectivePrefix}reject-all`, desc: 'Reject all pending join requests.' },
-        };
-
-
               canvas: { usage: `${effectivePrefix}canvas Title | type | text | watermark`, desc: 'Generate a themed canvas card from a replied image. Types: spotify, youtube, google, tiktok, duckduckgo, brave, applemusic, soundcloud, pinterest, playstore, happymod, apkpure, unsplash, wallpaper, wattpad, weather, sticker, lyrics, shazam, web, image. Aliases: canvascard, spotifycard, youtubecard, tiktokcard' },
               canvascard: { usage: `${effectivePrefix}canvas Title | type | text | watermark`, desc: 'Alias for canvas — themed canvas card generator.' },
               spotifycard: { usage: `${effectivePrefix}canvas Title | spotify | text | watermark`, desc: 'Alias for canvas with spotify type.' },
@@ -301,6 +298,8 @@ module.exports = {
               gensong: { usage: `${effectivePrefix}gensong <description>`, desc: 'Alias for aisong — AI song generation.' },
               makesong: { usage: `${effectivePrefix}makesong <description>`, desc: 'Alias for aisong — AI song generator.' },
               allow: { usage: `${effectivePrefix}allow add|remove|list [@user]`, desc: 'Owner only. Manage the bot whitelist. Sub-commands: add @user — add to whitelist, remove @user — remove, list — show all allowed users.' },
+        };
+
         if (helpData[cmdName]) {
             const info = helpData[cmdName];
             const body = `├ 📌 *Command:* ${cmdName}\n├ 📖 *Usage:* ${info.usage}\n├ ℹ️ *Description:*\n├ ${info.desc}`;
