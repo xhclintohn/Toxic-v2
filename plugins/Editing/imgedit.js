@@ -1,75 +1,55 @@
 const { getSettings } = require('../../database/config');
-const { uploadToUrl } = require('../../lib/toUrl');
-const { makePhotoEdit } = require('../../lib/toxicApi');
-const { downloadMediaMessage } = require('@whiskeysockets/baileys');
+  const { uploadToUrl } = require('../../lib/toUrl');
+  const { makePhotoEdit } = require('../../lib/toxicApi');
+  const { getFakeQuoted } = require('../../lib/fakeQuoted');
 
-module.exports = {
-    name: 'imgedit',
-    aliases: ['photoedit', 'aiedit'],
-    description: 'AI photo editor',
-    category: 'Editing',
-    run: async (context) => {
-        const { client, m, prefix } = context;
+  module.exports = {
+      name: 'imgedit',
+      aliases: ['photoedit', 'aiedit'],
+      description: 'AI photo editor',
+      category: 'Editing',
+      run: async (context) => {
+          const { client, m } = context;
+          const fq = getFakeQuoted(m);
+          const settings = await getSettings();
+          const prefix = settings.prefix || '.';
 
-        const settings = await getSettings();
-        const effectivePrefix = settings.prefix || '.';
+          const quoted = m.quoted ? m.quoted : null;
+          const mime = quoted?.mimetype || '';
+          const prompt = (m.text || '').replace(/^\S+\s*/, '').trim();
 
-        let quotedMsg = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-        let imageMsg = null;
+          if (!quoted || !/image/.test(mime)) {
+              await client.sendMessage(m.chat, { react: { text: '\u274c', key: m.key } });
+              return client.sendMessage(m.chat, {
+                  text: `\u256d\u2500\u2500\u2500(    TOXIC-MD    )\u2500\u2500\u2500\n\u251c\u2500\u2500\u2500\u226b E\u0280\u0280o\u0280 \u226a\u2500\u2500\u2500\n\u251c \n\u251c Reply to an image with a prompt.\n\u251c Example: ${prefix}imgedit make it look like night\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2609\n> \u00a9\ud835\udcaf\ud835\udcce\ud835\udccc\ud835\udcc2\ud835\udcc3\ud835\udcc1 \ud835\udcb1\ud835\udcb5 \ud835\udcfd\ud835\udcf5_\ud835\udcec\ud835\udcf5\ud835\udcf2\ud835\udcf7\ud835\udcfc\ud835\udcf8\ud835\udcf7`
+              }, { quoted: fq });
+          }
 
-        if (m.message?.imageMessage) {
-            imageMsg = m.message;
-        } else if (quotedMsg?.imageMessage) {
-            imageMsg = { message: quotedMsg, key: m.message?.extendedTextMessage?.contextInfo?.stanzaId };
-        }
+          if (!prompt) {
+              await client.sendMessage(m.chat, { react: { text: '\u274c', key: m.key } });
+              return client.sendMessage(m.chat, {
+                  text: `\u256d\u2500\u2500\u2500(    TOXIC-MD    )\u2500\u2500\u2500\n\u251c\u2500\u2500\u2500\u226b E\u0280\u0280o\u0280 \u226a\u2500\u2500\u2500\n\u251c \n\u251c Add a prompt you idiot.\n\u251c Example: ${prefix}imgedit make it look like night\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2609\n> \u00a9\ud835\udcaf\ud835\udcce\ud835\udccc\ud835\udcc2\ud835\udcc3\ud835\udcc1 \ud835\udcb1\ud835\udcb5 \ud835\udcfd\ud835\udcf5_\ud835\udcec\ud835\udcf5\ud835\udcf2\ud835\udcf7\ud835\udcfc\ud835\udcf8\ud835\udcf7`
+              }, { quoted: fq });
+          }
 
-        const bodyText = m.body || '';
-        const args = bodyText.slice(prefix.length).trim().split(/\s+/).slice(1);
-        const prompt = args.join(' ').trim();
+          await client.sendMessage(m.chat, { react: { text: '\u231b', key: m.key } });
 
-        if (!imageMsg) {
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Reply to an image with a prompt.\n├ Example: ${effectivePrefix}imgedit make it look like night\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧ᴛᴏɴ`);
-        }
+          try {
+              const media = await quoted.download();
+              const imgUrl = await uploadToUrl(media);
+              const resultUrl = await makePhotoEdit(imgUrl, prompt);
 
-        if (!prompt) {
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Add a prompt.\n├ Example: ${effectivePrefix}imgedit make it look like night\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜ʟɪɴᴛᴏɴ`);
-        }
-
-        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.key } });
-
-        try {
-            let imgBuf;
-            
-            if (m.message?.imageMessage) {
-                imgBuf = await downloadMediaMessage(m, 'buffer', {});
-            } else {
-                const fakeMsg = {
-                    key: m.key,
-                    message: quotedMsg
-                };
-                imgBuf = await downloadMediaMessage(fakeMsg, 'buffer', {});
-            }
-            
-            if (!imgBuf || imgBuf.length === 0) {
-                throw new Error('No image data');
-            }
-            
-            const imgLink = await uploadToUrl(imgBuf);
-            const resultUrl = await makePhotoEdit(imgLink, prompt);
-
-            await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-
-            await client.sendMessage(m.chat, {
-                image: { url: resultUrl },
-                caption: `╭───(    TOXIC-MD    )───\n├───≫ Dᴏɴᴇ ≪───\n├ \n├ Here's your edited image.\n├ Prompt: ${prompt}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_ᴄʟɪɴᴛᴏɴ`
-            }, { quoted: m });
-
-        } catch (error) {
-            console.error('imgedit error:', error);
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ AI edit failed. Try again.\n╰──────────────────☉\n> ©𝐏𝐨𝐰ᴇʀᴇᴅ 𝐁ʏ 𝐱ʜ_ᴄʟɪɴᴛᴏɴ`);
-        }
-    }
-};
+              await client.sendMessage(m.chat, { react: { text: '\u2705', key: m.key } });
+              await client.sendMessage(m.chat, {
+                  image: { url: resultUrl },
+                  caption: `\u256d\u2500\u2500\u2500(    TOXIC-MD    )\u2500\u2500\u2500\n\u251c\u2500\u2500\u2500\u226b AI E\u1d05ɪ\u1d1b \u226a\u2500\u2500\u2500\n\u251c \n\u251c Prompt: ${prompt}\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2609\n> \u00a9\ud835\udcaf\ud835\udcce\ud835\udccc\ud835\udcc2\ud835\udcc3\ud835\udcc1 \ud835\udcb1\ud835\udcb5 \ud835\udcfd\ud835\udcf5_\ud835\udcec\ud835\udcf5\ud835\udcf2\ud835\udcf7\ud835\udcfc\ud835\udcf8\ud835\udcf7`
+              }, { quoted: fq });
+          } catch {
+              await client.sendMessage(m.chat, { react: { text: '\u274c', key: m.key } });
+              await client.sendMessage(m.chat, {
+                  text: `\u256d\u2500\u2500\u2500(    TOXIC-MD    )\u2500\u2500\u2500\n\u251c\u2500\u2500\u2500\u226b F\u1d00ɪ\u029f\u1d07\u1d05 \u226a\u2500\u2500\u2500\n\u251c \n\u251c AI edit failed. Try again.\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2609\n> \u00a9\ud835\udcaf\ud835\udcce\ud835\udccc\ud835\udcc2\ud835\udcc3\ud835\udcc1 \ud835\udcb1\ud835\udcb5 \ud835\udcfd\ud835\udcf5_\ud835\udcec\ud835\udcf5\ud835\udcf2\ud835\udcf7\ud835\udcfc\ud835\udcf8\ud835\udcf7`
+              }, { quoted: fq });
+          }
+      }
+  };
+  
