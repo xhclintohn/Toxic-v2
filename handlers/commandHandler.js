@@ -273,6 +273,5 @@ commandFiles.forEach((file) => {
 });
 
 const chalk = require('chalk');
-console.log(chalk.green(`✔`) + chalk.white(` Loaded `) + chalk.cyan(`${_loadedCount}`) + chalk.white(` plugins`) + (_failedCount ? chalk.red(` (${_failedCount} failed)`) : chalk.gray(` • ${Object.keys(aliases).length} aliases registered`)));
-
+console.log(chalk.green('✔') + chalk.white(' Loaded ') + chalk.cyan(String(_loadedCount)) + chalk.white(' plugins') + chalk.gray(' | Failed: ') + (_failedCount ? chalk.red(String(_failedCount)) : chalk.green('0')));
 module.exports = { commands, aliases, totalCommands };
