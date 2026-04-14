@@ -227,6 +227,14 @@ const aliases = {
 
     allowuser: "allow",
     allowai: "allow",
+    youtubecard: "canvas",
+    tiktokcard: "canvas",
+    makesong: "aisong",
+    imagine: "rc",
+    tti: "rc",
+    texttoimage: "rc",
+    imageedit: "imgedit",
+    aiedit: "imgedit",
 };
 
 let _loadedCount = 0;
