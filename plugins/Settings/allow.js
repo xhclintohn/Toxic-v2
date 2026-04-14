@@ -1,0 +1,97 @@
+const { getSettings, getAllowedUsers, addAllowedUser, removeAllowedUser } = require('../../database/config');
+const ownerMiddleware = require('../../utils/botUtil/Ownermiddleware');
+const { getFakeQuoted } = require('../../lib/fakeQuoted');
+
+function cleanNumber(raw) {
+    return (raw || '').replace(/[\s+\-().]/g, '').trim();
+}
+
+module.exports = {
+    name: 'allow',
+    aliases: ['allowuser', 'allowai'],
+    description: 'Allow specific numbers to use autoai when autoai is off',
+    category: 'Settings',
+    run: async (context) => {
+        await ownerMiddleware(context, async () => {
+            const { client, m, args, prefix } = context;
+            const fq = getFakeQuoted(m);
+
+            const fmt = (title, lines) => {
+                const body = (Array.isArray(lines) ? lines : [lines]).map(l => `├ ${l}`).join('\n');
+                return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├\n${body}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+            };
+
+            try {
+                const settings = await getSettings();
+                const autoaiOn = settings?.autoai === true || settings?.autoai === 'true' || settings?.autoai === 'on';
+
+                if (autoaiOn) {
+                    return client.sendMessage(m.chat, {
+                        text: fmt('ALLOW', [
+                            'AutoAI is ON — replies to everyone.',
+                            'Turn it off first to manage allowed list.',
+                            `Use: ${prefix}autoai off`
+                        ])
+                    }, { quoted: fq });
+                }
+
+                const sub = (args[0] || '').toLowerCase();
+
+                if (sub === 'list') {
+                    const list = await getAllowedUsers();
+                    if (!list.length) {
+                        return client.sendMessage(m.chat, {
+                            text: fmt('ALLOW LIST', 'No one allowed. AutoAI is off for everyone 💀')
+                        }, { quoted: fq });
+                    }
+                    return client.sendMessage(m.chat, {
+                        text: fmt('ALLOW LIST', [`Total: ${list.length}`, ...list.map((n, i) => `${i + 1}. ${n}`)])
+                    }, { quoted: fq });
+                }
+
+                if (sub === 'remove' || sub === 'del' || sub === 'delete') {
+                    const raw = args.slice(1).join('');
+                    const num = cleanNumber(raw);
+                    if (!num || num.length < 6) {
+                        return client.sendMessage(m.chat, {
+                            text: fmt('ALLOW', [`Provide a valid number.`, `Example: ${prefix}allow remove 254712345678`])
+                        }, { quoted: fq });
+                    }
+                    await removeAllowedUser(num);
+                    await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+                    return client.sendMessage(m.chat, {
+                        text: fmt('ALLOW', [`Removed: ${num}`, 'AutoAI will no longer respond to them.'])
+                    }, { quoted: fq });
+                }
+
+                const rawNum = (sub === 'add' ? args.slice(1).join('') : args.join('')).trim();
+                const num = cleanNumber(rawNum);
+
+                if (!num || num.length < 6) {
+                    const list = await getAllowedUsers();
+                    return client.sendMessage(m.chat, {
+                        text: fmt('ALLOW', [
+                            `Status: AutoAI OFF`,
+                            `Allowed users: ${list.length}`,
+                            '',
+                            `Add: ${prefix}allow 254712345678`,
+                            `Remove: ${prefix}allow remove 254712345678`,
+                            `List: ${prefix}allow list`
+                        ])
+                    }, { quoted: fq });
+                }
+
+                await addAllowedUser(num);
+                await client.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+                return client.sendMessage(m.chat, {
+                    text: fmt('ALLOW', [`Added: ${num}`, 'AutoAI will respond to them even while off.'])
+                }, { quoted: fq });
+
+            } catch {
+                client.sendMessage(m.chat, {
+                    text: fmt('ALLOW', 'something broke. try again.')
+                }, { quoted: fq });
+            }
+        });
+    }
+};
