@@ -216,6 +216,17 @@ const aliases = {
     totalgroup: "botgc",
     tg: "botgc",
     lg: "botgc",
+    canvascard: "canvas",
+    spotifycard: "canvas",
+
+    airc: "rc",
+    rcedit: "rc",
+
+    gensong: "aisong",
+    songgenerator: "aisong",
+
+    allowuser: "allow",
+    allowai: "allow",
 };
 
 let _loadedCount = 0;
