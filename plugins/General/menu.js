@@ -15,11 +15,12 @@ module.exports = {
 
         const bodyText = m.body || '';
         const cleanText = bodyText.trimStart().slice(prefix.length).trimStart();
+        const firstWord = cleanText.split(' ')[0].toLowerCase();
 
-        if (cleanText !== '' && !['menu', 'commands', 'list'].includes(cleanText.split(' ')[0].toLowerCase())) {
+        if (cleanText !== '' && !['menu', 'commands', 'list'].includes(firstWord)) {
             const commandName = cleanText.split(' ')[0];
             return client.sendMessage(m.chat, {
-                text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ @${m.sender.split('@')[0].split(':')[0]}, chill.\n├ Extra trash after "${commandName}"?\n├ Just type *${prefix}menu* properly.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+                text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo ${m.pushName}, what's with the\n├ extra bullshit after "${commandName}"?\n├ Just type *${prefix}menu* properly, moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: fq });
         }
 
@@ -33,45 +34,45 @@ module.exports = {
             `├ Prefix: ${prefix}\n` +
             `├ Mode: ${mode}\n` +
             `├ \n` +
-            `├ Pick a category below or open GitHub.\n` +
+            `├ Select a button below.\n` +
             `╰──────────────────☉\n` +
-            `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+            `> xD`;
 
         const sections = [
             {
-                title: '⌜ Core Commands ⌟',
-                highlight_label: '',
+                title: '⌜ 𝘾𝙤𝙧𝙚 𝘾𝙤𝙢𝙢𝙖𝙣𝙙𝙨 ⌟',
+                highlight_label: '© 丨几匚',
                 rows: [
-                    { header: 'Full Menu', title: 'FullMenu', description: 'All commands list', id: `${prefix}fullmenu` },
-                    { header: 'Dev', title: 'Dev', description: 'Developer contact', id: `${prefix}dev` },
-                    { header: 'Report', title: 'Report', description: 'Report a bug to dev', id: `${prefix}report` },
+                    { title: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮', description: 'Display all commands', id: `${prefix}fullmenu` },
+                    { title: '𝐃𝐞𝐯', description: "Send developer contact", id: `${prefix}dev` },
+                    { title: '𝐑𝐞𝐩𝐨𝐫𝐭', description: 'Report a bug to dev', id: `${prefix}report` },
                 ],
             },
             {
-                title: 'ℹ Bot Info',
-                highlight_label: '',
+                title: 'ℹ 𝙄𝙣𝙛𝙤 𝘽𝙤𝙩',
+                highlight_label: '© 丨几匚',
                 rows: [
-                    { header: 'Ping', title: 'Ping', description: 'Check bot speed', id: `${prefix}ping` },
-                    { header: 'Settings', title: 'Settings', description: 'Bot settings', id: `${prefix}settings` },
-                    { header: 'Mode', title: 'Mode', description: 'Toggle bot mode', id: `${prefix}mode` },
+                    { title: '𝐏𝐢𝐧𝐠', description: 'Check bot speed', id: `${prefix}ping` },
+                    { title: '𝐒𝐞𝐭𝐭𝐢𝐧𝐠𝐬', description: 'Show bot settings', id: `${prefix}settings` },
+                    { title: '𝐌𝐨𝐝𝐞', description: 'Toggle bot mode', id: `${prefix}mode` },
                 ],
             },
             {
-                title: '📜 Category Menus',
-                highlight_label: '',
+                title: '📜 𝘾𝙖𝙩𝙚𝙜𝙤𝙧𝙮 𝙈𝙚𝙣𝙪𝙨',
+                highlight_label: '© 丨几匚',
                 rows: [
-                    { header: 'GeneralMenu', title: 'GeneralMenu', description: 'General commands', id: `${prefix}generalmenu` },
-                    { header: 'SettingsMenu', title: 'SettingsMenu', description: 'Settings commands', id: `${prefix}settingsmenu` },
-                    { header: 'OwnerMenu', title: 'OwnerMenu', description: 'Owner-only commands', id: `${prefix}ownermenu` },
-                    { header: 'GroupMenu', title: 'GroupMenu', description: 'Group management', id: `${prefix}groupmenu` },
-                    { header: 'AIMenu', title: 'AIMenu', description: 'AI-powered commands', id: `${prefix}aimenu` },
-                    { header: 'DownloadMenu', title: 'DownloadMenu', description: 'Download commands', id: `${prefix}downloadmenu` },
-                    { header: 'EditingMenu', title: 'EditingMenu', description: 'Image/video editing', id: `${prefix}editingmenu` },
-                    { header: 'EffectsMenu', title: 'EffectsMenu', description: 'Text effect commands', id: `${prefix}effectsmenu` },
-                    { header: 'AnimeMenu', title: 'AnimeMenu', description: 'Anime image commands', id: `${prefix}animemenu` },
-                    { header: 'UtilsMenu', title: 'UtilsMenu', description: 'Utility tools', id: `${prefix}utilsmenu` },
-                    { header: 'ReactionsMenu', title: 'ReactionsMenu', description: 'Reaction commands', id: `${prefix}reactionsmenu` },
-                    { header: 'PrivacyMenu', title: 'PrivacyMenu', description: 'Privacy settings', id: `${prefix}privacymenu` },
+                    { title: '𝐆𝐞𝐧𝐞𝐫𝐚𝐥𝐌𝐞𝐧𝐮', description: 'General commands', id: `${prefix}generalmenu` },
+                    { title: '𝐒𝐞𝐭𝐭𝐢𝐧𝐠𝐬𝐌𝐞𝐧𝐮', description: 'Bot settings commands', id: `${prefix}settingsmenu` },
+                    { title: '𝐎𝐰𝐧𝐞𝐫𝐌𝐞𝐧𝐮', description: 'Owner only commands', id: `${prefix}ownermenu` },
+                    { title: '𝐆𝐫𝐨𝐮𝐩𝐌𝐞𝐧𝐮', description: 'Group management', id: `${prefix}groupmenu` },
+                    { title: '𝐀𝐈𝐌𝐞𝐧𝐮', description: 'AI & chat commands', id: `${prefix}aimenu` },
+                    { title: '𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐌𝐞𝐧𝐮', description: 'Media downloaders', id: `${prefix}downloadmenu` },
+                    { title: '𝐄𝐝𝐢𝐭𝐢𝐧𝐠𝐌𝐞𝐧𝐮', description: 'Media editing tools', id: `${prefix}editingmenu` },
+                    { title: '𝐄𝐟𝐟𝐞𝐜𝐭𝐬𝐌𝐞𝐧𝐮', description: 'Text effect commands', id: `${prefix}effectsmenu` },
+                    { title: '𝐀𝐧𝐢𝐦𝐞𝐌𝐞𝐧𝐮', description: 'Anime image commands', id: `${prefix}animemenu` },
+                    { title: '𝐔𝐭𝐢𝐥𝐬𝐌𝐞𝐧𝐮', description: 'Utility commands', id: `${prefix}utilsmenu` },
+                    { title: '𝐑𝐞𝐚𝐜𝐭𝐢𝐨𝐧𝐬𝐌𝐞𝐧𝐮', description: 'Reaction commands', id: `${prefix}reactionsmenu` },
+                    { title: '𝐏𝐫𝐢𝐯𝐚𝐜𝐲𝐌𝐞𝐧𝐮', description: 'Privacy commands', id: `${prefix}privacymenu` },
                 ],
             },
         ];
@@ -80,19 +81,19 @@ module.exports = {
             const msg = await generateWAMessageFromContent(m.chat, proto.Message.fromObject({
                 interactiveMessage: {
                     body: { text: menuText },
-                    footer: { text: '' },
+                    footer: { text: `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` },
                     header: { hasMediaAttachment: false },
                     contextInfo: {
                         mentionedJid: [m.sender],
                         externalAdReply: {
                             title: `${botname}`,
-                            body: `Ready to cause chaos, @${m.sender.split('@')[0].split(':')[0]}?`,
+                            body: `Yo, ${m.pushName}! Ready to fuck shit up?`,
                             mediaType: 1,
                             thumbnail: pict,
                             mediaUrl: '',
                             sourceUrl: 'https://github.com/xhclintohn/Toxic-MD',
                             showAdAttribution: false,
-                            renderLargerThumbnail: false,
+                            renderLargerThumbnail: true,
                         }
                     },
                     nativeFlowMessage: {
@@ -100,7 +101,7 @@ module.exports = {
                             {
                                 name: 'cta_url',
                                 buttonParamsJson: JSON.stringify({
-                                    display_text: '🌐 GitHub',
+                                    display_text: 'GitHub Repo',
                                     url: 'https://github.com/xhclintohn/Toxic-MD',
                                     merchant_url: 'https://github.com/xhclintohn/Toxic-MD'
                                 })
@@ -108,12 +109,25 @@ module.exports = {
                             {
                                 name: 'single_select',
                                 buttonParamsJson: JSON.stringify({
-                                    title: '📖 Browse Categories',
+                                    title: '𝐕𝐈𝐄𝐖☇ 𝐎𝐏𝐓𝐈𝐎𝐍𝐒 ☑',
                                     sections
                                 })
                             }
                         ],
-                        messageParamsJson: ''
+                        messageParamsJson: JSON.stringify({
+                            limited_time_offer: {
+                                text: 'Toxic-MD',
+                                url: 'https://github.com/xhclintohn/Toxic-MD',
+                                copy_code: 'TOXIC',
+                                expiration_time: Date.now() * 1000,
+                            },
+                            bottom_sheet: {
+                                in_thread_buttons_limit: 2,
+                                divider_indices: [1, 2],
+                                list_title: 'Select Command',
+                                button_title: 'Toxic-MD',
+                            },
+                        })
                     }
                 }
             }), { quoted: fq, userJid: client.user.id });
@@ -126,19 +140,19 @@ module.exports = {
                 contextInfo: {
                     externalAdReply: {
                         title: `${botname}`,
-                        body: `Ready to cause chaos, @${m.sender.split('@')[0].split(':')[0]}?`,
+                        body: `Yo, ${m.pushName}! Ready to fuck shit up?`,
                         mediaType: 1,
                         thumbnail: pict,
                         mediaUrl: '',
                         sourceUrl: 'https://github.com/xhclintohn/Toxic-MD',
                         showAdAttribution: false,
-                        renderLargerThumbnail: false,
+                        renderLargerThumbnail: true,
                     }
                 }
             }, { quoted: fq });
             await client.sendMessage(m.chat, {
                 listMessage: {
-                    title: 'VIEW OPTIONS',
+                    title: '𝐕𝐈𝐄𝐖☇ 𝐎𝐏𝐓𝐈𝐎𝐍𝐒 ☑',
                     description: 'Select a category to view its commands.',
                     buttonText: '📖 Browse Commands',
                     listType: 1,
@@ -146,7 +160,7 @@ module.exports = {
                         title: s.title,
                         rows: s.rows.map(r => ({ title: r.title, description: r.description, rowId: r.id }))
                     })),
-                    footer: '',
+                    footer: `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                 },
             }, { quoted: fq });
         }
