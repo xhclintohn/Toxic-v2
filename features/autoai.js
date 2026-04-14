@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const { commands, aliases } = require('../handlers/commandHandler');
-const { getConversationHistory, addConversationMessage, clearConversationHistory } = require('../database/config');
+const { getConversationHistory, addConversationMessage, clearConversationHistory, getAllowedUsers } = require('../database/config');
 const { getFakeQuoted } = require('../lib/fakeQuoted');
 
 let GROQ_KEY = '';
