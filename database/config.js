@@ -295,13 +295,14 @@ let Database = null;
 
   async function updateGroupSetting(jid, key, value) {
       await ensureReady();
+      const _sv = typeof value === 'boolean' ? (value ? 1 : 0) : value;
       if (_backend === 'pg') {
           await _pg.query('INSERT INTO group_settings (jid) VALUES ($1) ON CONFLICT (jid) DO NOTHING', [jid]);
-          await _pg.query(`UPDATE group_settings SET ${key} = $1 WHERE jid = $2`, [value, jid]);
+          await _pg.query(`UPDATE group_settings SET ${key} = $1 WHERE jid = $2`, [_sv, jid]);
       } else if (_backend === 'memory') {
           if (!_mem.groups.has(jid)) _mem.groups.set(jid, { jid, antidelete: 1, gcpresence: 0, events: 0, antidemote: 0, antipromote: 0, antilink: 'off', antistatusmention: 'off', antitag: 0, welcome: 0, goodbye: 0, warn_limit: 3 });
           const g = _mem.groups.get(jid);
-          g[key] = value;
+          g[key] = _sv;
       } else {
           _db.prepare('INSERT OR IGNORE INTO group_settings (jid) VALUES (?)').run(jid);
           _db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(value, jid);
@@ -447,7 +448,7 @@ let Database = null;
               [jid, user]
           );
           return 1;
-      } catch { return 0; }
+      } catch (e) { console.log('❌ [ADDWARN]:', e.message); return 0; }
   }
 
   async function resetWarn(jid, user) {
@@ -516,7 +517,7 @@ let Database = null;
       addSudoUser, removeSudoUser, getSudoUsers,
       getAllowedUsers, addAllowedUser, removeAllowedUser,
       getConversationHistory, addConversationMessage, clearConversationHistory, clearOldConversationHistory,
-      getWarnCount, addWarn, resetWarn, setWarnLimit, getWarnLimit,
+      getWarnCount, addWarn, incrementWarn: addWarn, resetWarn, setWarnLimit, getWarnLimit,
       saveMessage, getMessage, deleteMessage, cleanupOldMsgStore
   };
   
