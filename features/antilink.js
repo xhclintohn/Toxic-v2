@@ -1,4 +1,4 @@
-const { getGroupSettings, getWarnCount, incrementWarn, resetWarn, getWarnLimit } = require("../database/config");
+const { getGroupSettings, getWarnCount, addWarn, resetWarn, getWarnLimit } = require("../database/config");
 
 const DEV_NUMBER = '254114885159';
 
@@ -41,7 +41,7 @@ module.exports = async (client, m) => {
         const sender = normalizeJid(m.sender);
         const reason = isChannelForward ? '📡 Channel forward' : '🔗 Link detected';
         const MAX_WARNS = await getWarnLimit(m.chat);
-        const newCount = await incrementWarn(m.chat, sender);
+        const newCount = await addWarn(m.chat, sender);
         const username = sender.split('@')[0];
         const remaining = MAX_WARNS - newCount;
 
