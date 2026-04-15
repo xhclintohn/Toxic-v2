@@ -146,7 +146,7 @@ let Database = null;
       `CREATE TABLE IF NOT EXISTS sudo_users (num TEXT PRIMARY KEY)`,
       `CREATE TABLE IF NOT EXISTS banned_users (num TEXT PRIMARY KEY)`,
       `CREATE TABLE IF NOT EXISTS allowed_users (num TEXT PRIMARY KEY)`,
-      `CREATE TABLE IF NOT EXISTS warn_data (jid TEXT NOT NULL, user TEXT NOT NULL, warns INTEGER DEFAULT 0, PRIMARY KEY (jid, user))`,
+      `CREATE TABLE IF NOT EXISTS warn_data (jid TEXT NOT NULL, "user" TEXT NOT NULL, warns INTEGER DEFAULT 0, PRIMARY KEY (jid, "user"))`,
       `CREATE TABLE IF NOT EXISTS msg_store (
           id TEXT NOT NULL, jid TEXT NOT NULL, sender TEXT, message TEXT NOT NULL,
           timestamp BIGINT NOT NULL, PRIMARY KEY (id, jid)
@@ -421,7 +421,7 @@ let Database = null;
   async function getWarnCount(jid, user) {
       const row = await qGet(
           'SELECT warns FROM warn_data WHERE jid = ? AND user = ?',
-          'SELECT warns FROM warn_data WHERE jid = $1 AND user = $2',
+          'SELECT warns FROM warn_data WHERE jid = $1 AND "user" = $2',
           [jid, user]
       );
       return row ? row.warns : 0;
@@ -437,14 +437,14 @@ let Database = null;
           if (row) {
               await qRun(
                   'UPDATE warn_data SET warns = warns + 1 WHERE jid = ? AND user = ?',
-                  'UPDATE warn_data SET warns = warns + 1 WHERE jid = $1 AND user = $2',
+                  'UPDATE warn_data SET warns = warns + 1 WHERE jid = $1 AND "user" = $2',
                   [jid, user]
               );
               return row.warns + 1;
           }
           await qRun(
               'INSERT INTO warn_data (jid, user, warns) VALUES (?, ?, 1)',
-              'INSERT INTO warn_data (jid, user, warns) VALUES ($1, $2, 1)',
+              'INSERT INTO warn_data (jid, "user", warns) VALUES ($1, $2, 1)',
               [jid, user]
           );
           return 1;
@@ -454,7 +454,7 @@ let Database = null;
   async function resetWarn(jid, user) {
       await qRun(
           'DELETE FROM warn_data WHERE jid = ? AND user = ?',
-          'DELETE FROM warn_data WHERE jid = $1 AND user = $2',
+          'DELETE FROM warn_data WHERE jid = $1 AND "user" = $2',
           [jid, user]
       );
   }
