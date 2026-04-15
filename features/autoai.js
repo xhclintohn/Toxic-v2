@@ -210,11 +210,14 @@ module.exports = async (context) => {
                   return jk === botNum || (bLidKey && jk === bLidKey);
               });
             const isReplyToBot = (() => {
-                  const qSender = m.msg?.contextInfo?.participant ||
-                      m.message?.imageMessage?.contextInfo?.participant ||
-                      m.message?.extendedTextMessage?.contextInfo?.participant ||
-                      m.message?.documentMessage?.contextInfo?.participant ||
-                      m.quoted?.sender || '';
+                const _raw = m.message || {};
+                let qSender = '';
+                for (const [, _mo] of Object.entries(_raw)) {
+                    if (_mo && typeof _mo === 'object' && _mo.contextInfo?.participant) {
+                        qSender = _mo.contextInfo.participant; break;
+                    }
+                }
+                if (!qSender) qSender = m.quoted?.sender || m.msg?.contextInfo?.participant || '';
                 if (!qSender) return false;
                 const qk = qSender.split('@')[0].split(':')[0];
                 return qk === botNum || (bLidKey && qk === bLidKey);
