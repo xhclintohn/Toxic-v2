@@ -1,7 +1,8 @@
 const axios = require('axios');
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const { commands, aliases } = require('../handlers/commandHandler');
-const { getConversationHistory, addConversationMessage, clearConversationHistory, getAllowedUsers } = require('../database/config');
+const { getConversationHistory, addConversationMessage, clearConversationHistory } = require('../database/config');
+const { getCachedAllowed } = require('../lib/settingsCache');
 const { getFakeQuoted } = require('../lib/fakeQuoted');
 
 let GROQ_KEY = '';
@@ -188,7 +189,7 @@ module.exports = async (context) => {
         const autoaiOn = settings?.autoai === true || settings?.autoai === 'true' || settings?.autoai === 'on';
         if (!autoaiOn) {
               const _quickSender = (m.sender || m.key?.remoteJid || '').split('@')[0].split(':')[0];
-              const _allowed = await getAllowedUsers();
+              const _allowed = await getCachedAllowed();
               if (!_allowed.some(u => u === _quickSender)) return;
           }
 
