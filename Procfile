@@ -1,1 +1,1 @@
-web: node index.js
+web: pm2-runtime ecosystem.config.js
