@@ -47,6 +47,7 @@ if (!fs.existsSync(sessionName)) {
 
 const groupEvents = require("./handlers/eventHandler");
 const connectionHandler = require('./handlers/connectionHandler');
+console.clear();
 
 const CHANNEL_JID = '120363427340708111@newsletter';
 const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '✨', '🌚', '🗿', '😮'];
