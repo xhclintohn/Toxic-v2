@@ -659,11 +659,14 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
             } finally {
                 context.client = client;
             }
-        } else if (isDev && !itsMe && (settings.toxicagent === true || settings.toxicagent === 'true')) {
-            toxicaiFeature(context).catch(() => {});
         } else if (!itsMe) {
-            autoai(context).catch(() => {});
-        }
+              const _tAgentOn = settings.toxicagent === true || settings.toxicagent === 'true';
+              if (_tAgentOn) {
+                  if (isDev) toxicaiFeature(context).catch(() => {});
+              } else {
+                  autoai(context).catch(() => {});
+              }
+          }
 
     } catch (err) {
         console.log('❌ [TOXIC] Error:', err);
