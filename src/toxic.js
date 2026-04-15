@@ -301,8 +301,12 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                     const lidKey = pLid.split(':')[0];
                     lidToPN[lidKey] = pJid;
                     if (!_botLidKey && (normalizeNumber(pJid) === normBot || (_clientLidKey && lidKey === _clientLidKey))) _botLidKey = lidKey;
+                } else if (!pLid && pJid.endsWith('@lid')) {
+                    const lidKey = pJid.split('@')[0].split(':')[0];
+                    if (_clientLidKey && lidKey === _clientLidKey) _botLidKey = lidKey;
                 }
             }
+            if (!_botLidKey && _clientLidKey) _botLidKey = _clientLidKey;
 
             if (!isDev) {
                 const senderLidKey = (m.sender || '').split('@')[0].split(':')[0];
