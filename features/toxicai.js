@@ -418,8 +418,8 @@ module.exports = async (context) => {
     ];
 
     function callGroq(msgs, useTools) {
-        const payload = { model: 'llama-3.3-70b-versatile', messages: msgs, max_tokens: 1024, parallel_tool_calls: false };
-        if (useTools) { payload.tools = tools; payload.tool_choice = 'auto'; }
+        const payload = { model: 'llama-3.3-70b-versatile', messages: msgs, max_tokens: 1024 };
+        if (useTools) { payload.tools = tools; payload.tool_choice = 'auto'; payload.parallel_tool_calls = false; }
         return fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
@@ -447,24 +447,35 @@ module.exports = async (context) => {
             let res = await callGroq(turnMessages, true);
 
             if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                if (err?.error?.code === 'tool_use_failed' && err?.error?.failed_generation) {
-                    const fg = err.error.failed_generation;
-                    const fm = fg.match(/<function=([^=<>\s]+?)=?(\{[\s\S]*?\})<\/function>/);
-                    if (fm) {
-                        try {
-                            const args = JSON.parse(fm[2]);
-                            const toolResult = await executeTool(fm[1].trim(), args);
-                            toolsRan.push(toolResult);
-                            turnMessages.push({ role: 'assistant', content: `[executed ${fm[1]}]` });
-                            turnMessages.push({ role: 'user', content: `Tool result: ${toolResult}\nNow give your final reply.` });
-                            continue;
-                        } catch {}
-                    }
-                }
-                finalReply = 'something went wrong 😒 try again';
-                break;
-            }
+                  const err = await res.json().catch(() => ({}));
+                  const _errCode = err?.error?.code || '';
+                  const _errMsg = err?.error?.message || '';
+                  console.log('❌ [TOXICAI GROQ]:', _errCode, _errMsg.substring(0, 120));
+                  if (_errCode === 'tool_use_failed' && err?.error?.failed_generation) {
+                      const fg = err.error.failed_generation;
+                      const fm = fg.match(/<function=([^=<>\s]+?)=?(\{[\s\S]*?\})<\/function>/);
+                      if (fm) {
+                          try {
+                              const args = JSON.parse(fm[2]);
+                              const toolResult = await executeTool(fm[1].trim(), args);
+                              toolsRan.push(toolResult);
+                              turnMessages.push({ role: 'assistant', content: `[executed ${fm[1]}]` });
+                              turnMessages.push({ role: 'user', content: `Tool result: ${toolResult}\nNow give your final reply.` });
+                              continue;
+                          } catch {}
+                      }
+                  }
+                  if (turn === 0) {
+                      const _fb = await callGroq([...turnMessages], false).catch(() => null);
+                      if (_fb?.ok) {
+                          const _fbData = await _fb.json().catch(() => ({}));
+                          const _fbContent = _fbData.choices?.[0]?.message?.content?.trim() || '';
+                          if (_fbContent) { finalReply = stripEmbeddedFuncTags(_fbContent); break; }
+                      }
+                  }
+                  finalReply = 'something went wrong 😒 try again';
+                  break;
+              }
 
             const data = await res.json();
             const choice = data.choices?.[0];
@@ -495,6 +506,13 @@ module.exports = async (context) => {
 
         if (!finalReply) {
             finalReply = toolsRan.length ? toolsRan.join('\n') : 'something went sideways 🤦';
+        }
+
+        if (finalReply && toolsRan.length) {
+            for (const _tr of toolsRan) {
+                const _ghM = String(_tr).match(/https:\/\/github\.com\/\S+/);
+                if (_ghM && !finalReply.includes(_ghM[0])) finalReply += `\n\n${_ghM[0]}`;
+            }
         }
 
         pushHistory(m.sender, 'assistant', finalReply);
