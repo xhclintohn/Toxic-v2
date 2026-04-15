@@ -268,6 +268,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         m.metadata = {};
         const lidToPN = {};
         let _botLidKey = '';
+        const _clientLidKey = (client.user?.lid || '').split('@')[0].split(':')[0];
 
         if (m.isGroup) {
             let _groupParticipants = [];
@@ -299,7 +300,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
                 if (pLid && pJid) {
                     const lidKey = pLid.split(':')[0];
                     lidToPN[lidKey] = pJid;
-                    if (!_botLidKey && normalizeNumber(pJid) === normBot) _botLidKey = lidKey;
+                    if (!_botLidKey && (normalizeNumber(pJid) === normBot || (_clientLidKey && lidKey === _clientLidKey))) _botLidKey = lidKey;
                 }
             }
 
@@ -384,7 +385,7 @@ module.exports = toxic = async (client, m, chatUpdate, store) => {
         const fakeQuoted = getFakeQuoted(m);
 
         const context = {
-            client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, participants,
+            client, m, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup, isGroup: m.isGroup, participants,
             pushname, body, budy, totalCommands, args, mime, qmsg, msgToxic, botNumber, itsMe,
             packname, generateProfilePicture, groupMetadata, toxicspeed, mycode, fetchJson, exec,
             getRandom, UploadFileUgu, TelegraPh, prefix: usedPrefix, cmd, botname, mode, gcpresence, antitag,
