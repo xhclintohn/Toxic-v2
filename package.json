@@ -4,7 +4,7 @@
   "description": "A lightning-fast WhatsApp bot with multi-device support, built on Node.js & Baileys.",
   "main": "index.js",
   "scripts": {
-    "start": "node keep-alive.js",
+    "start": "pm2-runtime ecosystem.config.js",
     "postinstall": "node patch-baileys.js"
   },
   "engines": {
@@ -45,7 +45,8 @@
     "qrcode": "^1.5.4",
     "cookie": "^0.7.0",
     "qs": "^6.13.0",
-    "pg": "^8.13.3"
+    "pg": "^8.13.3",
+    "pm2": "^5.4.3"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8",
