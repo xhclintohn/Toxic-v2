@@ -198,7 +198,7 @@ module.exports = async (context) => {
             const botNum = (botNumber || client.user?.id || '').split('@')[0].split(':')[0];
             const bLidKey = m._botLidKey || '';
             const bodyStr = m.body || m.text || '';
-            const isMentionedInBody = botNum.length > 5 && bodyStr.includes('@' + botNum);
+            const isMentionedInBody = (botNum.length > 5 && bodyStr.includes('@' + botNum)) || (bLidKey && bLidKey.length > 5 && bodyStr.includes('@' + bLidKey));
             const _allMentioned = [
                   ...(m.mentionedJid || []),
                   ...(m.msg?.contextInfo?.mentionedJid || []),
