@@ -1,4 +1,4 @@
-const { getGroupSettings, getWarnCount, incrementWarn, resetWarn, getWarnLimit } = require("../database/config");
+const { getGroupSettings, getWarnCount, addWarn, resetWarn, getWarnLimit } = require("../database/config");
 
 const normalizeJid = (jid) => {
     if (!jid) return '';
@@ -72,7 +72,7 @@ module.exports = async (client, m) => {
 
         if (mode === "warn" || mode === "delete" || mode === "true") {
             const MAX_WARNS = await getWarnLimit(m.chat);
-            const newCount = await incrementWarn(m.chat, sender);
+            const newCount = await addWarn(m.chat, sender);
             const remaining = MAX_WARNS - newCount;
 
             if (newCount >= MAX_WARNS) {
