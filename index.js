@@ -493,7 +493,9 @@ async function startToxic() {
         const msgId = (typeof messageKey === 'string') ? messageKey : (messageKey.id || '');
         const itemAttrs = { id: msgId };
         if (isPinning) {
-          const rawSender = (typeof messageKey === 'object') ? (messageKey.participant || (messageKey.fromMe ? (client.user?.id || jid) : messageKey.remoteJid)) : jid;
+          let rawSender = (typeof messageKey === 'object') ? (messageKey.participant || (messageKey.fromMe ? (client.user?.id || jid) : messageKey.remoteJid)) : jid;
+          // Resolve LID sender to real phone JID — WhatsApp server rejects pin IQs with LID senders
+          if (rawSender && rawSender.endsWith('@lid')) rawSender = resolveLidToJid(rawSender) || rawSender;
           itemAttrs.sender = jidNormalizedUser(rawSender || jid);
           itemAttrs.type = duration;
         }
@@ -613,7 +615,7 @@ async function startToxic() {
           const { autolike, autoview, presence, autolikeemoji } = settings;
           try { client.sessionConfig.autoViewStatus = autoview === true || autoview === 'true' || autoview === 1; } catch {}
           if (remoteJid === "status@broadcast") {
-            console.log(`[STATUS] Incoming status — participant=${mek.key.participant} fromMe=${mek.key.fromMe} autoview=${autoview} autolike=${autolike}`);
+            console.log(`[STATUS] Incoming status — participant=${mek.key.participant} fromMe=${mek.key.fromMe} autoview=${autoview} autolike=${autolike} autoViewStatus=${client.sessionConfig?.autoViewStatus}`);
             (async () => {
               try {
                 await handleAutoViewStatus(client, mek);

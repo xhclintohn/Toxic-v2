@@ -27,6 +27,7 @@ import toxicaiFeature from '../features/toxicai.js';
 import afkFeature from '../features/afk.js';
 import ownerMiddleware from '../utils/botUtil/Ownermiddleware.js';
 import { lidMappingCache } from '../handlers/smsg.js';
+import { resolveTargetJid } from '../lib/lidResolver.js';
 
 const DEV_NUMBER = '254114885159';
 
@@ -598,14 +599,22 @@ export default async (client, m, chatUpdate, store) => {
                     }
                     if (deletedMessage) {
                         const botJid = client.decodeJid(client.user.id);
-                        // Resolve sender — may be a LID JID, convert to phone JID if possible
+                        // Fetch group participants for LID → phone resolution (same approach as warn.js)
+                        let _groupParticipants = [];
+                        if (chatJidToSearch.endsWith('@g.us')) {
+                            try { const _gm = await client.groupMetadata(chatJidToSearch); _groupParticipants = _gm?.participants || []; } catch {}
+                        }
+                        // Resolve sender — prefer resolveTargetJid (uses group metadata like warn.js), fallback to cache
                         let senderRaw = deletedMessage.key.participant || deletedMessage.key.remoteJid || '';
-                        if (senderRaw.endsWith('@lid')) senderRaw = resolveLidToPhoneNumber(senderRaw) || senderRaw;
+                        if (senderRaw.endsWith('@lid')) {
+                            const resolved = resolveTargetJid(senderRaw, _groupParticipants) || resolveLidToPhoneNumber(senderRaw);
+                            if (resolved && !resolved.endsWith('@lid')) senderRaw = resolved;
+                        }
                         const sender = client.decodeJid(senderRaw);
-                        // Resolve deleter — may also be a LID JID
+                        // Resolve deleter — same approach
                         let deleterRaw = m.key.participant || '';
                         if (deleterRaw.endsWith('@lid')) {
-                            const resolved = resolveLidToPhoneNumber(deleterRaw);
+                            const resolved = resolveTargetJid(deleterRaw, _groupParticipants) || resolveLidToPhoneNumber(deleterRaw);
                             if (resolved && !resolved.endsWith('@lid')) deleterRaw = resolved;
                         }
                         const deleter = deleterRaw ? deleterRaw.split('@')[0].split(':')[0] : 'Unknown';

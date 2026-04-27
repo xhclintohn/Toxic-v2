@@ -6,12 +6,13 @@ export default {
     aliases: ['npmdownload', 'npminstall'],
     description: 'Download NPM package as .tgz file',
     run: async (context) => {
-        const { client, m } = context;
+        const { client, m, text } = context;
         const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         try {
-            let query = m.text.trim();
+            // Use 'text' (args after command) not 'm.text' (full body including command name)
+            let query = (text || '').trim();
             if (!query) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Provide a package name,\n├ you incompetent fool.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
