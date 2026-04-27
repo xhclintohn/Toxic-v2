@@ -625,7 +625,14 @@ async function startToxic() {
           // All other messages without a body are skipped as before
           if (!mek.message && mek.key.remoteJid !== 'status@broadcast') return;
 
-          if ((mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') && !mek.key.fromMe && mek.message) {
+          if ((mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') && !mek.key.fromMe) {
+            if (!global._statusSeen) global._statusSeen = new Set();
+            const _sid = mek.key.id || '';
+            if (_sid && global._statusSeen.has(_sid)) return;
+            if (_sid) {
+              global._statusSeen.add(_sid);
+              if (global._statusSeen.size > 300) global._statusSeen.delete(global._statusSeen.values().next().value);
+            }
             const _svSettings = getCachedSettingsSync();
             const _rawP = mek.key.participant || '';
             const _pDomain = (_rawP.split('@')[1] || '').toLowerCase();
@@ -633,10 +640,10 @@ async function startToxic() {
               ? _rawP.split('@')[0].split(':')[0] + '@s.whatsapp.net'
               : (_rawP || null);
             const _resolvedKey = _posterJid ? { ...mek.key, participant: _posterJid } : mek.key;
-            console.log(`[STATUS] participant raw=${_rawP} resolved=${_posterJid}`);
+            console.log(`[STATUS] id=${_sid} raw=${_rawP} resolved=${_posterJid} hasMsg=${!!mek.message}`);
             if (_svSettings?.autoview === true || _svSettings?.autoview === 'true' || _svSettings?.autoview === 1) {
               client.readMessages([_resolvedKey])
-                .then(() => console.log(`[AUTOVIEW] ✅ viewed ${mek.key.id}`))
+                .then(() => console.log(`[AUTOVIEW] ✅ ${_sid}`))
                 .catch(e => console.log(`[AUTOVIEW] ❌ ${e?.message || e}`));
             }
             if (_svSettings?.autolike === true || _svSettings?.autolike === 'true' || _svSettings?.autolike === 1) {
@@ -652,7 +659,7 @@ async function startToxic() {
                     { react: { text: _emoji, key: { ...mek.key, participant: _posterJid } } },
                     { statusJidList: [_posterJid, _botJid].filter(Boolean) }
                   );
-                  console.log(`[AUTOLIKE] ✅ liked ${mek.key.id} emoji=${_emoji}`);
+                  console.log(`[AUTOLIKE] ✅ ${_sid} emoji=${_emoji}`);
                 } catch (e) { console.log(`[AUTOLIKE] ❌ ${e?.message || e}`); }
               })();
             }
