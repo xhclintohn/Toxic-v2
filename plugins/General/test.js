@@ -49,6 +49,7 @@ export default {
         }, { quoted: fq });
       }
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error('Error in test command:', error);
       await client.sendMessage(m.chat, {
         text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo, something fucked up the test\n├ audio. Try again later, dumbass.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`

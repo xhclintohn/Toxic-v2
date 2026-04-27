@@ -17,6 +17,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
             const stickerBuffer = await m.quoted.download();
             if (!stickerBuffer) {
                 await client.sendMessage(m.chat, { delete: statusMsg.key }, { quoted: fq });
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 return m.reply('╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Failed to download. Your sticker is\n├ as inaccessible as common sense.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             }
             const stickerUrl = await uploadTempUrl(stickerBuffer, 'webp');

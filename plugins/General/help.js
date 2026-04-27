@@ -13,6 +13,7 @@ export default {
     run: async (context) => {
         const { client, m, args, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         const effectivePrefix = prefix || '.';
 
@@ -308,6 +309,7 @@ export default {
         if (helpData[cmdName]) {
             const info = helpData[cmdName];
             const body = `├ 📌 *Command:* ${cmdName}\n├ 📖 *Usage:* ${info.usage}\n├ ℹ️ *Description:*\n├ ${info.desc}`;
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return await client.sendMessage(m.chat, { text: fmt(`HELP: ${cmdName.toUpperCase()}`, body) }, { quoted: fq });
         }
 
@@ -319,6 +321,7 @@ export default {
             if (files.includes(cmdName + '.js')) {
                 found = true;
                 const body = `├ 📌 *Command:* ${cmdName}\n├ 📁 *Category:* ${cat}\n├ 📖 *Usage:* ${effectivePrefix}${cmdName}\n├ ℹ️ No detailed help available for this command yet.`;
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 return await client.sendMessage(m.chat, { text: fmt(`HELP: ${cmdName.toUpperCase()}`, body) }, { quoted: fq });
             }
         }

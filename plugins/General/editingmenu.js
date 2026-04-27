@@ -10,6 +10,7 @@ export default {
   run: async (context) => {
     const { client, m, pict } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
     const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃';
 
     const settings = await getSettings();

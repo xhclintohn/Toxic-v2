@@ -4,6 +4,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 export default async (context) => {
   const { client, m, text } = context;
   const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
   const formatStylishReply = (message) => {
     return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉
@@ -68,6 +69,7 @@ export default async (context) => {
     );
 
   } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
     await client.sendMessage(
       m.chat,
       { text: formatStylishReply(`Error: ${error.message}`) },

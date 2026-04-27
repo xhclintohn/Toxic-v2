@@ -80,6 +80,7 @@ export default async (context) => {
         }
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
     } catch (e) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         await client.sendMessage(m.chat, {
             text: `╭───(    TOXIC-MD    )───\n├───≫ RETRIEVE ≪───\n├ \n├ Something broke. WhatsApp's fault, not mine. 😤\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         }, { quoted: fq });

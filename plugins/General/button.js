@@ -37,6 +37,7 @@ export default {
       }, { quoted: fq });
 
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error(`Menu command error: ${error.stack}`);
     }
   }

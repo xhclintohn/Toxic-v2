@@ -7,6 +7,7 @@ export default async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
     const value = args[0]?.toLowerCase();
     const jid = m.chat;
 
@@ -15,7 +16,8 @@ export default async (context) => {
     };
 
     if (!jid.endsWith('@g.us')) {
-      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", "Epic fail, loser!\n├ This command is for groups only, moron!") }, { quoted: fq });
     }
 
@@ -29,11 +31,12 @@ export default async (context) => {
       const action = value === 'on';
 
       if (isEnabled === action) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote is already ${value.toUpperCase()}, you brainless fool!\n├ Quit wasting my time!`) }, { quoted: fq });
       }
 
       await updateGroupSetting(jid, 'antidemote', action);
-      await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
       return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote ${value.toUpperCase()}!\n├ Demotions are under my watch, king!`) }, { quoted: fq });
     }
 

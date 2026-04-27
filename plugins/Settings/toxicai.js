@@ -11,6 +11,7 @@ export default {
     run: async (context) => {
         const { client, m, args, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         const senderNum = (m.sender || '').split('@')[0].split(':')[0];
         const fmt = (title, lines) => {
@@ -19,7 +20,7 @@ export default {
         };
 
         if (senderNum !== DEV_NUMBER) {
-            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
             return client.sendMessage(m.chat, {
                 text: fmt('TOXICAGENT', ['Access denied.', 'Dev-only feature. Not your toy.'])
             }, { quoted: fq });
@@ -32,7 +33,7 @@ export default {
             if (value === 'on' || value === 'off') {
                 const newState = value === 'on';
                 await updateSetting('toxicagent', newState);
-                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                 return client.sendMessage(m.chat, {
                     text: fmt('TOXICAGENT', newState
                         ? ['Status: ✅ ON', 'GitHub AI agent active. Just text me GitHub tasks.']

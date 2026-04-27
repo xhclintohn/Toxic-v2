@@ -31,6 +31,7 @@ export default {
     run: async (context) => {
         const { client, m, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         const mentioned = m.mentionedJid?.length ? m.mentionedJid[0]
             : m.quoted?.sender ? m.quoted.sender
             : m.sender;

@@ -6,11 +6,13 @@ export default {
   run: async (context) => {
     const { client, m, text } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     try {
       const query = text ? text.trim() : '';
 
       if (!query) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return m.reply(`╭───(    TOXIC-MD    )───\n├ You forgot to type something, genius.\n├ Give me a song name OR a YouTube link.\n├ Example: .play harlem shake\n├ Or: .play https://youtu.be/dQw4w9WgXcQ\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
@@ -35,6 +37,7 @@ export default {
         sourceUrl = query;
       } else {
         if (query.length > 100) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
           return m.reply("╭───(    TOXIC-MD    )───\n├ Song title longer than my patience. 100 chars MAX!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 

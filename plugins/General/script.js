@@ -2,6 +2,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 export default async (context) => {
   const { client, m, text, botname, prefix = '' } = context;
   const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
   const toFancyFont = (text, isUpperCase = false) => {
     const fonts = {
@@ -69,6 +70,7 @@ export default async (context) => {
     }, { quoted: fq });
 
   } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
     console.error('Error in repo command:', error);
     await client.sendMessage(m.chat, { 
       text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Couldn't fetch repo data\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`

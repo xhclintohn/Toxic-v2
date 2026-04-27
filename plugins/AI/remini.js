@@ -5,11 +5,13 @@ import { uploadToUrl } from '../../lib/toUrl.js';
   export default async (context) => {
       const { client, m } = context;
       const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
       const quoted = m.quoted ? m.quoted : m;
       const mime = quoted.mimetype || m.mimetype || '';
 
       if (!/image/.test(mime)) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
           return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Mɪssɪɴɢ Iᴍᴀɢᴇ ≪───\n├ \n├ Give me an image you dumbass\n├ Reply to an image first\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞᠊ʀᴇᴅ 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 

@@ -7,6 +7,7 @@ export default async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     const formatStylishReply = (title, message) => {
       return `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├ \n├ ${message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
@@ -15,7 +16,7 @@ export default async (context) => {
     try {
       const settings = await getSettings();
       if (!settings || Object.keys(settings).length === 0) {
-        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("AUTOREAD", "Database is fucked, no settings found. Fix it, loser.") },
@@ -28,6 +29,8 @@ export default async (context) => {
       if (value === 'on' || value === 'off') {
         const action = value === 'on';
         if (settings.autoread === action) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+
           return await client.sendMessage(
             m.chat,
             { text: formatStylishReply("AUTOREAD", `Autoread message already ${value.toUpperCase()}, genius. Stop wasting my time.`) },
@@ -36,7 +39,7 @@ export default async (context) => {
         }
 
         await updateSetting('autoread', action);
-        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("AUTOREAD", `Autoread ${value.toUpperCase()} activated! ${action ? 'Bot\'s reading every message like a creep.' : 'No more spying on your trash messages.'}`) },
@@ -72,6 +75,7 @@ export default async (context) => {
       );
       await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       await client.sendMessage(
         m.chat,
         { text: formatStylishReply("AUTOREAD", "Shit broke, couldn't mess with autoread. Database or something's fucked. Try later.") },

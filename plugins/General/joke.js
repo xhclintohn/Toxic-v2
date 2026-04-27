@@ -8,6 +8,7 @@ export default {
     run: async (context) => {
         const { client, m } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         try {
             const res = await axios.get('https://v2.jokeapi.dev/joke/Any?blacklistFlags=nsfw,racist,sexist&type=twopart', { timeout: 8000 });
             const j = res.data;

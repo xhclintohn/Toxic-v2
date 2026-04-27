@@ -9,6 +9,7 @@ export default {
   run: async (context) => {
     const { client, m, prefix, botname } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     const url = m.body.replace(new RegExp(`^${prefix}(fetch|get|url|web)\\s*`, 'i'), '').trim();
 
@@ -123,6 +124,7 @@ export default {
       }
 
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error('Fetch command error:', error);
 
       let errorMessage = error.message;

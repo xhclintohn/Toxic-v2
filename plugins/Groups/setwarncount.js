@@ -23,10 +23,12 @@ export default async (context) => {
         const num = parseInt(rawInput, 10);
 
         if (isNaN(num) || num < 1 || num > 10) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return await client.sendMessage(m.chat, { text: fmt('Give me a number between 1 and 10. Is that too hard? 🙄') }, { quoted: fq });
         }
 
         if (num === current) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return await client.sendMessage(m.chat, { text: fmt(`Warn limit is already *${current}*. Pay attention. 😒`) }, { quoted: fq });
         }
 

@@ -10,6 +10,7 @@ export default {
         await middleware(context, async () => {
             const { client, m, prefix } = context;
             const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
             const groupMetadata = await client.groupMetadata(m.chat);
             const participants = groupMetadata.participants;
@@ -22,16 +23,18 @@ export default {
             }
 
             if (!rawJid) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ USAGE ≪───\n├ \n├ Mention or quote a user.\n├ Example: ${prefix}promote @user\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
             }
 
             const target = resolveTargetJid(rawJid, participants);
             if (!target) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 return m.reply(`╭───(    TOXIC-MD    )───\n├ Couldn't find that person in this group.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
             }
 
             try {
-                await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
                 await client.groupParticipantsUpdate(m.chat, [target], 'promote');
                 await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                 await client.sendMessage(m.chat, {

@@ -8,6 +8,7 @@ export default {
     run: async (context) => {
         const { client, m, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         const args = m.body?.split(" ") || [];
         const sessionId = args[1];

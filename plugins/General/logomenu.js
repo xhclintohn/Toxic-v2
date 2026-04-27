@@ -10,6 +10,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
     run: async (context) => {
       const { client, m, fakeQuoted } = context;
       const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
       const settings = await getSettings();
       const effectivePrefix = settings.prefix || '';

@@ -8,6 +8,7 @@ export default {
   run: async (context) => {
     const { client, m } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
     const bName = botname || 'Toxic-MD';
 
     try {
@@ -32,6 +33,7 @@ export default {
       }, { quoted: fq });
 
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       await client.sendMessage(m.chat, {
         text: `╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Couldn't send contact card.\n├ Error: ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: fq });

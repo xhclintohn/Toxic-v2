@@ -14,6 +14,7 @@ export default {
     run: async (context) => {
         const { client, m, pict, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         const toFancyFont = (text) => {
             const fonts = {

@@ -9,6 +9,7 @@ export default async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, args, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         const value = args[0]?.toLowerCase();
         const jid = m.chat;
 
@@ -24,15 +25,17 @@ export default async (context) => {
             const action = value === 'on';
 
             if (isEnabled === action) {
-                await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 return await client.sendMessage(m.chat, { text: fmt(`GCPresence already ${value.toUpperCase()}`) }, { quoted: fq });
             }
 
             if (jid.endsWith('@g.us')) {
                 await updateGroupSetting(jid, 'gcpresence', action);
-                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                 return await client.sendMessage(m.chat, { text: fmt(`Group GCPresence: ${value.toUpperCase()}`) }, { quoted: fq });
             } else {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 return await client.sendMessage(m.chat, { text: fmt('DMs: GCPresence always ON') }, { quoted: fq });
             }
         }

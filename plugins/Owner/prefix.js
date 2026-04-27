@@ -6,13 +6,14 @@ export default async (context) => {
     await ownerMiddleware(context, async () => {
         const { m, args } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         const newPrefix = args[0];
 
         let settings = await getSettings();
 
         if (newPrefix === 'null') {
             if (!settings.prefix) {
-                await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
                 return await m.reply(`✅ The bot was already prefixless.`);
             }
             await updateSetting('prefix', '');

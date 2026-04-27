@@ -30,6 +30,7 @@ export default {
       await client.sendMessage(m.chat, { delete: deleteKey }, { quoted: fq });
 
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error(`del command error:`, error);
     }
   }

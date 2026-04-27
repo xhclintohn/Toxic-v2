@@ -7,6 +7,7 @@ export default async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, args, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         const value = args[0]?.toLowerCase();
         const jid = m.chat;
 
@@ -15,7 +16,8 @@ export default async (context) => {
         };
 
         if (!jid.endsWith('@g.us')) {
-            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", "This command can only be used in groups, fool!") }, { quoted: fq });
         }
 
@@ -28,6 +30,7 @@ export default async (context) => {
         const isBotAdmin = userAdmins.includes(Myself);
 
         if (value === 'on' && !isBotAdmin) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", "I need admin privileges to enable Antitag, you clown!") }, { quoted: fq });
         }
 
@@ -35,11 +38,12 @@ export default async (context) => {
             const action = value === 'on';
 
             if (isEnabled === action) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag is already ${value.toUpperCase()}, genius!`) }, { quoted: fq });
             }
 
             await updateGroupSetting(jid, 'antitag', action);
-            await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
             return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag has been turned ${value.toUpperCase()} for this group.`) }, { quoted: fq });
         }
 

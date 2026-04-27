@@ -8,6 +8,7 @@ export default {
     run: async (context) => {
         const { client, m } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         try {
             const res = await axios.get('https://api.adviceslip.com/advice', { timeout: 8000 });
             const advice = res.data?.slip?.advice || 'Stop asking for advice and figure it out.';

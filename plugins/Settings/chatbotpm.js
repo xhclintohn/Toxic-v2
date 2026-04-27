@@ -11,6 +11,7 @@ export default {
     await ownerMiddleware(context, async () => {
       const { client, m, args, prefix } = context;
       const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
       const fmt = (title, lines) => {
         const body = (Array.isArray(lines) ? lines : [lines]).map(l => `├ ${l}`).join('\n');
@@ -24,11 +25,11 @@ export default {
         if (value === 'on' || value === 'off') {
           const newState = value === 'on';
           if (settings.autoai === newState) {
-            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
             return client.sendMessage(m.chat, { text: fmt('AUTO AI', `already ${value.toUpperCase()} 🙄 stop pressing buttons`) }, { quoted: fq });
           }
           await updateSetting('autoai', newState);
-          await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+          await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
           return client.sendMessage(m.chat, {
             text: fmt('AUTO AI', newState
               ? ['Status: ✅ ON', 'Replies to all DMs + @mentions in groups.', 'God help them 😒']

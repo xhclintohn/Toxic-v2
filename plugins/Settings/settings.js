@@ -11,7 +11,8 @@ export default {
     await ownerMiddleware(context, async () => {
       const { client, m, prefix } = context;
       const fq = getFakeQuoted(m);
-      await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
       const bName = botname || 'Toxic-MD';
 
       const settings = await getSettings();
@@ -158,7 +159,7 @@ export default {
         `├ Settings save instantly to database.\n` +
         `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
-      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
       await client.sendMessage(m.chat, { text: message }, { quoted: fq });
     });
   }

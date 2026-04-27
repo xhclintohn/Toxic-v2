@@ -10,6 +10,7 @@ export default {
     await middleware(context, async () => {
       const { client, m, prefix } = context;
       const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
       let rawJid = null;
       if (m.mentionedJid && m.mentionedJid.length > 0) rawJid = m.mentionedJid[0];
@@ -26,7 +27,7 @@ export default {
       if (!targetJid || targetJid === botJid) return m.reply(`╭───(    TOXIC-MD    )───\n├ You can't kick me, loser.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
       try {
-        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
         await client.groupParticipantsUpdate(m.chat, [targetJid], 'remove');
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         await client.sendMessage(m.chat, {

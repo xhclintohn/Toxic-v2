@@ -8,6 +8,7 @@ export default {
     run: async (context) => {
         const { client, m, text } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         const query = (text || '').trim();
         if (!query) {
             return client.sendMessage(m.chat, {

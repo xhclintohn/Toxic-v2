@@ -5,6 +5,7 @@ export default async (context) => {
 
 const { client, m, text, botname  } = context;
 const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
 
 async function MediaFire(url, options) {
@@ -30,6 +31,7 @@ async function MediaFire(url, options) {
 if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Provide a MediaFire link, you lazy bum!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 
 if (!text.includes('mediafire.com')) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return m.reply("╭───(    TOXIC-MD    )───\n├ That doesn't look like a MediaFire link, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
     }
 
@@ -43,6 +45,7 @@ try {
 
 
 if (!fileInfo || !fileInfo.length) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
     return m.reply("╭───(    TOXIC-MD    )───\n├ File no longer exists on MediaFire. Too slow!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 }
 

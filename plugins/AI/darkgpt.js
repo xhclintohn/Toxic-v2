@@ -9,8 +9,10 @@ export default {
     run: async (context) => {
         const { client, m, text, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         if (!text) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return m.reply(
                 `╭───(    TOXIC-MD    )───\n` +
                 `├───≫ Dᴀʀᴋ Gᴘᴛ ≪───\n` +

@@ -8,6 +8,7 @@ export default {
     run: async (context) => {
         const { client, m, text, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ QR CODE ≪───\n├ \n├ Usage: ${prefix}qr <text or link>\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });

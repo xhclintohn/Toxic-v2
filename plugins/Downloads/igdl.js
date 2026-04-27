@@ -5,6 +5,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
   export default async (context) => {
       const { client, m, text } = context;
       const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
       if (!text) return m.reply('╭───(    TOXIC-MD    )───\n├ Give me an Instagram link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
       if (!text.includes('instagram.com')) return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not an Instagram link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });

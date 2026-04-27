@@ -12,6 +12,7 @@ export default {
 
     if (!botname) {
       console.error(`Botname not set, you useless fuck.`);
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       return m.reply(`╭───(    TOXIC-MD    )───\nBot’s toast, no botname found! Yell at the dev, you legend.\nCheck https://github.com/xhclintohn/Toxic-MD\n╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
@@ -20,6 +21,7 @@ export default {
       // Validate m.sender
       if (!m.sender || typeof m.sender !== 'string' || !m.sender.includes('@s.whatsapp.net')) {
         console.error(`Invalid m.sender: ${JSON.stringify(m.sender)}`);
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return m.reply(`╭───(    TOXIC-MD    )───\nCan’t read your number, you beast! Try again.\nCheck https://github.com/xhclintohn/Toxic-MD\n╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
@@ -28,6 +30,7 @@ export default {
 
       // Check for search term
       if (!text) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return m.reply(`╭───(    TOXIC-MD    )───\nGimme a search term, @${userNumber}! Don’t choke, you legend. 🖼️\n╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, { mentions: [m.sender] });
       }
@@ -47,6 +50,7 @@ export default {
 
       const results = gifResponse.data.results;
       if (!results || results.length === 0) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return m.reply(`╭───(    TOXIC-MD    )───\nNo stickers found for "${text}", @${userNumber}! Try something else, you slacker. 😈\n╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, { mentions: [m.sender] });
       }
@@ -70,6 +74,7 @@ export default {
       }
 
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error(`Sticker command fucked up: ${error.stack}`);
       await m.reply(`╭───(    TOXIC-MD    )───\nSticker fetch failed, @${userNumber}! Something’s busted, try again. 😈\nCheck https://github.com/xhclintohn/Toxic-MD\n╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`, { mentions: [m.sender] });

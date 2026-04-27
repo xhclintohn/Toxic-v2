@@ -6,10 +6,12 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 export default async (context) => {
   const { client, m } = context;
   const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
   const quoted = m.quoted || m;
   const mime = (quoted.msg || quoted).mimetype || '';
 
   if (!/audio|video/.test(mime)) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
     return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Send or reply to an audio/video file with the caption _transcribe_ idiot\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
   }
 
@@ -19,12 +21,14 @@ export default async (context) => {
     const buffer = await m.quoted.download();
 
     if (buffer.length > 5 * 1024 * 1024) {
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Maximum file size is 5 MB.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
     const result = await transcribeWithTalknotes(buffer);
 
     if (!result || !result.text) {
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Failed to extract text. Please try again later.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 
@@ -71,6 +75,7 @@ async function transcribeWithTalknotes(buffer) {
 
     return data;
   } catch (err) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
     console.error('Talknotes error:', err.message);
     return null;
   }

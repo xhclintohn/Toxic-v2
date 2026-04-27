@@ -5,8 +5,10 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 export default async (context) => {
   const { client, m, text } = context;
   const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
   if (!text) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
     return m.reply("╭───(    TOXIC-MD    )───\n├ You forgot the query, dumbass.\n├ Try: .wallpaper anime girl, 5\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
   }
 

@@ -2,6 +2,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 export default async (context) => {
     const { client, m, text, fetchJson } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     try {
         if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Provide an app name, you brainless creature!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
@@ -12,6 +13,7 @@ export default async (context) => {
 
         if (!data?.datalist?.list?.length) {
             await client.sendMessage(m.chat, { react: { text: "❌", key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return m.reply("╭───(    TOXIC-MD    )───\n├ App not found!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
@@ -20,6 +22,7 @@ export default async (context) => {
 
         if (!apkUrl) {
             await client.sendMessage(m.chat, { react: { text: "❌", key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return m.reply("╭───(    TOXIC-MD    )───\n├ APK download link not available!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 

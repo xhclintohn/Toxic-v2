@@ -8,6 +8,7 @@ export default {
     run: async (context) => {
         const { client, m, text } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         const url = (text || '').trim();
         if (!url || !url.startsWith('http')) {
             return client.sendMessage(m.chat, {

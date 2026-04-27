@@ -4,8 +4,10 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 export default async (context) => {
     const { client, m, text, prefix } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     if (!text) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Wᴇʙ2Zɪᴩ ≪───\n├ \n├ Downloads entire websites as ZIP files\n├ Example: ${prefix}web2zip https://example.com\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 

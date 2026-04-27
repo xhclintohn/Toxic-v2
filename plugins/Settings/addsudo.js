@@ -7,6 +7,7 @@ export default async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, args, participants } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         let numberToAdd;
 

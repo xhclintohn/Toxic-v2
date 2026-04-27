@@ -8,6 +8,7 @@ const HEROKU_API_KEY = getHerokuApiKey();
 export default async (context) => {
     const { client, m } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     const formatStylishReply = (message) => {
         return (

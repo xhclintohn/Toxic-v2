@@ -7,6 +7,7 @@ export default async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, args, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         const fmt = (msg) => `╭───(    TOXIC-MD    )───\n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
@@ -17,21 +18,23 @@ export default async (context) => {
 
             if (value === 'on' || value === 'all') {
                 if (isEnabled) {
-                    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                     return await client.sendMessage(m.chat, { text: fmt('Multi-prefix already ON, clown. 🔥 All prefixes (. ! / #) work.') }, { quoted: fq });
                 }
                 await updateSetting('multiprefix', true);
-                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                 return await client.sendMessage(m.chat, { text: fmt('Multi-prefix: *ON 🔥* — . ! / # all work now. Enjoy, you picky bastard.') }, { quoted: fq });
             }
 
             if (value === 'off') {
                 if (!isEnabled) {
-                    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                     return await client.sendMessage(m.chat, { text: fmt(`Multi-prefix already OFF, clown. 🙄 Single prefix: *${settings.prefix || '.'}*`) }, { quoted: fq });
                 }
                 await updateSetting('multiprefix', false);
-                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                 return await client.sendMessage(m.chat, { text: fmt(`Multi-prefix: *OFF 🧊* — single prefix only: *${settings.prefix || '.'}*`) }, { quoted: fq });
             }
 
@@ -61,7 +64,8 @@ export default async (context) => {
             );
             await client.relayMessage(m.chat, _multiprefixMsg.message, { messageId: _multiprefixMsg.key.id });
         } catch (err) {
-            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
             await client.sendMessage(m.chat, { text: fmt(`Exploded. 💀 Error: ${err.message}`) }, { quoted: fq });
         }
     });

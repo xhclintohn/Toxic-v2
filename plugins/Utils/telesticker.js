@@ -9,6 +9,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 export default async (context) => {
     const { client, m, text, prefix, packname, author } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     try {
         if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Tᴇʟᴇɢʀᴀᴍ Sᴛɪᴄᴋᴇʀ ≪───\n├ \n├ Give me a Telegram sticker pack name or link!\n├ \n├ Example: ${prefix}telesticker itzel39\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
@@ -55,7 +56,8 @@ export default async (context) => {
         let tgsSkipped = 0;
 
         const stickerQueue = queue(async (task, callback) => {
-            try { await task(); } catch (error) { console.error(`Queue error: ${error.message}`); }
+            try { await task(); } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {}); console.error(`Queue error: ${error.message}`); }
             callback();
         }, 1);
 

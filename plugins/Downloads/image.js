@@ -11,6 +11,7 @@ import axios from 'axios';
       run: async (context) => {
           const { client, m, prefix } = context;
           const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
           const query = m.body.replace(new RegExp(`^${prefix}(image|img|pic|searchimage)\\s*`, 'i'), '').trim();
           if (!query) {
@@ -45,6 +46,7 @@ import axios from 'axios';
                       }, { quoted: fq });
                       if (i < data.items.length - 1) await new Promise(r => setTimeout(r, 1200));
                   } catch (imgErr) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                       console.warn(`Image ${i + 1} skipped: ${imgErr.message}`);
                   }
               }

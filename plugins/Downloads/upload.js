@@ -5,6 +5,7 @@ import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
   export default async (context) => {
       const { client, m } = context;
       const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
       try {
           const q = m.quoted ? m.quoted : m;
@@ -15,6 +16,7 @@ import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
           const mediaBuffer = await q.download();
 
           if (mediaBuffer.length > 256 * 1024 * 1024) {
+              await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
               return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ File too large! Max 256MB.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
           }
 

@@ -13,6 +13,7 @@ export default async (context) => {
     if (newPrefix === 'null') {
       if (!settings.prefix) {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return await m.reply(
           `╭───(    TOXIC-MD    )───\n` +
           `├ Already prefixless, you clueless twit! 😈\n` +
@@ -22,7 +23,7 @@ export default async (context) => {
         );
       }
       await updateSetting('prefix', '');
-      await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
       await m.reply(
         `╭───(    TOXIC-MD    )───\n` +
         `├ Prefix obliterated! 🔥\n` +
@@ -32,6 +33,7 @@ export default async (context) => {
       );
     } else if (newPrefix) {
       if (settings.prefix === newPrefix) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return await m.reply(
           `╭───(    TOXIC-MD    )───\n` +
           `├ Prefix is already ${newPrefix}, moron! 😈\n` +
@@ -41,7 +43,7 @@ export default async (context) => {
         );
       }
       await updateSetting('prefix', newPrefix);
-      await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
       await m.reply(
         `╭───(    TOXIC-MD    )───\n` +
         `├ New prefix set to ${newPrefix}! 🔥\n` +

@@ -29,6 +29,7 @@ export default {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Cᴀʟᴄᴜʟᴀᴛᴏʀ ≪───\n├\n├ 🔢 ${expr}\n├ = ${result}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: fq });
         } catch (e) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Cᴀʟᴄᴜʟᴀᴛᴏʀ ≪───\n├\n├ That expression is broken. Fix your math.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: fq });

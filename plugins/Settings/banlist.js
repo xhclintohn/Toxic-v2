@@ -11,6 +11,7 @@ export default async (context) => {
 
         if (!bannedUsers || bannedUsers.length === 0) {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return await m.reply(
                 `╭───(    TOXIC-MD    )───\n` +
                 `├───≫ BAN LIST ≪───\n` +

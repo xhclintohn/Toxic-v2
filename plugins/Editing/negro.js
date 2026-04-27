@@ -4,6 +4,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 export default async (context) => {
     const { client, mime, m, text, botname } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     if (m.quoted && /image/.test(mime)) {
         const buffer = await m.quoted.download();

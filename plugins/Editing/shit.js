@@ -4,6 +4,7 @@ let canvacord = null; try { canvacord = (await import("canvacord")).default ?? (
 export default async (context) => {
         const { client, m, Tag, botname } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
 let cap = `╭───(    TOXIC-MD    )───\n├───≫ SHIT ≪───\n├ \n├ Converted By ${botname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 

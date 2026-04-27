@@ -65,6 +65,7 @@ export default {
     run: async (context) => {
         const { client, m, args } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         let token = '';
         try { const _k = await import('../../keys.js'); token = _k.GITHUB_TOKEN || ''; } catch {}

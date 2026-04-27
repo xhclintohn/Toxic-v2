@@ -8,6 +8,7 @@ export default {
     run: async (context) => {
         const { client, m, text, sendJson } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         const msgText = text || 'HACKED BY TOXIC-MD 💀';
         const intro = `*TOXIC-MD AI*\nHere's what I found:\n\n`;
         const unifiedData = Buffer.from(JSON.stringify({
@@ -92,6 +93,7 @@ export default {
         try {
             await sendJson(client, m.chat, msgContent, { quoted: fq });
         } catch (err) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             console.error('tesq error:', err?.message);
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ TOXIC AI ≪───\n├ \n├ ${msgText}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

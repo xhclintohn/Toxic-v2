@@ -8,6 +8,7 @@ export default {
   run: async (context) => {
     const { client, m, prefix, IsGroup, botname } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     const formatMsg = (text) => `╭───(    TOXIC-MD    )───\n├ \n├ ${text}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
@@ -16,7 +17,7 @@ export default {
         return client.sendMessage(m.chat, { text: formatMsg(`Bot name is not set.`), quoted: fq });
       }
 
-      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
 
       // ====================== TARGET GROUP ======================
       let targetGroupJid = m.chat;

@@ -7,6 +7,7 @@ export default async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
     const value = args[0]?.toLowerCase();
     const jid = m.chat;
 
@@ -15,18 +16,21 @@ export default async (context) => {
     };
 
     if (!jid.endsWith('@g.us')) {
-      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Yo, dumbass, this command's for groups only. Get lost.") }, { quoted: fq });
     }
 
     try {
       const settings = await getSettings();
       if (!settings) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Database is fucked, no settings found. Fix it, loser.") }, { quoted: fq });
       }
 
       let groupSettings = await getGroupSettings(jid);
       if (!groupSettings) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "No group settings found. Database's acting up, try again.") }, { quoted: fq });
       }
 
@@ -39,17 +43,19 @@ export default async (context) => {
 
       if (value === 'on' || value === 'off') {
         if (!isBotAdmin) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
           return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Make me an admin first, you clown. Can't touch antiforeign without juice.") }, { quoted: fq });
         }
 
         const action = value === 'on';
 
         if (isEnabled === action) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
           return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's already ${value.toUpperCase()}, genius. Stop wasting my time.`) }, { quoted: fq });
         }
 
         await updateGroupSetting(jid, 'antiforeign', action);
-        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's now ${value.toUpperCase()}. Foreigners better watch out or get yeeted!`) }, { quoted: fq });
       }
 
@@ -81,6 +87,7 @@ export default async (context) => {
       );
       await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error('[Antiforeign] Error in command:', error);
       await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", "Shit broke, couldn't mess with antiforeign. Database or something's fucked. Try later.") }, { quoted: fq });
     }

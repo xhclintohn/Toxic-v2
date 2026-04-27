@@ -10,6 +10,7 @@ export default async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, text, quoted, isBotAdmin, IsGroup } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         
         if (!IsGroup) return m.reply(formatStylishReply("Group only command idiot"));
         
@@ -24,6 +25,7 @@ export default async (context) => {
             try {
                 imageBuffer = await quoted.download();
             } catch {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 return m.reply(formatStylishReply("Can't download image"));
             }
         }
@@ -31,17 +33,19 @@ export default async (context) => {
             try {
                 imageBuffer = await m.download();
             } catch {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 return m.reply(formatStylishReply("Can't download image"));
             }
         }
         else {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return m.reply(formatStylishReply("Send or reply with image"));
         }
         
         if (!imageBuffer) return m.reply(formatStylishReply("Invalid image"));
         
         try {
-            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
             await client.updateProfilePicture(m.chat, imageBuffer);
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
             return m.reply(formatStylishReply("Group picture updated"));

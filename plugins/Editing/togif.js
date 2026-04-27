@@ -11,14 +11,17 @@ function emojiToTwemojiUrl(emoji) {
 export default async (context) => {
     const { client, m, text } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     try {
         if (!text) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return m.reply('╭───(    TOXIC-MD    )───\n├───≫ EMOJI ART ≪───\n├ \n├ Give me an emoji!\n├ Example: .togif 😂\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
         const emojiMatch = text.match(/\p{Emoji}/u);
         if (!emojiMatch) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return m.reply('╭───(    TOXIC-MD    )───\n├───≫ EMOJI ART ≪───\n├ \n├ That\'s not an emoji. Give me a real one.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 

@@ -6,6 +6,7 @@ export default {
   run: async (context) => {
     const { client, m } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     try {
     
@@ -33,12 +34,14 @@ export default {
       ) {
         console.error(`Invalid target user: ${JSON.stringify(targetUser)}`);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Who the fuck am I torching?\n├ Tag someone or I'll roast your\n├ sorry ass to ashes!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
       targetNumber = targetUser.split('@')[0];
       if (!targetNumber) {
         console.error(`Failed to extract target number from JID: ${targetUser}`);
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ This user's ID is fucked beyond\n├ repair. Try again, you brainless twit!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
 
@@ -277,10 +280,12 @@ export default {
             delete: checkingMsg.key,
           }, { quoted: fq });
         } catch (deleteError) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
           console.error(`Failed to delete checking message: ${deleteError.stack}`);
         }
       }
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error(`Gaycheck command detonated: ${error.stack}`);
       await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Cʀᴀsʜᴇᴅ ≪───\n├ \n├ This shit blew up harder than your\n├ ego! Can't check gay levels now,\n├ you doomed idiot!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }

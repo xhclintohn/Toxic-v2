@@ -7,6 +7,7 @@ export default async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     const fmtMsg = (msg) =>
       `╭───(    TOXIC-MD    )───\n├───≫ AUTOLIKE ≪───\n├ \n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
@@ -19,12 +20,13 @@ export default async (context) => {
         const newValue = value === 'on';
 
         if (settings.autolike === newValue) {
-          await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
           return await client.sendMessage(m.chat, { text: fmtMsg(`Autolike is already ${value.toUpperCase()}, you brain-dead fool!`) }, { quoted: fq });
         }
 
         await updateSetting('autolike', newValue);
-        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         return await client.sendMessage(m.chat, {
           text: fmtMsg(`Autolike ${value.toUpperCase()}! ${value === 'on' ? 'Bot will now like statuses!' : 'Bot will ignore statuses like they ignore you.'}`)
         }, { quoted: fq });
@@ -62,6 +64,7 @@ export default async (context) => {
       );
       await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error('Autolike command error:', error);
       await client.sendMessage(m.chat, {
         text: fmtMsg('Failed to update autolike. Database might be drunk.')

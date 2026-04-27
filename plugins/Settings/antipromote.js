@@ -7,6 +7,7 @@ export default async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
     const value = args[0]?.toLowerCase();
     const jid = m.chat;
 
@@ -15,7 +16,8 @@ export default async (context) => {
     };
 
     if (!jid.endsWith('@g.us')) {
-      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", "Nice try, idiot!\n├ This command is for groups only, you moron!") }, { quoted: fq });
     }
 
@@ -29,11 +31,12 @@ export default async (context) => {
       const action = value === 'on';
 
       if (isEnabled === action) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote is already ${value.toUpperCase()}, you clueless moron!\n├ Stop spamming my commands!`) }, { quoted: fq });
       }
 
       await updateGroupSetting(jid, 'antipromote', action);
-      await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
       return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote ${value.toUpperCase()}!\n├ Promotions are under my control, king!`) }, { quoted: fq });
     }
 

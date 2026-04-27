@@ -18,6 +18,7 @@ await client.sendMessage(m.chat, { image: { url: image }, caption: cap}, { quote
 
 
 } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
 
 m.reply("╭───(    TOXIC-MD    )───\n├ Screenshot failed. Probably your garbage link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧")
 

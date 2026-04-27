@@ -10,6 +10,7 @@ export default {
     run: async (context) => {
         const { client, m, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         let text = m.body.replace(new RegExp(`^${prefix}(iqc|iphonechat|fakechat|chatmock)\\s*`, 'i'), '').trim();
 

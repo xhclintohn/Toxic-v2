@@ -25,6 +25,7 @@ export default {
         await ownerMiddleware(context, async () => {
             const { client, m, args, prefix } = context;
             const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
             const fmt = (title, lines) => {
                 const body = (Array.isArray(lines) ? lines : [lines]).map(l => `├ ${l}`).join('\n');
@@ -62,7 +63,7 @@ export default {
                     }), { quoted: fq, userJid: client.user.id });
                     await client.relayMessage(m.chat, interactiveMsg.message, { messageId: interactiveMsg.key.id });
                 } catch {
-                    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
                     await client.sendMessage(m.chat, {
                         listMessage: {
                             title: 'BOT MODE',
@@ -93,7 +94,7 @@ export default {
                         return sendModeButtons(current);
                     }
                     await updateSetting('mode', input);
-                    await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+                    await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                     await client.sendMessage(m.chat, {
                         text: fmt('BOT MODE', [
                             `Switched to ${MODES[input].emoji} ${MODES[input].label}`,

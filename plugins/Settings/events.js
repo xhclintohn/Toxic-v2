@@ -7,6 +7,7 @@ export default async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
     const jid = m.chat;
 
     const formatStylishReply = (message) => {
@@ -16,7 +17,7 @@ export default async (context) => {
 
     try {
       if (!jid.endsWith('@g.us')) {
-        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("Yo, dumbass! 😈 This command only works in groups, not your sad DMs. 🖕") },
@@ -36,11 +37,13 @@ export default async (context) => {
       const value = args[0]?.toLowerCase();
       let groupSettings = await getGroupSettings(jid);
       console.log('Toxic-MD: Group settings for', jid, ':', groupSettings);
-      let isEnabled = groupSettings?.events === true || groupSettings?.events === 'true';
+      let isEnabled = groupSettings?.events === true || groupSettings?.events === 1;
 
       if (value === 'on' || value === 'off') {
         const action = value === 'on';
         if (isEnabled === action) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+
           return await client.sendMessage(
             m.chat,
             {
@@ -53,7 +56,7 @@ export default async (context) => {
         }
 
         await updateGroupSetting(jid, 'events', action);
-        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         return await client.sendMessage(
           m.chat,
           {
@@ -95,6 +98,7 @@ export default async (context) => {
       );
       await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error('Toxic-MD: Error in events.js:', error.stack);
       await client.sendMessage(
         m.chat,

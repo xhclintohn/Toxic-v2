@@ -6,6 +6,7 @@ export default async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, args, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         const fmt = (msg) => `╭───(    TOXIC-MD    )───\n├───≫ GROUP ADD ≪───\n├ \n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
         const options = ['all', 'contacts', 'contact_blacklist', 'none'];

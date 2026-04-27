@@ -12,6 +12,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
     run: async (context) => {
       const { client, m, totalCommands, mode, pict, fakeQuoted } = context;
       const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
       const botname = '𝐓𝐨𝐱𝐢𝐜-𝐌𝐃';
 
       const settings = await getSettings();

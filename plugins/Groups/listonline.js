@@ -7,6 +7,7 @@ export default {
     run: async (context) => {
         const { client, m, isGroup } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         const _isGroup = isGroup || m.isGroup || m.chat?.endsWith('@g.us');
         if (!_isGroup) {
             return client.sendMessage(m.chat, {
@@ -14,7 +15,7 @@ export default {
             }, { quoted: fq });
         }
         try {
-            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
             const meta = await client.groupMetadata(m.chat);
             const participants = meta.participants || [];
 

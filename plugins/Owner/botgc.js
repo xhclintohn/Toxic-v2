@@ -5,6 +5,7 @@ export default async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, text, Owner } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
   try {
 
@@ -14,7 +15,7 @@ export default async (context) => {
           .map((entry) => entry[1]);
       let anaa = groupzs.map((v) => v.id);
       let jackhuh = `╭───(    TOXIC-MD    )───\n├───≫ BOT GROUPS ≪───\n├ \n`
-      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
       const promises = anaa.map((i) => {
         return new Promise((resolve) => {
           client.groupMetadata(i).then((metadat) => {

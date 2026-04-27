@@ -9,8 +9,10 @@ export default {
         await middleware(context, async () => {
             const { client, m, args } = context;
             const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
             if (!m.quoted) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 return m.reply('╭───(    TOXIC-MD    )───\n├───≥ PIN ≤───\n├ \n├ Quote a message to pin it,\n├ you absolute muppet.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             }
 
@@ -23,10 +25,11 @@ export default {
             };
 
             try {
-                await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
                 await client.pinMessage(m.chat, messageKey, isUnpin ? 0 : 1);
                 await m.reply(`╭───(    TOXIC-MD    )───\n├───≥ ${isUnpin ? 'UNPINNED' : 'PINNED'} ≤───\n├ \n├ Message ${isUnpin ? 'unpinned' : 'pinned'} successfully.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
             } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 console.error('[PIN ERROR]', error?.message || error);
                 const msg = error?.message || String(error);
                 const isAuth = msg.includes('forbidden') || msg.includes('not-authorized') || msg.includes('403');

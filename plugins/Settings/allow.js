@@ -15,6 +15,7 @@ export default {
         await ownerMiddleware(context, async () => {
             const { client, m, args, prefix } = context;
             const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
             const fmt = (title, lines) => {
                 const body = (Array.isArray(lines) ? lines : [lines]).map(l => `├ ${l}`).join('\n');

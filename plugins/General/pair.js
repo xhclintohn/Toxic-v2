@@ -34,6 +34,7 @@ export default {
     run: async (context) => {
         const { client, m, text, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         try {
             if (!text) {
@@ -141,6 +142,7 @@ export default {
                 await client.relayMessage(m.chat, ctaMsg.message, { messageId: ctaMsg.key.id });
 
             } catch (btnErr) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 await client.sendMessage(m.chat, {
                     text: `╭───(    TOXIC-MD    )───\n├───≫ Pᴀɪʀɪɴɢ Cᴏᴅᴇ ≪───\n├ \n├ Number: ${number}\n├ Code: *${formattedCode}*\n├ \n├ Copy the code above and paste\n├ it in your WhatsApp linked\n├ devices section. Hurry up,\n├ it expires quick.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 }, { quoted: fq });

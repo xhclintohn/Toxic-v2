@@ -18,6 +18,7 @@ export default {
       const command = args[1];
       await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ BUTTON ADDED ≪───\n├ \n├ Added button "${buttonName}"\n├ for command "${command}"\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error(`AddButton error: ${error.stack}`);
       await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Error adding custom button.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
     }

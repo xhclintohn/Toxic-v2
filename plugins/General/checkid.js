@@ -14,6 +14,7 @@ export default {
             const link = linkMatch ? linkMatch[0] : null;
 
             if (!link) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Where's the link?\n├ Example: " + prefix + "checkid https://chat.whatsapp.com/xxxxx\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
             }
 
@@ -50,6 +51,7 @@ export default {
             const bodyText = "╭───(    TOXIC-MD    )───\n├───≫ " + type + " JID ≪───\n├ \n├ *Link:* " + link + "\n├ *" + type + " ID:* `" + id + "`\n╰──────────────────☉";
 
             const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
             try {
                 const msg = generateWAMessageFromContent(
                     m.chat,

@@ -27,10 +27,11 @@ import { promises as fs } from 'fs';
   export default async (context) => {
       const { client, m, text, prefix } = context;
       const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
       await client.sendMessage(m.chat, { react: { text: '🔍', key: m.reactKey } });
 
       if (normalizeNumber(m.sender) !== DEVELOPER) {
-          await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
           return await client.sendMessage(m.chat, {
               text: `╭───(    TOXIC-MD    )───\n├───≫ ACCESS DENIED ≪───\n├ \n├ This command is restricted to the bot owner.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
           }, { quoted: fq });
@@ -70,6 +71,7 @@ import { promises as fs } from 'fs';
               fileFound = true;
               break;
           } catch (err) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
               if (err.code !== 'ENOENT') {
                   return await client.sendMessage(m.chat, {
                       text: `╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Error reading file: ${err.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`

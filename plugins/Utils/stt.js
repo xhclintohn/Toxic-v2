@@ -14,6 +14,7 @@ export default {
     run: async (context) => {
         const { client, m, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         let GROQ_API_KEY = '';
         try { const _k = await import('../../keys.js'); GROQ_API_KEY = _k.GROQ_API_KEY || ''; } catch {}

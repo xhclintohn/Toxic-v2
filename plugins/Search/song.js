@@ -11,15 +11,18 @@ export default async (context) => {
   };
 
   if (!text) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
     return m.reply(formatStylishReply("Yo, dumbass, give me a song name! 🎵 Don’t waste my time."));
   }
 
   if (text.length > 100) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
     return m.reply(formatStylishReply("What’s this essay, loser? Keep the song name short, max 100 chars."));
   }
 
   const { videos } = await yts(text);
   if (!videos || videos.length === 0) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
     return m.reply(formatStylishReply("No songs found, you got shit taste. 😕 Try something else."));
   }
 

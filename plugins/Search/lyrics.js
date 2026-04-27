@@ -5,6 +5,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 export default async (context) => {
   const { client, m, text } = context;
   const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
   if (!text) {
     return client.sendMessage(m.chat, {
@@ -66,6 +67,7 @@ export default async (context) => {
       await client.sendMessage(m.chat, { text: bodyText }, { quoted: fq });
     }
   } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
     await client.sendMessage(m.chat, {
       text: `╭───(    TOXIC-MD    )───\n├───≫ LYRICS ERROR ≪───\n├ \n├ Can't get lyrics for "${text}". Shit broke.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
     }, { quoted: fq });

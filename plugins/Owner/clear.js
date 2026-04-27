@@ -10,6 +10,7 @@ export default async (context) => {
         if (!m?.chat) return;
 
         if (m.chat.endsWith('@broadcast') || m.chat.endsWith('@newsletter')) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return m.reply('╭───(    TOXIC-MD    )───\n├ \n├ Cannot clear this type of chat.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
 
@@ -22,6 +23,7 @@ export default async (context) => {
             await client.chatModify({ delete: true, lastMessages }, m.chat);
             await m.reply('╭───(    TOXIC-MD    )───\n├───≥ CLEARED ≤───\n├ \n├ Chat cleared.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         } catch (err) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             if (err?.message?.includes('myAppStateKey') || err?.output?.statusCode === 404) {
                 return m.reply('╭───(    TOXIC-MD    )───\n├───≥ NOT READY ≤───\n├ \n├ App state not fully synced yet.\n├ Wait a minute then try again.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             }

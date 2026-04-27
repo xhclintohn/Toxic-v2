@@ -65,6 +65,7 @@ export default {
   run: async (context) => {
     const { client, m, text, prefix } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     if (!text) {
       const example = 'Toxic';
@@ -117,6 +118,7 @@ export default {
       await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
 
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       await client.sendMessage(m.chat, {
         text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├\n├ Failed to apply fancy style.\n├ Try again or use a different number.\n╰──────────────────☉`
       }, { quoted: fq });

@@ -7,6 +7,7 @@ export default async (context) => {
   await ownerMiddleware(context, async () => {
     const { client, m, args, prefix } = context;
     const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     const formatStylishReply = (message) => {
       return `╭───(    TOXIC-MD    )───\n├ ${message}\n╰──────────────────☉
@@ -16,7 +17,7 @@ export default async (context) => {
     try {
       const settings = await getSettings();
       if (!settings || Object.keys(settings).length === 0) {
-        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply("Database is fucked, no settings found. Fix it, loser.") },
@@ -29,6 +30,8 @@ export default async (context) => {
       if (value === 'on' || value === 'off') {
         const action = value === 'on';
         if (settings.startmessage === action) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+
           return await client.sendMessage(
             m.chat,
             { text: formatStylishReply(`Start message is already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time. 😈`) },
@@ -37,7 +40,7 @@ export default async (context) => {
         }
 
         await updateSetting('startmessage', action);
-        await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         return await client.sendMessage(
           m.chat,
           { text: formatStylishReply(`Start message ${value.toUpperCase()} activated! 🔥 ${action ? 'Welcome messages will be sent on connection! 🎉' : 'No more annoying welcome messages, you antisocial prick! 🚫'}`) },
@@ -73,6 +76,7 @@ export default async (context) => {
       );
       await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       await client.sendMessage(
         m.chat,
         { text: formatStylishReply("Shit broke, couldn't mess with start message. Database or something's fucked. Try later.") },

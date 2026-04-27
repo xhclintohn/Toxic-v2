@@ -8,6 +8,7 @@ export default {
     run: async (context) => {
         const { client, m, text, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         const box = (lines) => {
             const body = (Array.isArray(lines) ? lines : [lines]).map(l => `├ ${l}`).join('\n');

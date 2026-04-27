@@ -13,6 +13,7 @@ const commandQueue = queue(async (task, callback) => {
     try {
         await task.run(task.context);
     } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         console.error(`Sticker error: ${error.message}`);
     }
     callback();
@@ -91,6 +92,7 @@ export default async (context) => {
                 if (mediaPath !== tempFile) await fs.unlink(tempFile).catch(() => {});
 
             } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 console.error(`Sticker error: ${error.message}`);
                 await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
                 await m.reply('╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Error while creating sticker.\n├ Try again, you failure.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');

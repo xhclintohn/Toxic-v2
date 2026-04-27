@@ -7,6 +7,7 @@ export default {
     run: async (context) => {
         const { client, m, text } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         const count = Math.min(parseInt(text || '1') || 1, 10);
         const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * 6) + 1);
         const total = rolls.reduce((a, b) => a + b, 0);

@@ -15,6 +15,7 @@ export default {
     run: async (context) => {
         const { client, m, prefix, packname, author } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         const text = m.body.replace(new RegExp(`^${prefix}(bratvid|bratvideo|bratanimated)\\s*`, 'i'), '').trim();
 

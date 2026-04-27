@@ -21,6 +21,7 @@ export default async (context) => {
                     await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                 await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ UPDATED ≪───\n├ \n├ Group name set to "${newText}".\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
                 } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                     await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Failed to update group name.\n├ Make sure I'm an admin.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
                 }
                 break;
@@ -33,6 +34,7 @@ export default async (context) => {
                     await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                 await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ UPDATED ≪───\n├ \n├ Group description updated.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
                 } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                     await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Couldn't update the description.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
                 }
                 break;
@@ -47,6 +49,7 @@ export default async (context) => {
                     await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                 await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ UPDATED ≪───\n├ \n├ Group editing is now\n├ ${restrict ? 'locked to admins only' : 'open to all members'}.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
                 } catch (error) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                     await client.sendMessage(m.chat, { text: `╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Failed to update group settings.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` }, { quoted: fq });
                 }
                 break;

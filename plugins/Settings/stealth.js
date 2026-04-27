@@ -7,6 +7,7 @@ export default async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, args, prefix } = context;
         const fq = getFakeQuoted(m);
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         const fmt = (msg) => `╭───(    TOXIC-MD    )───\n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
@@ -17,21 +18,23 @@ export default async (context) => {
 
             if (value === 'on') {
                 if (isEnabled) {
-                    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                     return await client.sendMessage(m.chat, { text: fmt('Stealth Mode already ON, genius. 👻 Bot auto-deletes commands + replies after 8s.') }, { quoted: fq });
                 }
                 await updateSetting('stealth', true);
-                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                 return await client.sendMessage(m.chat, { text: fmt('Stealth Mode: *ON 👻* — commands vanish after 8s. Ghost mode activated.') }, { quoted: fq });
             }
 
             if (value === 'off') {
                 if (!isEnabled) {
-                    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                     return await client.sendMessage(m.chat, { text: fmt('Stealth Mode already OFF, clown. 💡 Messages stay.') }, { quoted: fq });
                 }
                 await updateSetting('stealth', false);
-                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                 return await client.sendMessage(m.chat, { text: fmt('Stealth Mode: *OFF 💡* — messages stick around like an ex.') }, { quoted: fq });
             }
 
@@ -61,7 +64,8 @@ export default async (context) => {
             );
             await client.relayMessage(m.chat, _stealthMsg.message, { messageId: _stealthMsg.key.id });
         } catch (err) {
-            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
             await client.sendMessage(m.chat, { text: fmt(`Crashed. 💀 Error: ${err.message}`) }, { quoted: fq });
         }
     });
