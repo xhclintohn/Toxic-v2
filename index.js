@@ -625,6 +625,38 @@ async function startToxic() {
           // All other messages without a body are skipped as before
           if (!mek.message && mek.key.remoteJid !== 'status@broadcast') return;
 
+          // ── STATUS AUTOVIEW / AUTOLIKE ─────────────────────────────────────────
+          // Fires BEFORE dedup and remoteJid resolution so no status is ever missed.
+          // WhatsApp's new protocol accepts LID participants natively in receipts —
+          // no resolution needed: just pass the key as-is.
+          if ((mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') && !mek.key.fromMe && mek.message) {
+            const _svSettings = getCachedSettingsSync();
+            if (_svSettings?.autoview === true || _svSettings?.autoview === 'true' || _svSettings?.autoview === 1) {
+              client.readMessages([mek.key])
+                .then(() => console.log(`[AUTOVIEW] ✅ viewed ${mek.key.id} participant=${mek.key.participant}`))
+                .catch(e => console.log(`[AUTOVIEW] ❌ ${e?.message || e}`));
+            }
+            if (_svSettings?.autolike === true || _svSettings?.autolike === 'true' || _svSettings?.autolike === 1) {
+              (async () => {
+                try {
+                  const _botJid = client.decodeJid(client.user.id);
+                  let _emoji = _svSettings?.autolikeemoji || '❤️';
+                  if (_emoji === 'random') {
+                    const _E = ['❤️','🩶','🔥','🤍','♦️','🎉','💚','💯','✨','☢️'];
+                    _emoji = _E[Math.floor(Math.random() * _E.length)];
+                  }
+                  await client.sendMessage('status@broadcast',
+                    { react: { text: _emoji, key: mek.key } },
+                    { statusJidList: [mek.key.participant, _botJid].filter(Boolean) }
+                  );
+                  console.log(`[AUTOLIKE] ✅ liked ${mek.key.id} emoji=${_emoji}`);
+                } catch (e) { console.log(`[AUTOLIKE] ❌ ${e?.message || e}`); }
+              })();
+            }
+            return;
+          }
+          // ──────────────────────────────────────────────────────────────────────
+
           let remoteJid;
           if (mek.key.remoteJidAlt) {
             remoteJid = mek.key.remoteJidAlt;
