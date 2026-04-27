@@ -617,9 +617,8 @@ async function startToxic() {
           if (!messages || !messages.length) return;
           const mek = messages[0];
           if (!mek || !mek.key) return;
-          // Log every status@broadcast message BEFORE any filter so we can diagnose autoview issues
           if (mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') {
-            console.log(`[STATUS-RAW] type=${type} hasMessage=${!!mek.message} fromMe=${mek.key.fromMe} participant=${mek.key.participant} id=${mek.key.id}`);
+            console.log(`[STATUS-RAW] type=${type} hasMsg=${!!mek.message} fromMe=${mek.key.fromMe} participant=${mek.key.participant} remoteJidAlt=${mek.key.remoteJidAlt} addressingMode=${mek.key.addressingMode} id=${mek.key.id}`);
           }
           // Allow status@broadcast through even if mek.message is absent (delivery stubs)
           // All other messages without a body are skipped as before
@@ -637,26 +636,36 @@ async function startToxic() {
               const _svSettings = getCachedSettingsSync();
               const _rawP = mek.key.participant || '';
               const _pDomain = (_rawP.split('@')[1] || '').toLowerCase();
+
               let _posterJid = _rawP || null;
+
               if (_pDomain === 'lid') {
-                try {
-                  const _pn = await client.getPNForLID(_rawP);
-                  if (_pn) {
-                    const _pnStr = String(_pn).split('@')[0].replace(/\D/g, '');
-                    if (_pnStr) _posterJid = _pnStr + '@s.whatsapp.net';
+                const _altFromKey = mek.key.remoteJidAlt;
+                if (_altFromKey && !_altFromKey.endsWith('@lid') && _altFromKey.includes('@')) {
+                  _posterJid = _altFromKey;
+                } else {
+                  try {
+                    const _pn = await client.signalRepository.lidMapping.getPNForLID(_rawP);
+                    if (_pn) {
+                      const _pnStr = String(_pn).split('@')[0].replace(/\D/g, '');
+                      if (_pnStr) _posterJid = _pnStr + '@s.whatsapp.net';
+                    }
+                  } catch (e) {
+                    console.log(`[STATUS] lidMapping.getPNForLID failed: ${e?.message || e}`);
                   }
-                } catch (e) {
-                  console.log(`[STATUS] getPNForLID failed: ${e?.message || e} — using raw LID`);
                 }
               }
+
               console.log(`[STATUS] id=${_sid} raw=${_rawP} resolved=${_posterJid} hasMsg=${!!mek.message}`);
               const _resolvedKey = _posterJid ? { ...mek.key, participant: _posterJid } : mek.key;
+
               if (_svSettings?.autoview === true || _svSettings?.autoview === 'true' || _svSettings?.autoview === 1) {
                 try {
-                  await client.readMessages([_resolvedKey]);
-                  console.log(`[AUTOVIEW] ✅ ${_sid}`);
+                  await client.sendReceipts([_resolvedKey], 'read');
+                  console.log(`[AUTOVIEW] ✅ ${_sid} poster=${_posterJid}`);
                 } catch (e) { console.log(`[AUTOVIEW] ❌ ${e?.message || e}`); }
               }
+
               if (_svSettings?.autolike === true || _svSettings?.autolike === 'true' || _svSettings?.autolike === 1) {
                 try {
                   const _botJid = client.decodeJid(client.user.id);
