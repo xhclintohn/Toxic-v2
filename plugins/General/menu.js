@@ -118,14 +118,7 @@ export default {
                                 })
                             }
                         ],
-                        messageParamsJson: JSON.stringify({
-                            bottom_sheet: {
-                                in_thread_buttons_limit: 2,
-                                divider_indices: [1, 2],
-                                list_title: 'Select Command',
-                                button_title: 'Toxic-MD',
-                            },
-                        })
+                        messageParamsJson: JSON.stringify({})
                     }
                 }
             }), { quoted: fq, userJid: client.user.id });
