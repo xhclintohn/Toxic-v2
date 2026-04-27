@@ -587,7 +587,7 @@ export default async (client, m, chatUpdate, store) => {
                 let deletedMessage = null;
                 let chatJidToSearch = normalizedDeletedJid;
                 // 1) SQL store
-                const sqlRow = msgStore.getMessage(deletedMessageId);
+                const sqlRow = await msgStore.getMessage(deletedMessageId);
                 if (sqlRow) {
                     deletedMessage = { key: sqlRow.message?.key || { id: deletedMessageId, remoteJid: sqlRow.jid, participant: sqlRow.sender }, message: sqlRow.message?.message || {}, pushName: sqlRow.message?.pushName || '' };
                     chatJidToSearch = sqlRow.jid;

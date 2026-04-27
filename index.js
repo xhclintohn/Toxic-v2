@@ -234,7 +234,7 @@ async function resolveLidForStatus(sock, rawLidJid) {
     const variants = [rawLidJid, `${lidNum}:0@lid`, `${lidNum}:1@lid`, `${lidNum}@s.whatsapp.net`];
     for (const v of variants) {
       try {
-        const pn = sock.signalRepository.lidMapping.getPNForLID(v);
+        const pn = await sock.signalRepository.lidMapping.getPNForLID(v);
         if (pn && typeof pn === 'string') {
           const n = pn.split('@')[0].split(':')[0].replace(/\D/g, '');
           if (n && n.length >= 7 && n !== lidNum) {
