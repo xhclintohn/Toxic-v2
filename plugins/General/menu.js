@@ -15,8 +15,7 @@ export default {
         const { client, m, mode, pict, botname, prefix } = context;
         const fq = getFakeQuoted(m);
 
-        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-        await client.sendMessage(m.chat, { react: { text: '🤖', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '🤖', key: m.key } });
 
         const bodyText = m.body || '';
         const cleanText = bodyText.trimStart().slice(prefix.length).trimStart();
@@ -120,12 +119,6 @@ export default {
                             }
                         ],
                         messageParamsJson: JSON.stringify({
-                            limited_time_offer: {
-                                text: 'Toxic-MD',
-                                url: 'https://github.com/xhclintohn/Toxic-MD',
-                                copy_code: 'TOXIC',
-                                expiration_time: Date.now() * 1000,
-                            },
                             bottom_sheet: {
                                 in_thread_buttons_limit: 2,
                                 divider_indices: [1, 2],
