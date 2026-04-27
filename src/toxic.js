@@ -437,6 +437,10 @@ export default async (client, m, chatUpdate, store) => {
             if (Owner) isAdmin = true;
         }
 
+        // Assign computed admin status to m so features can access them
+        m.isAdmin = isAdmin;
+        m.isBotAdmin = isBotAdmin;
+
         if (!m.isGroup && m.quoted?.sender && m.quoted.sender.endsWith('@lid')) {
             const _dmLidNum = m.quoted.sender.split('@')[0].split(':')[0];
             if (globalThis.lidPhoneCache) {

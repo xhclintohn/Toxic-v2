@@ -421,7 +421,7 @@ async function startToxic() {
         client.ev.buffer = () => {};
     }
 
-    client.sessionConfig = { autoViewStatus: settingss?.autoview === true || settingss?.autoview === 'true' };
+    client.sessionConfig = { autoViewStatus: settingss?.autoview === true || settingss?.autoview === 'true' || settingss?.autoview === 1 };
     store.bind(client.ev);
 
     if (!client.pinMessage) {
@@ -544,12 +544,12 @@ async function startToxic() {
           const settings = getCachedSettingsSync();
           getCachedSettings().catch(() => {});
           const { autolike, autoview, presence, autolikeemoji } = settings;
-          try { client.sessionConfig.autoViewStatus = autoview === true || autoview === 'true'; } catch {}
+          try { client.sessionConfig.autoViewStatus = autoview === true || autoview === 'true' || autoview === 1; } catch {}
           if (remoteJid === "status@broadcast") {
             (async () => {
               try {
                 await handleAutoViewStatus(client, mek);
-                if (autolike === true || autolike === 'true') {
+                if (autolike === true || autolike === 'true' || autolike === 1) {
                   const nickk = client.decodeJid(client.user.id);
                   const posterJid = resolveStatusPosterJid(mek.key);
                   if (posterJid) {
@@ -608,7 +608,7 @@ async function startToxic() {
               const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: cleanSender, from: remoteJid, chat: remoteJid, isGroup: remoteJid.endsWith('@g.us') };
               toxic(client, listM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC LIST]:', e.message));
               setImmediate(() => {
-                  if (settings?.autoread === true || settings?.autoread === 'true') { client.readMessages([mek.key]).catch(() => {}); }
+                  if (settings?.autoread === true || settings?.autoread === 'true' || settings?.autoread === 1) { client.readMessages([mek.key]).catch(() => {}); }
                   if (remoteJid.endsWith('@s.whatsapp.net') && presence && presence !== 'off') {
                     try {
                       if (presence === 'online') client.sendPresenceUpdate('available', remoteJid).catch(() => {});
@@ -628,7 +628,7 @@ async function startToxic() {
           m.chat = remoteJid;
           toxic(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
               setImmediate(() => {
-                  if (settings?.autoread === true || settings?.autoread === 'true') { client.readMessages([mek.key]).catch(() => {}); }
+                  if (settings?.autoread === true || settings?.autoread === 'true' || settings?.autoread === 1) { client.readMessages([mek.key]).catch(() => {}); }
                   if (remoteJid.endsWith('@s.whatsapp.net') && presence && presence !== 'off') {
                     try {
                       if (presence === 'online') client.sendPresenceUpdate('available', remoteJid).catch(() => {});
@@ -644,7 +644,7 @@ async function startToxic() {
         try {
           if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
             const settings = await getCachedSettings();
-            client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true';
+            client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true' || settings?.autoview === 1;
             handleAutoViewStatus(client, { key: update.key }).catch(() => {});
           }
         } catch (e) {}

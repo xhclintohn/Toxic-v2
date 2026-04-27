@@ -1,4 +1,5 @@
 import { getGroupSettings, getSudoUsers, resetWarn } from '../database/config.js';
+import antiforeign from '../features/antiforeign.js';
 
 const DEVELOPER_NUMBER = "254114885159";
 
@@ -48,6 +49,9 @@ const Events = async (client, event, pict) => {
         );
 
         if (event.action === "add") {
+            // Run antiforeign enforcement before welcome/other handlers
+            try { await antiforeign(client, event); } catch {}
+
             for (const participant of participants) {
                 if (isDeveloper(participant)) {
                     try {

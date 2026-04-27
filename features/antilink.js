@@ -39,10 +39,23 @@ export default async (client, m) => {
         await client.sendMessage(m.chat, { delete: { remoteJid: m.chat, fromMe: false, id: m.key.id, participant: m.sender || m.key.participant } });
 
         const sender = normalizeJid(m.sender);
+        const username = sender.split('@')[0];
         const reason = isChannelForward ? '📡 Channel forward' : '🔗 Link detected';
+
+        // KICK mode: instantly remove without warning
+        if (antilinkMode === 'kick') {
+            try {
+                await client.groupParticipantsUpdate(m.chat, [sender], 'remove');
+                await client.sendMessage(m.chat, {
+                    text: `╭───( *Toxic-MD Antilink* )───\n├ 🚨 @${username} KICKED!\n├ Reason: ${reason}\n├ Kick mode — zero tolerance. 😈\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                    mentions: [sender]
+                });
+            } catch {}
+            return;
+        }
+
         const MAX_WARNS = await getWarnLimit(m.chat);
         const newCount = await addWarn(m.chat, sender);
-        const username = sender.split('@')[0];
         const remaining = MAX_WARNS - newCount;
 
         if (newCount >= MAX_WARNS) {

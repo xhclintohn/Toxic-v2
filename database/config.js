@@ -120,7 +120,8 @@ let Database = null;
           jid TEXT PRIMARY KEY, antidelete INTEGER DEFAULT 1, gcpresence INTEGER DEFAULT 0,
           events INTEGER DEFAULT 0, antidemote INTEGER DEFAULT 0, antipromote INTEGER DEFAULT 0,
           antilink TEXT DEFAULT 'off', antistatusmention TEXT DEFAULT 'off', antitag INTEGER DEFAULT 0,
-          welcome INTEGER DEFAULT 0, goodbye INTEGER DEFAULT 0, warn_limit INTEGER DEFAULT 3
+          welcome INTEGER DEFAULT 0, goodbye INTEGER DEFAULT 0, warn_limit INTEGER DEFAULT 3,
+          antiforeign INTEGER DEFAULT 0
       );
       CREATE TABLE IF NOT EXISTS conversation_history (
           id INTEGER PRIMARY KEY AUTOINCREMENT, num TEXT NOT NULL, role TEXT NOT NULL,
@@ -146,7 +147,8 @@ let Database = null;
           jid TEXT PRIMARY KEY, antidelete INTEGER DEFAULT 1, gcpresence INTEGER DEFAULT 0,
           events INTEGER DEFAULT 0, antidemote INTEGER DEFAULT 0, antipromote INTEGER DEFAULT 0,
           antilink TEXT DEFAULT 'off', antistatusmention TEXT DEFAULT 'off', antitag INTEGER DEFAULT 0,
-          welcome INTEGER DEFAULT 0, goodbye INTEGER DEFAULT 0, warn_limit INTEGER DEFAULT 3
+          welcome INTEGER DEFAULT 0, goodbye INTEGER DEFAULT 0, warn_limit INTEGER DEFAULT 3,
+          antiforeign INTEGER DEFAULT 0
       )`,
       `CREATE TABLE IF NOT EXISTS conversation_history (
           id SERIAL PRIMARY KEY, num TEXT NOT NULL, role TEXT NOT NULL,
@@ -174,6 +176,8 @@ let Database = null;
       _db.pragma('busy_timeout = 5000');
       _db.pragma('mmap_size = 268435456');
       _db.exec(SQLITE_SCHEMA);
+      // Migrate existing SQLite DBs: add missing columns
+      try { _db.prepare('ALTER TABLE group_settings ADD COLUMN antiforeign INTEGER DEFAULT 0').run(); } catch {}
       _backend = 'sqlite';
       console.log(`✅ [DB] Using SQLite (${_sqliteDriver})`);
   }
@@ -197,6 +201,11 @@ let Database = null;
               new Promise((_, rej) => setTimeout(() => rej(new Error('PG connect timeout')), 20000))
           ]);
           for (const sql of PG_SCHEMA) { try { await pool.query(sql); } catch {} }
+          // Migrate existing DBs: add missing columns
+          const PG_MIGRATIONS = [
+              `ALTER TABLE group_settings ADD COLUMN IF NOT EXISTS antiforeign INTEGER DEFAULT 0`,
+          ];
+          for (const sql of PG_MIGRATIONS) { try { await pool.query(sql); } catch {} }
           setInterval(() => { pool.query('SELECT 1').catch(() => {}); }, 3 * 60 * 1000);
           _pg = pool;
           _backend = 'pg';
@@ -293,10 +302,12 @@ let Database = null;
           antidelete: !!row.antidelete, gcpresence: !!row.gcpresence, events: !!row.events,
           antidemote: !!row.antidemote, antipromote: !!row.antipromote, antilink: row.antilink || 'off',
           antistatusmention: row.antistatusmention || 'off', antitag: !!row.antitag,
-          welcome: !!row.welcome, goodbye: !!row.goodbye, warn_limit: row.warn_limit || 3
+          welcome: !!row.welcome, goodbye: !!row.goodbye, warn_limit: row.warn_limit || 3,
+          antiforeign: !!row.antiforeign
       } : {
           antidelete: true, gcpresence: false, events: false, antidemote: false, antipromote: false,
-          antilink: 'off', antistatusmention: 'off', antitag: false, welcome: false, goodbye: false, warn_limit: 3
+          antilink: 'off', antistatusmention: 'off', antitag: false, welcome: false, goodbye: false,
+          warn_limit: 3, antiforeign: false
       };
       cache.groupSettings.set(jid, { data, time: Date.now() });
       return data;
@@ -309,7 +320,7 @@ let Database = null;
           await _pg.query('INSERT INTO group_settings (jid) VALUES ($1) ON CONFLICT (jid) DO NOTHING', [jid]);
           await _pg.query(`UPDATE group_settings SET ${key} = $1 WHERE jid = $2`, [_sv, jid]);
       } else if (_backend === 'memory') {
-          if (!_mem.groups.has(jid)) _mem.groups.set(jid, { jid, antidelete: 1, gcpresence: 0, events: 0, antidemote: 0, antipromote: 0, antilink: 'off', antistatusmention: 'off', antitag: 0, welcome: 0, goodbye: 0, warn_limit: 3 });
+          if (!_mem.groups.has(jid)) _mem.groups.set(jid, { jid, antidelete: 1, gcpresence: 0, events: 0, antidemote: 0, antipromote: 0, antilink: 'off', antistatusmention: 'off', antitag: 0, welcome: 0, goodbye: 0, warn_limit: 3, antiforeign: 0 });
           const g = _mem.groups.get(jid);
           g[key] = _sv;
       } else {
