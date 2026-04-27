@@ -48,28 +48,28 @@ export default async (context) => {
       const _msg = generateWAMessageFromContent(
         m.chat,
         {
-            interactiveMessage: {
-                body: { text: formatStylishReply(`Presence is ${settings.presence ? settings.presence.toUpperCase() },
-                footer: { text: '' },
-                nativeFlowMessage: {
-                    buttons: [
-                        {
-                            name: 'single_select',
-                            buttonParamsJson: JSON.stringify({
-                                title: 'Choose an option',
-                                sections: [{
-                                    rows: [
-                                                                                                { title: 'ONLINE 🟢', id: `${prefix}presence online` },
-                                                        { title: 'OFFLINE ⚫', id: `${prefix}presence offline` },
-                                                        { title: 'RECORDING 🎙️', id: `${prefix}presence recording` },
-                                                        { title: 'TYPING ⌨️', id: `${prefix}presence typing` }
-                                    ]
-                                }]
-                            })
-                        }
-                    ]
+          interactiveMessage: {
+            body: { text: formatStylishReply(`Presence is currently *${settings.presence ? settings.presence.toUpperCase() : 'NOT SET'}*`) },
+            footer: { text: '' },
+            nativeFlowMessage: {
+              buttons: [
+                {
+                  name: 'single_select',
+                  buttonParamsJson: JSON.stringify({
+                    title: 'Choose an option',
+                    sections: [{
+                      rows: [
+                        { title: 'ONLINE 🟢', id: `${prefix}presence online` },
+                        { title: 'OFFLINE ⚫', id: `${prefix}presence offline` },
+                        { title: 'RECORDING 🎙️', id: `${prefix}presence recording` },
+                        { title: 'TYPING ⌨️', id: `${prefix}presence typing` }
+                      ]
+                    }]
+                  })
                 }
+              ]
             }
+          }
         },
         { quoted: fq }
       );

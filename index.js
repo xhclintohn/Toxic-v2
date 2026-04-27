@@ -350,8 +350,9 @@ async function startToxic() {
       generateHighQualityLinkPreview: true,
       emitOwnEvents: true,
       fireInitQueries: true,
-      retryRequestDelayMs: 0,
-      maxMsgRetryCount: 2,
+      retryRequestDelayMs: 250,
+      maxMsgRetryCount: 5,
+      enableAutoSessionRecreation: true,
       getMessage: async (key) => {
         const msg = store.loadMessage(key.remoteJid, key.id);
         return msg?.message || undefined;
