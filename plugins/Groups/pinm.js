@@ -1,5 +1,4 @@
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
-import { proto } from '@whiskeysockets/baileys';
 
 export default {
   name: 'pinm',
@@ -35,16 +34,19 @@ export default {
     }
 
     try {
-      const quotedKey = m.quoted.key;
+      const messageKey = {
+        id: m.quoted.id,
+        remoteJid: m.chat,
+        participant: m.quoted.sender
+      };
 
-      await client.sendMessage(m.chat, {
-        pin: quotedKey,
-        type: proto.PinInChat.Type.PIN_FOR_ALL,
-        time: time
-      }, { quoted: fq });
+      // Use client.pinMessage — the correct Baileys API (sendMessage with top-level type/pin causes "Invalid media type")
+      // Args: (jid, key, pinType=1, durationSeconds)
+      await client.pinMessage(m.chat, messageKey, 1, time);
 
+      const durationLabel = time === 86400 ? '24 hours' : time === 604800 ? '7 days' : time === 2592000 ? '30 days' : `${time}s`;
       await client.sendMessage(m.chat, { 
-        text: `╭───(    TOXIC-MD    )───\n├ \n├ ✅ Message pinned successfully!\n├ Duration: ${time} seconds\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` 
+        text: `╭───(    TOXIC-MD    )───\n├ \n├ ✅ Message pinned successfully!\n├ Duration: ${durationLabel}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` 
       }, { quoted: fq });
 
     } catch (error) {

@@ -247,6 +247,22 @@ async function handleAutoViewStatus(sock, m) {
         }
       } catch {}
     }
+    // Try signal repository (synchronous, most reliable for fresh sessions)
+    if (participantJid === rawParticipant) {
+      try {
+        if (sock.signalRepository?.lidMapping?.getPNForLID) {
+          const pn = sock.signalRepository.lidMapping.getPNForLID(rawParticipant);
+          if (pn) {
+            const num = String(pn).split('@')[0].split(':')[0].replace(/[^0-9]/g, '');
+            if (num && num.length >= 7) {
+              participantJid = num + '@s.whatsapp.net';
+              lidPhoneCache.set(rawParticipant.split('@')[0].split(':')[0], num);
+              console.log(`[AUTOVIEW] LID resolved via signalRepo: ${rawParticipant} → ${participantJid}`);
+            }
+          }
+        }
+      } catch {}
+    }
     if (participantJid === rawParticipant) {
       console.log(`[AUTOVIEW] LID could not be resolved: ${rawParticipant} — readMessages may fail`);
     }
@@ -273,8 +289,8 @@ function resolveStatusPosterJid(key = {}) {
     // LID number is NOT the phone number — resolve from cache
     const cached = lidPhoneCache?.get(user);
     if (cached) return String(cached).replace(/\D/g, '') + '@s.whatsapp.net';
-    // No cached mapping yet — return LID as-is (autolike may fail for this user)
-    return user + '@' + server;
+    // No cache hit — return LID as-is, autolike will send to LID (WhatsApp sometimes handles it)
+    return rawParticipant;
   }
   return user + '@' + server;
 }
@@ -631,6 +647,7 @@ async function startToxic() {
             })();
             return;
           }
+          if (!mek.message) return; // Safety: catch any null message that slipped past earlier guards
           mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
           if (!mek.message) return;
           const isStealthOn = settings.stealth === 'true' || settings.stealth === true;

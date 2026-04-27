@@ -572,7 +572,8 @@ export default async (client, m, chatUpdate, store) => {
                     const deletedMessageId = deletedKey.id;
                     const deletedRemoteJid = deletedKey.remoteJid;
                     if (!deletedRemoteJid || deletedRemoteJid === 'status@broadcast' || deletedRemoteJid.includes('@broadcast') || deletedRemoteJid.includes('@newsletter')) return;
-                    const normalizedDeletedJid = deletedRemoteJid.includes('@lid') ? deletedRemoteJid.split('@')[0] + '@s.whatsapp.net' : deletedRemoteJid;
+                    // Properly resolve LID to phone JID using cache — naively using LID number as phone is WRONG
+                    const normalizedDeletedJid = deletedRemoteJid.includes('@lid') ? resolveLidToPhoneNumber(deletedRemoteJid) : deletedRemoteJid;
                     let deletedMessage = null;
                     let chatJidToSearch = normalizedDeletedJid;
                     const sqlRow = msgStore.getMessage(deletedMessageId);
@@ -597,8 +598,17 @@ export default async (client, m, chatUpdate, store) => {
                     }
                     if (deletedMessage) {
                         const botJid = client.decodeJid(client.user.id);
-                        const sender = client.decodeJid(deletedMessage.key.participant || deletedMessage.key.remoteJid);
-                        const deleter = m.key.participant ? m.key.participant.split('@')[0] : 'Unknown';
+                        // Resolve sender — may be a LID JID, convert to phone JID if possible
+                        let senderRaw = deletedMessage.key.participant || deletedMessage.key.remoteJid || '';
+                        if (senderRaw.endsWith('@lid')) senderRaw = resolveLidToPhoneNumber(senderRaw) || senderRaw;
+                        const sender = client.decodeJid(senderRaw);
+                        // Resolve deleter — may also be a LID JID
+                        let deleterRaw = m.key.participant || '';
+                        if (deleterRaw.endsWith('@lid')) {
+                            const resolved = resolveLidToPhoneNumber(deleterRaw);
+                            if (resolved && !resolved.endsWith('@lid')) deleterRaw = resolved;
+                        }
+                        const deleter = deleterRaw ? deleterRaw.split('@')[0].split(':')[0] : 'Unknown';
                         let groupName = 'Private Chat';
                         if (chatJidToSearch.endsWith('@g.us')) {
                             try { const gMeta = await fastGroupMetadata(client, chatJidToSearch); groupName = gMeta?.subject || 'Unknown Group'; } catch { groupName = 'Unknown Group'; }
