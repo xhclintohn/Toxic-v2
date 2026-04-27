@@ -633,21 +633,31 @@ async function startToxic() {
               global._statusSeen.add(_sid);
               if (global._statusSeen.size > 300) global._statusSeen.delete(global._statusSeen.values().next().value);
             }
-            const _svSettings = getCachedSettingsSync();
-            const _rawP = mek.key.participant || '';
-            const _pDomain = (_rawP.split('@')[1] || '').toLowerCase();
-            const _posterJid = _pDomain === 'lid'
-              ? _rawP.split('@')[0].split(':')[0] + '@s.whatsapp.net'
-              : (_rawP || null);
-            const _resolvedKey = _posterJid ? { ...mek.key, participant: _posterJid } : mek.key;
-            console.log(`[STATUS] id=${_sid} raw=${_rawP} resolved=${_posterJid} hasMsg=${!!mek.message}`);
-            if (_svSettings?.autoview === true || _svSettings?.autoview === 'true' || _svSettings?.autoview === 1) {
-              client.readMessages([_resolvedKey])
-                .then(() => console.log(`[AUTOVIEW] ✅ ${_sid}`))
-                .catch(e => console.log(`[AUTOVIEW] ❌ ${e?.message || e}`));
-            }
-            if (_svSettings?.autolike === true || _svSettings?.autolike === 'true' || _svSettings?.autolike === 1) {
-              (async () => {
+            (async () => {
+              const _svSettings = getCachedSettingsSync();
+              const _rawP = mek.key.participant || '';
+              const _pDomain = (_rawP.split('@')[1] || '').toLowerCase();
+              let _posterJid = _rawP || null;
+              if (_pDomain === 'lid') {
+                try {
+                  const _pn = await client.getPNForLID(_rawP);
+                  if (_pn) {
+                    const _pnStr = String(_pn).split('@')[0].replace(/\D/g, '');
+                    if (_pnStr) _posterJid = _pnStr + '@s.whatsapp.net';
+                  }
+                } catch (e) {
+                  console.log(`[STATUS] getPNForLID failed: ${e?.message || e} — using raw LID`);
+                }
+              }
+              console.log(`[STATUS] id=${_sid} raw=${_rawP} resolved=${_posterJid} hasMsg=${!!mek.message}`);
+              const _resolvedKey = _posterJid ? { ...mek.key, participant: _posterJid } : mek.key;
+              if (_svSettings?.autoview === true || _svSettings?.autoview === 'true' || _svSettings?.autoview === 1) {
+                try {
+                  await client.readMessages([_resolvedKey]);
+                  console.log(`[AUTOVIEW] ✅ ${_sid}`);
+                } catch (e) { console.log(`[AUTOVIEW] ❌ ${e?.message || e}`); }
+              }
+              if (_svSettings?.autolike === true || _svSettings?.autolike === 'true' || _svSettings?.autolike === 1) {
                 try {
                   const _botJid = client.decodeJid(client.user.id);
                   let _emoji = _svSettings?.autolikeemoji || '❤️';
@@ -661,8 +671,8 @@ async function startToxic() {
                   );
                   console.log(`[AUTOLIKE] ✅ ${_sid} emoji=${_emoji}`);
                 } catch (e) { console.log(`[AUTOLIKE] ❌ ${e?.message || e}`); }
-              })();
-            }
+              }
+            })();
             return;
           }
 
