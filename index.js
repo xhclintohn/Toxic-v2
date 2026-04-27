@@ -247,6 +247,23 @@ async function resolveLidForStatus(sock, rawLidJid) {
     }
   }
 
+  // Step 2.5: session file mapping written by Baileys (lid-mapping-<lid>_reverse.json → cleanJid)
+  try {
+    const revFile = path.join(sessionName, `lid-mapping-${lidNum}_reverse.json`);
+    if (fs.existsSync(revFile)) {
+      const raw = fs.readFileSync(revFile, 'utf-8');
+      const jid = JSON.parse(raw);
+      if (jid) {
+        const n = String(jid).split('@')[0].split(':')[0].replace(/\D/g, '');
+        if (n && n.length >= 7 && n !== lidNum) {
+          cacheLidPhone(lidNum, n);
+          console.log(`[LID] Session file: ${rawLidJid} → ${n}@s.whatsapp.net`);
+          return n + '@s.whatsapp.net';
+        }
+      }
+    }
+  } catch {}
+
   // Step 3: scan ALL groups for a participant with this LID — uses phoneNumber/id/pn fields
   // (same approach as isBotAdmin: pPhone = p.phoneNumber || p.phone_number || p.pn)
   try {

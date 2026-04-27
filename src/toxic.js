@@ -101,6 +101,22 @@ function resolveLidToPhoneNumber(lidJid) {
         const lidNumber = lidJid.split('@')[0].split(':')[0];
         const mapped = lidMappingCache.get(lidNumber) || (globalThis.lidPhoneCache && globalThis.lidPhoneCache.get(lidNumber));
         if (mapped) return mapped + '@s.whatsapp.net';
+        // Session file fallback: lid-mapping-<lid>_reverse.json → phone number
+        try {
+            const sessionDir = path.join(__dirname, '../Session');
+            const revFile = path.join(sessionDir, `lid-mapping-${lidNumber}_reverse.json`);
+            if (fs.existsSync(revFile)) {
+                const raw = fs.readFileSync(revFile, 'utf-8');
+                const jid = JSON.parse(raw);
+                if (jid) {
+                    const n = String(jid).split('@')[0].split(':')[0].replace(/\D/g, '');
+                    if (n && n.length >= 7 && n !== lidNumber) {
+                        if (globalThis.lidPhoneCache) globalThis.lidPhoneCache.set(lidNumber, n);
+                        return n + '@s.whatsapp.net';
+                    }
+                }
+            }
+        } catch {}
         return lidJid;
     } catch (e) {
         return lidJid;
@@ -410,14 +426,18 @@ export default async (client, m, chatUpdate, store) => {
             };
             const senderNum = _resolveNum(m.sender);
             const botNumP = _resolveNum(botNumber);
+            const _senderLidNum = m.sender?.endsWith('@lid') ? _lidNumFn(m.sender) : '';
             for (const p of participants) {
                 const pJid = p.id || p.jid || '';
                 const pLid = p.lid || '';
                 const pPhone = p.phoneNumber || p.phone_number || p.pn || '';
                 const pPn = pPhone ? String(pPhone).replace(/\D/g, '') : '';
                 const pNum = pPn || _resolveNum(pJid) || _resolveNum(pLid);
+                const pLidNum = pJid.endsWith('@lid') ? _lidNumFn(pJid) : (pLid ? _lidNumFn(pLid) : '');
                 const isAdminRole = p.admin === 'admin' || p.admin === 'superadmin';
-                if (isAdminRole && _numMatch(pNum, senderNum)) isAdmin = true;
+                const senderMatchPhone = _numMatch(pNum, senderNum);
+                const senderMatchLid = _senderLidNum && pLidNum && _senderLidNum === pLidNum;
+                if (isAdminRole && (senderMatchPhone || senderMatchLid)) isAdmin = true;
                 if (isAdminRole && _numMatch(pNum, botNumP)) isBotAdmin = true;
             }
             if (!isBotAdmin && m.isGroup && participants.length > 0) {
@@ -658,6 +678,7 @@ export default async (client, m, chatUpdate, store) => {
                         const rawMessage = deletedMessage.message || {};
                         const messageType = getMessageType(rawMessage);
                         const voMedia = isViewOnceMessage(rawMessage) ? getViewOnceMedia(rawMessage) : null;
+                        console.log(`[ANTIDELETE] Sending to ${botJid} | type=${messageType} | hasContent=${Object.keys(rawMessage).length > 0}`);
                         try {
                             if (voMedia) {
                                 const hdr = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉`;
@@ -719,7 +740,7 @@ export default async (client, m, chatUpdate, store) => {
                     } catch (error) { console.log('❌ [ANTIEDIT ERROR]:', error.message); }
                 }
             }
-        })().catch(() => {});
+        })().catch(e => console.log('[ANTIDELETE/ANTIEDIT OUTER]:', e?.message || e));
 
         if (cmd) {
             try {
