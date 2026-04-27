@@ -216,65 +216,100 @@ function invalidateSettingsCache() {
   try { invalidateSettings(); } catch (e) {}
 }
 
-async function handleAutoViewStatus(sock, m) {
-  if (!sock?.sessionConfig?.autoViewStatus) return;
-  if (!m?.key) return;
-  if (m.key.remoteJid !== 'status@broadcast') return;
+// Resolve a LID JID to a phone JID using every available method.
+// Same participant-field strategy as isBotAdmin (phoneNumber, id, pn fields).
+async function resolveLidForStatus(sock, rawLidJid) {
+  if (!rawLidJid || !rawLidJid.endsWith('@lid')) return rawLidJid;
+  const lidNum = rawLidJid.split('@')[0].split(':')[0];
 
-  // Resolve the participant JID — may be a LID that needs mapping to a phone JID
-  let participantJid = m.key.remoteJidAlt || m.key.participant || '';
-  const rawParticipant = participantJid;
+  // Step 1: in-memory cache (fastest, zero I/O)
+  const fromCache = lidPhoneCache?.get(lidNum);
+  if (fromCache) {
+    const n = String(fromCache).replace(/\D/g, '');
+    if (n && n !== lidNum) { console.log(`[LID] Cache hit: ${rawLidJid} → ${n}@s.whatsapp.net`); return n + '@s.whatsapp.net'; }
+  }
 
-  console.log(`[AUTOVIEW] Status received — id=${m.key.id} rawParticipant=${rawParticipant} fromMe=${m.key.fromMe}`);
-
-  if (participantJid && participantJid.endsWith('@lid')) {
-    const lidNum = participantJid.split('@')[0].split(':')[0];
-    // Try synchronous cache first
-    const cached = lidPhoneCache?.get(lidNum);
-    if (cached) {
-      participantJid = String(cached).replace(/\D/g, '') + '@s.whatsapp.net';
-      console.log(`[AUTOVIEW] LID resolved from cache: ${rawParticipant} → ${participantJid}`);
-    } else {
-      // Try async DB/signal resolver
+  // Step 2: signalRepository.lidMapping.getPNForLID (synchronous, built-in WhatsApp table)
+  if (sock.signalRepository?.lidMapping?.getPNForLID) {
+    const variants = [rawLidJid, `${lidNum}:0@lid`, `${lidNum}:1@lid`, `${lidNum}@s.whatsapp.net`];
+    for (const v of variants) {
       try {
-        const phone = await resolvePhoneFromLidAsync(participantJid);
-        if (phone && typeof phone === 'string') {
-          const num = phone.replace(/\D/g, '');
-          if (num && num !== lidNum) {
-            participantJid = num + '@s.whatsapp.net';
-            console.log(`[AUTOVIEW] LID resolved async: ${rawParticipant} → ${participantJid}`);
+        const pn = sock.signalRepository.lidMapping.getPNForLID(v);
+        if (pn && typeof pn === 'string') {
+          const n = pn.split('@')[0].split(':')[0].replace(/\D/g, '');
+          if (n && n.length >= 7 && n !== lidNum) {
+            cacheLidPhone(lidNum, n);
+            console.log(`[LID] signalRepo hit (${v}): ${rawLidJid} → ${n}@s.whatsapp.net`);
+            return n + '@s.whatsapp.net';
           }
         }
       } catch {}
-    }
-    // Try signal repository (synchronous, most reliable for fresh sessions)
-    if (participantJid === rawParticipant) {
-      try {
-        if (sock.signalRepository?.lidMapping?.getPNForLID) {
-          const pn = sock.signalRepository.lidMapping.getPNForLID(rawParticipant);
-          if (pn) {
-            const num = String(pn).split('@')[0].split(':')[0].replace(/[^0-9]/g, '');
-            if (num && num.length >= 7) {
-              participantJid = num + '@s.whatsapp.net';
-              lidPhoneCache.set(rawParticipant.split('@')[0].split(':')[0], num);
-              console.log(`[AUTOVIEW] LID resolved via signalRepo: ${rawParticipant} → ${participantJid}`);
-            }
-          }
-        }
-      } catch {}
-    }
-    if (participantJid === rawParticipant) {
-      console.log(`[AUTOVIEW] LID could not be resolved: ${rawParticipant} — readMessages may fail`);
     }
   }
 
-  const resolvedKey = participantJid ? { ...m.key, participant: participantJid } : m.key;
-  console.log(`[AUTOVIEW] Calling readMessages with participant=${resolvedKey.participant}`);
+  // Step 3: scan ALL groups for a participant with this LID — uses phoneNumber/id/pn fields
+  // (same approach as isBotAdmin: pPhone = p.phoneNumber || p.phone_number || p.pn)
+  try {
+    const allGroups = await sock.groupFetchAllParticipating();
+    for (const [, meta] of Object.entries(allGroups || {})) {
+      for (const p of meta.participants || []) {
+        // Match by LID field
+        const pLidNum = (p.lid || p.id || '').split('@')[0].split(':')[0].replace(/\D/g, '');
+        if (pLidNum !== lidNum) continue;
+        // Priority: phoneNumber field (most explicit)
+        const pPhone = (p.phoneNumber || p.phone_number || p.pn || '').toString().replace(/\D/g, '');
+        if (pPhone && pPhone.length >= 7) { cacheLidPhone(lidNum, pPhone); console.log(`[LID] Group scan (phoneNumber): ${rawLidJid} → ${pPhone}@s.whatsapp.net`); return pPhone + '@s.whatsapp.net'; }
+        // Fallback: non-LID id/jid
+        const pBase = p.id || p.jid || '';
+        if (pBase && !pBase.endsWith('@lid') && pBase.includes('@')) {
+          const n = pBase.split('@')[0].split(':')[0].replace(/\D/g, '');
+          if (n && n.length >= 7) { cacheLidPhone(lidNum, n); console.log(`[LID] Group scan (id): ${rawLidJid} → ${n}@s.whatsapp.net`); return n + '@s.whatsapp.net'; }
+        }
+      }
+    }
+  } catch (e) { console.log(`[LID] Group scan error: ${e.message}`); }
+
+  // Step 4: async DB + signalRepo multiple-format lookup (resolvePhoneFromLidAsync)
+  try {
+    const phone = await resolvePhoneFromLidAsync(rawLidJid);
+    if (phone && typeof phone === 'string') {
+      const n = phone.replace(/\D/g, '');
+      if (n && n !== lidNum) { console.log(`[LID] Async DB/signalRepo: ${rawLidJid} → ${n}@s.whatsapp.net`); return n + '@s.whatsapp.net'; }
+    }
+  } catch {}
+
+  console.log(`[LID] All resolvers failed for ${rawLidJid} — will use LID directly`);
+  return rawLidJid; // last resort: pass LID through, WhatsApp may handle natively
+}
+
+async function handleAutoViewStatus(sock, m) {
+  if (!sock?.sessionConfig?.autoViewStatus) {
+    console.log(`[AUTOVIEW] Disabled (autoViewStatus=false) — skipping`);
+    return;
+  }
+  if (!m?.key) return;
+  if (m.key.remoteJid !== 'status@broadcast') return;
+  if (m.key.fromMe) return;
+
+  const rawParticipant = m.key.remoteJidAlt || m.key.participant || '';
+  console.log(`[AUTOVIEW] Processing id=${m.key.id} participant=${rawParticipant}`);
+
+  const participantJid = await resolveLidForStatus(sock, rawParticipant);
+  const resolvedKey = rawParticipant ? { ...m.key, participant: participantJid } : m.key;
+
+  console.log(`[AUTOVIEW] Calling readMessages — resolved=${participantJid}`);
   try {
     await sock.readMessages([resolvedKey]);
-    console.log(`[AUTOVIEW] readMessages succeeded for ${resolvedKey.participant}`);
+    console.log(`[AUTOVIEW] ✅ readMessages OK for ${participantJid}`);
   } catch (err) {
-    console.log(`[AUTOVIEW] readMessages failed: ${err.message}`);
+    console.log(`[AUTOVIEW] ❌ readMessages failed (${participantJid}): ${err.message}`);
+    // Fallback: try with raw LID if we resolved it to a different JID
+    if (participantJid !== rawParticipant && rawParticipant) {
+      try {
+        await sock.readMessages([{ ...m.key, participant: rawParticipant }]);
+        console.log(`[AUTOVIEW] ✅ readMessages OK with raw LID ${rawParticipant}`);
+      } catch {}
+    }
   }
 }
 

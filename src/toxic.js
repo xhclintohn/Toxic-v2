@@ -27,7 +27,7 @@ import toxicaiFeature from '../features/toxicai.js';
 import afkFeature from '../features/afk.js';
 import ownerMiddleware from '../utils/botUtil/Ownermiddleware.js';
 import { lidMappingCache } from '../handlers/smsg.js';
-import { resolveTargetJid } from '../lib/lidResolver.js';
+import { resolveTargetJid, resolveSenderJid } from '../lib/lidResolver.js';
 
 const DEV_NUMBER = '254114885159';
 
@@ -567,55 +567,87 @@ export default async (client, m, chatUpdate, store) => {
 
         (async () => {
             if (m.message?.protocolMessage?.type === 0) {
+                console.log(`[ANTIDELETE] ⚡ Delete event detected`);
                 const _adSettings = await getCachedSettings();
-                if (_adSettings?.antidelete === true) {
-                    const deletedKey = m.message.protocolMessage.key;
-                    const deletedMessageId = deletedKey.id;
-                    const deletedRemoteJid = deletedKey.remoteJid;
-                    if (!deletedRemoteJid || deletedRemoteJid === 'status@broadcast' || deletedRemoteJid.includes('@broadcast') || deletedRemoteJid.includes('@newsletter')) return;
-                    // Properly resolve LID to phone JID using cache — naively using LID number as phone is WRONG
-                    const normalizedDeletedJid = deletedRemoteJid.includes('@lid') ? resolveLidToPhoneNumber(deletedRemoteJid) : deletedRemoteJid;
-                    let deletedMessage = null;
-                    let chatJidToSearch = normalizedDeletedJid;
-                    const sqlRow = msgStore.getMessage(deletedMessageId);
-                    if (sqlRow) {
-                        deletedMessage = { key: sqlRow.message.key || { id: deletedMessageId, remoteJid: sqlRow.jid, participant: sqlRow.sender }, message: sqlRow.message.message || {}, pushName: sqlRow.message.pushName || '' };
-                        chatJidToSearch = sqlRow.jid;
+                if (_adSettings?.antidelete !== true) {
+                    console.log(`[ANTIDELETE] Disabled in settings — skipping`);
+                    return;
+                }
+                const deletedKey = m.message.protocolMessage.key;
+                const deletedMessageId = deletedKey.id;
+                const deletedRemoteJid = deletedKey.remoteJid;
+                console.log(`[ANTIDELETE] deletedMsgId=${deletedMessageId} deletedJid=${deletedRemoteJid} deleterParticipant=${m.key.participant}`);
+                if (!deletedRemoteJid || deletedRemoteJid === 'status@broadcast' || deletedRemoteJid.includes('@broadcast') || deletedRemoteJid.includes('@newsletter')) {
+                    console.log(`[ANTIDELETE] Skipping broadcast/newsletter JID`);
+                    return;
+                }
+                // Resolve deletedRemoteJid if it's a LID DM
+                const normalizedDeletedJid = deletedRemoteJid.endsWith('@lid') ? (resolveLidToPhoneNumber(deletedRemoteJid) || deletedRemoteJid) : deletedRemoteJid;
+                console.log(`[ANTIDELETE] Normalized JID: ${normalizedDeletedJid}`);
+                let deletedMessage = null;
+                let chatJidToSearch = normalizedDeletedJid;
+                // 1) SQL store
+                const sqlRow = msgStore.getMessage(deletedMessageId);
+                if (sqlRow) {
+                    deletedMessage = { key: sqlRow.message?.key || { id: deletedMessageId, remoteJid: sqlRow.jid, participant: sqlRow.sender }, message: sqlRow.message?.message || {}, pushName: sqlRow.message?.pushName || '' };
+                    chatJidToSearch = sqlRow.jid;
+                    console.log(`[ANTIDELETE] ✅ Found in SQL store. chat=${chatJidToSearch}`);
+                } else {
+                    console.log(`[ANTIDELETE] ⚠️ Not in SQL store, checking in-memory store...`);
+                }
+                // 2) in-memory store fallback
+                if (!deletedMessage && store?.chats && store?.messageMap) {
+                    if (store.messageMap?.[deletedMessageId]) chatJidToSearch = store.messageMap[deletedMessageId].normalizedJid;
+                    if (store.chats?.[chatJidToSearch]) deletedMessage = store.chats[chatJidToSearch].find(msg => msg.key.id === deletedMessageId);
+                    if (!deletedMessage && normalizedDeletedJid !== chatJidToSearch && store.chats?.[normalizedDeletedJid]) {
+                        deletedMessage = store.chats[normalizedDeletedJid].find(msg => msg.key.id === deletedMessageId);
+                        if (deletedMessage) chatJidToSearch = normalizedDeletedJid;
                     }
-                    if (!deletedMessage && store?.chats && store?.messageMap) {
-                        if (store.messageMap[deletedMessageId]) chatJidToSearch = store.messageMap[deletedMessageId].normalizedJid;
-                        if (store.chats[chatJidToSearch]) deletedMessage = store.chats[chatJidToSearch].find(msg => msg.key.id === deletedMessageId);
-                        if (!deletedMessage && normalizedDeletedJid !== chatJidToSearch && store.chats[normalizedDeletedJid]) {
-                            deletedMessage = store.chats[normalizedDeletedJid].find(msg => msg.key.id === deletedMessageId);
-                            if (deletedMessage) chatJidToSearch = normalizedDeletedJid;
-                        }
-                        if (!deletedMessage) {
-                            for (const [jid, messages] of Object.entries(store.chats)) {
-                                if (['key', 'idGetter', 'dict', 'array'].includes(jid)) continue;
-                                const foundMsg = messages.find(msg => msg.key.id === deletedMessageId);
-                                if (foundMsg) { deletedMessage = foundMsg; chatJidToSearch = jid; break; }
-                            }
+                    if (!deletedMessage) {
+                        for (const [jid, messages] of Object.entries(store.chats || {})) {
+                            if (['key', 'idGetter', 'dict', 'array'].includes(jid)) continue;
+                            const foundMsg = messages?.find?.(msg => msg.key.id === deletedMessageId);
+                            if (foundMsg) { deletedMessage = foundMsg; chatJidToSearch = jid; break; }
                         }
                     }
                     if (deletedMessage) {
-                        const botJid = client.decodeJid(client.user.id);
-                        // Fetch group participants for LID → phone resolution (same approach as warn.js)
-                        let _groupParticipants = [];
-                        if (chatJidToSearch.endsWith('@g.us')) {
-                            try { const _gm = await client.groupMetadata(chatJidToSearch); _groupParticipants = _gm?.participants || []; } catch {}
+                        console.log(`[ANTIDELETE] ✅ Found in in-memory store. chat=${chatJidToSearch}`);
+                    } else {
+                        console.log(`[ANTIDELETE] ❌ Message NOT found in any store — cannot recover`);
+                    }
+                }
+                if (deletedMessage) {
+                        // Resolve botJid — must be phone JID, never LID
+                        let botJid = client.decodeJid(client.user.id);
+                        if (botJid && botJid.endsWith('@lid')) {
+                            const resolved = resolveLidToPhoneNumber(botJid);
+                            if (resolved && !resolved.endsWith('@lid')) botJid = resolved;
                         }
-                        // Resolve sender — prefer resolveTargetJid (uses group metadata like warn.js), fallback to cache
+                        console.log(`[ANTIDELETE] botJid=${botJid} chat=${chatJidToSearch}`);
+                        // Resolve sender LID — async resolveSenderJid uses group metadata (same as warn.js) + all fallbacks
                         let senderRaw = deletedMessage.key.participant || deletedMessage.key.remoteJid || '';
+                        console.log(`[ANTIDELETE] Raw sender=${senderRaw}`);
                         if (senderRaw.endsWith('@lid')) {
-                            const resolved = resolveTargetJid(senderRaw, _groupParticipants) || resolveLidToPhoneNumber(senderRaw);
-                            if (resolved && !resolved.endsWith('@lid')) senderRaw = resolved;
+                            const resolved = await resolveSenderJid(senderRaw, chatJidToSearch, client).catch(() => null);
+                            if (resolved && !resolved.endsWith('@lid')) {
+                                senderRaw = resolved;
+                                console.log(`[ANTIDELETE] Sender resolved → ${senderRaw}`);
+                            } else {
+                                console.log(`[ANTIDELETE] ⚠️ Sender LID unresolved: ${senderRaw}`);
+                            }
                         }
                         const sender = client.decodeJid(senderRaw);
-                        // Resolve deleter — same approach
+                        // Resolve deleter LID — same approach
                         let deleterRaw = m.key.participant || '';
+                        console.log(`[ANTIDELETE] Raw deleter=${deleterRaw}`);
                         if (deleterRaw.endsWith('@lid')) {
-                            const resolved = resolveTargetJid(deleterRaw, _groupParticipants) || resolveLidToPhoneNumber(deleterRaw);
-                            if (resolved && !resolved.endsWith('@lid')) deleterRaw = resolved;
+                            const resolved = await resolveSenderJid(deleterRaw, chatJidToSearch, client).catch(() => null);
+                            if (resolved && !resolved.endsWith('@lid')) {
+                                deleterRaw = resolved;
+                                console.log(`[ANTIDELETE] Deleter resolved → ${deleterRaw}`);
+                            } else {
+                                console.log(`[ANTIDELETE] ⚠️ Deleter LID unresolved: ${deleterRaw}`);
+                            }
                         }
                         const deleter = deleterRaw ? deleterRaw.split('@')[0].split(':')[0] : 'Unknown';
                         let groupName = 'Private Chat';
@@ -648,7 +680,6 @@ export default async (client, m, chatUpdate, store) => {
                                 else { await client.sendMessage(botJid, { text: hdr + `\n╰──────────☉\n\n⚠️ *Deleted content could not be recovered*`, mentions: [sender] }); }
                             }
                         } catch (error) { console.log('❌ [ANTIDELETE ERROR]:', error.message); }
-                    }
                 }
             }
 
