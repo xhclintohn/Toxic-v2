@@ -1,15 +1,18 @@
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getSettings, updateSetting } from '../../database/config.js';
 import ownerMiddleware from '../../utils/botUtil/Ownermiddleware.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
 export default async (context) => {
   await ownerMiddleware(context, async () => {
-    const { client, m, args } = context;
+    const { client, m, args, prefix } = context;
     const fq = getFakeQuoted(m);
+
+    const fmtMsg = (msg) =>
+      `╭───(    TOXIC-MD    )───\n├───≫ AUTOLIKE ≪───\n├ \n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
     try {
       const settings = await getSettings();
-      const prefix = settings.prefix || '.';
       const value = args[0]?.toLowerCase();
 
       if (value === 'on' || value === 'off') {
@@ -17,71 +20,52 @@ export default async (context) => {
 
         if (settings.autolike === newValue) {
           await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-          await m.reply(
-            `╭───(    TOXIC-MD    )───\n` +
-            `├───≫ AUTOLIKE ≪───\n` +
-            `├ \n` +
-            `├ Autolike is already ${value.toUpperCase()}, you brain-dead fool!\n` +
-            `╰──────────────────☉\n` +
-            `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-          );
-          return;
+          return await client.sendMessage(m.chat, { text: fmtMsg(`Autolike is already ${value.toUpperCase()}, you brain-dead fool!`) }, { quoted: fq });
         }
 
         await updateSetting('autolike', newValue);
         await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
-
-        await m.reply(
-          `╭───(    TOXIC-MD    )───\n` +
-          `├───≫ AUTOLIKE ≪───\n` +
-          `├ \n` +
-          `├ Autolike ${value.toUpperCase()}! ${value === 'on' ? 'Bot will now like statuses!' : 'Bot will ignore statuses like they ignore you.'}\n` +
-          `╰──────────────────☉\n` +
-          `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        );
-        return;
+        return await client.sendMessage(m.chat, {
+          text: fmtMsg(`Autolike ${value.toUpperCase()}! ${value === 'on' ? 'Bot will now like statuses!' : 'Bot will ignore statuses like they ignore you.'}`)
+        }, { quoted: fq });
       }
 
-    
       const isAutolikeOn = settings.autolike === true;
       const currentEmoji = settings.autolikeemoji || 'random';
-      
-      const statusText = isAutolikeOn ? 
-                        `ON (${currentEmoji === 'random' ? 'Random emojis' : currentEmoji + ' emoji'})` : 
-                        'OFF';
+      const statusText = isAutolikeOn
+        ? `ON (${currentEmoji === 'random' ? 'Random emojis' : currentEmoji + ' emoji'})`
+        : 'OFF';
 
-      await client.sendMessage(m.chat, {
-        interactiveMessage: {
-          header: `╭───(    TOXIC-MD    )───\n├───≫ AUTOLIKE ≪───\n├ \n├ Current: ${statusText}\n├ \n├ Use "${prefix}autolike on" to turn ON\n├ Use "${prefix}autolike off" to turn OFF\n├ Use "${prefix}reaction <emoji>" to change emoji\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-          buttons: [
-            {
-              name: "quick_reply",
-              buttonParamsJson: JSON.stringify({
-                display_text: "TURN ON",
-                id: `${prefix}autolike on`
-              })
-            },
-            {
-              name: "quick_reply",
-              buttonParamsJson: JSON.stringify({
-                display_text: "TURN OFF",
-                id: `${prefix}autolike off`
-              })
+      const _msg = generateWAMessageFromContent(
+        m.chat,
+        {
+          interactiveMessage: {
+            body: { text: fmtMsg(`Current: ${statusText}\n├ \n├ Use "${prefix}reaction <emoji>" to change emoji`) },
+            footer: { text: '' },
+            nativeFlowMessage: {
+              buttons: [{
+                name: 'single_select',
+                buttonParamsJson: JSON.stringify({
+                  title: 'Choose an option',
+                  sections: [{
+                    rows: [
+                      { title: 'ON ✅', id: `${prefix}autolike on` },
+                      { title: 'OFF ❌', id: `${prefix}autolike off` }
+                    ]
+                  }]
+                })
+              }]
             }
-          ]
-        }
-      }, { quoted: fq });
-
+          }
+        },
+        { quoted: fq }
+      );
+      await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
     } catch (error) {
       console.error('Autolike command error:', error);
-      await m.reply(
-        `╭───(    TOXIC-MD    )───\n` +
-        `├───≫ AUTOLIKE ≪───\n` +
-        `├ \n` +
-        `├ Failed to update autolike. Database might be drunk.\n` +
-        `╰──────────────────☉\n` +
-        `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      );
+      await client.sendMessage(m.chat, {
+        text: fmtMsg('Failed to update autolike. Database might be drunk.')
+      }, { quoted: fq });
     }
   });
 };

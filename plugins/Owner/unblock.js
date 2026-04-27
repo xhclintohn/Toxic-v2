@@ -8,6 +8,20 @@ const toBlockJid = (jid) => {
     return user + '@s.whatsapp.net';
 };
 
+const resolveLid = (jid) => {
+    if (!jid || !jid.endsWith('@lid')) return jid;
+    if (globalThis.resolvePhoneFromLid) {
+        const phone = globalThis.resolvePhoneFromLid(jid);
+        if (phone && !phone.endsWith('@lid')) return phone;
+    }
+    if (globalThis.lidPhoneCache) {
+        const lidNum = jid.split('@')[0].split(':')[0].replace(/\D/g, '');
+        const cached = globalThis.lidPhoneCache.get(lidNum);
+        if (cached) return String(cached).replace(/\D/g, '') + '@s.whatsapp.net';
+    }
+    return jid;
+};
+
 export default async (context) => {
     await ownerMiddleware(context, async () => {
         const { client, m, text } = context;
@@ -17,7 +31,8 @@ export default async (context) => {
             return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Tag or reply to a user to unblock.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
-        const raw = m.mentionedJid?.[0] || m.quoted?.sender || text;
+        const rawJid = m.mentionedJid?.[0] || m.quoted?.sender || text;
+        const raw = resolveLid(rawJid);
         const users = toBlockJid(raw);
 
         if (!users) {

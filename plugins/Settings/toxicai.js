@@ -1,3 +1,4 @@
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getSettings, updateSetting } from '../../database/config.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
@@ -40,16 +41,36 @@ export default {
             }
 
             const isOn = settings.toxicagent === true || settings.toxicagent === 'true';
-            return client.sendMessage(m.chat, {
-                text: fmt('TOXICAGENT', [
-                    `Status: ${isOn ? '✅ ON' : '❌ OFF'}`,
-                    'Handles: create/delete/rename repos, upload files,',
-                    '         list branches, create issues, star repos',
-                    '',
-                    `Toggle: ${prefix}toxicai on  /  ${prefix}toxicai off`,
-                    'Say "clear conversation" to reset memory'
-                ])
+
+            const _msg = generateWAMessageFromContent(m.chat, {
+                interactiveMessage: {
+                    body: {
+                        text: fmt('TOXICAGENT', [
+                            `Status: ${isOn ? '✅ ON' : '❌ OFF'}`,
+                            'Handles: create/delete/rename repos, upload files,',
+                            '         list branches, create issues, star repos',
+                            '',
+                            'Say "clear conversation" to reset memory'
+                        ])
+                    },
+                    footer: { text: '' },
+                    nativeFlowMessage: {
+                        buttons: [{
+                            name: 'single_select',
+                            buttonParamsJson: JSON.stringify({
+                                title: 'Toggle ToxicAgent',
+                                sections: [{
+                                    rows: [
+                                        { title: 'ON ✅', description: 'Enable GitHub AI agent', id: `${prefix}toxicai on` },
+                                        { title: 'OFF ❌', description: 'Disable GitHub AI agent', id: `${prefix}toxicai off` }
+                                    ]
+                                }]
+                            })
+                        }]
+                    }
+                }
             }, { quoted: fq });
+            await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
         } catch {
             client.sendMessage(m.chat, { text: fmt('TOXICAGENT', 'something broke. try again.') }, { quoted: fq });
         }

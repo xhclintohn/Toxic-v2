@@ -1,8 +1,9 @@
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getGroupSettings, updateGroupSetting, getWarnLimit } from '../../database/config.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
 export default async (context) => {
-    const { client, m, args, isAdmin, isBotAdmin } = context;
+    const { client, m, args, isAdmin, isBotAdmin, prefix } = context;
     const fq = getFakeQuoted(m);
 
     const fmt = (msg) => `╭───(    TOXIC-MD    )───\n├───≫ ANTILINK ≪───\n├ \n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
@@ -30,9 +31,10 @@ export default async (context) => {
                 return await client.sendMessage(m.chat, { text: fmt(`Antilink is already set to *${value.toUpperCase()}*. Pay attention. 😒`) }, { quoted: fq });
             }
             await updateGroupSetting(m.chat, 'antilink', value);
+            await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
             const desc =
                 value === 'off' ? 'Links are now allowed. Hope you know what you\'re doing. 🙄' :
-                value === 'warn' ? `Links will be deleted and sender warned.\nAt the warn limit they\'re KICKED. 😈` :
+                value === 'warn' ? `Links will be deleted and sender warned.\nAt the warn limit they're KICKED. 😈` :
                 'Links = Instant kick. No second chances. 😈';
             return await client.sendMessage(m.chat, { text: fmt(`✅ Antilink set to *${value.toUpperCase()}*.\n├ ${desc}`) }, { quoted: fq });
         }
@@ -40,9 +42,32 @@ export default async (context) => {
         const currentMode = String(groupSettings.antilink || "off").toUpperCase();
         const warnLimit = await getWarnLimit(m.chat);
 
-        await client.sendMessage(m.chat, {
-            text: fmt(`Current mode: *${currentMode}*\n├ Warn limit: *${warnLimit}* (set with .setwarncount)\n├ \n├ 📖 *How to use:*\n├ .antilink off — Allow links\n├ .antilink warn — Delete + warn user\n├ .antilink kick — Delete + instant kick\n├ \n├ In warn mode, hitting the limit\n├ = auto kick. 😈`)
-        }, { quoted: fq });
+        const _msg = generateWAMessageFromContent(
+            m.chat,
+            {
+                interactiveMessage: {
+                    body: { text: fmt(`Current mode: *${currentMode}*\n├ Warn limit: *${warnLimit}* (set with ${prefix}setwarncount)\n├ \n├ off — Allow links\n├ warn — Delete + warn user\n├ kick — Delete + instant kick`) },
+                    footer: { text: '' },
+                    nativeFlowMessage: {
+                        buttons: [{
+                            name: 'single_select',
+                            buttonParamsJson: JSON.stringify({
+                                title: 'Choose mode',
+                                sections: [{
+                                    rows: [
+                                        { title: 'OFF 🔓', description: 'Links allowed', id: `${prefix}antilink off` },
+                                        { title: 'WARN ⚠️', description: 'Delete + warn sender', id: `${prefix}antilink warn` },
+                                        { title: 'KICK 🦵', description: 'Delete + instant kick', id: `${prefix}antilink kick` }
+                                    ]
+                                }]
+                            })
+                        }]
+                    }
+                }
+            },
+            { quoted: fq }
+        );
+        await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
     } catch (error) {
         console.error("Antilink command error:", error);
         await client.sendMessage(m.chat, { text: fmt('Something broke. Try again. 😤') }, { quoted: fq });

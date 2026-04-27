@@ -16,8 +16,49 @@ export default async (context) => {
             const value = args[0]?.toLowerCase();
 
             if (value === 'on') {
-                if (isEnabled) return const _stealthMsg = generateWAMessageFromContent(m.chat, { interactiveMessage: { body: { text: fmt(`Stealth Mode: *${isEnabled ? 'ON 👻' : 'OFF 💡'}*\n├ Usage: *${prefix}stealth on/off*\n├ When ON, bot auto-deletes commands + replies after 8s.`) }, footer: { text: '' }, nativeFlowMessage: { buttons: [{ name: 'single_select', buttonParamsJson: JSON.stringify({ title: 'Choose an option', sections: [{ rows: [                                                    { title: 'ON 👻', id: `${prefix}stealth on` },
-                                                    { title: 'OFF 💡', id: `${prefix}stealth off` }] }] }) }] } } }, { quoted: fq });
+                if (isEnabled) {
+                    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                    return await client.sendMessage(m.chat, { text: fmt('Stealth Mode already ON, genius. 👻 Bot auto-deletes commands + replies after 8s.') }, { quoted: fq });
+                }
+                await updateSetting('stealth', true);
+                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+                return await client.sendMessage(m.chat, { text: fmt('Stealth Mode: *ON 👻* — commands vanish after 8s. Ghost mode activated.') }, { quoted: fq });
+            }
+
+            if (value === 'off') {
+                if (!isEnabled) {
+                    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                    return await client.sendMessage(m.chat, { text: fmt('Stealth Mode already OFF, clown. 💡 Messages stay.') }, { quoted: fq });
+                }
+                await updateSetting('stealth', false);
+                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+                return await client.sendMessage(m.chat, { text: fmt('Stealth Mode: *OFF 💡* — messages stick around like an ex.') }, { quoted: fq });
+            }
+
+            const _stealthMsg = generateWAMessageFromContent(
+                m.chat,
+                {
+                    interactiveMessage: {
+                        body: { text: fmt(`Stealth Mode: *${isEnabled ? 'ON 👻' : 'OFF 💡'}*\n├ Usage: *${prefix}stealth on/off*\n├ When ON, bot auto-deletes commands + replies after 8s.`) },
+                        footer: { text: '' },
+                        nativeFlowMessage: {
+                            buttons: [{
+                                name: 'single_select',
+                                buttonParamsJson: JSON.stringify({
+                                    title: 'Choose an option',
+                                    sections: [{
+                                        rows: [
+                                            { title: 'ON 👻', id: `${prefix}stealth on` },
+                                            { title: 'OFF 💡', id: `${prefix}stealth off` }
+                                        ]
+                                    }]
+                                })
+                            }]
+                        }
+                    }
+                },
+                { quoted: fq }
+            );
             await client.relayMessage(m.chat, _stealthMsg.message, { messageId: _stealthMsg.key.id });
         } catch (err) {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });

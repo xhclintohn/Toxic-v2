@@ -49,14 +49,16 @@ export default async (context) => {
             }, { quoted: fq });
         }
 
+        const botDm = client.user?.id;
         const senderNum = (m.quoted?.sender || ctx.participant || '').split('@')[0].split(':')[0] || 'Unknown';
         const caption = `╭───(    TOXIC-MD    )───\n├───≫ VIEW ONCE RETRIEVED ≪───\n├ \n├ 👁 Sender: @${senderNum}\n├ 📍 Chat: ${m.isGroup ? 'Group' : 'DM'}\n├ \n├ You sneaky little thing. 😈\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
         const mentions = ctx.participant ? [ctx.participant] : [];
+        const dest = botDm || m.chat;
 
         if (imageMsg) {
-            await client.sendMessage(m.chat, { image: buffer, caption, mentions }, { quoted: fq });
+            await client.sendMessage(dest, { image: buffer, caption, mentions });
         } else {
-            await client.sendMessage(m.chat, { video: buffer, caption, mentions }, { quoted: fq });
+            await client.sendMessage(dest, { video: buffer, caption, mentions });
         }
     } catch (e) {
         await client.sendMessage(m.chat, {

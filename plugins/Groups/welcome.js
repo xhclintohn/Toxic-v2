@@ -27,14 +27,37 @@ export default async (context) => {
                     return await client.sendMessage(m.chat, { text: fmt(`Bruh 🙄 Welcome is already ${value.toUpperCase()} in this group. Pay attention!`) }, { quoted: fq });
                 }
                 await updateGroupSetting(jid, 'welcome', action);
+                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
                 return await client.sendMessage(m.chat, {
                     text: fmt(`Welcome messages ${value.toUpperCase()}! 🔥 ${action ? "New members better brace themselves 😈" : "No more warm welcomes. Cold group energy 🧊"}`)
                 }, { quoted: fq });
             }
 
-            await client.sendMessage(m.chat, {
-                text: fmt(`Welcome Status: *${isEnabled ? 'ON 🥶' : 'OFF 😴'}*\n├ Usage: *${prefix}welcome on/off*\n├ Toggles welcome messages for new members in this group.`),
-            }, { quoted: fq });
+            const _msg = generateWAMessageFromContent(
+                m.chat,
+                {
+                    interactiveMessage: {
+                        body: { text: fmt(`Welcome Status: *${isEnabled ? 'ON 🥶' : 'OFF 😴'}*\n├ Toggles welcome messages for new members in this group.`) },
+                        footer: { text: '' },
+                        nativeFlowMessage: {
+                            buttons: [{
+                                name: 'single_select',
+                                buttonParamsJson: JSON.stringify({
+                                    title: 'Choose an option',
+                                    sections: [{
+                                        rows: [
+                                            { title: 'ON ✅', id: `${prefix}welcome on` },
+                                            { title: 'OFF ❌', id: `${prefix}welcome off` }
+                                        ]
+                                    }]
+                                })
+                            }]
+                        }
+                    }
+                },
+                { quoted: fq }
+            );
+            await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
         } catch (error) {
             console.error('Toxic-MD: Error in welcome.js:', error);
             await client.sendMessage(m.chat, { text: fmt(`Something crashed. Typical. 💀 Error: ${error.message}`) }, { quoted: fq });

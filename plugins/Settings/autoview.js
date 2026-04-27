@@ -49,7 +49,7 @@ export default async (context) => {
         m.chat,
         {
             interactiveMessage: {
-                body: { text: formatStylishReply('AUTOVIEW', `Autoview Status: ${settings.autoview ? 'ON (Watching all statuses) },
+                body: { text: formatStylishReply('AUTOVIEW', `Autoview Status: ${settings.autoview ? 'ON ✅' : 'OFF ❌'}. Pick a vibe, noob!`) },
                 footer: { text: '' },
                 nativeFlowMessage: {
                     buttons: [

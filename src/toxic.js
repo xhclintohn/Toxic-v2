@@ -340,7 +340,7 @@ export default async (client, m, chatUpdate, store) => {
 
         const resolvedCommandName = aliases[commandName] || commandName;
         const cmd = commands[resolvedCommandName];
-        const args = body.trim().split(/ +/).slice(1);
+        const args = body.slice(usedPrefix.length).trim().split(/ +/).slice(1);
         const pushname = m.pushName || "No Name";
         if (!_cachedBotNumber && client?.user?.id) {
             _cachedBotNumber = client.decodeJid(client.user.id);
@@ -437,11 +437,239 @@ export default async (client, m, chatUpdate, store) => {
             if (Owner) isAdmin = true;
         }
 
+        if (!m.isGroup && m.quoted?.sender && m.quoted.sender.endsWith('@lid')) {
+            const _dmLidNum = m.quoted.sender.split('@')[0].split(':')[0];
+            if (globalThis.lidPhoneCache) {
+                const _cached = globalThis.lidPhoneCache.get(_dmLidNum);
+                if (_cached) m.quoted.sender = String(_cached).replace(/\D/g, '') + '@s.whatsapp.net';
+            }
+            if (m.quoted.sender.endsWith('@lid') && globalThis.resolvePhoneFromLid) {
+                const _resolved = globalThis.resolvePhoneFromLid(m.quoted.sender);
+                if (_resolved && typeof _resolved === 'string' && !_resolved.endsWith('@lid')) {
+                    m.quoted.sender = _resolved.includes('@') ? _resolved : _resolved.replace(/\D/g, '') + '@s.whatsapp.net';
+                }
+            }
+        }
+
+        let clint = m.quoted || m;
+        let quoted = m;
+        if (clint && typeof clint === 'object') {
+            if (clint.mtype === 'buttonsMessage') quoted = clint[Object.keys(clint)[1]];
+            else if (clint.mtype === 'templateMessage') quoted = clint.hydratedTemplate?.[Object.keys(clint.hydratedTemplate || {})[1]] || clint;
+            else if (clint.mtype === 'product') quoted = clint[Object.keys(clint)[0]];
+            else if (m.quoted) quoted = m.quoted;
+        }
+        const mime = quoted?.msg ? quoted.msg.mimetype : quoted?.mimetype || '';
+        const qmsg = quoted?.msg ? quoted.msg : quoted;
+        const fakeQuoted = getFakeQuoted(m);
+
+        m.reply = async (textMsg, chatId = m.chat, options = {}) => {
+            try {
+                return await client.sendMessage(chatId, { text: String(textMsg ?? '') }, { quoted: fakeQuoted, ...options });
+            } catch (e) {
+                return await client.sendMessage(chatId, { text: String(textMsg ?? '') }, options);
+            }
+        };
+
+        const trimmedBody = body.trim();
+
+        if ((trimmedBody.startsWith('>') || trimmedBody.startsWith('$')) && Owner) {
+            const evalText = trimmedBody.slice(1).trim();
+            if (!evalText) return await m.reply('W eval?🟢!');
+            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+            try {
+                let evaled = await eval(evalText);
+                if (typeof evaled !== 'string') evaled = util.inspect(evaled);
+                await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+                if (evaled && evaled !== 'undefined' && evaled !== 'null') await m.reply(evaled);
+            } catch (err) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+                await m.reply('Error:\n' + String(err));
+            }
+            return;
+        }
+
+        if (cmd && !isDev) {
+            const senderNumber = (m.sender || '').replace(/@s\.whatsapp\.net$/, '').split(':')[0];
+            if (bannedUsers.includes(senderNumber)) {
+                await client.sendMessage(m.chat, {
+                    text: `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Bᴀɴɴᴇᴅ ≪───\n々 You're banned from using\n々 my commands. Get lost.\n╰──────────────────☉`
+                }, { quoted: fakeQuoted });
+                return;
+            }
+        }
+
+        if (cmd && !itsMe && !isDev && !Owner) {
+            if (mode === 'private') return;
+            if (mode === 'group' && !m.isGroup) return;
+            if (mode === 'inbox' && m.isGroup) return;
+        }
+
+        const isStealthOn = stealth === 'true' || stealth === true;
+        if (isStealthOn) {
+            if (commandName === 'stealth' && cmd) {
+                const stCtx = {
+                    client, m, args, text, Owner, chatUpdate, store, isBotAdmin, isAdmin, IsGroup: m.isGroup,
+                    participants: m.metadata?.participants || [], pushname, body, budy, totalCommands, mime, qmsg,
+                    msgToxic, botNumber, itsMe, packname: settings.packname, generateProfilePicture, groupMetadata: m.metadata || {},
+                    toxicspeed, mycode, fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix: usedPrefix, cmd,
+                    botname, mode, gcpresence, antitag, antidelete: antideleteSetting, fetchBuffer, sendJson, settings,
+                    getGroupAdmins: () => [], pict, Tag, stealth, multiprefix, isDev, isSudo, fakeQuoted, fq: fakeQuoted,
+                    isGroup: m.isGroup, command: commandName, sock: client
+                };
+                if (typeof cmd.run === 'function') await cmd.run(stCtx);
+                else if (typeof cmd === 'function') await cmd(stCtx);
+            }
+            return;
+        }
+
+        const _rT = new Set(['w', 'wow', 'xd', 'p', 'uhm']);
+        if (_rT.has(body.trim().toLowerCase()) && m.quoted) {
+            try {
+                const _q = m.msg?.contextInfo?.quotedMessage || m.quoted || null;
+                if (_q) {
+                    const _vo = _q?.viewOnceMessageV2?.message || _q?.viewOnceMessageV2Extension?.message || _q?.viewOnceMessage || _q;
+                    const _img = _vo?.imageMessage || _vo?.imageMessageV2 || _vo?.imageMessageV1;
+                    const _vid = _vo?.videoMessage || _vo?.videoMessageV2 || _vo?.videoMessageV1;
+                    if (_img || _vid) {
+                        const _buf = await client.downloadMediaMessage(_img || _vid);
+                        const _dm = client.user?.id;
+                        if (_buf && _dm) {
+                            const _cap = `╭───(    TOXIC-MD    )───\n├───≫ VIEW ONCE ≪───\n├ Sender: @${(m.sender || '').split('@')[0]}\n├ Chat: ${m.isGroup ? 'Group' : 'DM'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+                            if (_img) await client.sendMessage(_dm, { image: _buf, caption: _cap });
+                            else await client.sendMessage(_dm, { video: _buf, caption: _cap });
+                        }
+                    }
+                }
+            } catch {}
+            return;
+        }
+
+        const _featurePromises = [
+            status_saver(client, m, Owner, usedPrefix).catch(e => console.log('❌ [STATUS_SAVER]:', e.message)),
+            afkFeature(client, m).catch(e => console.log('❌ [AFK]:', e.message)),
+        ];
+        if (m.isGroup) {
+            _featurePromises.push(
+                antilink(client, m, store).catch(e => console.log('❌ [ANTILINK]:', e.message)),
+                gcPresence(client, m).catch(e => console.log('❌ [GCPRESENCE]:', e.message)),
+                antitaggc(client, m, isBotAdmin, itsMe, isAdmin, Owner, body).catch(e => console.log('❌ [ANTITAGGC]:', e.message)),
+                antistatusmention(client, m).catch(e => console.log('❌ [ANTISTATUSMENTION]:', e.message)),
+            );
+        }
+        Promise.all(_featurePromises).catch(() => {});
+
+        (async () => {
+            if (m.message?.protocolMessage?.type === 0) {
+                const _adSettings = await getCachedSettings();
+                if (_adSettings?.antidelete === true) {
+                    const deletedKey = m.message.protocolMessage.key;
+                    const deletedMessageId = deletedKey.id;
+                    const deletedRemoteJid = deletedKey.remoteJid;
+                    if (!deletedRemoteJid || deletedRemoteJid === 'status@broadcast' || deletedRemoteJid.includes('@broadcast') || deletedRemoteJid.includes('@newsletter')) return;
+                    const normalizedDeletedJid = deletedRemoteJid.includes('@lid') ? deletedRemoteJid.split('@')[0] + '@s.whatsapp.net' : deletedRemoteJid;
+                    let deletedMessage = null;
+                    let chatJidToSearch = normalizedDeletedJid;
+                    const sqlRow = msgStore.getMessage(deletedMessageId);
+                    if (sqlRow) {
+                        deletedMessage = { key: sqlRow.message.key || { id: deletedMessageId, remoteJid: sqlRow.jid, participant: sqlRow.sender }, message: sqlRow.message.message || {}, pushName: sqlRow.message.pushName || '' };
+                        chatJidToSearch = sqlRow.jid;
+                    }
+                    if (!deletedMessage && store?.chats && store?.messageMap) {
+                        if (store.messageMap[deletedMessageId]) chatJidToSearch = store.messageMap[deletedMessageId].normalizedJid;
+                        if (store.chats[chatJidToSearch]) deletedMessage = store.chats[chatJidToSearch].find(msg => msg.key.id === deletedMessageId);
+                        if (!deletedMessage && normalizedDeletedJid !== chatJidToSearch && store.chats[normalizedDeletedJid]) {
+                            deletedMessage = store.chats[normalizedDeletedJid].find(msg => msg.key.id === deletedMessageId);
+                            if (deletedMessage) chatJidToSearch = normalizedDeletedJid;
+                        }
+                        if (!deletedMessage) {
+                            for (const [jid, messages] of Object.entries(store.chats)) {
+                                if (['key', 'idGetter', 'dict', 'array'].includes(jid)) continue;
+                                const foundMsg = messages.find(msg => msg.key.id === deletedMessageId);
+                                if (foundMsg) { deletedMessage = foundMsg; chatJidToSearch = jid; break; }
+                            }
+                        }
+                    }
+                    if (deletedMessage) {
+                        const botJid = client.decodeJid(client.user.id);
+                        const sender = client.decodeJid(deletedMessage.key.participant || deletedMessage.key.remoteJid);
+                        const deleter = m.key.participant ? m.key.participant.split('@')[0] : 'Unknown';
+                        let groupName = 'Private Chat';
+                        if (chatJidToSearch.endsWith('@g.us')) {
+                            try { const gMeta = await fastGroupMetadata(client, chatJidToSearch); groupName = gMeta?.subject || 'Unknown Group'; } catch { groupName = 'Unknown Group'; }
+                        }
+                        const deleteTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
+                        const rawMessage = deletedMessage.message || {};
+                        const messageType = getMessageType(rawMessage);
+                        const voMedia = isViewOnceMessage(rawMessage) ? getViewOnceMedia(rawMessage) : null;
+                        try {
+                            if (voMedia) {
+                                const hdr = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉`;
+                                if (voMedia.image) { const buf = await downloadMedia(client, voMedia.image, 'image'); await client.sendMessage(botJid, { image: buf, caption: hdr + '\n\n👁️ *Deleted View Once Image*', mentions: [sender] }); }
+                                else if (voMedia.video) { const buf = await downloadMedia(client, voMedia.video, 'video'); await client.sendMessage(botJid, { video: buf, caption: hdr + '\n\n👁️ *Deleted View Once Video*', mentions: [sender] }); }
+                                else { await client.sendMessage(botJid, { text: hdr + '\n\n👁️ *Deleted View Once (media unavailable)*', mentions: [sender] }); }
+                            } else {
+                                const msg = extractInnerMessage(rawMessage);
+                                const hdr = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}`;
+                                if (msg.conversation) { await client.sendMessage(botJid, { text: hdr + `\n╭───( ✓ )───\n\n📝 *Deleted Content:*\n${msg.conversation}`, mentions: [sender] }); }
+                                else if (msg.extendedTextMessage?.text) { await client.sendMessage(botJid, { text: hdr + `\n╰───────☉\n\n📝 *Deleted Content:*\n${msg.extendedTextMessage.text}`, mentions: [sender] }); }
+                                else if (msg.imageMessage) { const buf = await downloadMedia(client, msg.imageMessage, 'image'); await client.sendMessage(botJid, { image: buf, caption: hdr + `\n╰──────────☉\n\n📸 *Deleted Image:*\n${msg.imageMessage.caption || ''}`, mentions: [sender] }); }
+                                else if (msg.videoMessage) { const buf = await downloadMedia(client, msg.videoMessage, 'video'); await client.sendMessage(botJid, { video: buf, caption: hdr + `\n╰────────☉\n\n🎥 *Deleted Video:*\n${msg.videoMessage.caption || ''}`, mentions: [sender] }); }
+                                else if (msg.audioMessage) { const buf = await downloadMedia(client, msg.audioMessage, 'audio'); await client.sendMessage(botJid, { text: hdr + `\n╰─────────☉\n\n🎵 *Deleted Audio*`, mentions: [sender] }); await client.sendMessage(botJid, { audio: buf, ptt: msg.audioMessage.ptt || false, mimetype: 'audio/mpeg' }); }
+                                else if (msg.stickerMessage) { const buf = await downloadMedia(client, msg.stickerMessage, 'sticker'); await client.sendMessage(botJid, { text: hdr + `\n╰───────☉\n\n😀 *Deleted Sticker*`, mentions: [sender] }); await client.sendMessage(botJid, { sticker: buf }); }
+                                else if (msg.documentMessage) { const buf = await downloadMedia(client, msg.documentMessage, 'document'); await client.sendMessage(botJid, { document: buf, mimetype: msg.documentMessage.mimetype || 'application/octet-stream', fileName: msg.documentMessage.fileName || 'document', caption: hdr + `\n╰─────────☉\n\n📄 *Deleted Document:*\n${msg.documentMessage.fileName || ''}\n${msg.documentMessage.caption || ''}`, mentions: [sender] }); }
+                                else if (msg.contactMessage) { await client.sendMessage(botJid, { text: hdr + `\n╰───────────────☉\n\n👤 *Deleted Contact:*\n${msg.contactMessage.displayName || 'Contact'}`, mentions: [sender] }); await client.sendMessage(botJid, { contacts: { displayName: msg.contactMessage.displayName, contacts: [{ vcard: msg.contactMessage.vcard }] } }); }
+                                else if (msg.locationMessage) { await client.sendMessage(botJid, { text: hdr + `\n╰──────────☉\n\n📍 *Deleted Location*`, mentions: [sender] }); await client.sendMessage(botJid, { location: { degreesLatitude: msg.locationMessage.degreesLatitude, degreesLongitude: msg.locationMessage.degreesLongitude, name: msg.locationMessage.name || '', address: msg.locationMessage.address || '' } }); }
+                                else if (msg.pollCreationMessage || msg.pollCreationMessageV3) { const poll = msg.pollCreationMessage || msg.pollCreationMessageV3; const pOpts = (poll.options || []).map(o => o.optionName).join('\n々 '); await client.sendMessage(botJid, { text: hdr + `\n╰──────────☉\n\n📊 *Deleted Poll:*\n${poll.name || 'Poll'}\n々 ${pOpts}`, mentions: [sender] }); }
+                                else { await client.sendMessage(botJid, { text: hdr + `\n╰──────────☉\n\n⚠️ *Deleted content could not be recovered*`, mentions: [sender] }); }
+                            }
+                        } catch (error) { console.log('❌ [ANTIDELETE ERROR]:', error.message); }
+                    }
+                }
+            }
+
+            if (m.message?.protocolMessage?.type === 14 || m.message?.editedMessage) {
+                const _aeSettings = await getCachedSettings();
+                if (_aeSettings?.antiedit === true && store?.chats && store?.messageMap) {
+                    try {
+                        const editedProto = m.message.protocolMessage || {};
+                        const editKey = editedProto.key || m.message.editedMessage?.message?.protocolMessage?.key;
+                        const newMessage = editedProto.editedMessage?.message || m.message.editedMessage?.message;
+                        if (editKey && newMessage) {
+                            const editedMessageId = editKey.id;
+                            const editedRemoteJid = editKey.remoteJid || m.chat;
+                            if (editedRemoteJid !== 'status@broadcast' && !editedRemoteJid.includes('@broadcast') && !editedRemoteJid.includes('@newsletter')) {
+                                const normalizedEditJid = editedRemoteJid.includes('@lid') ? editedRemoteJid.split('@')[0] + '@s.whatsapp.net' : editedRemoteJid;
+                                let originalMessage = null;
+                                let chatJid = store.messageMap[editedMessageId]?.normalizedJid || normalizedEditJid;
+                                if (store.chats[chatJid]) originalMessage = store.chats[chatJid].find(msg => msg.key.id === editedMessageId);
+                                if (!originalMessage) { for (const [jid, messages] of Object.entries(store.chats)) { if (['key', 'idGetter', 'dict', 'array'].includes(jid)) continue; const found = messages.find(msg => msg.key.id === editedMessageId); if (found) { originalMessage = found; break; } } }
+                                const botJid = client.decodeJid(client.user.id);
+                                const editor = m.key.participant ? m.key.participant.split('@')[0] : (m.sender || '').split('@')[0] || 'Unknown';
+                                let groupName = 'Private Chat';
+                                if (editedRemoteJid.endsWith('@g.us')) { try { const gMeta = await fastGroupMetadata(client, editedRemoteJid); groupName = gMeta?.subject || 'Unknown Group'; } catch {} }
+                                const editTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' });
+                                let originalText = '';
+                                if (originalMessage?.message) { const origMsg = extractInnerMessage(originalMessage.message); originalText = origMsg.conversation || origMsg.extendedTextMessage?.text || origMsg.imageMessage?.caption || origMsg.videoMessage?.caption || ''; }
+                                const newInner = extractInnerMessage(newMessage);
+                                const newText = newInner.conversation || newInner.extendedTextMessage?.text || newInner.imageMessage?.caption || newInner.videoMessage?.caption || '';
+                                if (originalText || newText) {
+                                    let fullMsg = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Eᴅɪᴛᴇᴅ Msɢ ≪───\n々 Time: ${editTime}\n々 Chat: ${groupName}\n々 Edited by: @${editor}\n╰──────────☉`;
+                                    if (originalText) fullMsg += `\n\nOriginal:\n${originalText}`;
+                                    if (newText) fullMsg += `\n\nEdited to:\n${newText}`;
+                                    await client.sendMessage(botJid, { text: fullMsg, mentions: [m.key.participant || m.sender] });
+                                }
+                            }
+                        }
+                    } catch (error) { console.log('❌ [ANTIEDIT ERROR]:', error.message); }
+                }
+            }
+        })().catch(() => {});
+
         if (cmd) {
             try {
                 const participants = m.metadata?.participants || [];
-                const groupMetadata = m.metadata || null;
-                const isGroup = m.isGroup || false;
+                const groupMetadata = m.metadata || {};
                 if (m.mentionedJid && m.mentionedJid.length > 0 && globalThis.resolvePhoneFromLidAsync) {
                     const resolved = [];
                     for (const jid of m.mentionedJid) {
@@ -471,7 +699,16 @@ export default async (client, m, chatUpdate, store) => {
                     }
                     m.mentionedJid = resolved;
                 }
-                const cmdCtx = { client, m, args, text, prefix: usedPrefix, command: commandName, pushname, botNumber, itsMe, isDev, isSudo, Owner, settings, Tag, msgToxic, budy, sock: client, store, isAdmin, isBotAdmin, mode, pict, botname, totalCommands, isGroup, participants, groupMetadata };
+                const cmdCtx = {
+                    client, m, args, text, prefix: usedPrefix, command: commandName, pushname, botNumber,
+                    itsMe, isDev, isSudo, Owner, settings, Tag, msgToxic, budy, sock: client, store,
+                    isAdmin, isBotAdmin, mode, pict, botname, totalCommands, isGroup: m.isGroup,
+                    participants, groupMetadata, body, fq: fakeQuoted, fakeQuoted, mime, qmsg,
+                    packname: settings.packname, generateProfilePicture, toxicspeed, mycode, fetchJson,
+                    exec, getRandom, UploadFileUgu, TelegraPh, gcpresence, antitag,
+                    antidelete: antideleteSetting, fetchBuffer, sendJson, getGroupAdmins: () => [],
+                    stealth, multiprefix, chatUpdate, IsGroup: m.isGroup
+                };
                 if (typeof cmd.run === 'function') {
                     await cmd.run(cmdCtx);
                 } else if (typeof cmd === 'function') {

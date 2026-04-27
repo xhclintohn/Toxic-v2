@@ -1,15 +1,17 @@
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getSettings, updateSetting } from '../../database/config.js';
 import ownerMiddleware from '../../utils/botUtil/Ownermiddleware.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
 export default async (context) => {
   await ownerMiddleware(context, async () => {
-    const { client, m, args } = context;
+    const { client, m, args, prefix } = context;
     const fq = getFakeQuoted(m);
+
+    const fmtMsg = (msg) => `╭───(    TOXIC-MD    )───\n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
     try {
       const settings = await getSettings();
-      const prefix = settings.prefix || '.';
       const newEmoji = args[0];
       const currentEmoji = settings.autolikeemoji || 'random';
 
@@ -17,65 +19,53 @@ export default async (context) => {
         if (newEmoji === 'random') {
           if (currentEmoji === 'random') {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-            await m.reply("╭───(    TOXIC-MD    )───\n├ Already using random emojis, you brain-dead fool!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
-            return;
+            return await client.sendMessage(m.chat, { text: fmtMsg('Already using random emojis, you brain-dead fool!') }, { quoted: fq });
           }
           await updateSetting('autolikeemoji', 'random');
           await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
-          await m.reply("╭───(    TOXIC-MD    )───\n├ Reaction emoji set to random! Happy now?\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+          return await client.sendMessage(m.chat, { text: fmtMsg('Reaction emoji set to random! Happy now?') }, { quoted: fq });
         } else {
           if (currentEmoji === newEmoji) {
-            await m.reply(`╭───(    TOXIC-MD    )───\n├ Already using ${newEmoji} emoji, moron!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-            return;
+            return await client.sendMessage(m.chat, { text: fmtMsg(`Already using ${newEmoji} emoji, moron!`) }, { quoted: fq });
           }
           await updateSetting('autolikeemoji', newEmoji);
           await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
-          await m.reply(`╭───(    TOXIC-MD    )───\n├ Reaction emoji set to ${newEmoji}!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+          return await client.sendMessage(m.chat, { text: fmtMsg(`Reaction emoji set to ${newEmoji}!`) }, { quoted: fq });
         }
-        return;
       }
 
       const currentText = currentEmoji === 'random' ? 'Random emojis' : `${currentEmoji} emoji`;
 
-      await client.sendMessage(m.chat, {
-        interactiveMessage: {
-          header: `╭───(    TOXIC-MD    )───\n├───≫ REACTION SETTINGS ≪───\n├ \n├ Current: ${currentText}\n├ \n├ Use "${prefix}reaction random" for random\n├ Use "${prefix}reaction <emoji>" for specific\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-          buttons: [
-            {
-              name: "quick_reply",
-              buttonParamsJson: JSON.stringify({
-                display_text: "RANDOM",
-                id: `${prefix}reaction random`
-              })
-            },
-            {
-              name: "quick_reply",
-              buttonParamsJson: JSON.stringify({
-                display_text: "LOVE",
-                id: `${prefix}reaction ❤️`
-              })
-            },
-            {
-              name: "quick_reply",
-              buttonParamsJson: JSON.stringify({
-                display_text: "FIRE",
-                id: `${prefix}reaction 🔥`
-              })
-            },
-            {
-              name: "quick_reply",
-              buttonParamsJson: JSON.stringify({
-                display_text: "LAUGH",
-                id: `${prefix}reaction 😂`
-              })
+      const _msg = generateWAMessageFromContent(
+        m.chat,
+        {
+          interactiveMessage: {
+            body: { text: fmtMsg(`REACTION SETTINGS\n├ Current: ${currentText}\n├ \n├ Use "${prefix}reaction random" for random\n├ Use "${prefix}reaction <emoji>" for specific`) },
+            footer: { text: '' },
+            nativeFlowMessage: {
+              buttons: [{
+                name: 'single_select',
+                buttonParamsJson: JSON.stringify({
+                  title: 'Choose reaction emoji',
+                  sections: [{
+                    rows: [
+                      { title: 'RANDOM 🎲', id: `${prefix}reaction random` },
+                      { title: 'LOVE ❤️', id: `${prefix}reaction ❤️` },
+                      { title: 'FIRE 🔥', id: `${prefix}reaction 🔥` },
+                      { title: 'LAUGH 😂', id: `${prefix}reaction 😂` }
+                    ]
+                  }]
+                })
+              }]
             }
-          ]
-        }
-      }, { quoted: fq });
-
+          }
+        },
+        { quoted: fq }
+      );
+      await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
     } catch (error) {
       console.error('Reaction command error:', error);
-      await m.reply("╭───(    TOXIC-MD    )───\n├ Failed to update reaction settings. Something's broken.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+      await client.sendMessage(m.chat, { text: fmtMsg("Failed to update reaction settings. Something's broken.") }, { quoted: fq });
     }
   });
 };

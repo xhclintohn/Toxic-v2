@@ -16,8 +16,49 @@ export default async (context) => {
             const value = args[0]?.toLowerCase();
 
             if (value === 'on' || value === 'all') {
-                if (isEnabled) return const _multiprefixMsg = generateWAMessageFromContent(m.chat, { interactiveMessage: { body: { text: fmt(`Multi-prefix already OFF, clown. 🙄 Single prefix: *${settings.prefix || '.'}*`) }, footer: { text: '' }, nativeFlowMessage: { buttons: [{ name: 'single_select', buttonParamsJson: JSON.stringify({ title: 'Choose an option', sections: [{ rows: [                                                    { title: 'ON 🔥', id: `${prefix}multiprefix on` },
-                                                    { title: 'OFF 🧊', id: `${prefix}multiprefix off` }] }] }) }] } } }, { quoted: fq });
+                if (isEnabled) {
+                    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                    return await client.sendMessage(m.chat, { text: fmt('Multi-prefix already ON, clown. 🔥 All prefixes (. ! / #) work.') }, { quoted: fq });
+                }
+                await updateSetting('multiprefix', true);
+                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+                return await client.sendMessage(m.chat, { text: fmt('Multi-prefix: *ON 🔥* — . ! / # all work now. Enjoy, you picky bastard.') }, { quoted: fq });
+            }
+
+            if (value === 'off') {
+                if (!isEnabled) {
+                    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+                    return await client.sendMessage(m.chat, { text: fmt(`Multi-prefix already OFF, clown. 🙄 Single prefix: *${settings.prefix || '.'}*`) }, { quoted: fq });
+                }
+                await updateSetting('multiprefix', false);
+                await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
+                return await client.sendMessage(m.chat, { text: fmt(`Multi-prefix: *OFF 🧊* — single prefix only: *${settings.prefix || '.'}*`) }, { quoted: fq });
+            }
+
+            const _multiprefixMsg = generateWAMessageFromContent(
+                m.chat,
+                {
+                    interactiveMessage: {
+                        body: { text: fmt(`Multi-prefix: *${isEnabled ? 'ON 🔥' : 'OFF 🧊'}*\n├ When ON: . ! / # all trigger commands.\n├ When OFF: only *${settings.prefix || '.'}* works.`) },
+                        footer: { text: '' },
+                        nativeFlowMessage: {
+                            buttons: [{
+                                name: 'single_select',
+                                buttonParamsJson: JSON.stringify({
+                                    title: 'Choose an option',
+                                    sections: [{
+                                        rows: [
+                                            { title: 'ON 🔥', id: `${prefix}multiprefix on` },
+                                            { title: 'OFF 🧊', id: `${prefix}multiprefix off` }
+                                        ]
+                                    }]
+                                })
+                            }]
+                        }
+                    }
+                },
+                { quoted: fq }
+            );
             await client.relayMessage(m.chat, _multiprefixMsg.message, { messageId: _multiprefixMsg.key.id });
         } catch (err) {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });

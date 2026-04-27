@@ -28,7 +28,12 @@ export default async (context) => {
             try { const meta = await client.groupMetadata(m.chat); participants = meta.participants || []; } catch {}
         }
 
-        const blockJid = resolveTargetJid(rawJid, participants);
+        let blockJid = resolveTargetJid(rawJid, participants);
+
+        if (!blockJid && !m.isGroup) {
+            const chatUser = m.chat.split('@')[0].split(':')[0].replace(/\D/g, '');
+            if (chatUser) blockJid = chatUser + '@s.whatsapp.net';
+        }
 
         if (!blockJid) {
             return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ BLOCK ≪───\n├ \n├ Couldn't figure out who that clown is. Try again. 😤\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

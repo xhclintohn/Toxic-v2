@@ -1,3 +1,4 @@
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getSettings, updateSetting } from '../../database/config.js';
 import ownerMiddleware from '../../utils/botUtil/Ownermiddleware.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
@@ -36,16 +37,32 @@ export default {
         }
 
         const isOn = settings.autoai === true || settings.autoai === 'true';
-        return client.sendMessage(m.chat, {
-          text: fmt('AUTO AI', [
-            `Status: ${isOn ? '✅ ON' : '❌ OFF'}`,
-            `DMs: replies to every message`,
-            `Groups: replies when @mentioned or when its message is replied to`,
-            '',
-            `Toggle: ${prefix}chatbotpm on  /  ${prefix}chatbotpm off`
-          ])
-        }, { quoted: fq });
 
+        const _msg = generateWAMessageFromContent(
+          m.chat,
+          {
+            interactiveMessage: {
+              body: { text: fmt('AUTO AI', [`Status: ${isOn ? '✅ ON' : '❌ OFF'}`, 'DMs: replies to every message', 'Groups: replies when @mentioned or replied to']) },
+              footer: { text: '' },
+              nativeFlowMessage: {
+                buttons: [{
+                  name: 'single_select',
+                  buttonParamsJson: JSON.stringify({
+                    title: 'Choose an option',
+                    sections: [{
+                      rows: [
+                        { title: 'ON ✅', id: `${prefix}chatbotpm on` },
+                        { title: 'OFF ❌', id: `${prefix}chatbotpm off` }
+                      ]
+                    }]
+                  })
+                }]
+              }
+            }
+          },
+          { quoted: fq }
+        );
+        await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
       } catch {
         client.sendMessage(m.chat, { text: fmt('AUTO AI', 'something broke. try again.') }, { quoted: fq });
       }
