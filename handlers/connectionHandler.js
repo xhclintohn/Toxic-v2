@@ -99,34 +99,34 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
         });
 
         const buttonsMsg = generateWAMessageFromContent(
-          botJid,
+  botJid,
+  {
+    interactiveMessage: {
+      body: {
+        text: `*Bot is ready!*\n*Pick an option below to get started.*`
+      },
+      footer: { text: `Powered by ${botName}` },
+      nativeFlowMessage: {
+        buttons: [
           {
-            interactiveMessage: {
-              body: {
-                text: `◈━━━━━━━━━━━━━━━━◈\n│❒ *${botName}* is ready!\n│❒ Pick an option below to get started.\n◈━━━━━━━━━━━━━━━━◈`
-              },
-              footer: { text: `Powered by ${botName}` },
-              nativeFlowMessage: {
-                buttons: [
-                  {
-                    name: 'single_select',
-                    buttonParamsJson: JSON.stringify({
-                      title: 'Get Started',
-                      sections: [{
-                        rows: [
-                          { title: '📱 Menu', description: 'View all commands', id: `${effectivePrefix}menu` },
-                          { title: '⚙️ Settings', description: 'Bot configuration', id: `${effectivePrefix}settings` },
-                          { title: '🏓 Ping', description: 'Check bot speed', id: `${effectivePrefix}ping` }
-                        ]
-                      }]
-                    })
-                  }
+            name: 'single_select',
+            buttonParamsJson: JSON.stringify({
+              title: 'Get Started',
+              sections: [{
+                rows: [
+                  { title: 'Menu', description: 'View bot menu', id: `${effectivePrefix}menu` },
+                  { title: '⚙️ Settings', description: 'All bot settings', id: `${effectivePrefix}settings` },
+                  { title: 'Ping', description: 'Check bot speed', id: `${effectivePrefix}ping` }
                 ]
-              }
-            }
-          },
-          {}
-        );
+              }]
+            })
+          }
+        ]
+      }
+    }
+  },
+  {}
+);
         await socket.relayMessage(botJid, buttonsMsg.message, { messageId: buttonsMsg.key.id });
       } catch (error) {}
 
