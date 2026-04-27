@@ -187,19 +187,20 @@ const Events = async (client, event, pict) => {
     if (event.action === "demote" && antidemote) {
         try {
             const participantObj = participants[0];
-            // Extract string JID from participant (may be object or string)
             const participantJidRaw = extractJid(participantObj);
-            const participantDisplay = _num(participantJidRaw) || participantJidRaw.split("@")[0].split(":")[0];
             // Resolve to real phone JID using group metadata participants
             const nParticipant = resolveTargetJid(participantJidRaw, metadata.participants) || normalizeJid(participantObj);
+            // Always derive display from RESOLVED jid so we never show a LID number
+            const participantDisplay = _num(nParticipant) || nParticipant.split("@")[0].split(":")[0];
 
             const authorJidRaw = event.author || '';
-            const authorDisplay = _num(authorJidRaw) || authorJidRaw.split("@")[0].split(":")[0];
             const nAuthor = authorJidRaw
                 ? (resolveTargetJid(authorJidRaw, metadata.participants) || normalizeJid(authorJidRaw))
                 : null;
+            // Always derive display from RESOLVED jid so we never show a LID number
+            const authorDisplay = nAuthor ? (_num(nAuthor) || nAuthor.split("@")[0].split(":")[0]) : '';
 
-            console.log(`[EVENTS] Antidemote — participant=${nParticipant} author=${nAuthor}`);
+            console.log(`[EVENTS] Antidemote — participant=${nParticipant} (display=${participantDisplay}) author=${nAuthor} (display=${authorDisplay})`);
 
             if (isProtected(participantObj)) {
                 try { await client.groupParticipantsUpdate(event.id, [nParticipant], "promote"); } catch {}
@@ -245,16 +246,18 @@ const Events = async (client, event, pict) => {
         try {
             const participantObj = participants[0];
             const participantJidRaw = extractJid(participantObj);
-            const participantDisplay = _num(participantJidRaw) || participantJidRaw.split("@")[0].split(":")[0];
             const nParticipant = resolveTargetJid(participantJidRaw, metadata.participants) || normalizeJid(participantObj);
+            // Always derive display from RESOLVED jid so we never show a LID number
+            const participantDisplay = _num(nParticipant) || nParticipant.split("@")[0].split(":")[0];
 
             const authorJidRaw = event.author || '';
-            const authorDisplay = _num(authorJidRaw) || authorJidRaw.split("@")[0].split(":")[0];
             const nAuthor = authorJidRaw
                 ? (resolveTargetJid(authorJidRaw, metadata.participants) || normalizeJid(authorJidRaw))
                 : null;
+            // Always derive display from RESOLVED jid so we never show a LID number
+            const authorDisplay = nAuthor ? (_num(nAuthor) || nAuthor.split("@")[0].split(":")[0]) : '';
 
-            console.log(`[EVENTS] Antipromote — participant=${nParticipant} author=${nAuthor}`);
+            console.log(`[EVENTS] Antipromote — participant=${nParticipant} (display=${participantDisplay}) author=${nAuthor} (display=${authorDisplay})`);
 
             if (isProtected(authorJidRaw)) return;
 

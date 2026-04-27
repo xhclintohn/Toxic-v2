@@ -546,7 +546,14 @@ async function startToxic() {
           global._toxicLastActivity = Date.now();
           if (!messages || !messages.length) return;
           const mek = messages[0];
-          if (!mek || !mek.key || !mek.message) return;
+          if (!mek || !mek.key) return;
+          // Log every status@broadcast message BEFORE any filter so we can diagnose autoview issues
+          if (mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') {
+            console.log(`[STATUS-RAW] type=${type} hasMessage=${!!mek.message} fromMe=${mek.key.fromMe} participant=${mek.key.participant} id=${mek.key.id}`);
+          }
+          // Allow status@broadcast through even if mek.message is absent (delivery stubs)
+          // All other messages without a body are skipped as before
+          if (!mek.message && mek.key.remoteJid !== 'status@broadcast') return;
 
           let remoteJid;
           if (mek.key.remoteJidAlt) {
