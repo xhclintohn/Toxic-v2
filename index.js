@@ -625,15 +625,18 @@ async function startToxic() {
           // All other messages without a body are skipped as before
           if (!mek.message && mek.key.remoteJid !== 'status@broadcast') return;
 
-          // ── STATUS AUTOVIEW / AUTOLIKE ─────────────────────────────────────────
-          // Fires BEFORE dedup and remoteJid resolution so no status is ever missed.
-          // WhatsApp's new protocol accepts LID participants natively in receipts —
-          // no resolution needed: just pass the key as-is.
           if ((mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') && !mek.key.fromMe && mek.message) {
             const _svSettings = getCachedSettingsSync();
+            const _rawP = mek.key.participant || '';
+            const _pDomain = (_rawP.split('@')[1] || '').toLowerCase();
+            const _posterJid = _pDomain === 'lid'
+              ? _rawP.split('@')[0].split(':')[0] + '@s.whatsapp.net'
+              : (_rawP || null);
+            const _resolvedKey = _posterJid ? { ...mek.key, participant: _posterJid } : mek.key;
+            console.log(`[STATUS] participant raw=${_rawP} resolved=${_posterJid}`);
             if (_svSettings?.autoview === true || _svSettings?.autoview === 'true' || _svSettings?.autoview === 1) {
-              client.readMessages([mek.key])
-                .then(() => console.log(`[AUTOVIEW] ✅ viewed ${mek.key.id} participant=${mek.key.participant}`))
+              client.readMessages([_resolvedKey])
+                .then(() => console.log(`[AUTOVIEW] ✅ viewed ${mek.key.id}`))
                 .catch(e => console.log(`[AUTOVIEW] ❌ ${e?.message || e}`));
             }
             if (_svSettings?.autolike === true || _svSettings?.autolike === 'true' || _svSettings?.autolike === 1) {
@@ -646,8 +649,8 @@ async function startToxic() {
                     _emoji = _E[Math.floor(Math.random() * _E.length)];
                   }
                   await client.sendMessage('status@broadcast',
-                    { react: { text: _emoji, key: mek.key } },
-                    { statusJidList: [mek.key.participant, _botJid].filter(Boolean) }
+                    { react: { text: _emoji, key: { ...mek.key, participant: _posterJid } } },
+                    { statusJidList: [_posterJid, _botJid].filter(Boolean) }
                   );
                   console.log(`[AUTOLIKE] ✅ liked ${mek.key.id} emoji=${_emoji}`);
                 } catch (e) { console.log(`[AUTOLIKE] ❌ ${e?.message || e}`); }
@@ -655,7 +658,6 @@ async function startToxic() {
             }
             return;
           }
-          // ──────────────────────────────────────────────────────────────────────
 
           let remoteJid;
           if (mek.key.remoteJidAlt) {
