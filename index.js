@@ -573,7 +573,8 @@ async function startToxic() {
             remoteJid = resolveLidToJid(mek.key.remoteJid);
           }
 
-          if (type !== 'notify') return;
+          // Status messages arrive as type='append', not 'notify' — allow them through
+          if (type !== 'notify' && remoteJid !== 'status@broadcast') return;
           const ts = mek?.messageTimestamp;
           const tsN = ts ? (typeof ts === 'object' ? Number(ts.low||0)+Number(ts.high||0)*4294967296 : Number(ts)) : 0;
           if (tsN && tsN < (Math.floor(Date.now() / 1000) - 300)) return;

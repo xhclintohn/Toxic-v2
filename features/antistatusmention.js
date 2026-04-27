@@ -5,6 +5,15 @@ const fmt = (msg) => `╭───(    TOXIC-MD    )───\n├  ${msg}\n╰�
 
 const _num = (jid) => (jid || '').split('@')[0].split(':')[0].replace(/\D/g, '');
 
+// Participants can have LID in id — use phoneNumber field first for the real phone number
+const _pNum = (p) => {
+    const phone = p.phoneNumber || p.phone_number || '';
+    if (phone) return _num(phone);
+    const base = p.id || p.jid || '';
+    if (base && !base.endsWith('@lid')) return _num(base);
+    return _num(p.lid || base); // fallback: LID number (not a phone, but best we have)
+};
+
 export default async (client, m) => {
     try {
         if (!m?.message) return;
@@ -31,14 +40,12 @@ export default async (client, m) => {
         const botRaw = client.decodeJid ? client.decodeJid(client.user.id) : (client.user?.id || '');
         const botNum = _num(botRaw);
 
-        // Re-derive admin status from resolved sender — don't rely on m.isAdmin which may be wrong for LID senders
+        // Re-derive admin status using _pNum (checks phoneNumber first, then non-LID id)
         const isAdmin = groupMetadata.participants.some(p => {
-            const pNum = _num(p.id || p.jid || '');
-            return pNum === senderNum && (p.admin === 'admin' || p.admin === 'superadmin');
+            return _pNum(p) === senderNum && (p.admin === 'admin' || p.admin === 'superadmin');
         });
         const isBotAdmin = groupMetadata.participants.some(p => {
-            const pNum = _num(p.id || p.jid || '');
-            return pNum === botNum && (p.admin === 'admin' || p.admin === 'superadmin');
+            return _pNum(p) === botNum && (p.admin === 'admin' || p.admin === 'superadmin');
         });
 
         console.log(`[ANTISTATUSMENTION] senderNum=${senderNum} isAdmin=${isAdmin} isBotAdmin=${isBotAdmin} mode=${mode}`);

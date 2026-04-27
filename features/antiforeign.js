@@ -5,6 +5,25 @@ const DEV_NUMBER = '254114885159';
 
 const cleanNum = (jid) => (jid || '').split('@')[0].split(':')[0].replace(/\D/g, '');
 
+// Participants can have LID in id — use phoneNumber field first for the real phone number
+const _pNum = (p) => {
+    if (typeof p === 'string') return cleanNum(p);
+    const phone = p.phoneNumber || p.phone_number || '';
+    if (phone) return cleanNum(phone);
+    const base = p.id || p.jid || '';
+    if (base && !base.endsWith('@lid')) return cleanNum(base);
+    return cleanNum(p.lid || base);
+};
+
+// Extract JID string from a participant that may be an object or a string
+const extractJid = (p) => {
+    if (typeof p === 'string') return p;
+    if (!p) return '';
+    const phone = p.phoneNumber || p.phone_number || '';
+    if (phone) return typeof phone === 'string' && phone.includes('@') ? phone : phone + '@s.whatsapp.net';
+    return p.id || p.jid || '';
+};
+
 export default async (client, event) => {
     try {
         if (!event || event.action !== 'add') return;
@@ -16,9 +35,9 @@ export default async (client, event) => {
         const botRaw = client.decodeJid ? client.decodeJid(client.user.id) : (client.user?.id || '');
         const botNum = cleanNum(botRaw);
 
+        // Use _pNum to get phone from participants (p.id may be LID)
         const isBotAdmin = metadata.participants.some(p => {
-            const pNum = cleanNum(p.id || p.jid || '');
-            return pNum === botNum && (p.admin === 'admin' || p.admin === 'superadmin');
+            return _pNum(p) === botNum && (p.admin === 'admin' || p.admin === 'superadmin');
         });
 
         if (!isBotAdmin) return;
@@ -27,8 +46,12 @@ export default async (client, event) => {
         const BOT_COUNTRY_CODE = botNum.slice(0, 3);
 
         for (const participant of event.participants) {
+            // Extract JID string from participant (may be an object with id/phoneNumber)
+            const participantJid = extractJid(participant);
+            if (!participantJid) continue;
+
             // Resolve real phone JID — same pattern as warn.js plugin
-            const resolvedJid = resolveTargetJid(participant, metadata.participants);
+            const resolvedJid = resolveTargetJid(participantJid, metadata.participants);
             if (!resolvedJid) continue; // can't resolve LID, skip safely
 
             const pNum = cleanNum(resolvedJid);
@@ -49,6 +72,6 @@ export default async (client, event) => {
             }
         }
     } catch (err) {
-        console.error('AntiForign Error:', err);
+        console.error('[ANTIFOREIGN] Error:', err.message);
     }
 };

@@ -6,21 +6,35 @@ const DEVELOPER_NUMBER = "254114885159";
 
 const _num = (jid) => (jid || '').split('@')[0].split(':')[0].replace(/\D/g, '');
 
-const normalizeJid = (jid) => {
+// Event participants can be objects {id, phoneNumber, admin} or plain strings
+// Extract the best JID string — prefer phoneNumber (real phone) over id (may be LID)
+const extractJid = (p) => {
+    if (typeof p === 'string') return p;
+    if (!p) return '';
+    const phone = p.phoneNumber || p.phone_number || '';
+    if (phone) return typeof phone === 'string' && phone.includes('@') ? phone : phone + '@s.whatsapp.net';
+    return p.id || p.jid || '';
+};
+
+// Normalise any participant value (object or string) to a @s.whatsapp.net JID
+const normalizeJid = (p) => {
+    const jid = extractJid(p);
     if (!jid) return '';
     if (jid.endsWith('@lid') && globalThis.resolvePhoneFromLid) {
         const phone = globalThis.resolvePhoneFromLid(jid);
-        if (phone) return phone + '@s.whatsapp.net';
+        if (phone) return _num(phone) + '@s.whatsapp.net';
     }
+    if (jid.endsWith('@lid')) return jid; // can't resolve yet — keep raw
     return _num(jid) + '@s.whatsapp.net';
 };
 
-const isDeveloper = (jid) => _num(jid) === DEVELOPER_NUMBER;
+const isDeveloper = (p) => _num(extractJid(p)) === DEVELOPER_NUMBER;
 
 const Events = async (client, event, pict) => {
-    const botJid = normalizeJid(client.decodeJid(client.user.id));
+    const botRaw = client.decodeJid ? client.decodeJid(client.user.id) : (client.user?.id || '');
+    const botJid = normalizeJid(botRaw);
 
-    // Fetch metadata independently — a failure here must NOT abort welcome/goodbye/etc.
+    // Fetch metadata independently — failure must NOT abort welcome/goodbye/etc.
     let metadata = null;
     try {
         metadata = await client.groupMetadata(event.id);
@@ -51,14 +65,15 @@ const Events = async (client, event, pict) => {
     const currentDevs = Array.isArray(sudoUsers) ? sudoUsers.map(v => normalizeJid(v)) : [];
     currentDevs.push(normalizeJid(DEVELOPER_NUMBER));
 
-    const isProtected = (jid) => {
-        const n = normalizeJid(jid);
-        return isDeveloper(jid) || currentDevs.includes(n) || n === botJid || n === normalizeJid(metadata.owner);
+    const isProtected = (p) => {
+        const n = normalizeJid(p);
+        return isDeveloper(p) || currentDevs.includes(n) || n === botJid || n === normalizeJid(metadata.owner);
     };
 
     const dpUrls = await Promise.all(
-        participants.map(async (participant) => {
-            try { return await client.profilePictureUrl(participant, "image"); } catch { return pict || null; }
+        participants.map(async (p) => {
+            const jid = extractJid(p);
+            try { return await client.profilePictureUrl(jid, "image"); } catch { return pict || null; }
         })
     );
 
@@ -67,15 +82,16 @@ const Events = async (client, event, pict) => {
         try { await antiforeign(client, event); } catch (e) {
             console.log('[EVENTS] antiforeign error:', e.message);
         }
-        for (const participant of participants) {
-            if (isDeveloper(participant)) {
+        for (const p of participants) {
+            if (isDeveloper(p)) {
                 try {
                     const freshMeta = await client.groupMetadata(event.id);
-                    const botIsAdmin = freshMeta.participants.some(
-                        p => normalizeJid(p.id || p.jid || '') === botJid && p.admin !== null
-                    );
+                    const botIsAdmin = freshMeta.participants.some(fp => {
+                        const fpJid = extractJid(fp);
+                        return normalizeJid(fpJid) === botJid && fp.admin !== null;
+                    });
                     if (botIsAdmin) {
-                        const devJid = normalizeJid(participant);
+                        const devJid = normalizeJid(p);
                         await client.groupParticipantsUpdate(event.id, [devJid], "promote");
                         await client.sendMessage(event.id, {
                             text: `╭───(    TOXIC-MD    )───\n├───≫ AUTO-PROMOTED ≪───\n├ \n├ 👑 The developer has joined.\n├ Auto-promoted to admin.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
@@ -93,8 +109,9 @@ const Events = async (client, event, pict) => {
     if (welcomeEnabled && event.action === "add") {
         console.log(`[EVENTS] Sending welcome to ${participants.length} member(s) in ${event.id}`);
         for (let i = 0; i < participants.length; i++) {
-            const participant = participants[i];
-            const userName = participant.split("@")[0].split(":")[0];
+            const p = participants[i];
+            const participantJid = extractJid(p);
+            const userName = _num(participantJid) || participantJid.split("@")[0].split(":")[0];
             const dpUrl = dpUrls[i];
             const caption =
 `╭───(    TOXIC-MD    )───
@@ -111,13 +128,13 @@ const Events = async (client, event, pict) => {
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
             try {
                 if (dpUrl) {
-                    await client.sendMessage(event.id, { image: { url: dpUrl }, caption, mentions: [participant] });
+                    await client.sendMessage(event.id, { image: { url: dpUrl }, caption, mentions: [participantJid] });
                 } else {
-                    await client.sendMessage(event.id, { text: caption, mentions: [participant] });
+                    await client.sendMessage(event.id, { text: caption, mentions: [participantJid] });
                 }
             } catch (e) {
                 console.log('[EVENTS] Welcome image send failed, retrying text:', e.message);
-                try { await client.sendMessage(event.id, { text: caption, mentions: [participant] }); } catch (e2) {
+                try { await client.sendMessage(event.id, { text: caption, mentions: [participantJid] }); } catch (e2) {
                     console.log('[EVENTS] Welcome text send also failed:', e2.message);
                 }
             }
@@ -126,8 +143,8 @@ const Events = async (client, event, pict) => {
 
     // Reset warns on leave
     if (event.action === "remove") {
-        for (const participant of participants) {
-            try { await resetWarn(event.id, normalizeJid(participant)); } catch {}
+        for (const p of participants) {
+            try { await resetWarn(event.id, normalizeJid(p)); } catch {}
         }
     }
 
@@ -135,8 +152,9 @@ const Events = async (client, event, pict) => {
     if (goodbyeEnabled && event.action === "remove") {
         console.log(`[EVENTS] Sending goodbye to ${participants.length} member(s) in ${event.id}`);
         for (let i = 0; i < participants.length; i++) {
-            const participant = participants[i];
-            const userName = participant.split("@")[0].split(":")[0];
+            const p = participants[i];
+            const participantJid = extractJid(p);
+            const userName = _num(participantJid) || participantJid.split("@")[0].split(":")[0];
             const dpUrl = dpUrls[i];
             const caption =
 `╭───(    TOXIC-MD    )───
@@ -152,49 +170,57 @@ const Events = async (client, event, pict) => {
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
             try {
                 if (dpUrl) {
-                    await client.sendMessage(event.id, { image: { url: dpUrl }, caption, mentions: [participant] });
+                    await client.sendMessage(event.id, { image: { url: dpUrl }, caption, mentions: [participantJid] });
                 } else {
-                    await client.sendMessage(event.id, { text: caption, mentions: [participant] });
+                    await client.sendMessage(event.id, { text: caption, mentions: [participantJid] });
                 }
             } catch (e) {
                 console.log('[EVENTS] Goodbye image send failed, retrying text:', e.message);
-                try { await client.sendMessage(event.id, { text: caption, mentions: [participant] }); } catch (e2) {
+                try { await client.sendMessage(event.id, { text: caption, mentions: [participantJid] }); } catch (e2) {
                     console.log('[EVENTS] Goodbye text send also failed:', e2.message);
                 }
             }
         }
     }
 
-    // Antidemote — use resolveTargetJid for LID-safe JID resolution
+    // Antidemote — use resolveTargetJid for LID-safe resolution
     if (event.action === "demote" && antidemote) {
-        console.log(`[EVENTS] Antidemote triggered — participant=${participants[0]} author=${event.author}`);
         try {
-            const participant = participants[0];
-            const nParticipant = resolveTargetJid(participant, metadata.participants) || normalizeJid(participant);
-            const nAuthor = event.author
-                ? (resolveTargetJid(event.author, metadata.participants) || normalizeJid(event.author))
+            const participantObj = participants[0];
+            // Extract string JID from participant (may be object or string)
+            const participantJidRaw = extractJid(participantObj);
+            const participantDisplay = _num(participantJidRaw) || participantJidRaw.split("@")[0].split(":")[0];
+            // Resolve to real phone JID using group metadata participants
+            const nParticipant = resolveTargetJid(participantJidRaw, metadata.participants) || normalizeJid(participantObj);
+
+            const authorJidRaw = event.author || '';
+            const authorDisplay = _num(authorJidRaw) || authorJidRaw.split("@")[0].split(":")[0];
+            const nAuthor = authorJidRaw
+                ? (resolveTargetJid(authorJidRaw, metadata.participants) || normalizeJid(authorJidRaw))
                 : null;
 
-            if (isProtected(participant)) {
+            console.log(`[EVENTS] Antidemote — participant=${nParticipant} author=${nAuthor}`);
+
+            if (isProtected(participantObj)) {
                 try { await client.groupParticipantsUpdate(event.id, [nParticipant], "promote"); } catch {}
                 await client.sendMessage(event.id, {
                     text:
 `╭───(    TOXIC-MD    )───
 ├───≫ ANTIDEMOTE ≪───
 ├ 
-├ 🛡️ *@${participant.split("@")[0].split(":")[0]} cannot be demoted.*
+├ 🛡️ *@${participantDisplay} cannot be demoted.*
 ├ Protected user — re-promoted automatically.
 ├ 
 ├ 🤖 *Bot*: 𝐓𝐨𝐱𝐢𝐜-𝐌𝐃
 ├ 🦁 *Group*: ${metadata.subject}
 ╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-                    mentions: [participant]
+                    mentions: [nParticipant].filter(Boolean)
                 });
                 return;
             }
 
-            if (isProtected(event.author)) return;
+            if (isProtected(authorJidRaw)) return;
 
             if (nAuthor) await client.groupParticipantsUpdate(event.id, [nAuthor], "demote").catch(() => {});
             await client.groupParticipantsUpdate(event.id, [nParticipant], "promote").catch(() => {});
@@ -203,42 +229,48 @@ const Events = async (client, event, pict) => {
 `╭───(    TOXIC-MD    )───
 ├───≫ ANTIDEMOTE ≪───
 ├ 
-├ 😏 *Nice try, @${(event.author || '').split("@")[0].split(":")[0]}! Demoted for messing with @${participant.split("@")[0].split(":")[0]}!*
+├ 😏 *Nice try, @${authorDisplay}! Demoted for messing with @${participantDisplay}!*
 ├ 
 ├ 🤖 *Bot*: 𝐓𝐨𝐱𝐢𝐜-𝐌𝐃
 ├ 🦁 *Group*: ${metadata.subject}
 ├ 📜 *Rule*: Antidemote is on. Only the big dogs can demote!
 ╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-                mentions: [event.author, participant].filter(Boolean)
+                mentions: [nAuthor, nParticipant].filter(Boolean)
             });
         } catch (e) {
             console.log('[EVENTS] Antidemote error:', e.message);
         }
     } else if (event.action === "promote" && antipromote) {
-        console.log(`[EVENTS] Antipromote triggered — participant=${participants[0]} author=${event.author}`);
         try {
-            const participant = participants[0];
-            const nParticipant = resolveTargetJid(participant, metadata.participants) || normalizeJid(participant);
-            const nAuthor = event.author
-                ? (resolveTargetJid(event.author, metadata.participants) || normalizeJid(event.author))
+            const participantObj = participants[0];
+            const participantJidRaw = extractJid(participantObj);
+            const participantDisplay = _num(participantJidRaw) || participantJidRaw.split("@")[0].split(":")[0];
+            const nParticipant = resolveTargetJid(participantJidRaw, metadata.participants) || normalizeJid(participantObj);
+
+            const authorJidRaw = event.author || '';
+            const authorDisplay = _num(authorJidRaw) || authorJidRaw.split("@")[0].split(":")[0];
+            const nAuthor = authorJidRaw
+                ? (resolveTargetJid(authorJidRaw, metadata.participants) || normalizeJid(authorJidRaw))
                 : null;
 
-            if (isProtected(event.author)) return;
+            console.log(`[EVENTS] Antipromote — participant=${nParticipant} author=${nAuthor}`);
 
-            if (isProtected(participant)) {
+            if (isProtected(authorJidRaw)) return;
+
+            if (isProtected(participantObj)) {
                 await client.sendMessage(event.id, {
                     text:
 `╭───(    TOXIC-MD    )───
 ├───≫ PROMOTION ≪───
 ├ 
-├ 😎 *Big dog @${participant.split("@")[0].split(":")[0]} just leveled up!*
+├ 😎 *Big dog @${participantDisplay} just leveled up!*
 ├ 
 ├ 🤖 *Bot*: 𝐓𝐨𝐱𝐢𝐜-𝐌𝐃
 ├ 🦁 *Group*: ${metadata.subject}
 ╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-                    mentions: [participant]
+                    mentions: [nParticipant].filter(Boolean)
                 });
                 return;
             }
@@ -251,14 +283,14 @@ const Events = async (client, event, pict) => {
 `╭───(    TOXIC-MD    )───
 ├───≫ ANTIPROMOTE ≪───
 ├ 
-├ 😆 *Oof, @${(event.author || '').split("@")[0].split(":")[0]}! Demoted for trying to boost @${participant.split("@")[0].split(":")[0]}!*
+├ 😆 *Oof, @${authorDisplay}! Demoted for trying to boost @${participantDisplay}!*
 ├ 
 ├ 🤖 *Bot*: 𝐓𝐨𝐱𝐢𝐜-𝐌𝐃
 ├ 🦁 *Group*: ${metadata.subject}
 ├ 📜 *Rule*: Antipromote is on. Only the elite can promote!
 ╰──────────────────☉
 > ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-                mentions: [event.author, participant].filter(Boolean)
+                mentions: [nAuthor, nParticipant].filter(Boolean)
             });
         } catch (e) {
             console.log('[EVENTS] Antipromote error:', e.message);
