@@ -43,7 +43,7 @@ const Events = async (client, event, pict) => {
 
         const dpUrls = await Promise.all(
             participants.map(async (participant) => {
-                try { return await client.profilePictureUrl(participant, "image"); } catch { return pict; }
+                try { return await client.profilePictureUrl(participant, "image"); } catch { return pict || null; }
             })
         );
 
@@ -69,13 +69,11 @@ const Events = async (client, event, pict) => {
         }
 
         if (welcomeEnabled && event.action === "add") {
-            try {
-                for (let i = 0; i < participants.length; i++) {
-                    const participant = participants[i];
-                    const userName = participant.split("@")[0].split(":")[0];
-                    await client.sendMessage(event.id, {
-                        image: { url: dpUrls[i] },
-                        caption:
+            for (let i = 0; i < participants.length; i++) {
+                const participant = participants[i];
+                const userName = participant.split("@")[0].split(":")[0];
+                const dpUrl = dpUrls[i];
+                const caption =
 `╭───(    TOXIC-MD    )───
 ├───≫ WELCOME ≪───
 ├ 
@@ -87,11 +85,17 @@ const Events = async (client, event, pict) => {
 ├ 
 ├ 😼 *Try not to get roasted too hard, newbie!*
 ╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-                        mentions: [participant]
-                    });
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+                try {
+                    if (dpUrl) {
+                        await client.sendMessage(event.id, { image: { url: dpUrl }, caption, mentions: [participant] });
+                    } else {
+                        await client.sendMessage(event.id, { text: caption, mentions: [participant] });
+                    }
+                } catch {
+                    try { await client.sendMessage(event.id, { text: caption, mentions: [participant] }); } catch {}
                 }
-            } catch {}
+            }
         }
 
         if (event.action === "remove") {
@@ -103,13 +107,11 @@ const Events = async (client, event, pict) => {
         }
 
         if (goodbyeEnabled && event.action === "remove") {
-            try {
-                for (let i = 0; i < participants.length; i++) {
-                    const participant = participants[i];
-                    const userName = participant.split("@")[0].split(":")[0];
-                    await client.sendMessage(event.id, {
-                        image: { url: dpUrls[i] },
-                        caption:
+            for (let i = 0; i < participants.length; i++) {
+                const participant = participants[i];
+                const userName = participant.split("@")[0].split(":")[0];
+                const dpUrl = dpUrls[i];
+                const caption =
 `╭───(    TOXIC-MD    )───
 ├───≫ GOODBYE ≪───
 ├ 
@@ -120,11 +122,17 @@ const Events = async (client, event, pict) => {
 ├ 
 ├ 😜 *Don't cry, we'll survive without ya!*
 ╰──────────────────☉
-> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
-                        mentions: [participant]
-                    });
+> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+                try {
+                    if (dpUrl) {
+                        await client.sendMessage(event.id, { image: { url: dpUrl }, caption, mentions: [participant] });
+                    } else {
+                        await client.sendMessage(event.id, { text: caption, mentions: [participant] });
+                    }
+                } catch {
+                    try { await client.sendMessage(event.id, { text: caption, mentions: [participant] }); } catch {}
                 }
-            } catch {}
+            }
         }
 
         if (event.action === "demote" && antidemote) {
@@ -177,7 +185,9 @@ const Events = async (client, event, pict) => {
                 const nAuthor = normalizeJid(event.author);
                 const nParticipant = normalizeJid(participant);
 
-                if (isProtected(participant) || isProtected(event.author)) {
+                if (isProtected(event.author)) return;
+
+                if (isProtected(participant)) {
                     await client.sendMessage(event.id, {
                         text:
 `╭───(    TOXIC-MD    )───

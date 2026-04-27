@@ -438,6 +438,14 @@ let Database = null;
 
   async function addWarn(jid, user) {
       try {
+          await ensureReady();
+          if (_backend === 'pg') {
+              const res = await _pg.query(
+                  'INSERT INTO warn_data (jid, "user", warns) VALUES ($1, $2, 1) ON CONFLICT (jid, "user") DO UPDATE SET warns = warn_data.warns + 1 RETURNING warns',
+                  [jid, user]
+              );
+              return res.rows[0]?.warns || 1;
+          }
           const row = await qGet(
               'SELECT warns FROM warn_data WHERE jid = ? AND user = ?',
               'SELECT warns FROM warn_data WHERE jid = $1 AND user = $2',

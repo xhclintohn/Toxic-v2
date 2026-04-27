@@ -682,6 +682,13 @@ async function startToxic() {
       try { groupEvents(client, m, null); } catch (error) {}
     });
 
+    client.ev.on("presence.update", ({ id, presences }) => {
+      if (!global._toxicPresenceMap) global._toxicPresenceMap = new Map();
+      for (const [jid, data] of Object.entries(presences || {})) {
+        global._toxicPresenceMap.set(jid, { ...data, timestamp: Date.now() });
+      }
+    });
+
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 15;
     const baseReconnectDelay = 2000;

