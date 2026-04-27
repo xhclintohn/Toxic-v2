@@ -220,8 +220,29 @@ async function handleAutoViewStatus(sock, m) {
   if (!sock?.sessionConfig?.autoViewStatus) return;
   if (!m?.key) return;
   if (m.key.remoteJid !== 'status@broadcast') return;
-  const isLid = m.key.addressingMode === 'lid';
-  const resolvedKey = isLid ? { ...m.key, participant: m.key.remoteJidAlt || m.key.participant } : m.key;
+
+  // Resolve the participant JID — may be a LID that needs mapping to a phone JID
+  let participantJid = m.key.remoteJidAlt || m.key.participant || '';
+
+  if (participantJid && participantJid.endsWith('@lid')) {
+    const lidNum = participantJid.split('@')[0].split(':')[0];
+    // Try synchronous cache first
+    const cached = lidPhoneCache?.get(lidNum);
+    if (cached) {
+      participantJid = String(cached).replace(/\D/g, '') + '@s.whatsapp.net';
+    } else {
+      // Try async DB/signal resolver
+      try {
+        const phone = await resolvePhoneFromLidAsync(participantJid);
+        if (phone && typeof phone === 'string') {
+          const num = phone.replace(/\D/g, '');
+          if (num && num !== lidNum) participantJid = num + '@s.whatsapp.net';
+        }
+      } catch {}
+    }
+  }
+
+  const resolvedKey = participantJid ? { ...m.key, participant: participantJid } : m.key;
   try { await sock.readMessages([resolvedKey]); } catch (err) {}
 }
 
@@ -232,7 +253,13 @@ function resolveStatusPosterJid(key = {}) {
   const user = (decoded[0] || '').split(':')[0];
   const server = decoded[1] || '';
   if (!user) return '';
-  if (server === 'lid') return user + '@s.whatsapp.net';
+  if (server === 'lid') {
+    // LID number is NOT the phone number — resolve from cache
+    const cached = lidPhoneCache?.get(user);
+    if (cached) return String(cached).replace(/\D/g, '') + '@s.whatsapp.net';
+    // No cached mapping yet — return LID as-is (autolike may fail for this user)
+    return user + '@' + server;
+  }
   return user + '@' + server;
 }
 
