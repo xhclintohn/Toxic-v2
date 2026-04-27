@@ -1,7 +1,5 @@
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
-const DEV_NUMBER = '254114885159';
-
 export default async (context) => {
     const { client, m } = context;
     const fq = getFakeQuoted(m);
@@ -14,7 +12,9 @@ export default async (context) => {
     }
 
     try {
-        const dest = DEV_NUMBER + '@s.whatsapp.net';
+        let dest = client.user?.id || '';
+        if (dest.includes(':')) dest = dest.split(':')[0] + '@s.whatsapp.net';
+        if (!dest) dest = client.decodeJid ? client.decodeJid(client.user.id) : client.user.id;
         const mediaType = m.quoted?.mtype || '';
         const isImage = mediaType === 'imageMessage' || !!(m.quoted?.imageMessage);
         const isVideo = mediaType === 'videoMessage' || !!(m.quoted?.videoMessage);

@@ -32,7 +32,7 @@ export default async (context) => {
         return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote is already ${value.toUpperCase()}, you brainless fool!\n├ Quit wasting my time!`) }, { quoted: fq });
       }
 
-      await updateGroupSetting(jid, 'antidemote', action ? 'true' : 'false');
+      await updateGroupSetting(jid, 'antidemote', action);
       await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
       return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote ${value.toUpperCase()}!\n├ Demotions are under my watch, king!`) }, { quoted: fq });
     }

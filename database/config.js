@@ -304,7 +304,7 @@ let Database = null;
 
   async function updateGroupSetting(jid, key, value) {
       await ensureReady();
-      const _sv = typeof value === 'boolean' ? (value ? 1 : 0) : value;
+      const _sv = (value === true || value === 'true') ? 1 : (value === false || value === 'false') ? 0 : value;
       if (_backend === 'pg') {
           await _pg.query('INSERT INTO group_settings (jid) VALUES ($1) ON CONFLICT (jid) DO NOTHING', [jid]);
           await _pg.query(`UPDATE group_settings SET ${key} = $1 WHERE jid = $2`, [_sv, jid]);
@@ -314,7 +314,7 @@ let Database = null;
           g[key] = _sv;
       } else {
           _db.prepare('INSERT OR IGNORE INTO group_settings (jid) VALUES (?)').run(jid);
-          _db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(value, jid);
+          _db.prepare(`UPDATE group_settings SET ${key} = ? WHERE jid = ?`).run(_sv, jid);
       }
       cache.groupSettings.delete(jid);
   }

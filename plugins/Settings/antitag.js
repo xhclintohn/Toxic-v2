@@ -38,7 +38,7 @@ export default async (context) => {
                 return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag is already ${value.toUpperCase()}, genius!`) }, { quoted: fq });
             }
 
-            await updateGroupSetting(jid, 'antitag', action ? 'true' : 'false');
+            await updateGroupSetting(jid, 'antitag', action);
             await client.sendMessage(m.chat, { react: { text: '⚙️', key: m.reactKey } });
             return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag has been turned ${value.toUpperCase()} for this group.`) }, { quoted: fq });
         }

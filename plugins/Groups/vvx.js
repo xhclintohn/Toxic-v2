@@ -1,7 +1,5 @@
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
-const DEV_NUMBER = '254114885159';
-
 export default async (context) => {
     const { client, m } = context;
     const fq = getFakeQuoted(m);
@@ -21,7 +19,7 @@ export default async (context) => {
         const buffer = await client.downloadMediaMessage(mediaMessage);
         if (!buffer || buffer.length === 0) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Failed to download media.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
-        const dest = DEV_NUMBER + '@s.whatsapp.net';
+        const dest = m.chat;
         const caption = `╭───(    TOXIC-MD    )───\n├───≫ VIEW ONCE ≪───\n├ \n├ Here's your media, perv.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
         if (imageMsg) {

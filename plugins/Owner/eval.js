@@ -22,8 +22,10 @@ export default async (context) => {
             }
             let evaled = await eval(trimmedText);
             if (typeof evaled !== 'string') evaled = util.inspect(evaled);
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
             if (evaled && evaled !== 'undefined' && evaled !== 'null') await m.reply(evaled);
         } catch (err) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ EVAL ERROR ≪───\n├ \n├ ${String(err)}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
     });
