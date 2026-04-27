@@ -3,6 +3,8 @@ import { resolveTargetJid } from '../lib/lidResolver.js';
 
 const fmt = (msg) => `╭───(    TOXIC-MD    )───\n├  ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
+const _num = (jid) => (jid || '').split('@')[0].split(':')[0].replace(/\D/g, '');
+
 export default async (client, m) => {
     try {
         if (!m?.message) return;
@@ -14,14 +16,34 @@ export default async (client, m) => {
         const mode = (groupSettings.antistatusmention || 'off').toLowerCase();
         if (!mode || mode === 'off' || mode === 'false') return;
 
-        const isAdmin = m.isAdmin;
-        const isBotAdmin = m.isBotAdmin;
-
-        // Resolve real phone JID — same pattern as warn.js plugin
+        // Fetch fresh metadata and resolve sender via resolveTargetJid (same as warn.js)
         const groupMetadata = await client.groupMetadata(m.chat);
         const sender = resolveTargetJid(m.sender, groupMetadata.participants);
-        if (!sender) return;
-        const username = sender.split('@')[0];
+
+        console.log(`[ANTISTATUSMENTION] chat=${m.chat} rawSender=${m.sender} resolved=${sender} fromMe=${m.key.fromMe} mtype=${m.mtype}`);
+
+        if (!sender) {
+            console.log('[ANTISTATUSMENTION] Could not resolve sender — skipping.');
+            return;
+        }
+
+        const senderNum = _num(sender);
+        const botRaw = client.decodeJid ? client.decodeJid(client.user.id) : (client.user?.id || '');
+        const botNum = _num(botRaw);
+
+        // Re-derive admin status from resolved sender — don't rely on m.isAdmin which may be wrong for LID senders
+        const isAdmin = groupMetadata.participants.some(p => {
+            const pNum = _num(p.id || p.jid || '');
+            return pNum === senderNum && (p.admin === 'admin' || p.admin === 'superadmin');
+        });
+        const isBotAdmin = groupMetadata.participants.some(p => {
+            const pNum = _num(p.id || p.jid || '');
+            return pNum === botNum && (p.admin === 'admin' || p.admin === 'superadmin');
+        });
+
+        console.log(`[ANTISTATUSMENTION] senderNum=${senderNum} isAdmin=${isAdmin} isBotAdmin=${isBotAdmin} mode=${mode}`);
+
+        const username = senderNum || sender.split('@')[0];
 
         if (isAdmin) {
             await client.sendMessage(m.chat, {
@@ -39,7 +61,7 @@ export default async (client, m) => {
             return;
         }
 
-        // Delete using original key — WhatsApp resolves LID participant internally
+        // Delete using original key — WhatsApp handles LID participant internally
         try {
             await client.sendMessage(m.chat, {
                 delete: {
@@ -49,7 +71,9 @@ export default async (client, m) => {
                     participant: m.key.participant || m.sender,
                 },
             });
-        } catch {}
+        } catch (e) {
+            console.log('[ANTISTATUSMENTION] Delete failed:', e.message);
+        }
 
         if (mode === 'kick') {
             try {
@@ -58,7 +82,8 @@ export default async (client, m) => {
                     text: fmt(`🚫 @${username} KICKED for status mention.\nMessage deleted. Rules aren't optional. 😈`),
                     mentions: [sender],
                 });
-            } catch {
+            } catch (e) {
+                console.log('[ANTISTATUSMENTION] Kick failed:', e.message);
                 await client.sendMessage(m.chat, {
                     text: fmt(`Tried to kick @${username} for status mention but failed.\nCheck my permissions. 😠`),
                     mentions: [sender],
@@ -67,27 +92,26 @@ export default async (client, m) => {
             return;
         }
 
-        if (mode === 'warn' || mode === 'delete' || mode === 'true') {
-            const MAX_WARNS = await getWarnLimit(m.chat);
-            const newCount = await addWarn(m.chat, username);
-            const remaining = MAX_WARNS - newCount;
+        // warn / delete / true — warn then kick at limit
+        const MAX_WARNS = await getWarnLimit(m.chat);
+        const newCount = await addWarn(m.chat, username);
+        const remaining = MAX_WARNS - newCount;
 
-            if (newCount >= MAX_WARNS) {
-                await resetWarn(m.chat, username);
-                try { await client.groupParticipantsUpdate(m.chat, [sender], 'remove'); } catch {}
-                await client.sendMessage(m.chat, {
-                    text: fmt(`🚨 @${username} KICKED!\n├ Reason: Status mention spam\n├ Warns: ${newCount}/${MAX_WARNS}\n├ That's your limit. Get out. 😈`),
-                    mentions: [sender],
-                });
-                return;
-            }
-
+        if (newCount >= MAX_WARNS) {
+            await resetWarn(m.chat, username);
+            try { await client.groupParticipantsUpdate(m.chat, [sender], 'remove'); } catch {}
             await client.sendMessage(m.chat, {
-                text: fmt(`⚠️ @${username}, warned for status mention!\n├ Message deleted.\n├ Warns: ${newCount}/${MAX_WARNS}\n├ ${remaining} more and you're GONE. 😈`),
+                text: fmt(`🚨 @${username} KICKED!\n├ Reason: Status mention spam\n├ Warns: ${newCount}/${MAX_WARNS}\n├ That's your limit. Get out. 😈`),
                 mentions: [sender],
             });
+            return;
         }
+
+        await client.sendMessage(m.chat, {
+            text: fmt(`⚠️ @${username}, warned for status mention!\n├ Message deleted.\n├ Warns: ${newCount}/${MAX_WARNS}\n├ ${remaining} more and you're GONE. 😈`),
+            mentions: [sender],
+        });
     } catch (err) {
-        console.error('AntiStatusMention Error:', err);
+        console.error('[ANTISTATUSMENTION] Error:', err.message);
     }
 };

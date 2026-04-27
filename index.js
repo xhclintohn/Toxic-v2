@@ -223,6 +223,9 @@ async function handleAutoViewStatus(sock, m) {
 
   // Resolve the participant JID — may be a LID that needs mapping to a phone JID
   let participantJid = m.key.remoteJidAlt || m.key.participant || '';
+  const rawParticipant = participantJid;
+
+  console.log(`[AUTOVIEW] Status received — id=${m.key.id} rawParticipant=${rawParticipant} fromMe=${m.key.fromMe}`);
 
   if (participantJid && participantJid.endsWith('@lid')) {
     const lidNum = participantJid.split('@')[0].split(':')[0];
@@ -230,20 +233,33 @@ async function handleAutoViewStatus(sock, m) {
     const cached = lidPhoneCache?.get(lidNum);
     if (cached) {
       participantJid = String(cached).replace(/\D/g, '') + '@s.whatsapp.net';
+      console.log(`[AUTOVIEW] LID resolved from cache: ${rawParticipant} → ${participantJid}`);
     } else {
       // Try async DB/signal resolver
       try {
         const phone = await resolvePhoneFromLidAsync(participantJid);
         if (phone && typeof phone === 'string') {
           const num = phone.replace(/\D/g, '');
-          if (num && num !== lidNum) participantJid = num + '@s.whatsapp.net';
+          if (num && num !== lidNum) {
+            participantJid = num + '@s.whatsapp.net';
+            console.log(`[AUTOVIEW] LID resolved async: ${rawParticipant} → ${participantJid}`);
+          }
         }
       } catch {}
+    }
+    if (participantJid === rawParticipant) {
+      console.log(`[AUTOVIEW] LID could not be resolved: ${rawParticipant} — readMessages may fail`);
     }
   }
 
   const resolvedKey = participantJid ? { ...m.key, participant: participantJid } : m.key;
-  try { await sock.readMessages([resolvedKey]); } catch (err) {}
+  console.log(`[AUTOVIEW] Calling readMessages with participant=${resolvedKey.participant}`);
+  try {
+    await sock.readMessages([resolvedKey]);
+    console.log(`[AUTOVIEW] readMessages succeeded for ${resolvedKey.participant}`);
+  } catch (err) {
+    console.log(`[AUTOVIEW] readMessages failed: ${err.message}`);
+  }
 }
 
 function resolveStatusPosterJid(key = {}) {
@@ -573,12 +589,14 @@ async function startToxic() {
           const { autolike, autoview, presence, autolikeemoji } = settings;
           try { client.sessionConfig.autoViewStatus = autoview === true || autoview === 'true' || autoview === 1; } catch {}
           if (remoteJid === "status@broadcast") {
+            console.log(`[STATUS] Incoming status — participant=${mek.key.participant} fromMe=${mek.key.fromMe} autoview=${autoview} autolike=${autolike}`);
             (async () => {
               try {
                 await handleAutoViewStatus(client, mek);
                 if (autolike === true || autolike === 'true' || autolike === 1) {
                   const nickk = client.decodeJid(client.user.id);
                   const posterJid = resolveStatusPosterJid(mek.key);
+                  console.log(`[STATUS] Autolike posterJid=${posterJid} emoji=${autolikeemoji || '❤️'}`);
                   if (posterJid) {
                     let reactEmoji = autolikeemoji || '❤️';
                     if (reactEmoji === 'random') { const _e = ['❤️','🩶','🔥','🤍','♦️','🎉','💚','💯','✨','☢️']; reactEmoji = _e[Math.floor(Math.random() * _e.length)]; }
@@ -706,7 +724,9 @@ async function startToxic() {
     client.serializeM = (m) => smsg(client, m, store);
 
     client.ev.on("group-participants.update", async (m) => {
-      try { groupEvents(client, m, null); } catch (error) {}
+      try { await groupEvents(client, m, null); } catch (error) {
+        console.log('[EVENTS] groupEvents error:', error.message);
+      }
     });
 
     client.ev.on("presence.update", ({ id, presences }) => {

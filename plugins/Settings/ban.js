@@ -1,11 +1,11 @@
 import ownerMiddleware from '../../utils/botUtil/Ownermiddleware.js';
 import { getSettings, banUser, getBannedUsers, getSudoUsers } from '../../database/config.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
-import { resolvePhoneNumber } from '../../lib/lidResolver.js';
+import { resolveTargetJid } from '../../lib/lidResolver.js';
 
 export default async (context) => {
     await ownerMiddleware(context, async () => {
-        const { client, m, args, participants } = context;
+        const { client, m, args } = context;
         const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
@@ -17,12 +17,26 @@ export default async (context) => {
 
         const sudoUsers = await getSudoUsers();
 
+        // Fetch fresh group metadata for LID resolution (most reliable for quoted/mentioned users)
+        let freshParticipants = [];
+        if (m.chat && m.chat.endsWith('@g.us')) {
+            try {
+                const freshMeta = await client.groupMetadata(m.chat);
+                freshParticipants = freshMeta.participants || [];
+            } catch {}
+        }
+        // Fallback to context participants
+        if (!freshParticipants.length) freshParticipants = context.participants || [];
+
         let numberToBan;
+        let resolvedJid;
 
         if (m.quoted) {
-            numberToBan = resolvePhoneNumber(m.quoted.sender, participants);
+            resolvedJid = resolveTargetJid(m.quoted.sender, freshParticipants);
+            numberToBan = resolvedJid ? resolvedJid.split('@')[0].replace(/\D/g, '') : null;
         } else if (m.mentionedJid && m.mentionedJid.length > 0) {
-            numberToBan = resolvePhoneNumber(m.mentionedJid[0], participants);
+            resolvedJid = resolveTargetJid(m.mentionedJid[0], freshParticipants);
+            numberToBan = resolvedJid ? resolvedJid.split('@')[0].replace(/\D/g, '') : null;
         } else {
             numberToBan = (args[0] || '').replace(/[^0-9]/g, '');
         }
@@ -30,6 +44,12 @@ export default async (context) => {
         if (!numberToBan) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ BAN ≪───\n├ \n├ Please provide a valid number or quote a user, moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
+
+        // Sanity check — LID numbers are 15+ digits and not a phone number
+        if (numberToBan.length > 15) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ BAN ≪───\n├ \n├ Couldn't resolve that user's phone number (LID address).\n├ Ask them to send a message first so the bot can map them.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
         if (sudoUsers.includes(numberToBan)) {

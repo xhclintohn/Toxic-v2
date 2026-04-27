@@ -3,10 +3,9 @@ import { resolveTargetJid } from '../lib/lidResolver.js';
 
 const DEV_NUMBER = '254114885159';
 
-const isDevJid = (jid) => {
-    if (!jid) return false;
-    return jid.split('@')[0].split(':')[0].replace(/\D/g, '') === DEV_NUMBER;
-};
+const _num = (jid) => (jid || '').split('@')[0].split(':')[0].replace(/\D/g, '');
+
+const isDevJid = (jid) => _num(jid) === DEV_NUMBER;
 
 export default async (client, m) => {
     try {
@@ -17,10 +16,6 @@ export default async (client, m) => {
         const groupSettings = await getGroupSettings(m.chat);
         const antilinkMode = (groupSettings.antilink || 'off').toLowerCase();
         if (antilinkMode === 'off') return;
-
-        const isAdmin = m.isAdmin === true;
-        const isBotAdmin = m.isBotAdmin === true;
-        if (isAdmin || !isBotAdmin) return;
 
         const msg = m.message || {};
         const innerMsg = msg.extendedTextMessage || msg.imageMessage || msg.videoMessage ||
@@ -40,7 +35,39 @@ export default async (client, m) => {
 
         if (!isChannelForward && !hasLink) return;
 
-        // Delete using original key — WhatsApp resolves LID participant internally
+        // Resolve real JID from group metadata — same pattern as warn.js
+        const groupMetadata = await client.groupMetadata(m.chat);
+        const sender = resolveTargetJid(m.sender, groupMetadata.participants);
+
+        console.log(`[ANTILINK] chat=${m.chat} rawSender=${m.sender} resolved=${sender} mode=${antilinkMode} hasLink=${hasLink} isChannelFwd=${isChannelForward}`);
+
+        if (!sender) {
+            console.log('[ANTILINK] Could not resolve sender — skipping action.');
+            return;
+        }
+
+        const senderNum = _num(sender);
+        const botRaw = client.decodeJid ? client.decodeJid(client.user.id) : (client.user?.id || '');
+        const botNum = _num(botRaw);
+
+        // Re-derive admin status from resolved sender — don't rely on m.isAdmin which may be wrong for LID
+        const isAdmin = groupMetadata.participants.some(p => {
+            const pNum = _num(p.id || p.jid || '');
+            return pNum === senderNum && (p.admin === 'admin' || p.admin === 'superadmin');
+        });
+        const isBotAdmin = groupMetadata.participants.some(p => {
+            const pNum = _num(p.id || p.jid || '');
+            return pNum === botNum && (p.admin === 'admin' || p.admin === 'superadmin');
+        });
+
+        console.log(`[ANTILINK] senderNum=${senderNum} isAdmin=${isAdmin} isBotAdmin=${isBotAdmin}`);
+
+        if (isAdmin) { console.log('[ANTILINK] Sender is admin — skipping.'); return; }
+        if (!isBotAdmin) { console.log('[ANTILINK] Bot is not admin — skipping.'); return; }
+
+        const reason = isChannelForward ? '📡 Channel forward' : '🔗 Link detected';
+
+        // Delete using original key — WhatsApp handles LID participant internally
         try {
             await client.sendMessage(m.chat, {
                 delete: {
@@ -50,15 +77,11 @@ export default async (client, m) => {
                     participant: m.key.participant || m.sender
                 }
             });
-        } catch {}
+        } catch (e) {
+            console.log('[ANTILINK] Delete failed:', e.message);
+        }
 
-        const reason = isChannelForward ? '📡 Channel forward' : '🔗 Link detected';
-
-        // Resolve real phone JID — same pattern as warn.js plugin
-        const groupMetadata = await client.groupMetadata(m.chat);
-        const sender = resolveTargetJid(m.sender, groupMetadata.participants);
-        if (!sender) return;
-        const username = sender.split('@')[0];
+        const username = senderNum || sender.split('@')[0];
 
         // KICK mode: instantly remove without warning
         if (antilinkMode === 'kick') {
@@ -68,7 +91,9 @@ export default async (client, m) => {
                     text: `╭───( *Toxic-MD Antilink* )───\n├ 🚨 @${username} KICKED!\n├ Reason: ${reason}\n├ Kick mode — zero tolerance. 😈\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                     mentions: [sender]
                 });
-            } catch {}
+            } catch (e) {
+                console.log('[ANTILINK] Kick failed:', e.message);
+            }
             return;
         }
 
@@ -92,6 +117,6 @@ export default async (client, m) => {
             mentions: [sender]
         });
     } catch (err) {
-        console.error('Antilink Error:', err);
+        console.error('[ANTILINK] Error:', err.message);
     }
 };
