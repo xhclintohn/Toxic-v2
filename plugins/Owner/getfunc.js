@@ -12,17 +12,18 @@ const normalizeNumber = (jid) => {
 };
 
 const DEVELOPER = normalizeNumber('254114885159');
+const MAX_TEXT_SIZE = 3000;
 const FEATURES_DIR = path.join(__dirname, '..', '..', 'features');
 
 export default async (context) => {
     const { client, m, text, prefix } = context;
     const fq = getFakeQuoted(m);
-    await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+    await client.sendMessage(m.chat, { react: { text: '🔍', key: m.reactKey } });
 
     if (normalizeNumber(m.sender) !== DEVELOPER) {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         return await client.sendMessage(m.chat, {
-            text: `╭───(    TOXIC-MD    )───\n├───≫ ACCESS DENIED ≪───\n├ \n├ This command is restricted to the bot dev.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            text: `╭───(    TOXIC-MD    )───\n├───≫ ACCESS DENIED ≪───\n├ \n├ This command is restricted to the bot owner.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         }, { quoted: fq });
     }
 
@@ -42,9 +43,11 @@ export default async (context) => {
         const data = await fs.readFile(filePath, 'utf8');
         const fileBuffer = Buffer.from(data, 'utf8');
 
-        await client.sendMessage(m.chat, {
-            text: `╭───(    TOXIC-MD    )───\n├───≫ FEATURE FILE ≪───\n├ \n├ File: ${funcName}.js\n├ Size: ${data.length} chars\n├ \n\`\`\`javascript\n${data}\n\`\`\`\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-        }, { quoted: fq });
+        if (data.length <= MAX_TEXT_SIZE) {
+            await client.sendMessage(m.chat, {
+                text: `╭───(    TOXIC-MD    )───\n├───≫ FEATURE FILE ≪───\n├ \n├ File: ${funcName}.js\n├ Size: ${data.length} chars\n├ \n\`\`\`javascript\n${data}\n\`\`\`\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            }, { quoted: fq });
+        }
 
         await client.sendMessage(m.chat, {
             document: fileBuffer,

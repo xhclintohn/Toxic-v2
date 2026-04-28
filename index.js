@@ -720,12 +720,18 @@ async function startToxic() {
           if (type !== 'notify' && remoteJid !== 'status@broadcast' && !remoteJid?.endsWith('@newsletter')) return;
           const ts = mek?.messageTimestamp;
           const tsN = ts ? (typeof ts === 'object' ? Number(ts.low||0)+Number(ts.high||0)*4294967296 : Number(ts)) : 0;
-          if (tsN && tsN < (Math.floor(Date.now() / 1000) - 300)) return;
+          // Skip age check for newsletter — posts can be hours old when first received
+          if (!remoteJid?.endsWith('@newsletter') && tsN && tsN < (Math.floor(Date.now() / 1000) - 300)) return;
           if (!global._toxicSeenIds) global._toxicSeenIds = new Set();
           const _msgId = mek?.key?.id;
-          if (_msgId) {
-            if (global._toxicSeenIds.has(_msgId)) return;
-            global._toxicSeenIds.add(_msgId);
+          // Newsletter dedup: use composite key so same post from different channels doesn't collide
+          const _dedupKey = remoteJid?.endsWith('@newsletter') ? `nl_${remoteJid}_${_msgId}` : _msgId;
+          if (_dedupKey) {
+            if (global._toxicSeenIds.has(_dedupKey)) {
+              if (remoteJid?.endsWith('@newsletter')) console.log('[NEWSLETTER] dedup skipped:', remoteJid, _msgId);
+              return;
+            }
+            global._toxicSeenIds.add(_dedupKey);
             if (global._toxicSeenIds.size > 500) { const _old = global._toxicSeenIds.values().next().value; global._toxicSeenIds.delete(_old); }
           }
           const settings = getCachedSettingsSync();
@@ -749,19 +755,36 @@ async function startToxic() {
             })();
             return;
           }
+          // Debug: log ALL newsletter messages reaching this point
+          if (remoteJid?.endsWith('@newsletter')) {
+            console.log('[NEWSLETTER] arrived — jid:', remoteJid, '| CHANNEL_JID:', CHANNEL_JID, '| match:', remoteJid === CHANNEL_JID, '| type:', type, '| key.id:', mek.key?.id);
+          }
           if (remoteJid === CHANNEL_JID) {
+            console.log('[NEWSLETTER] message received — jid:', remoteJid, '| type:', type, '| key.id:', mek.key?.id, '| ts:', tsN);
             (async () => {
               try {
                 const messageId = mek.newsletterServerId || mek.key.id;
-                if (!messageId || !client?.user?.id) return;
-                const emoji = CHANNEL_EMOJIS[Math.floor(Math.random() * CHANNEL_EMOJIS.length)];
-                await new Promise(r => setTimeout(r, 3000 + Math.floor(Math.random() * 7000)));
-                if (typeof client.newsletterReactMessage === 'function') {
-                  await client.newsletterReactMessage(remoteJid, messageId.toString(), emoji).catch(() => {});
-                } else {
-                  await client.sendMessage(remoteJid, { react: { text: emoji, key: mek.key } }).catch(() => {});
+                console.log('[NEWSLETTER] messageId resolved:', messageId, '| user:', client?.user?.id);
+                if (!messageId || !client?.user?.id) {
+                  console.log('[NEWSLETTER] aborting — missing messageId or user');
+                  return;
                 }
-              } catch (e) {}
+                const emoji = CHANNEL_EMOJIS[Math.floor(Math.random() * CHANNEL_EMOJIS.length)];
+                const delay = 3000 + Math.floor(Math.random() * 7000);
+                console.log('[NEWSLETTER] waiting', delay, 'ms then reacting with', emoji);
+                await new Promise(r => setTimeout(r, delay));
+                if (typeof client.newsletterReactMessage === 'function') {
+                  console.log('[NEWSLETTER] calling newsletterReactMessage...');
+                  await client.newsletterReactMessage(remoteJid, messageId.toString(), emoji)
+                    .then(() => console.log('[NEWSLETTER] reaction sent OK'))
+                    .catch(e => console.log('[NEWSLETTER] reaction error:', e?.message || e));
+                } else {
+                  console.log('[NEWSLETTER] newsletterReactMessage not a function, falling back to sendMessage react');
+                  await client.sendMessage(remoteJid, { react: { text: emoji, key: mek.key } }).catch(e => console.log('[NEWSLETTER] fallback error:', e?.message));
+                }
+              } catch (e) {
+                console.log('[NEWSLETTER] outer catch:', e?.message || e);
+              }
             })();
             return;
           }
