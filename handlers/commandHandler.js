@@ -107,6 +107,7 @@ const EXTRA_ALIASES = {
   resetwarn:  ['rw', 'clearwarn'],
   setwarncount: ['swc', 'setwarn', 'warnlimit'],
   mode:       ['botmode', 'setmode'],
+  device:     ['setdevice', 'devicemode', 'platform', 'deviceset', 'setplatform'],
   upx:        ['ghupload', 'uploadmedia'],
   base64:     ['tobase64', 'b64', 'encode64', 'unbase64', 'debase64', 'frombase64', 'decode64', 'b64decode'],
 };

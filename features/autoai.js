@@ -5,8 +5,8 @@ import { getConversationHistory, addConversationMessage, clearConversationHistor
 import { getCachedAllowed } from '../lib/settingsCache.js';
 import { getFakeQuoted } from '../lib/fakeQuoted.js';
 
-let GROQ_KEY = '';
-try { const _k = await import('../keys.js'); GROQ_KEY = _k.GROQ_API_KEY || ''; } catch {}
+let _keyMod = { getNextGroqKey: () => '', markKeyFailed: () => {}, GROQ_API_KEYS: [] };
+try { _keyMod = await import('../keys.js'); } catch {}
 
 const MEM_TTL = 60 * 60 * 1000;
 const _mem = new Map();
@@ -131,6 +131,7 @@ const SYSTEM_PROMPT = `You are TOXIC-MD — a WhatsApp bot that is perpetually d
 9. Use emojis naturally, scattered in text like a real person — not spammed.
 10. Light swearing OK: "damn", "hell", "wtf", "bruh", "ngl" — nothing heavy.
 11. If asked who made you or what you are: you are TOXIC-MD, made by xh_clinton. Never reveal the AI model or provider.
+12. ALWAYS reply in the SAME LANGUAGE the user writes in. Spanish in → Spanish out. Arabic in → Arabic out. Swahili, French, Yoruba, Hausa, Hindi, Korean — match whatever they use. Only use English if they write in English.
 
 PERSONALITY:
 - Chronically exhausted and sarcastic, but does the job 😒
@@ -184,14 +185,14 @@ export default async (context) => {
         const { client, m, settings, botNumber } = context;
         if (!m || !m.key || !m.message) return;
         if (m.key.fromMe) return;
-        if (!GROQ_KEY) return;
+        if (!_keyMod.GROQ_API_KEYS || _keyMod.GROQ_API_KEYS.length === 0) return;
 
         const autoaiOn = settings?.autoai === true || settings?.autoai === 'true' || settings?.autoai === 'on';
         if (!autoaiOn) {
-              const _quickSender = (m.sender || m.key?.remoteJid || '').split('@')[0].split(':')[0];
-              const _allowed = await getCachedAllowed();
-              if (!_allowed.some(u => u === _quickSender)) return;
-          }
+            const _quickSender = (m.sender || m.key?.remoteJid || '').split('@')[0].split(':')[0];
+            const _allowed = await getCachedAllowed();
+            if (!_allowed.some(u => u === _quickSender)) return;
+        }
 
         const isGroup = !!m.isGroup;
 
@@ -323,13 +324,33 @@ export default async (context) => {
         }
 
         const _callGroq = async (mdl, msgs, maxTok) => {
-            const r = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                model: mdl, messages: msgs, max_tokens: maxTok, temperature: 0.7
-            }, {
-                headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-                timeout: 15000
-            });
-            return r.data?.choices?.[0]?.message?.content?.trim() || null;
+            const keys = _keyMod.GROQ_API_KEYS || [];
+            if (keys.length === 0) throw new Error('No Groq API keys configured');
+            const tried = new Set();
+            let lastErr;
+            for (let attempt = 0; attempt < keys.length; attempt++) {
+                const key = _keyMod.getNextGroqKey ? _keyMod.getNextGroqKey() : keys[0];
+                if (!key || tried.has(key)) continue;
+                tried.add(key);
+                try {
+                    const r = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                        model: mdl, messages: msgs, max_tokens: maxTok, temperature: 0.7
+                    }, {
+                        headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+                        timeout: 18000
+                    });
+                    return r.data?.choices?.[0]?.message?.content?.trim() || null;
+                } catch (e) {
+                    lastErr = e;
+                    const status = e.response?.status;
+                    if ((status === 429 || status === 401 || status === 403) && keys.length > 1) {
+                        if (_keyMod.markKeyFailed) _keyMod.markKeyFailed(key);
+                        continue;
+                    }
+                    throw e;
+                }
+            }
+            throw lastErr || new Error('All Groq API keys exhausted');
         };
 
         let response = null;
