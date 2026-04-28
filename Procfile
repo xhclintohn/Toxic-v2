@@ -1,1 +1,1 @@
-web: node index.js
+web: node patch-baileys.js && node index.js
