@@ -31,6 +31,7 @@ const EXTRA_ALIASES = {
   snackvideo: ['snack', 'snackvid', 'sck'],
   apk:        ['apkdown', 'apkdl', 'app'],
   shazam:     ['identify', 'songid', 'detectsong', 'whatmusic', 'findmusic', 'fmusic', 'getmusic', 'gmusic'],
+  blocklist:  ['listblock', 'lb', 'blockedlist', 'myblocked'],
   sticker:    ['s', 'stk', 'stkr', 'make'],
   toimg:      ['toimage', 'stickertoimg', 'stkimg'],
   attp:       ['attp', 'textsticker'],
@@ -197,5 +198,4 @@ export const commandsReady = (async () => {
   }
 
   await loadPlugins(pluginsPath);
-  console.log(`Loaded ${totalCommands} commands`);
 })();

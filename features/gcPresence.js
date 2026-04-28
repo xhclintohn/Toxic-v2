@@ -11,7 +11,6 @@ export default async (client, m) => {
         try {
             await client.sendPresenceUpdate(selectedPresence, m.chat);
         } catch (e) {
-            console.log("Error in gcPresence:", e);
         }
     }
 };

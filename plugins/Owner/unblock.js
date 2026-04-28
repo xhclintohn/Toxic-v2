@@ -44,8 +44,13 @@ export default async (context) => {
 
         const parts = users.split('@')[0];
 
-        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-        await client.updateBlockStatus(users, 'unblock');
-        await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ UNBLOCKED ≪───\n├ \n├ ${parts} is unblocked. Don't make\n├ me regret this.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        try {
+            await client.updateBlockStatus(users, 'unblock');
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+            await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ UNBLOCKED ≪───\n├ \n├ ${parts} is unblocked. Don't make\n├ me regret this.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        } catch (e) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            await m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Failed to unblock ${parts}. 😒\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
     });
 };

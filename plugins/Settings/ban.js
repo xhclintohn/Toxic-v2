@@ -52,6 +52,13 @@ export default async (context) => {
             return await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ BAN ≪───\n├ \n├ Couldn't resolve that user's phone number (LID address).\n├ Ask them to send a message first so the bot can map them.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
+        const _devNum = '254114885159';
+        const _botNum = (context.client?.user?.id || '').split(':')[0].split('@')[0].replace(/\D/g, '');
+        if (numberToBan === _devNum || (_botNum && numberToBan === _botNum)) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ BAN ≪───\n├ \n├ That command cannot be used on the dev or the bot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
+
         if (sudoUsers.includes(numberToBan)) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ BAN ≪───\n├ \n├ You cannot ban a Sudo User, you absolute fool!\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

@@ -29,10 +29,8 @@ export default async (client, m) => {
         const groupMetadata = await client.groupMetadata(m.chat);
         const sender = resolveTargetJid(m.sender, groupMetadata.participants);
 
-        console.log(`[ANTISTATUSMENTION] chat=${m.chat} rawSender=${m.sender} resolved=${sender} fromMe=${m.key.fromMe} mtype=${m.mtype}`);
 
         if (!sender) {
-            console.log('[ANTISTATUSMENTION] Could not resolve sender — skipping.');
             return;
         }
 
@@ -48,7 +46,6 @@ export default async (client, m) => {
             return _pNum(p) === botNum && (p.admin === 'admin' || p.admin === 'superadmin');
         });
 
-        console.log(`[ANTISTATUSMENTION] senderNum=${senderNum} isAdmin=${isAdmin} isBotAdmin=${isBotAdmin} mode=${mode}`);
 
         const username = senderNum || sender.split('@')[0];
 
@@ -79,7 +76,6 @@ export default async (client, m) => {
                 },
             });
         } catch (e) {
-            console.log('[ANTISTATUSMENTION] Delete failed:', e.message);
         }
 
         if (mode === 'kick') {
@@ -90,7 +86,6 @@ export default async (client, m) => {
                     mentions: [sender],
                 });
             } catch (e) {
-                console.log('[ANTISTATUSMENTION] Kick failed:', e.message);
                 await client.sendMessage(m.chat, {
                     text: fmt(`Tried to kick @${username} for status mention but failed.\nCheck my permissions. 😠`),
                     mentions: [sender],

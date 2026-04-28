@@ -24,7 +24,6 @@ function cleanTmp(maxAgeMs = MAX_AGE_MS) {
             } catch {}
         }
     }
-    if (deleted > 0) console.log(`[cleanup] Deleted ${deleted} stale tmp file(s)`);
 }
 
 function startCleanupScheduler() {

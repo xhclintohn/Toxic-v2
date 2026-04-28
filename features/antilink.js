@@ -48,10 +48,8 @@ export default async (client, m) => {
         const groupMetadata = await client.groupMetadata(m.chat);
         const sender = resolveTargetJid(m.sender, groupMetadata.participants);
 
-        console.log(`[ANTILINK] chat=${m.chat} rawSender=${m.sender} resolved=${sender} mode=${antilinkMode} hasLink=${hasLink} isChannelFwd=${isChannelForward}`);
 
         if (!sender) {
-            console.log('[ANTILINK] Could not resolve sender — skipping action.');
             return;
         }
 
@@ -67,10 +65,7 @@ export default async (client, m) => {
             return _pNum(p) === botNum && (p.admin === 'admin' || p.admin === 'superadmin');
         });
 
-        console.log(`[ANTILINK] senderNum=${senderNum} isAdmin=${isAdmin} isBotAdmin=${isBotAdmin}`);
 
-        if (isAdmin) { console.log('[ANTILINK] Sender is admin — skipping.'); return; }
-        if (!isBotAdmin) { console.log('[ANTILINK] Bot is not admin — skipping.'); return; }
 
         const reason = isChannelForward ? '📡 Channel forward' : '🔗 Link detected';
 
@@ -85,7 +80,6 @@ export default async (client, m) => {
                 }
             });
         } catch (e) {
-            console.log('[ANTILINK] Delete failed:', e.message);
         }
 
         const username = senderNum || sender.split('@')[0];
@@ -99,7 +93,6 @@ export default async (client, m) => {
                     mentions: [sender]
                 });
             } catch (e) {
-                console.log('[ANTILINK] Kick failed:', e.message);
             }
             return;
         }

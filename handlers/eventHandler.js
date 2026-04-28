@@ -58,7 +58,6 @@ const Events = async (client, event, pict) => {
     const antidemote = groupSettings?.antidemote === true || groupSettings?.antidemote === 1;
     const antipromote = groupSettings?.antipromote === true || groupSettings?.antipromote === 1;
 
-    console.log(`[EVENTS] action=${event.action} group=${event.id} participants=${JSON.stringify(participants)} welcome=${welcomeEnabled} goodbye=${goodbyeEnabled} antidemote=${antidemote} antipromote=${antipromote}`);
 
     let sudoUsers = [];
     try { sudoUsers = await getSudoUsers(); } catch {}
@@ -107,7 +106,6 @@ const Events = async (client, event, pict) => {
 
     // Welcome
     if (welcomeEnabled && event.action === "add") {
-        console.log(`[EVENTS] Sending welcome to ${participants.length} member(s) in ${event.id}`);
         for (let i = 0; i < participants.length; i++) {
             const p = participants[i];
             const participantJid = extractJid(p);
@@ -150,7 +148,6 @@ const Events = async (client, event, pict) => {
 
     // Goodbye
     if (goodbyeEnabled && event.action === "remove") {
-        console.log(`[EVENTS] Sending goodbye to ${participants.length} member(s) in ${event.id}`);
         for (let i = 0; i < participants.length; i++) {
             const p = participants[i];
             const participantJid = extractJid(p);
@@ -200,7 +197,6 @@ const Events = async (client, event, pict) => {
             // Always derive display from RESOLVED jid so we never show a LID number
             const authorDisplay = nAuthor ? (_num(nAuthor) || nAuthor.split("@")[0].split(":")[0]) : '';
 
-            console.log(`[EVENTS] Antidemote — participant=${nParticipant} (display=${participantDisplay}) author=${nAuthor} (display=${authorDisplay})`);
 
             if (isProtected(participantObj)) {
                 try { await client.groupParticipantsUpdate(event.id, [nParticipant], "promote"); } catch {}
@@ -257,7 +253,6 @@ const Events = async (client, event, pict) => {
             // Always derive display from RESOLVED jid so we never show a LID number
             const authorDisplay = nAuthor ? (_num(nAuthor) || nAuthor.split("@")[0].split(":")[0]) : '';
 
-            console.log(`[EVENTS] Antipromote — participant=${nParticipant} (display=${participantDisplay}) author=${nAuthor} (display=${authorDisplay})`);
 
             if (isProtected(authorJidRaw)) return;
 

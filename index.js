@@ -301,7 +301,6 @@ async function resolveLidForStatus(sock, rawLidJid) {
 
 async function handleAutoViewStatus(sock, m) {
   if (!sock?.sessionConfig?.autoViewStatus) {
-    console.log(`[AUTOVIEW] Disabled (autoViewStatus=false) — skipping`);
     return;
   }
   if (!m?.key) return;
@@ -309,22 +308,17 @@ async function handleAutoViewStatus(sock, m) {
   if (m.key.fromMe) return;
 
   const rawParticipant = m.key.remoteJidAlt || m.key.participant || '';
-  console.log(`[AUTOVIEW] Processing id=${m.key.id} participant=${rawParticipant}`);
 
   const participantJid = await resolveLidForStatus(sock, rawParticipant);
   const resolvedKey = rawParticipant ? { ...m.key, participant: participantJid } : m.key;
 
-  console.log(`[AUTOVIEW] Calling readMessages — resolved=${participantJid}`);
   try {
     await sock.readMessages([resolvedKey]);
-    console.log(`[AUTOVIEW] ✅ readMessages OK for ${participantJid}`);
   } catch (err) {
-    console.log(`[AUTOVIEW] ❌ readMessages failed (${participantJid}): ${err.message}`);
     // Fallback: try with raw LID if we resolved it to a different JID
     if (participantJid !== rawParticipant && rawParticipant) {
       try {
         await sock.readMessages([{ ...m.key, participant: rawParticipant }]);
-        console.log(`[AUTOVIEW] ✅ readMessages OK with raw LID ${rawParticipant}`);
       } catch {}
     }
   }
@@ -508,7 +502,6 @@ async function startToxic() {
         const lidClean = lid.split('@')[0].split(':')[0];
         const phoneClean = String(phoneNumber).split('@')[0].split(':')[0].replace(/[^\d]/g, '');
         cacheLidPhone(lidClean, phoneClean);
-        console.log(`✅ [LID MAPPING] ${lidClean} -> ${phoneClean}`);
       }
     });
 
@@ -618,7 +611,6 @@ async function startToxic() {
           const mek = messages[0];
           if (!mek || !mek.key) return;
           if (mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') {
-            console.log(`[STATUS-RAW] type=${type} hasMsg=${!!mek.message} fromMe=${mek.key.fromMe} participant=${mek.key.participant} remoteJidAlt=${mek.key.remoteJidAlt} addressingMode=${mek.key.addressingMode} id=${mek.key.id}`);
           }
           // Allow status@broadcast through even if mek.message is absent (delivery stubs)
           // All other messages without a body are skipped as before
@@ -651,19 +643,16 @@ async function startToxic() {
                       if (_pnStr) _posterJid = _pnStr + '@s.whatsapp.net';
                     }
                   } catch (e) {
-                    console.log(`[STATUS] lidMapping.getPNForLID failed: ${e?.message || e}`);
                   }
                 }
               }
 
-              console.log(`[STATUS] id=${_sid} raw=${_rawP} resolved=${_posterJid} hasMsg=${!!mek.message}`);
               const _resolvedKey = _posterJid ? { ...mek.key, participant: _posterJid } : mek.key;
 
               if (_svSettings?.autoview === true || _svSettings?.autoview === 'true' || _svSettings?.autoview === 1) {
                 try {
                   await client.sendReceipts([_resolvedKey], 'read');
-                  console.log(`[AUTOVIEW] ✅ ${_sid} poster=${_posterJid}`);
-                } catch (e) { console.log(`[AUTOVIEW] ❌ ${e?.message || e}`); }
+ }
               }
 
               if (_svSettings?.autolike === true || _svSettings?.autolike === 'true' || _svSettings?.autolike === 1) {
@@ -678,8 +667,7 @@ async function startToxic() {
                     { react: { text: _emoji, key: { ...mek.key, participant: _posterJid } } },
                     { statusJidList: [_posterJid, _botJid].filter(Boolean) }
                   );
-                  console.log(`[AUTOLIKE] ✅ ${_sid} emoji=${_emoji}`);
-                } catch (e) { console.log(`[AUTOLIKE] ❌ ${e?.message || e}`); }
+ }
               }
             })();
             return;
@@ -727,14 +715,12 @@ async function startToxic() {
           const { autolike, autoview, presence, autolikeemoji } = settings;
           try { client.sessionConfig.autoViewStatus = autoview === true || autoview === 'true' || autoview === 1; } catch {}
           if (remoteJid === "status@broadcast") {
-            console.log(`[STATUS] Incoming status — participant=${mek.key.participant} fromMe=${mek.key.fromMe} autoview=${autoview} autolike=${autolike} autoViewStatus=${client.sessionConfig?.autoViewStatus}`);
             (async () => {
               try {
                 await handleAutoViewStatus(client, mek);
                 if (autolike === true || autolike === 'true' || autolike === 1) {
                   const nickk = client.decodeJid(client.user.id);
                   const posterJid = resolveStatusPosterJid(mek.key);
-                  console.log(`[STATUS] Autolike posterJid=${posterJid} emoji=${autolikeemoji || '❤️'}`);
                   if (posterJid) {
                     let reactEmoji = autolikeemoji || '❤️';
                     if (reactEmoji === 'random') { const _e = ['❤️','🩶','🔥','🤍','♦️','🎉','💚','💯','✨','☢️']; reactEmoji = _e[Math.floor(Math.random() * _e.length)]; }

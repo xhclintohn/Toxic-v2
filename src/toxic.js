@@ -587,23 +587,18 @@ export default async (client, m, chatUpdate, store) => {
 
         (async () => {
             if (m.message?.protocolMessage?.type === 0) {
-                console.log(`[ANTIDELETE] ⚡ Delete event detected`);
                 const _adSettings = await getCachedSettings();
                 if (_adSettings?.antidelete !== true) {
-                    console.log(`[ANTIDELETE] Disabled in settings — skipping`);
                     return;
                 }
                 const deletedKey = m.message.protocolMessage.key;
                 const deletedMessageId = deletedKey.id;
                 const deletedRemoteJid = deletedKey.remoteJid;
-                console.log(`[ANTIDELETE] deletedMsgId=${deletedMessageId} deletedJid=${deletedRemoteJid} deleterParticipant=${m.key.participant}`);
                 if (!deletedRemoteJid || deletedRemoteJid === 'status@broadcast' || deletedRemoteJid.includes('@broadcast') || deletedRemoteJid.includes('@newsletter')) {
-                    console.log(`[ANTIDELETE] Skipping broadcast/newsletter JID`);
                     return;
                 }
                 // Resolve deletedRemoteJid if it's a LID DM
                 const normalizedDeletedJid = deletedRemoteJid.endsWith('@lid') ? (resolveLidToPhoneNumber(deletedRemoteJid) || deletedRemoteJid) : deletedRemoteJid;
-                console.log(`[ANTIDELETE] Normalized JID: ${normalizedDeletedJid}`);
                 let deletedMessage = null;
                 let chatJidToSearch = normalizedDeletedJid;
                 // 1) SQL store
@@ -611,9 +606,7 @@ export default async (client, m, chatUpdate, store) => {
                 if (sqlRow) {
                     deletedMessage = { key: sqlRow.message?.key || { id: deletedMessageId, remoteJid: sqlRow.jid, participant: sqlRow.sender }, message: sqlRow.message?.message || {}, pushName: sqlRow.message?.pushName || '' };
                     chatJidToSearch = sqlRow.jid;
-                    console.log(`[ANTIDELETE] ✅ Found in SQL store. chat=${chatJidToSearch}`);
                 } else {
-                    console.log(`[ANTIDELETE] ⚠️ Not in SQL store, checking in-memory store...`);
                 }
                 // 2) in-memory store fallback
                 if (!deletedMessage && store?.chats && store?.messageMap) {
@@ -631,9 +624,7 @@ export default async (client, m, chatUpdate, store) => {
                         }
                     }
                     if (deletedMessage) {
-                        console.log(`[ANTIDELETE] ✅ Found in in-memory store. chat=${chatJidToSearch}`);
                     } else {
-                        console.log(`[ANTIDELETE] ❌ Message NOT found in any store — cannot recover`);
                     }
                 }
                 if (deletedMessage) {
@@ -643,30 +634,23 @@ export default async (client, m, chatUpdate, store) => {
                             const resolved = resolveLidToPhoneNumber(botJid);
                             if (resolved && !resolved.endsWith('@lid')) botJid = resolved;
                         }
-                        console.log(`[ANTIDELETE] botJid=${botJid} chat=${chatJidToSearch}`);
                         // Resolve sender LID — async resolveSenderJid uses group metadata (same as warn.js) + all fallbacks
                         let senderRaw = deletedMessage.key.participant || deletedMessage.key.remoteJid || '';
-                        console.log(`[ANTIDELETE] Raw sender=${senderRaw}`);
                         if (senderRaw.endsWith('@lid')) {
                             const resolved = await resolveSenderJid(senderRaw, chatJidToSearch, client).catch(() => null);
                             if (resolved && !resolved.endsWith('@lid')) {
                                 senderRaw = resolved;
-                                console.log(`[ANTIDELETE] Sender resolved → ${senderRaw}`);
                             } else {
-                                console.log(`[ANTIDELETE] ⚠️ Sender LID unresolved: ${senderRaw}`);
                             }
                         }
                         const sender = client.decodeJid(senderRaw);
                         // Resolve deleter LID — same approach
                         let deleterRaw = m.key.participant || '';
-                        console.log(`[ANTIDELETE] Raw deleter=${deleterRaw}`);
                         if (deleterRaw.endsWith('@lid')) {
                             const resolved = await resolveSenderJid(deleterRaw, chatJidToSearch, client).catch(() => null);
                             if (resolved && !resolved.endsWith('@lid')) {
                                 deleterRaw = resolved;
-                                console.log(`[ANTIDELETE] Deleter resolved → ${deleterRaw}`);
                             } else {
-                                console.log(`[ANTIDELETE] ⚠️ Deleter LID unresolved: ${deleterRaw}`);
                             }
                         }
                         const deleter = deleterRaw ? deleterRaw.split('@')[0].split(':')[0] : 'Unknown';
@@ -678,7 +662,6 @@ export default async (client, m, chatUpdate, store) => {
                         const rawMessage = deletedMessage.message || {};
                         const messageType = getMessageType(rawMessage);
                         const voMedia = isViewOnceMessage(rawMessage) ? getViewOnceMedia(rawMessage) : null;
-                        console.log(`[ANTIDELETE] Sending to ${botJid} | type=${messageType} | hasContent=${Object.keys(rawMessage).length > 0}`);
                         try {
                             if (voMedia) {
                                 const hdr = `╭───( 𝐓𝐨𝐱𝐢𝐜-𝐌D )───\n───≫ Dᴇʟᴇᴛᴇᴅ Msɢ ≪───\n々 Time: ${deleteTime}\n々 Chat: ${groupName}\n々 Type: ${messageType}\n々 Deleted by: @${deleter}\n々 Sender: @${sender.split('@')[0]}\n╰──────────☉`;
@@ -740,7 +723,6 @@ export default async (client, m, chatUpdate, store) => {
                     } catch (error) { console.log('❌ [ANTIEDIT ERROR]:', error.message); }
                 }
             }
-        })().catch(e => console.log('[ANTIDELETE/ANTIEDIT OUTER]:', e?.message || e));
 
         if (cmd) {
             try {

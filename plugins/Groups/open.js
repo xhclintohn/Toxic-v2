@@ -7,7 +7,13 @@ export default async (context) => {
         const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
-        await client.groupSettingUpdate(m.chat, 'not_announcement');
-        m.reply(`╭───(    TOXIC-MD    )───\n├───≫ OPENED ≪───\n├ \n├ Group opened. Talk your trash.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        try {
+            await client.groupSettingUpdate(m.chat, 'not_announcement');
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+            m.reply(`╭───(    TOXIC-MD    )───\n├───≫ OPENED ≪───\n├ \n├ Group opened. Talk your trash.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        } catch (e) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            m.reply(`╭───(    TOXIC-MD    )───\n├ Failed to open group: ${e.message?.slice(0, 60)}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
     });
 };

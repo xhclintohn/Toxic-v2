@@ -8,9 +8,10 @@ export default async (context) => {
         const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
-        if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Provide number to be added.\n├ Format: add 254114885159\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-
-        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+        if (!text) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Provide number to be added.\n├ Format: add 254114885159\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
 
         const _participants = participants.map((user) => user.id.split(':')[0] + '@s.whatsapp.net');
 
