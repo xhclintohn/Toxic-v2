@@ -41,6 +41,7 @@ export default async (context) => {
                 value === 'off' ? 'Links are now allowed. Hope you know what you\'re doing. 🙄' :
                 value === 'warn' ? `Links will be deleted and sender warned.\nAt the warn limit they're KICKED. 😈` :
                 'Links = Instant kick. No second chances. 😈';
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return await client.sendMessage(m.chat, { text: fmt(`✅ Antilink set to *${value.toUpperCase()}*.\n├ ${desc}`) }, { quoted: fq });
         }
 

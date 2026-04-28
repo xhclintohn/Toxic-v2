@@ -10,9 +10,15 @@ export default {
         const { client, m, isOwner } = context;
         const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-        if (!isOwner) return m.reply('Owner only command.');
+        if (!isOwner) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply('Owner only command.');
+        }
         const tmpDirs = ['./tmp', './temp'].filter(d => existsSync(d));
-        if (!tmpDirs.length) return m.reply('No tmp directories found.');
+        if (!tmpDirs.length) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply('No tmp directories found.');
+        }
         let deleted = 0;
         let skipped = 0;
         for (const dir of tmpDirs) {

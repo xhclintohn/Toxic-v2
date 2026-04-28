@@ -23,7 +23,10 @@ export default async (context) => {
         }),
       });
 
-      if (!response.ok) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ API failed to fetch a valid response.\n├ Try again later, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧')
+      if (!response.ok) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+          return m.reply('╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ API failed to fetch a valid response.\n├ Try again later, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧')
+      }
 
       let per = await response.buffer();
 

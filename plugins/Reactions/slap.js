@@ -36,7 +36,10 @@ export default {
         try {
             const target = getTarget(m);
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-            if (!target) return m.reply(`╭───(    TOXIC-MD    )───\n├ Tag or quote someone to slap.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+            if (!target) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                return m.reply(`╭───(    TOXIC-MD    )───\n├ Tag or quote someone to slap.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+            }
             const resolvedTarget = resolveDisplayJid(target);
             const tNum = resolvedTarget.split('@')[0];
             const sNum = resolveDisplayJid(m.sender).split('@')[0];

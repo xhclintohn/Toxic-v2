@@ -20,6 +20,7 @@ export default {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Jᴏᴋᴇ ≪───\n├\n├ 😐 ${setup}\n├\n├ 😂 ${delivery}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: fq });
         } catch {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return client.sendMessage(m.chat, { text: '╭───(    TOXIC-MD    )───\n├───≫ Jᴏᴋᴇ ≪───\n├\n├ Your life is the joke, I\'m too tired to think of another one.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' }, { quoted: fq });
         }
     }

@@ -1,9 +1,9 @@
-import ownerMiddleware from '../../utils/botUtil/Ownermiddleware.js';
+import middleware from '../../utils/botUtil/middleware.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 import { getBinaryNodeChild, getBinaryNodeChildren } from '@whiskeysockets/baileys';
 
 export default async (context) => {
-    await ownerMiddleware(context, async () => {
+    await middleware(context, async () => {
         const { client, m, participants, botname, groupMetadata, text, pushname } = context;
         const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });

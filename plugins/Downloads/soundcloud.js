@@ -9,7 +9,10 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
           const { client, m, text, prefix } = context;
           const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-          if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}soundcloud https://soundcloud.com/user/track\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+          if (!text) {
+              await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+              return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}soundcloud https://soundcloud.com/user/track\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+          }
           if (!text.includes('soundcloud.com')) return m.reply('╭───(    TOXIC-MD    )───\n├ That\'s not a SoundCloud link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
           await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
           try {

@@ -15,14 +15,13 @@ import axios from 'axios';
 
           const query = m.body.replace(new RegExp(`^${prefix}(image|img|pic|searchimage)\\s*`, 'i'), '').trim();
           if (!query) {
+              await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
               return client.sendMessage(m.chat, {
                   text: `╭───(    TOXIC-MD    )───\n├ Give me something to search, genius.\n├ Example: ${prefix}img cats\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
               }, { quoted: fq });
           }
 
           try {
-              await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-
               const { data } = await axios.get('https://www.googleapis.com/customsearch/v1', {
                   params: { q: query, key: GCSE_KEY, cx: GCSE_CX, searchType: 'image', num: 5, safe: 'off' },
                   timeout: 15000

@@ -16,7 +16,10 @@ export default async (context) => {
         }
     }
 
-    if (!m.isGroup) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ This command is meant for groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+    if (!m.isGroup) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ This command is meant for groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+    }
 
     let info = await client.groupMetadata(m.chat);
     let ts = await convertTimestamp(info.creation);

@@ -12,7 +12,10 @@ export default async (context) => {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     try {
-        if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Tᴇʟᴇɢʀᴀᴍ Sᴛɪᴄᴋᴇʀ ≪───\n├ \n├ Give me a Telegram sticker pack name or link!\n├ \n├ Example: ${prefix}telesticker itzel39\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        if (!text) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Tᴇʟᴇɢʀᴀᴍ Sᴛɪᴄᴋᴇʀ ≪───\n├ \n├ Give me a Telegram sticker pack name or link!\n├ \n├ Example: ${prefix}telesticker itzel39\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 

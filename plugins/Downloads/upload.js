@@ -11,7 +11,10 @@ import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
           const q = m.quoted ? m.quoted : m;
           const mime = (q.msg || q).mimetype || '';
 
-          if (!mime) return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Quote or send a media file to upload.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+          if (!mime) {
+              await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+              return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Quote or send a media file to upload.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+          }
 
           const mediaBuffer = await q.download();
 

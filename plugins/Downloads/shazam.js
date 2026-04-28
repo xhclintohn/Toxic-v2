@@ -15,7 +15,10 @@ export default async (context) => {
 
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
-        if (!m.quoted) return m.reply("╭───(    TOXIC-MD    )───\n├ Quote an audio/video message, you deaf imbecile.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+        if (!m.quoted) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply("╭───(    TOXIC-MD    )───\n├ Quote an audio/video message, you deaf imbecile.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+        }
 
         const p = m.quoted ? m.quoted : m;
         const buffer = await p.download();

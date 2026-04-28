@@ -12,12 +12,18 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
       const { client, m, text, prefix, args } = context;
       const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-      if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}yt https://youtu.be/xxxx [mp3/mp4]\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+      if (!text) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+          return m.reply(`╭───(    TOXIC-MD    )───\n├ Example: ${prefix}yt https://youtu.be/xxxx [mp3/mp4]\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+      }
       const parts = text.trim().split(/\s+/);
       const ytUrl = parts[0];
       const format = (parts[1] || 'mp3').toLowerCase();
       const id = extractYtId(ytUrl);
-      if (!id) return m.reply('╭───(    TOXIC-MD    )───\n├ Invalid YouTube link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+      if (!id) {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+          return m.reply('╭───(    TOXIC-MD    )───\n├ Invalid YouTube link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+      }
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
       try {
           const fullUrl = `https://youtube.com/watch?v=${id}`;

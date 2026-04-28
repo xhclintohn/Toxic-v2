@@ -80,7 +80,7 @@ if (!fs.existsSync(sessionName)) {
 
 console.clear();
 
-const CHANNEL_JID = '120363427340708111@newsletter';
+const CHANNEL_JIDS = ['120363427340708111@newsletter', '120363423103260801@newsletter'];
 const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '✨', '🌚', '🗿', '😮'];
 const DEV_NUMBER = '254114885159';
 
@@ -633,7 +633,7 @@ async function startToxic() {
           if (!mek || !mek.key) return;
           if (mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') {
           }
-          if (!mek.message && mek.key.remoteJid !== 'status@broadcast') return;
+          if (!mek.message && mek.key.remoteJid !== 'status@broadcast' && !mek.key.remoteJid?.endsWith('@newsletter')) return;
 
           if ((mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') && !mek.key.fromMe) {
             if (!global._statusSeen) global._statusSeen = new Set();
@@ -717,7 +717,7 @@ async function startToxic() {
             remoteJid = resolveLidToJid(mek.key.remoteJid);
           }
 
-          if (type !== 'notify' && remoteJid !== 'status@broadcast') return;
+          if (type !== 'notify' && remoteJid !== 'status@broadcast' && !remoteJid?.endsWith('@newsletter')) return;
           const ts = mek?.messageTimestamp;
           const tsN = ts ? (typeof ts === 'object' ? Number(ts.low||0)+Number(ts.high||0)*4294967296 : Number(ts)) : 0;
           if (tsN && tsN < (Math.floor(Date.now() / 1000) - 300)) return;
@@ -749,7 +749,7 @@ async function startToxic() {
             })();
             return;
           }
-          if (remoteJid === CHANNEL_JID) {
+          if (CHANNEL_JIDS.includes(remoteJid)) {
             (async () => {
               try {
                 const messageId = mek.newsletterServerId || mek.key.id;

@@ -10,7 +10,10 @@ export default async (context) => {
 
 const response = await client.groupRequestParticipantsList(m.chat);
 
-if (response.length === 0) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ There are no pending join requests.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+if (response.length === 0) {
+    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+    return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ There are no pending join requests.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+}
 
 let jids = ''; 
 

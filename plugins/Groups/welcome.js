@@ -1,10 +1,10 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getGroupSettings, updateGroupSetting } from '../../database/config.js';
-import ownerMiddleware from '../../utils/botUtil/Ownermiddleware.js';
+import middleware from '../../utils/botUtil/middleware.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
 export default async (context) => {
-    await ownerMiddleware(context, async () => {
+    await middleware(context, async () => {
         const { client, m, args, prefix } = context;
         const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
@@ -36,31 +36,23 @@ export default async (context) => {
                 }, { quoted: fq });
             }
 
-            const _msg = generateWAMessageFromContent(
-                m.chat,
-                {
-                    interactiveMessage: {
-                        body: { text: fmt(`Welcome Status: *${isEnabled ? 'ON 🥶' : 'OFF 😴'}*\n├ Toggles welcome messages for new members in this group.`) },
-                        footer: { text: '' },
-                        nativeFlowMessage: {
-                            buttons: [{
-                                name: 'single_select',
-                                buttonParamsJson: JSON.stringify({
-                                    title: 'Choose an option',
-                                    sections: [{
-                                        rows: [
-                                            { title: 'ON ✅', id: `${prefix}welcome on` },
-                                            { title: 'OFF ❌', id: `${prefix}welcome off` }
-                                        ]
-                                    }]
-                                })
-                            }]
-                        }
-                    }
-                },
-                { quoted: fq }
-            );
-            await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
+            await client.sendMessage(m.chat, {
+                  listMessage: {
+                      title: `Wᴇʟᴄᴏᴍᴇ Status: ${isEnabled ? 'ON 🥶' : 'OFF 😴'}`,
+                      description: `Toggles welcome messages. Turn on or off below.`,
+                      buttonText: 'Choose an option',
+                      listType: 1,
+                      sections: [{
+                          title: 'Options',
+                          rows: [
+                              { title: 'ON ✅', description: 'Enable welcome messages', rowId: `${prefix}welcome on` },
+                              { title: 'OFF ❌', description: 'Disable welcome messages', rowId: `${prefix}welcome off` }
+                          ]
+                      }],
+                      footer: '©𝐏𝐨𝐰𝐞𝐫𝐞ꀠ𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧'
+                  }
+              }, { quoted: fq });
+              await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         } catch (error) {
     await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             console.error('Toxic-MD: Error in welcome.js:', error);

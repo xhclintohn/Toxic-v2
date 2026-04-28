@@ -10,7 +10,10 @@ export default {
         const { client, m, text, prefix } = context;
         const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-        if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ READ MORE ≪───\n├ \n├ Usage: ${prefix}readmore visible text|hidden text\n├ The text after | will be hidden.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        if (!text) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ READ MORE ≪───\n├ \n├ Usage: ${prefix}readmore visible text|hidden text\n├ The text after | will be hidden.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
         const parts = text.split('|');
         const visible = parts[0] || '';
         const hidden = parts[1] || '';

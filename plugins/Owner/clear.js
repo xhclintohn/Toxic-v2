@@ -25,6 +25,7 @@ export default async (context) => {
         } catch (err) {
     await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             if (err?.message?.includes('myAppStateKey') || err?.output?.statusCode === 404) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 return m.reply('╭───(    TOXIC-MD    )───\n├───≥ NOT READY ≤───\n├ \n├ App state not fully synced yet.\n├ Wait a minute then try again.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             }
             await m.reply('╭───(    TOXIC-MD    )───\n├───≥ ERROR ≤───\n├ \n├ Failed to clear chat.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');

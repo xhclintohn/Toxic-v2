@@ -7,7 +7,10 @@ export default async (context) => {
     const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
-    if (!text) return m.reply("╭───(    TOXIC-MD    )───\n├ Provide a valid web link to inspect, dimwit.\n├ Bot will crawl HTML, CSS, JS, and media.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+    if (!text) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+        return m.reply("╭───(    TOXIC-MD    )───\n├ Provide a valid web link to inspect, dimwit.\n├ Bot will crawl HTML, CSS, JS, and media.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+    }
 
     if (!/^https?:\/\//i.test(text)) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});

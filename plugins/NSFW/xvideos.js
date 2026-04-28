@@ -7,8 +7,14 @@ export default async (context) => {
     const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
-    if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ You dumb fuck, type something.\n├ I'm not psychic.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-    if (text.length > 150) return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Your search is longer than your dick.\n├ Keep it under 150 chars, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+    if (!text) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+        return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ You dumb fuck, type something.\n├ I'm not psychic.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+    }
+    if (text.length > 150) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+        return m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Your search is longer than your dick.\n├ Keep it under 150 chars, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+    }
 
     const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
 

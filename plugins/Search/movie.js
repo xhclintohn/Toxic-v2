@@ -5,7 +5,10 @@ export default async (context) => {
   const fq = getFakeQuoted(m);
   await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
-  if (!text) return m.reply("🚫 Please provide a movie name or TV show");
+  if (!text) {
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+      return m.reply("🚫 Please provide a movie name or TV show");
+  }
 
   try {
     let fids = await axios.get(`http://www.omdbapi.com/?apikey=742b2d09&t=${text}&plot=full`);

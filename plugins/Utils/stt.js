@@ -18,7 +18,10 @@ export default {
 
         let GROQ_API_KEY = '';
         try { const _k = await import('../../keys.js'); GROQ_API_KEY = _k.GROQ_API_KEY || ''; } catch {}
-        if (!GROQ_API_KEY) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STT ≪───\n├ \n├ GROQ_API_KEY not set in keys.js\n├ Add it to enable transcription.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+        if (!GROQ_API_KEY) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STT ≪───\n├ \n├ GROQ_API_KEY not set in keys.js\n├ Add it to enable transcription.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+        }
 
         const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
         const directAudio = m.message?.audioMessage;

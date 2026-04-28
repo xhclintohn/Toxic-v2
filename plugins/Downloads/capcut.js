@@ -9,7 +9,10 @@ export default {
         const { client, m, text, prefix } = context;
         const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-        if (!text) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ CAPCUT DL ≪───\n├ \n├ Usage: ${prefix}capcut <url>\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        if (!text) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ CAPCUT DL ≪───\n├ \n├ Usage: ${prefix}capcut <url>\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
         if (!text.match(/capcut\.com/i)) return m.reply('That doesn\'t look like a CapCut link.');
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });

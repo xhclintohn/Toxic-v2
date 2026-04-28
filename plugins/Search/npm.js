@@ -12,7 +12,10 @@ export default {
 
         try {
             const query = (text || '').trim();
-            if (!query) return m.reply("╭───(    TOXIC-MD    )───\n├ Give me a package name, you useless human.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+            if (!query) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                return m.reply("╭───(    TOXIC-MD    )───\n├ Give me a package name, you useless human.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+            }
 
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 

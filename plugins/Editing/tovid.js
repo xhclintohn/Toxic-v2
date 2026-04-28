@@ -10,7 +10,10 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
         const fq = getFakeQuoted(m);
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-            if (!m.quoted) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO VIDEO ≪───\n├ \n├ The command requires a STICKER.\n├ Your empty reply suggests you\n├ cannot read.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+            if (!m.quoted) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO VIDEO ≪───\n├ \n├ The command requires a STICKER.\n├ Your empty reply suggests you\n├ cannot read.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+            }
             const quotedMime = m.quoted.mimetype || '';
             if (!/webp/.test(quotedMime)) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO VIDEO ≪───\n├ \n├ That is a file, not a sticker.\n├ The .webp extension is a clue\n├ you seem to have missed.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             const statusMsg = await m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO VIDEO ≪───\n├ \n├ Forcing your static sticker into\n├ a video. A pointless endeavor.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');

@@ -17,13 +17,19 @@ export default {
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
             
-            if (!m.quoted) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO IMAGE ≪───\n├ \n├ Are you illiterate? QUOTE A STICKER.\n├ The command is not a suggestion.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+            if (!m.quoted) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO IMAGE ≪───\n├ \n├ Are you illiterate? QUOTE A STICKER.\n├ The command is not a suggestion.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+            }
             
             const quotedMime = m.quoted.mimetype || '';
             if (!/webp/.test(quotedMime)) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ TO IMAGE ≪───\n├ \n├ That is not a sticker. Do you need\n├ glasses? That is clearly not a .webp file.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             
             mediaPath = await m.quoted.download();
-            if (!mediaPath) return m.reply('╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Failed to download the sticker.\n├ Your phone is probably as useless\n├ as you are.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+            if (!mediaPath) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                return m.reply('╭───(    TOXIC-MD    )───\n├───≫ FAILED ≪───\n├ \n├ Failed to download the sticker.\n├ Your phone is probably as useless\n├ as you are.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+            }
             
             const tempFile = path.join(tmpdir(), `sticker_${Date.now()}.webp`);
             outPath = path.join(tmpdir(), `sticker_${Date.now()}.png`);

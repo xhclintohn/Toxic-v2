@@ -45,10 +45,16 @@ for (const eff of EFFECTS) {
                 const { client, m, text, prefix } = context;
                 const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-                if (!text) return m.reply(
+                if (!text) {
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                    return m.reply(
+                }
                     `╭───(    TOXIC-MD    )───\n├───≫ ${effect.label} ≪───\n├ \n├ Usage: ${prefix}${effect.name} YourText\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 );
-                if (text.length > 50) return m.reply('╭───(    TOXIC-MD    )───\n├ Text too long. Max 50 chars.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+                if (text.length > 50) {
+                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                    return m.reply('╭───(    TOXIC-MD    )───\n├ Text too long. Max 50 chars.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+                }
                 try {
                     await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
                     const imgBuffer = await makeEffect(effect.id, text.trim(), effect.extraParams || {});

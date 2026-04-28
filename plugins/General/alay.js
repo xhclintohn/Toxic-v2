@@ -8,7 +8,10 @@ export default {
         const fq = getFakeQuoted(m);
         const input = text || m.quoted?.text;
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-        if (!input) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ALAY TEXT ≪───\n├ \n├ Give me text to alay-ify, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        if (!input) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ALAY TEXT ≪───\n├ \n├ Give me text to alay-ify, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
         const alay = input.split('').map(v => {
             const r = Math.random();
             const char = r > .5 ? v.toUpperCase() : v.toLowerCase();

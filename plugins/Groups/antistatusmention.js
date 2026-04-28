@@ -39,6 +39,7 @@ export default async (context) => {
                 value === 'off' ? 'Status mentions are now allowed. Hope that\'s intentional. 🙄' :
                 value === 'warn' ? `Status mentions deleted + user warned.\nHit the warn limit and they\'re KICKED. 😈` :
                 'Status mention = Instant kick. Zero tolerance. 😈';
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return await client.sendMessage(m.chat, { text: fmt(`✅ AntiStatusMention set to *${value.toUpperCase()}*.\n├ ${desc}`) }, { quoted: fq });
         }
 

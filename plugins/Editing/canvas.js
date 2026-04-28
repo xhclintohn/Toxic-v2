@@ -29,6 +29,7 @@ import { uploadToUrl } from '../../lib/toUrl.js';
           const usageMsg = `╭───(    TOXIC-MD    )───\n├───≫ Cᴀɴᴠᴀs Cᴀʀᴅ ≪───\n├ \n├ Reply to an image to use this.\n├ \n├ *Usage:*\n├ ${prefix}canvas Title | type | text | watermark\n├ \n├ *Example:*\n├ ${prefix}canvas Blinding Lights | spotify | The Weeknd | TOXIC-MD\n├ ${prefix}canvas My Video | youtube | Subscribe Now | BOT\n├ \n├ *Available Types (${CANVAS_TYPES.length}):*\n${typesList}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞᠊ʀᴇᴅ 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
           if (!quoted || !/image/.test(mime)) {
+              await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
               return client.sendMessage(m.chat, { text: usageMsg }, { quoted: fq });
           }
 

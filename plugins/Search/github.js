@@ -50,7 +50,10 @@ export default async (context) => {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
         if (subCommand === 'user' || subCommand === 'stalk') {
-            if (!searchQuery) return m.reply('Give me a GitHub username to stalk.');
+            if (!searchQuery) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                return m.reply('Give me a GitHub username to stalk.');
+            }
             const userData = await githubUserStalk(searchQuery);
             const bio = userData.bio || 'No bio';
             const location = userData.location || 'Unknown';
@@ -60,9 +63,15 @@ export default async (context) => {
                 `╭───(    TOXIC-MD    )───\n├───≫ GitHub User ≪───\n├ Name: ${userData.name || userData.login}\n├ Username: @${userData.login}\n├ Bio: ${bio}\n├ Location: ${location}\n├ Repos: ${userData.public_repos}\n├ Followers: ${userData.followers}\n├ Following: ${userData.following}\n├ Joined: ${createdDate}\n├ URL: ${userData.html_url}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             );
         } else if (subCommand === 'repos' || subCommand === 'search') {
-            if (!searchQuery) return m.reply('Give me something to search, genius.');
+            if (!searchQuery) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                return m.reply('Give me something to search, genius.');
+            }
             const repoData = await githubRepoSearch(searchQuery);
-            if (!repoData.items || repoData.items.length === 0) return m.reply('No repositories found. Try a different query.');
+            if (!repoData.items || repoData.items.length === 0) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                return m.reply('No repositories found. Try a different query.');
+            }
             const top5 = repoData.items.slice(0, 5);
             const repoList = top5.map((repo, i) =>
                 `├ ${i + 1}. ${repo.full_name}\n│  ⭐ ${repo.stargazers_count} | ${repo.language || 'Unknown'}\n│  ${repo.description ? repo.description.substring(0, 60) : 'No description'}`
@@ -71,7 +80,10 @@ export default async (context) => {
             await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ GitHub Repos ≪───\n${repoList}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         } else if (subCommand === 'trending') {
             const trendData = await githubTrending();
-            if (!trendData.items || trendData.items.length === 0) return m.reply('No trending repos found.');
+            if (!trendData.items || trendData.items.length === 0) {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                return m.reply('No trending repos found.');
+            }
             const top5 = trendData.items.slice(0, 5);
             const trendList = top5.map((repo, i) =>
                 `├ ${i + 1}. ${repo.full_name}\n│  ⭐ ${repo.stargazers_count} | ${repo.language || 'Unknown'}\n│  ${repo.description ? repo.description.substring(0, 60) : 'No description'}`
