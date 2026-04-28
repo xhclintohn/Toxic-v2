@@ -17,12 +17,12 @@ const FEATURES_DIR = path.join(__dirname, '..', '..', 'features');
 export default async (context) => {
     const { client, m, text, prefix } = context;
     const fq = getFakeQuoted(m);
-    await client.sendMessage(m.chat, { react: { text: '🔍', key: m.reactKey } });
+    await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
 
     if (normalizeNumber(m.sender) !== DEVELOPER) {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         return await client.sendMessage(m.chat, {
-            text: `╭───(    TOXIC-MD    )───\n├───≫ ACCESS DENIED ≪───\n├ \n├ This command is restricted to the bot owner.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            text: `╭───(    TOXIC-MD    )───\n├───≫ ACCESS DENIED ≪───\n├ \n├ This command is restricted to the bot dev.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         }, { quoted: fq });
     }
 
