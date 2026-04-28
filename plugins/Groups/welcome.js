@@ -15,7 +15,7 @@ export default async (context) => {
 
         try {
             if (!jid.endsWith('@g.us')) {
-                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } }).catch(() => {});
                 return await client.sendMessage(m.chat, { text: fmt("Oi! 😤 This only works in groups. Not your personal DM, genius. 🖕") }, { quoted: fq });
             }
 
@@ -26,17 +26,17 @@ export default async (context) => {
             if (value === 'on' || value === 'off') {
                 const action = value === 'on';
                 if (isEnabled === action) {
-                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                    await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } }).catch(() => {});
                     return await client.sendMessage(m.chat, { text: fmt(`Bruh 🙄 Welcome is already ${value.toUpperCase()} in this group. Pay attention!`) }, { quoted: fq });
                 }
                 await updateGroupSetting(jid, 'welcome', action);
-                await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
                 return await client.sendMessage(m.chat, {
                     text: fmt(`Welcome messages ${value.toUpperCase()}! 🔥 ${action ? "New members better brace themselves 😈" : "No more warm welcomes. Cold group energy 🧊"}`)
                 }, { quoted: fq });
             }
 
-            // carousel + single_select (iOS ✅ Android ✅)
+            // carousel + single_select (iOS  Android )
             const toggleMsg = generateWAMessageFromContent(
                 m.chat,
                 proto.Message.fromObject({
@@ -51,12 +51,12 @@ export default async (context) => {
                                     buttons: [{
                                         name: 'single_select',
                                         buttonParamsJson: JSON.stringify({
-                                            title: '⚙️ Choose Action',
+                                            title: 'Choose Action',
                                             sections: [{
                                                 title: 'Welcome Messages',
                                                 rows: [
-                                                    { title: 'ON ✅', description: 'Enable welcome messages', id: `${prefix}welcome on` },
-                                                    { title: 'OFF ❌', description: 'Disable welcome messages', id: `${prefix}welcome off` }
+                                                    { title: 'ON ', description: 'Enable welcome messages', id: `${prefix}welcome on` },
+                                                    { title: 'OFF ', description: 'Disable welcome messages', id: `${prefix}welcome off` }
                                                 ]
                                             }]
                                         })
@@ -69,9 +69,9 @@ export default async (context) => {
                 { quoted: fq }
             );
             await client.relayMessage(m.chat, toggleMsg.message, { messageId: toggleMsg.key.id });
-            await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
         } catch (error) {
-    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+    await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } }).catch(() => {});
             console.error('Toxic-MD: Error in welcome.js:', error);
             await client.sendMessage(m.chat, { text: fmt(`Something crashed. Typical. 💀 Error: ${error.message}`) }, { quoted: fq });
         }

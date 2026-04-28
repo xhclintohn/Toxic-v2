@@ -42,7 +42,7 @@ export default {
         }
 
         try {
-            // carousel + single_select (BuuClient-verified: iOS ✅ Android ✅)
+            // carousel + single_select (BuuClient-verified: iOS  Android )
             const carouselMsg = generateWAMessageFromContent(
                 m.chat,
                 proto.Message.fromObject({
@@ -57,7 +57,7 @@ export default {
                                     buttons: [{
                                         name: 'single_select',
                                         buttonParamsJson: JSON.stringify({
-                                            title: '⚡ Select a command',
+                                            title: 'Select a command',
                                             sections: [{
                                                 title: 'Bot Commands',
                                                 rows: [
@@ -134,6 +134,6 @@ export default {
             await m.reply('shop failed to render.');
         }
 
-        await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+        await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
     }
 };

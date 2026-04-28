@@ -53,7 +53,7 @@ export default {
                 ],
             },
             {
-                title: 'ℹ 𝙄𝙣𝙛𝙤 𝘽𝙤𝙩',
+                title: '𝙄𝙣𝙛𝙤 𝘽𝙤𝙩',
                 highlight_label: '© 丨几匚',
                 rows: [
                     { title: '𝐏𝐢𝐧𝐠', description: 'Check bot speed', id: `${prefix}ping` },
@@ -62,7 +62,7 @@ export default {
                 ],
             },
             {
-                title: '📜 𝘾𝙖𝙩𝙚𝙜𝙤𝙧𝙮 𝙈𝙚𝙣𝙪𝙨',
+                title: '𝘾𝙖𝙩𝙚𝙜𝙤𝙧𝙮 𝙈𝙚𝙣𝙪𝙨',
                 highlight_label: '© 丨几匚',
                 rows: [
                     { title: '𝐆𝐞𝐧𝐞𝐫𝐚𝐥𝐌𝐞𝐧𝐮', description: 'General commands', id: `${prefix}generalmenu` },
@@ -116,7 +116,7 @@ export default {
                             },
                             {
                                 name: 'quick_reply',
-                                buttonParamsJson: JSON.stringify({ display_text: '🏓 Ping', id: `${prefix}ping` })
+                                buttonParamsJson: JSON.stringify({ display_text: 'Ping', id: `${prefix}ping` })
                             }
                         ],
                         messageVersion: 1,

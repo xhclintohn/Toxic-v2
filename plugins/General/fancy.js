@@ -109,7 +109,7 @@ export default {
               messageVersion: 1,
               buttons: [{
                 name: 'cta_copy',
-                buttonParamsJson: JSON.stringify({ display_text: '📋 Copy Text', copy_code: styledText })
+                buttonParamsJson: JSON.stringify({ display_text: 'Copy Text', copy_code: styledText })
               }]
             }
           }
@@ -119,7 +119,7 @@ export default {
       await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
 
     } catch (error) {
-    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+    await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } }).catch(() => {});
       await client.sendMessage(m.chat, {
         text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├\n├ Failed to apply fancy style.\n├ Try again or use a different number.\n╰──────────────────☉`
       }, { quoted: fq });

@@ -11,7 +11,7 @@ let hasSentStartMessage = false;
 function getGreeting() {
   const hour = DateTime.now().setZone("Africa/Nairobi").hour;
   if (hour >= 5 && hour < 12) return "Hey there! Ready to kick off the day? 🚀";
-  if (hour >= 12 && hour < 18) return "What's up? Time to make things happen! ⚡";
+  if (hour >= 12 && hour < 18) return "What's up? Time to make things happen!";
   if (hour >= 18 && hour < 22) return "Evening vibes! Let's get to it! 🌟";
   return "Late night? Let's see what's cooking! 🌙";
 }
@@ -62,7 +62,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
             `✨ *Bot Name*: ${botName}`,
             `🔧 *Mode*: ${settings.mode}`,
             `➡️ *Prefix*: ${settings.prefix}`,
-            `📋 *Commands*: ${totalCommands}`,
+            `*Commands*: ${totalCommands}`,
             `🕒 *Time*: ${getCurrentTime()}`,
             `💾 *Database*: Postgres SQL`,
             `📚 *Library*: Baileys`,
@@ -80,7 +80,7 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
             `✨ *Bot Name*: ${botName}`,
             `🔧 *Mode*: ${settings.mode}`,
             `➡️ *Prefix*: ${settings.prefix}`,
-            `📋 *Commands*: ${totalCommands}`,
+            `*Commands*: ${totalCommands}`,
             `🕒 *Time*: ${getCurrentTime()}`,
             `💾 *Database*: Postgres SQL`,
             `📚 *Library*: Baileys`,
@@ -107,19 +107,19 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
       },
       footer: { text: `Powered by ${botName}` },
       nativeFlowMessage: {
+        messageVersion: 1,
         buttons: [
           {
-            name: 'single_select',
-            buttonParamsJson: JSON.stringify({
-              title: 'Get Started',
-              sections: [{
-                rows: [
-                  { title: 'Menu', description: 'View bot menu', id: `${effectivePrefix}menu` },
-                  { title: '⚙️ Settings', description: 'All bot settings', id: `${effectivePrefix}settings` },
-                  { title: 'Ping', description: 'Check bot speed', id: `${effectivePrefix}ping` }
-                ]
-              }]
-            })
+            name: 'quick_reply',
+            buttonParamsJson: JSON.stringify({ display_text: 'Menu', id: `${effectivePrefix}menu` })
+          },
+          {
+            name: 'quick_reply',
+            buttonParamsJson: JSON.stringify({ display_text: 'Settings', id: `${effectivePrefix}settings` })
+          },
+          {
+            name: 'quick_reply',
+            buttonParamsJson: JSON.stringify({ display_text: 'Ping', id: `${effectivePrefix}ping` })
           }
         ]
       }

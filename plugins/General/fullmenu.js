@@ -130,15 +130,15 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
               buttons: [
                 {
                   name: 'quick_reply',
-                  buttonParamsJson: JSON.stringify({ display_text: '📜 General', id: `${effectivePrefix}generalmenu` })
+                  buttonParamsJson: JSON.stringify({ display_text: 'General', id: `${effectivePrefix}generalmenu` })
                 },
                 {
                   name: 'quick_reply',
-                  buttonParamsJson: JSON.stringify({ display_text: '🎬 Downloads', id: `${effectivePrefix}downloadmenu` })
+                  buttonParamsJson: JSON.stringify({ display_text: 'Downloads', id: `${effectivePrefix}downloadmenu` })
                 },
                 {
                   name: 'quick_reply',
-                  buttonParamsJson: JSON.stringify({ display_text: '👥 Groups', id: `${effectivePrefix}groupmenu` })
+                  buttonParamsJson: JSON.stringify({ display_text: 'Groups', id: `${effectivePrefix}groupmenu` })
                 }
               ]
             }

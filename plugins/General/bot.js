@@ -77,15 +77,15 @@ export default {
                         buttons: [
                             {
                                 name: 'quick_reply',
-                                buttonParamsJson: JSON.stringify({ display_text: '📱 Menu', id: `${effectivePrefix}menu` })
+                                buttonParamsJson: JSON.stringify({ display_text: 'Menu', id: `${effectivePrefix}menu` })
                             },
                             {
                                 name: 'quick_reply',
-                                buttonParamsJson: JSON.stringify({ display_text: '🏓 Ping', id: `${effectivePrefix}ping` })
+                                buttonParamsJson: JSON.stringify({ display_text: 'Ping', id: `${effectivePrefix}ping` })
                             },
                             {
                                 name: 'quick_reply',
-                                buttonParamsJson: JSON.stringify({ display_text: '⚙️ Settings', id: `${effectivePrefix}settings` })
+                                buttonParamsJson: JSON.stringify({ display_text: 'Settings', id: `${effectivePrefix}settings` })
                             }
                         ]
                     }

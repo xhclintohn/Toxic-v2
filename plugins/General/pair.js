@@ -106,7 +106,7 @@ export default {
 
             if (!code) throw new Error("Pairing code generation failed. The number might not be on WhatsApp.");
 
-            await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
 
             const formattedCode = code.match(/.{1,4}/g)?.join('-') || code;
 
@@ -127,7 +127,7 @@ export default {
                                         {
                                             name: 'cta_copy',
                                             buttonParamsJson: JSON.stringify({
-                                                display_text: '📋 Copy Pairing Code',
+                                                display_text: 'Copy Pairing Code',
                                                 id: 'copy_code',
                                                 copy_code: formattedCode
                                             })
@@ -142,7 +142,7 @@ export default {
                 await client.relayMessage(m.chat, ctaMsg.message, { messageId: ctaMsg.key.id });
 
             } catch (btnErr) {
-    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+    await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } }).catch(() => {});
                 await client.sendMessage(m.chat, {
                     text: `╭───(    TOXIC-MD    )───\n├───≫ Pᴀɪʀɪɴɢ Cᴏᴅᴇ ≪───\n├ \n├ Number: ${number}\n├ Code: *${formattedCode}*\n├ \n├ Copy the code above and paste\n├ it in your WhatsApp linked\n├ devices section. Hurry up,\n├ it expires quick.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
                 }, { quoted: fq });
@@ -159,7 +159,7 @@ export default {
 
         } catch (error) {
             console.error("Error in pair command:", error);
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
             await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Pᴀɪʀɪɴɢ Fᴀɪʟᴇᴅ ≪───\n├ \n├ Couldn't generate the code.\n├ ${error.message || 'Unknown error'}\n├ \n├ Make sure the number is valid\n├ and actually on WhatsApp.\n├ Then try again, if you can\n├ manage that.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: fq });

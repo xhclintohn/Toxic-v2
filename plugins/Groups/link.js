@@ -35,7 +35,7 @@ export default async (context) => {
                   {
                     name: 'cta_copy',
                     buttonParamsJson: JSON.stringify({
-                      display_text: '📋 Copy Link',
+                      display_text: 'Copy Link',
                       copy_code: link
                     })
                   }
@@ -50,9 +50,9 @@ export default async (context) => {
         await m.reply(bodyText);
       }
 
-      await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
     } catch {
-      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+      await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
       await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Couldn't fetch the link.\n├ Either make me admin or quit.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫᠊ᴇᴅ 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
   });

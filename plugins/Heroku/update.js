@@ -31,7 +31,7 @@ export default async (context) => {
                     m.chat,
                     {
                         text: formatStylishReply(
-                            "⚠️ Seriously? You forgot to set *HEROKU_API_KEY* or *HEROKU_APP_NAME*.\n" +
+                            " Seriously? You forgot to set *HEROKU_API_KEY* or *HEROKU_APP_NAME*.\n" +
                             "Fix your setup before crying for updates. 🙄"
                         ),
                     },
@@ -82,8 +82,8 @@ export default async (context) => {
                                                     sections: [
                                                         {
                                                             rows: [
-                                                                { title: "📱 Menu", description: "Get command list", id: `${prefix}menu` },
-                                                                { title: "⚙ Settings", description: "Bot settings", id: `${prefix}settings` },
+                                                                { title: "Menu", description: "Get command list", id: `${prefix}menu` },
+                                                                { title: "Settings", description: "Bot settings", id: `${prefix}settings` },
                                                             ],
                                                         },
                                                     ],
@@ -124,7 +124,7 @@ export default async (context) => {
                                                         title: "What do you want?",
                                                         rows: [
                                                             { title: "🚀 Trigger Update", description: "Update now", id: `${prefix}triggerupdate` },
-                                                            { title: "📱 Menu", description: "Back to command list", id: `${prefix}menu` },
+                                                            { title: "Menu", description: "Back to command list", id: `${prefix}menu` },
                                                         ],
                                                     },
                                                 ],
@@ -148,14 +148,14 @@ export default async (context) => {
 
             if (errorMessage.includes("API key")) {
                 msg =
-                    "❌ Your Heroku API key is trash.\n" +
+                    " Your Heroku API key is trash.\n" +
                     "Fix *HEROKU_API_KEY* before crying here.";
             } else if (errorMessage.includes("not found")) {
                 msg =
-                    "❌ Heroku app not found.\n" +
+                    " Heroku app not found.\n" +
                     "Are you sure *HEROKU_APP_NAME* is correct, genius?";
             } else {
-                msg = `❌ Update failed:\n${errorMessage}\nTry again without panicking.`;
+                msg = ` Update failed:\n${errorMessage}\nTry again without panicking.`;
             }
 
             await client.sendMessage(

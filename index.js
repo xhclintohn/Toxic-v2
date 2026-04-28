@@ -763,7 +763,7 @@ async function startToxic() {
             console.log('[NEWSLETTER] message received — jid:', remoteJid, '| type:', type, '| key.id:', mek.key?.id, '| ts:', tsN);
             (async () => {
               try {
-                const messageId = mek.newsletterServerId || mek.key.id;
+                const messageId = mek.key?.server_id || mek.newsletterServerId || mek.key.id;
                 console.log('[NEWSLETTER] messageId resolved:', messageId, '| user:', client?.user?.id);
                 if (!messageId || !client?.user?.id) {
                   console.log('[NEWSLETTER] aborting — missing messageId or user');
@@ -820,7 +820,9 @@ async function startToxic() {
                 if (selectedCmd) {
                   const effectivePrefix = settings?.prefix || '.';
                   const command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
-                  const cleanSender = sender && sender.includes(':') && !sender.endsWith('@lid') ? sender.split(':')[0] + '@' + sender.split('@')[1] : sender;
+                  // When fromMe (bot owner tapping their own button), use the bot's own JID as sender
+                  const effectiveSender = mek.key.fromMe ? (client.user?.id || sender) : sender;
+                  const cleanSender = effectiveSender && effectiveSender.includes(':') && !effectiveSender.endsWith('@lid') ? effectiveSender.split(':')[0] + '@' + effectiveSender.split('@')[1] : effectiveSender;
                   const nfM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: cleanSender, from: remoteJid, chat: remoteJid, isGroup: remoteJid.endsWith('@g.us') };
                   toxic(client, nfM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC INTERACTIVE]:', e.message));
                   return;
@@ -834,7 +836,9 @@ async function startToxic() {
             if (selectedCmd) {
               const effectivePrefix = settings?.prefix || '.';
               const command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
-              const cleanSender = sender && sender.includes(':') && !sender.endsWith('@lid') ? sender.split(':')[0] + '@' + sender.split('@')[1] : sender;
+              // When fromMe (bot owner tapping their own button), use the bot's own JID as sender
+              const effectiveSenderL = mek.key.fromMe ? (client.user?.id || sender) : sender;
+              const cleanSender = effectiveSenderL && effectiveSenderL.includes(':') && !effectiveSenderL.endsWith('@lid') ? effectiveSenderL.split(':')[0] + '@' + effectiveSenderL.split('@')[1] : effectiveSenderL;
               const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: cleanSender, from: remoteJid, chat: remoteJid, isGroup: remoteJid.endsWith('@g.us') };
               toxic(client, listM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC LIST]:', e.message));
               setImmediate(() => {

@@ -24,7 +24,7 @@ export default {
             const { email, sessionId, expiresAt } = response.data.result;
             const expires = new Date(expiresAt).toLocaleString();
 
-            await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
 
             await client.sendMessage(
                 m.chat,
@@ -35,7 +35,7 @@ export default {
                             {
                                 name: "cta_copy",
                                 buttonParamsJson: JSON.stringify({
-                                    display_text: "📋 Copy Session ID",
+                                    display_text: "Copy Session ID",
                                     id: "copy_session",
                                     copy_code: sessionId
                                 })
@@ -43,7 +43,7 @@ export default {
                             {
                                 name: "cta_copy", 
                                 buttonParamsJson: JSON.stringify({
-                                    display_text: "📧 Copy Email",
+                                    display_text: "Copy Email",
                                     id: "copy_email",
                                     copy_code: email
                                 })
@@ -56,7 +56,7 @@ export default {
 
         } catch (error) {
             console.error('TempMail error:', error);
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
 
             let errorMessage = `Failed to create temporary email, you impatient creature. `;
             if (error.message.includes('timeout')) {

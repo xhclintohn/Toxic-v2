@@ -12,14 +12,14 @@ import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
           const mime = (q.msg || q).mimetype || '';
 
           if (!mime) {
-              await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+              await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } }).catch(() => {});
               return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Quote or send a media file to upload.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
           }
 
           const mediaBuffer = await q.download();
 
           if (mediaBuffer.length > 256 * 1024 * 1024) {
-              await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+              await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } }).catch(() => {});
               return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ File too large! Max 256MB.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
           }
 
@@ -29,7 +29,7 @@ import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
           const link = await uploadToUrl(mediaBuffer, ext);
           const fileSizeMB = (mediaBuffer.length / (1024 * 1024)).toFixed(2);
 
-          await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+          await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
 
           const resultText =
               `╭───(    TOXIC-MD    )───\n` +
@@ -49,7 +49,7 @@ import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
                           messageVersion: 1,
                           buttons: [{
                               name: 'cta_copy',
-                              buttonParamsJson: JSON.stringify({ display_text: '📋 Copy Link', copy_code: link })
+                              buttonParamsJson: JSON.stringify({ display_text: 'Copy Link', copy_code: link })
                           }],
                           messageParamsJson: ''
                       }
@@ -61,7 +61,7 @@ import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
           }
 
       } catch (err) {
-          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+          await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
           m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Uᴘʟᴏᴀᴅ Eʀʀᴏʀ ≪───\n├ \n├ Upload failed, try again.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
   };

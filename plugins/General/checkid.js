@@ -14,7 +14,7 @@ export default {
             const link = linkMatch ? linkMatch[0] : null;
 
             if (!link) {
-                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } }).catch(() => {});
                 return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Where's the link?\n├ Example: " + prefix + "checkid https://chat.whatsapp.com/xxxxx\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
             }
 
@@ -24,7 +24,7 @@ export default {
             try {
                 url = new URL(link);
             } catch {
-                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
                 return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ That's not a valid URL.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
             }
 
@@ -42,11 +42,11 @@ export default {
                 id = res.id;
                 type = 'Channel';
             } else {
-                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+                await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
                 return m.reply("╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ That's not a WhatsApp group or channel link.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞᠊ᴅ 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
             }
 
-            await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
 
             const bodyText = "╭───(    TOXIC-MD    )───\n├───≫ " + type + " JID ≪───\n├ \n├ *Link:* " + link + "\n├ *" + type + " ID:* `" + id + "`\n╰──────────────────☉";
 
@@ -64,7 +64,7 @@ export default {
                                     {
                                         name: 'cta_copy',
                                         buttonParamsJson: JSON.stringify({
-                                            display_text: "📋 Copy " + type + " ID",
+                                            display_text: "Copy " + type + " ID",
                                             copy_code: id
                                         })
                                     }
@@ -76,12 +76,12 @@ export default {
                 );
                 await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
             } catch {
-                await m.reply(bodyText + "\n\n📋 Copy this ID: `" + id + "`");
+                await m.reply(bodyText + "\n\nCopy this ID: `" + id + "`");
             }
 
         } catch (error) {
             console.error('CheckID error:', error);
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
             await m.reply("╭───(    TOXIC-MD    )───\n├───≫ Cʀᴀsʜᴇᴅ ≪───\n├ \n├ Error: " + error.message + "\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
     }
