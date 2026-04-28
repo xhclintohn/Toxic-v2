@@ -16,12 +16,14 @@ export default {
         const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
-        let GROQ_API_KEY = '';
-        try { const _k = await import('../../keys.js'); GROQ_API_KEY = _k.GROQ_API_KEY || ''; } catch {}
-        if (!GROQ_API_KEY) {
+        let _km = {};
+        try { _km = await import('../../keys.js'); } catch {}
+        const _groqKeys = _km.GROQ_API_KEYS?.length ? _km.GROQ_API_KEYS : [_km.GROQ_API_KEY || process.env.GROQ_KEY_1 || process.env.GROQ_API_KEY || ''].filter(Boolean);
+        if (!_groqKeys.length) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-            return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STT ≪───\n├ \n├ GROQ_API_KEY not set in keys.js\n├ Add it to enable transcription.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
+            return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STT ≪───\n├ \n├ No GROQ key set. Add GROQ_KEY_1 to env vars.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
         }
+        let GROQ_API_KEY = _km.getNextGroqKey?.() || _groqKeys[0];
 
         const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
         const directAudio = m.message?.audioMessage;
@@ -51,12 +53,24 @@ export default {
             form.append('model', 'whisper-large-v3');
             form.append('response_format', 'json');
 
-            const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', form, {
-                headers: {
-                    ...form.getHeaders(),
-                    Authorization: `Bearer ${GROQ_API_KEY}`,
-                },
-            });
+            let response;
+            for (let _i = 0; _i < _groqKeys.length; _i++) {
+                const _k = _km.getNextGroqKey?.() || _groqKeys[_i];
+                if (!_k) continue;
+                try {
+                    response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', form, {
+                        headers: { ...form.getHeaders(), Authorization: `Bearer ${_k}` },
+                    });
+                    break;
+                } catch (e) {
+                    if ((e.response?.status === 429 || e.response?.status === 401 || e.response?.status === 403) && _groqKeys.length > 1) {
+                        _km.markKeyFailed?.(_k);
+                        continue;
+                    }
+                    throw e;
+                }
+            }
+            if (!response) throw new Error('All GROQ keys exhausted');
 
             const transcribed = response.data?.text?.trim();
 

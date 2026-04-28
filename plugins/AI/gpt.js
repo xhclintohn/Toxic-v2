@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { GROQ_API_KEY as GROQ_KEY } from '../../keys.js';
+
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
 export default async (context) => {
@@ -11,18 +11,37 @@ export default async (context) => {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Type a prompt, genius.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
-    if (!GROQ_KEY || GROQ_KEY === 'REPLACE_WITH_YOUR_GROQ_API_KEY_HERE') {
-        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-        return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ GROQ_API_KEY not set in keys.js\n├ Get one free at console.groq.com\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
-    }
+        let _km = {};
+        try { _km = await import('../../keys.js'); } catch {}
+        const _groqKeys = _km.GROQ_API_KEYS?.length ? _km.GROQ_API_KEYS : [_km.GROQ_API_KEY || process.env.GROQ_KEY_1 || process.env.GROQ_API_KEY || ''].filter(Boolean);
+        if (!_groqKeys.length) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ No GROQ key set. Add GROQ_KEY_1 to env vars.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        }
+        const _callGroq = async (payload) => {
+            const tried = new Set();
+            for (let i = 0; i < _groqKeys.length; i++) {
+                const k = (_km.getNextGroqKey?.()) || _groqKeys[i];
+                if (!k || tried.has(k)) continue;
+                tried.add(k);
+                const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${k}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if ((r.status === 429 || r.status === 401 || r.status === 403) && _groqKeys.length > 1) {
+                    _km.markKeyFailed?.(k);
+                    continue;
+                }
+                return r;
+            }
+            throw new Error('All GROQ keys exhausted');
+        };
 
     try {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+        const res = await _callGroq({
                 model: 'llama-3.3-70b-versatile',
                 messages: [
                     { role: 'system', content: 'You are a highly capable AI assistant. Answer accurately and concisely.' },
@@ -30,8 +49,7 @@ export default async (context) => {
                 ],
                 max_tokens: 1024,
                 temperature: 0.7
-            })
-        });
+            });
 
         if (!res.ok) throw new Error(`Groq API error: ${res.status}`);
         const data = await res.json();

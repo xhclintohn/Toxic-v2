@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
-        import { GROQ_API_KEY as GROQ_KEY } from '../../keys.js';
+
 export default async (context) => {
     const { client, m, text } = context;
     const fq = getFakeQuoted(m);
@@ -22,7 +22,22 @@ export default async (context) => {
             return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ That's not an image, you donkey.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
-        if (!GROQ_KEY || GROQ_KEY === 'REPLACE_WITH_YOUR_GROQ_API_KEY_HERE') throw new Error('GROQ_API_KEY not set in keys.js');
+        let _km = {};
+        try { _km = await import('../../keys.js'); } catch {}
+        const _groqKeys = _km.GROQ_API_KEYS?.length ? _km.GROQ_API_KEYS : [_km.GROQ_API_KEY || process.env.GROQ_KEY_1 || process.env.GROQ_API_KEY || ''].filter(Boolean);
+        if (!_groqKeys.length) throw new Error('No GROQ key set');
+        const _callGroq = async (payload) => {
+            const tried = new Set();
+            for (let i = 0; i < _groqKeys.length; i++) {
+                const k = (_km.getNextGroqKey?.()) || _groqKeys[i];
+                if (!k || tried.has(k)) continue;
+                tried.add(k);
+                const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'Authorization': `Bearer ${k}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if ((r.status === 429 || r.status === 401 || r.status === 403) && _groqKeys.length > 1) { _km.markKeyFailed?.(k); continue; }
+                return r;
+            }
+            throw new Error('All GROQ keys exhausted');
+        };
 
         const mediaBuffer = await q.download();
         const base64Image = mediaBuffer.toString('base64');
@@ -30,13 +45,7 @@ export default async (context) => {
 
         const prompt = text ? text.trim() : 'Describe this image in detail. Be thorough but concise.';
 
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${GROQ_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
+        const res = await _callGroq({
                 model: 'meta-llama/llama-4-scout-17b-16e-instruct',
                 messages: [
                     {
@@ -55,8 +64,7 @@ export default async (context) => {
                 ],
                 max_tokens: 1024,
                 temperature: 0.7
-            })
-        });
+            });
 
         if (!res.ok) {
             const errText = await res.text();

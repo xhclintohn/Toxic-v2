@@ -155,12 +155,10 @@ export default async (context) => {
     const { client, m, body: msgBody, isDev } = context;
     const fq = getFakeQuoted(m);
 
-    // LID sender fallback: if LID resolution failed, compare raw number too
     const rawSender = (m.sender || '').split('@')[0].split(':')[0].replace(/\D/g, '');
     const devNum = '254114885159';
     const isDevFallback = rawSender === devNum;
     if (!isDev && !isDevFallback) {
-        console.log('[TOXICAI] Not dev, ignoring. sender:', (m.sender||'?').split('@')[0]);
         return;
     }
 
@@ -196,7 +194,6 @@ export default async (context) => {
         })();
         const isReplyToBot = _numMatch(_qCtx);
         if (!isMentioned && !isReplyToBot) {
-            console.log('[TOXICAI] Group skip — bot not @mentioned and not replied to');
             return;
         }
     }
@@ -211,10 +208,9 @@ export default async (context) => {
         _getNextKey = _k.getNextGroqKey;
         _markKeyFailed = _k.markKeyFailed;
         GROQ_KEY = (typeof _getNextKey === 'function' ? _getNextKey() : null) || _k.GROQ_API_KEY || '';
-    } catch (e) { console.log('❌ [TOXICAI] keys.js import error:', e.message); }
+    } catch (e) { ; }
     if (!GROQ_KEY) GROQ_KEY = process.env.GROQ_KEY_1 || process.env.GROQ_API_KEY || '';
-    if (!GROQ_KEY) { console.log('❌ [TOXICAI] No GROQ key set — set GROQ_KEY_1 in env vars'); return; }
-    console.log('[TOXICAI] Starting for sender:', (m.sender||'?').split('@')[0], '| isDev:', isDev);
+    if (!GROQ_KEY) { ; return; }
 
     let GH_TOKEN = '';
     try { const _k = await import('../keys.js'); GH_TOKEN = _k.GITHUB_TOKEN || ''; } catch {}
@@ -479,7 +475,6 @@ export default async (context) => {
                 body: JSON.stringify(payload)
             });
             if (res.status === 429 || res.status === 401 || res.status === 403) {
-                console.log(`[TOXICAI] Key failed (${res.status}), rotating...`);
                 if (_markKeyFailed) _markKeyFailed(currentKey);
                 const nextKey = _getNextKey ? _getNextKey() : null;
                 if (!nextKey || nextKey === currentKey) return res;
@@ -518,7 +513,6 @@ export default async (context) => {
                   const err = await res.json().catch(() => ({}));
                   const _errCode = err?.error?.code || '';
                   const _errMsg = err?.error?.message || '';
-                  console.log('❌ [TOXICAI GROQ]:', _errCode, _errMsg.substring(0, 120));
                   if (_errCode === 'tool_use_failed' && err?.error?.failed_generation) {
                       const fg = err.error.failed_generation;
                       const fm = fg.match(/<function=([^=<>\s]+?)=?(\{[\s\S]*?\})<\/function>/);

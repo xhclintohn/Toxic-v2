@@ -83,7 +83,6 @@ async function runCmd(context, cmdStr) {
         await target({ ...context, isBotAdmin: m.isBotAdmin, isAdmin: m.isAdmin, args: cmdArgs, text: joinedArgs, q: joinedArgs, body: joinedArgs });
         return { ok: true, name: cmdName };
     } catch (e) {
-        console.error(`❌ [AUTOAI] cmd "${cmdName}" threw:`, e.message);
         return { ok: false, name: cmdName };
     } finally {
         m.body = prevBody;
@@ -185,30 +184,23 @@ export default async (context) => {
         const { client, m, settings, botNumber } = context;
         if (!m || !m.key || !m.message) return;
         if (m.key.fromMe) return;
-        // allow legacy GROQ_API_KEY single-key setups
         const _resolvedKeys = (_keyMod.GROQ_API_KEYS?.length > 0)
             ? _keyMod.GROQ_API_KEYS
             : [_keyMod.GROQ_API_KEY, process.env.GROQ_API_KEY].filter(k => k && k.length > 10);
         if (_resolvedKeys.length === 0) {
-            console.log('[AUTOAI] No Groq key found — set GROQ_KEY_1 or GROQ_API_KEY in env vars');
             return;
         }
-        // inject resolved keys back so getNextGroqKey() works below
         if (!_keyMod.GROQ_API_KEYS?.length) _keyMod = { ..._keyMod, GROQ_API_KEYS: _resolvedKeys };
 
         const autoaiOn = settings?.autoai === true || settings?.autoai === 'true' || settings?.autoai === 'on';
         const chatbotpmOn = settings?.chatbotpm === true || settings?.chatbotpm === 'true' || settings?.chatbotpm === 'on';
         const _quickSender = (m.sender || m.key?.remoteJid || '').split('@')[0].split(':')[0];
-        console.log(`[AUTOAI] msg from ${_quickSender} | autoai=${autoaiOn} chatbotpm=${chatbotpmOn} isGroup=${!!m.isGroup} jid=${remoteJid?.split('@')[1]}`);
         if (!autoaiOn && !chatbotpmOn) {
             const _allowed = await getCachedAllowed();
             if (!_allowed.some(u => u === _quickSender)) {
-                console.log(`[AUTOAI] Skip — autoai+chatbotpm off and sender not in allowed list`);
                 return;
             }
         } else if (!autoaiOn && chatbotpmOn && m.isGroup) {
-            // chatbotpm=on means DM-only; groups need autoai=on
-            console.log('[AUTOAI] Skip — chatbotpm on, but this is a group (autoai off). Enable autoai for group responses.');
             return;
         }
 
@@ -247,24 +239,19 @@ export default async (context) => {
             })();
             const isReplyToBot = _numMatch(_qCtx);
             if (!isMentioned && !isReplyToBot) {
-                console.log('[AUTOAI] Group skip — bot not @mentioned and not replied to');
                 return;
             }
         } else {
-            // accept @s.whatsapp.net and @lid (LID resolution may not have fired)
             const _dmOk = remoteJid?.endsWith('@s.whatsapp.net') || remoteJid?.endsWith('@lid');
             if (!_dmOk) {
-                console.log('[AUTOAI] DM skip — unexpected JID:', remoteJid);
                 return;
             }
         }
 
         const rawMsg = m.message;
-        // Skip meta-only keys to find the real content type
         const _META_KEYS = new Set(['messageContextInfo','senderKeyDistributionMessage','messageSecret']);
         const msgType = Object.keys(rawMsg || {}).find(k => !_META_KEYS.has(k)) ||
                         Object.keys(rawMsg || {})[0] || '';
-        console.log('[AUTOAI] rawMsg keys:', Object.keys(rawMsg || {}).join(','), '| resolved type:', msgType);
         if (msgType === 'videoMessage' || rawMsg?.videoMessage ||
             msgType === 'reactionMessage' || msgType === 'protocolMessage' ||
             msgType === 'keepInChatMessage' || msgType === 'encReactionMessage' ||
@@ -280,7 +267,6 @@ export default async (context) => {
         ).trim();
 
         if (textContent && ALL_PREFIXES.some(p => textContent.startsWith(p))) {
-            console.log('[AUTOAI] Skip — message starts with a command prefix');
             return;
         }
 
@@ -307,11 +293,9 @@ export default async (context) => {
             return;
         }
 
-        // Check multiple paths — Baileys may nest the image under different keys
         const _innerImage = rawMsg?.imageMessage || m.msg?.imageMessage ||
             (msgType === 'imageMessage' ? rawMsg[msgType] : null);
         const hasImage = !!_innerImage;
-        console.log('[AUTOAI] hasImage:', hasImage, '| hasDoc:', !!(rawMsg?.documentMessage || rawMsg?.documentWithCaptionMessage));
         const hasDoc = !!(rawMsg?.documentMessage || rawMsg?.documentWithCaptionMessage || msgType === 'documentMessage' || msgType === 'documentWithCaptionMessage');
 
         let userContent;
@@ -349,11 +333,9 @@ export default async (context) => {
             const poll = rawMsg?.pollCreationMessage || rawMsg?.pollCreationMessageV3;
             userContent = poll ? `[A poll was created: "${poll.name || 'Poll'}"]` : '[The user created a poll]';
         } else {
-            console.log('[AUTOAI] Skip — no usable content in message type:', msgType);
             return;
         }
 
-        console.log('[AUTOAI] ✅ Processing message from', _quickSender, '| content preview:', String(typeof userContent === 'string' ? userContent : '[media]').slice(0, 60));
         client.sendMessage(remoteJid, { react: { text: '🤖', key: m.reactKey } }).catch(() => {});
 
         let history = _getHist(senderNum);
@@ -405,8 +387,8 @@ export default async (context) => {
                 for (const _vm of _visionModels) {
                     try {
                         response = await _callGroq(_vm, [...baseHistory, { role: 'user', content: userContent }], 600);
-                        if (response) { console.log('[AUTOAI] Vision model used:', _vm); break; }
-                    } catch(e) { console.log('[AUTOAI] Vision model', _vm, 'failed:', e.response?.status || e.message); }
+                        if (response) { ; break; }
+                    } catch(e) { ; }
                 }
                 if (!response) {
                     const _fallback = textContent
@@ -422,7 +404,6 @@ export default async (context) => {
                 return;
             }
         } catch (e) {
-            console.error(`❌ [AUTOAI] Groq error: ${e.response?.data?.error?.message || e.message}`);
             client.sendMessage(remoteJid, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return;
         }
@@ -458,7 +439,6 @@ export default async (context) => {
             client.sendMessage(remoteJid, { react: { text: '✅', key: m.reactKey } }).catch(() => {});
         }
     } catch (err) {
-        console.error('❌ [AUTOAI] Error:', err?.message || err);
         try { client.sendMessage(remoteJid, { react: { text: '❌', key: m.reactKey } }).catch(() => {}); } catch {}
     }
 };

@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { GROQ_API_KEY } from '../../keys.js';
+
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
 export default {
@@ -27,13 +27,22 @@ export default {
         try {
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${GROQ_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
+        let _km = {};
+        try { _km = await import('../../keys.js'); } catch {}
+        const _groqKeys = _km.GROQ_API_KEYS?.length ? _km.GROQ_API_KEYS : [_km.GROQ_API_KEY || process.env.GROQ_KEY_1 || process.env.GROQ_API_KEY || ''].filter(Boolean);
+        const _callGroq = async (payload) => {
+            const tried = new Set();
+            for (let i = 0; i < _groqKeys.length; i++) {
+                const k = (_km.getNextGroqKey?.()) || _groqKeys[i];
+                if (!k || tried.has(k)) continue;
+                tried.add(k);
+                const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'Authorization': `Bearer ${k}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if ((r.status === 429 || r.status === 401 || r.status === 403) && _groqKeys.length > 1) { _km.markKeyFailed?.(k); continue; }
+                return r;
+            }
+            throw new Error('All GROQ keys exhausted');
+        };
+            const response = await _callGroq({
                     model: 'llama-3.3-70b-versatile',
                     messages: [
                         {
@@ -53,8 +62,7 @@ If someone asks something stupid, you answer BUT you also call them a dumbass. K
                     ],
                     temperature: 0.95,
                     max_tokens: 1024
-                })
-            });
+                });
 
             if (!response.ok) throw new Error(`API error: ${response.status}`);
 
