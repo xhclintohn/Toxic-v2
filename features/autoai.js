@@ -215,33 +215,41 @@ export default async (context) => {
         const isGroup = !!m.isGroup;
 
         if (isGroup) {
-            const botNum = (botNumber || client.user?.id || '').split('@')[0].split(':')[0];
-            const bLidKey = m._botLidKey || '';
+            const _rawBotId = client.user?.id || botNumber || '';
+            const botNum = _rawBotId.split('@')[0].split(':')[0];
+            const botLid = (client.user?.lid || '').split('@')[0].split(':')[0];
             const bodyStr = m.body || m.text || '';
-            const isMentionedInBody = (botNum.length > 5 && bodyStr.includes('@' + botNum)) ||
-                (bLidKey && bLidKey.length > 5 && bodyStr.includes('@' + bLidKey));
             const _allMentioned = [
                 ...(m.mentionedJid || []),
                 ...(m.msg?.contextInfo?.mentionedJid || []),
                 ...(m.message?.extendedTextMessage?.contextInfo?.mentionedJid || []),
+                ...(m.message?.imageMessage?.contextInfo?.mentionedJid || []),
+                ...(m.message?.videoMessage?.contextInfo?.mentionedJid || []),
             ];
-            const isMentioned = isMentionedInBody || _allMentioned.some(j => {
+            console.log('[AUTOAI-DBG] botNum:', botNum, '| botLid:', botLid, '| body:', bodyStr.slice(0,80));
+            console.log('[AUTOAI-DBG] mentionedJids:', _allMentioned.join(',') || 'none');
+            const _numMatch = (j) => {
                 const jk = (j || '').split('@')[0].split(':')[0];
-                return jk === botNum || (bLidKey && jk === bLidKey);
-            });
-            const isReplyToBot = (() => {
+                return (botNum && jk === botNum) || (botLid && jk === botLid);
+            };
+            const isMentionedInBody = (botNum.length > 4 && bodyStr.includes('@' + botNum)) ||
+                (botLid.length > 4 && bodyStr.includes('@' + botLid));
+            const isMentionedInList = _allMentioned.some(_numMatch);
+            const isMentioned = isMentionedInBody || isMentionedInList;
+            const _qCtx = (() => {
                 const _raw = m.message || {};
-                let qSender = '';
                 for (const [, _mo] of Object.entries(_raw)) {
-                    if (_mo && typeof _mo === 'object' && _mo.contextInfo?.participant) {
-                        qSender = _mo.contextInfo.participant; break;
+                    if (_mo && typeof _mo === 'object') {
+                        const ctx = _mo.contextInfo;
+                        if (ctx?.participant) return ctx.participant;
+                        if (ctx?.remoteJid && ctx?.quotedMessage) return ctx.remoteJid;
                     }
                 }
-                if (!qSender) qSender = m.quoted?.sender || m.msg?.contextInfo?.participant || '';
-                if (!qSender) return false;
-                const qk = qSender.split('@')[0].split(':')[0];
-                return qk === botNum || (bLidKey && qk === bLidKey);
+                return m.quoted?.sender || m.msg?.contextInfo?.participant || '';
             })();
+            console.log('[AUTOAI-DBG] quotedParticipant:', _qCtx || 'none');
+            const isReplyToBot = _numMatch(_qCtx);
+            console.log('[AUTOAI-DBG] isMentioned:', isMentioned, '| isReplyToBot:', isReplyToBot);
             if (!isMentioned && !isReplyToBot) {
                 console.log('[AUTOAI] Group skip — bot not @mentioned and not replied to');
                 return;
