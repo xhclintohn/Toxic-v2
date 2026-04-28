@@ -15,9 +15,16 @@ export default {
             return m.reply("╭───(    TOXIC-MD    )───\n├ No Sudo Users found. You're all alone.\n╰──────────────────☑\n> ©𝐏𝐨𝐰𝐞𝐫𝐞ꀠ𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
         }
 
+        await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+
         const rows = [
-            { items: ["No", "Sudo Users"], isHeading: true },
-            ...sudoUsers.map((jid, index) => ({ items: [(index + 1).toString(), jid] }))
+            {
+                items: ["No", "Sudo Users"],
+                isHeading: true
+            },
+            ...sudoUsers.map((jid, index) => ({
+                items: [(index + 1).toString(), jid]
+            }))
         ];
 
         const content = {
@@ -43,7 +50,7 @@ export default {
                                 messageType: 4,
                                 tableMetadata: {
                                     rows: rows,
-                                    title: "Sudo Users List"
+                                    title: "Sudo Users"
                                 }
                             }
                         ],
@@ -67,8 +74,6 @@ export default {
             }
         };
         const relayOption = {};
-        
-        await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         dino.relayMessage(m.chat, content, relayOption);
     }
 };
