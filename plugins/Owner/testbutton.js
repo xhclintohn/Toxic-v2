@@ -42,25 +42,42 @@ export default {
         }
 
         try {
-            await sendBtn(client, m.chat, {}, fq, proto.Message.fromObject({
-                listMessage: {
-                    title: 'Test 2 of 5 — list picker',
-                    description: 'Tap the button below to open a selection list.',
-                    buttonText: 'Open list',
-                    listType: 1,
-                    sections: [{
-                        title: 'Commands',
-                        rows: [
-                            { title: 'Ping', description: 'Check bot response time', rowId: `${prefix}ping` },
-                            { title: 'Alive', description: 'Confirm bot is running', rowId: `${prefix}alive` },
-                            { title: 'Menu', description: 'Open the main menu', rowId: `${prefix}menu` }
-                        ]
-                    }],
-                    footer: 'Toxic-MD'
-                }
-            }));
+            // carousel + single_select (BuuClient-verified: iOS ✅ Android ✅)
+            const carouselMsg = generateWAMessageFromContent(
+                m.chat,
+                proto.Message.fromObject({
+                    interactiveMessage: {
+                        body: { text: 'Test 2 of 5 — carousel single_select\n\nTap the button below to open a selection list.' },
+                        footer: { text: 'Toxic-MD' },
+                        carouselMessage: {
+                            cards: [{
+                                header: { title: 'Quick Commands', hasMediaAttachment: false },
+                                body: { text: 'Pick a command to run:' },
+                                nativeFlowMessage: {
+                                    buttons: [{
+                                        name: 'single_select',
+                                        buttonParamsJson: JSON.stringify({
+                                            title: '⚡ Select a command',
+                                            sections: [{
+                                                title: 'Bot Commands',
+                                                rows: [
+                                                    { title: 'Ping', description: 'Check bot response time', id: `${prefix}ping` },
+                                                    { title: 'Alive', description: 'Confirm bot is running', id: `${prefix}alive` },
+                                                    { title: 'Menu', description: 'Open the main menu', id: `${prefix}menu` }
+                                                ]
+                                            }]
+                                        })
+                                    }]
+                                }
+                            }]
+                        }
+                    }
+                }),
+                { quoted: fq }
+            );
+            await client.relayMessage(m.chat, carouselMsg.message, { messageId: carouselMsg.key.id });
         } catch {
-            await m.reply('list picker failed to render.');
+            await m.reply('carousel single_select failed to render.');
         }
 
         try {

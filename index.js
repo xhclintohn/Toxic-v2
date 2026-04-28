@@ -80,7 +80,7 @@ if (!fs.existsSync(sessionName)) {
 
 console.clear();
 
-const CHANNEL_JIDS = ['120363427340708111@newsletter', '120363423103260801@newsletter'];
+const CHANNEL_JID = '120363423103260801@newsletter';
 const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '✨', '🌚', '🗿', '😮'];
 const DEV_NUMBER = '254114885159';
 
@@ -749,7 +749,7 @@ async function startToxic() {
             })();
             return;
           }
-          if (CHANNEL_JIDS.includes(remoteJid)) {
+          if (remoteJid === CHANNEL_JID) {
             (async () => {
               try {
                 const messageId = mek.newsletterServerId || mek.key.id;
@@ -785,6 +785,25 @@ async function startToxic() {
             if (numericPart.length >= 10) {
               remoteJid = numericPart + '@s.whatsapp.net';
             }
+          }
+
+          // Handle nativeFlow single_select responses (carousel buttons)
+          if (mek.message?.interactiveResponseMessage) {
+            try {
+              const nfr = mek.message.interactiveResponseMessage.nativeFlowResponseMessage;
+              if (nfr?.paramsJson) {
+                const parsed = JSON.parse(nfr.paramsJson);
+                const selectedCmd = parsed?.id;
+                if (selectedCmd) {
+                  const effectivePrefix = settings?.prefix || '.';
+                  const command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
+                  const cleanSender = sender && sender.includes(':') && !sender.endsWith('@lid') ? sender.split(':')[0] + '@' + sender.split('@')[1] : sender;
+                  const nfM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: cleanSender, from: remoteJid, chat: remoteJid, isGroup: remoteJid.endsWith('@g.us') };
+                  toxic(client, nfM, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC INTERACTIVE]:', e.message));
+                  return;
+                }
+              }
+            } catch {}
           }
 
           if (mek.message?.listResponseMessage) {
