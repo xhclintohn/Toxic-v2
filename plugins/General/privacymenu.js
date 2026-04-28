@@ -38,8 +38,7 @@ export default {
       menuText += `├ *${fancyCommandName}*\n`;
     }
 
-    menuText += `╰──────────────────☉\n`;
-    menuText += `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+    menuText += `╰──────────────────☉`;
 
     await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
     await client.sendMessage(m.chat, {
