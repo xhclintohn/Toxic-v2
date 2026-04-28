@@ -42,28 +42,25 @@ export default {
         }
 
         try {
-            await sendBtn(client, m.chat, {
-                body: { text: `Test 2 of 5 — single_select\n\nTap the button below to open a selection list.` },
-                footer: { text: 'Toxic-MD' },
-                nativeFlowMessage: {
-                    messageVersion: 1,
-                    buttons: [{
-                        name: 'single_select',
-                        buttonParamsJson: JSON.stringify({
-                            title: 'Pick a command',
-                            sections: [{
-                                rows: [
-                                    { title: 'Ping', description: 'Check bot response time', id: `${prefix}ping` },
-                                    { title: 'Alive', description: 'Confirm bot is running', id: `${prefix}alive` },
-                                    { title: 'Menu', description: 'Open the main menu', id: `${prefix}menu` }
-                                ]
-                            }]
-                        })
-                    }]
+            await client.sendMessage(m.chat, {
+                listMessage: {
+                    title: 'Test 2 of 5 — list picker',
+                    description: 'Tap the button below to open a selection list.',
+                    buttonText: 'Open list',
+                    listType: 1,
+                    sections: [{
+                        title: 'Commands',
+                        rows: [
+                            { title: 'Ping', description: 'Check bot response time', rowId: `${prefix}ping` },
+                            { title: 'Alive', description: 'Confirm bot is running', rowId: `${prefix}alive` },
+                            { title: 'Menu', description: 'Open the main menu', rowId: `${prefix}menu` }
+                        ]
+                    }],
+                    footer: 'Toxic-MD'
                 }
-            }, fq);
+            }, { quoted: fq });
         } catch {
-            await m.reply('single_select failed to render.');
+            await m.reply('list picker failed to render.');
         }
 
         try {
