@@ -65,37 +65,33 @@ export default {
         const settings = await getSettings();  
         const effectivePrefix = settings.prefix || '.';
 
-        const msg = generateWAMessageFromContent(  
-            m.chat,  
-            {  
-                interactiveMessage: {  
-                    body: { 
-                        text: `╭───(    TOXIC-MD    )───\n├───≫ Sᴛᴀʀᴛ ≪───\n├ \n├ Yo @${m.sender.split('@')[0].split(':')[0]}! You actually bothered\n├ to check if I'm alive?\n├ ${botname} is active 24/7, unlike\n├ your brain cells.\n├ Stop wasting my time and pick\n├ something useful below.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` 
-                    },  
-                    nativeFlowMessage: {  
-                        buttons: [  
-                            {  
-                                name: 'single_select',  
-                                buttonParamsJson: JSON.stringify({  
-                                    title: '𝐖𝐇𝐀𝐓 𝐃𝐎 𝐘𝐎𝐔 𝐖𝐀𝐍𝐓?',  
-                                    sections: [  
-                                        {  
-                                            rows: [  
-                                                { title: '📱 Menu', description: 'Get all commands', id: `${effectivePrefix}menu` },  
-                                                { title: '⚙ Settings', description: 'Bot settings', id: `${effectivePrefix}settings` },  
-                                                { title: '🏓 Ping', description: 'Check bot speed', id: `${effectivePrefix}ping` },  
-                                                { title: '🔄 Update', description: 'Check for updates', id: `${effectivePrefix}update` },  
-                                            ],  
-                                        },  
-                                    ],  
-                                }),  
-                            },  
-                        ],  
-                    },  
-                },  
-            },  
-            { quoted: fq }  
-        );  
+        const msg = generateWAMessageFromContent(
+            m.chat,
+            {
+                interactiveMessage: {
+                    body: {
+                        text: `╭───(    TOXIC-MD    )───\n├───≫ Sᴛᴀʀᴛ ≪───\n├ \n├ Yo @${m.sender.split('@')[0].split(':')[0]}! You actually bothered\n├ to check if I'm alive?\n├ ${botname} is active 24/7, unlike\n├ your brain cells.\n├ Stop wasting my time and pick\n├ something useful below.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+                    },
+                    nativeFlowMessage: {
+                        buttons: [
+                            {
+                                name: 'quick_reply',
+                                buttonParamsJson: JSON.stringify({ display_text: '📱 Menu', id: `${effectivePrefix}menu` })
+                            },
+                            {
+                                name: 'quick_reply',
+                                buttonParamsJson: JSON.stringify({ display_text: '🏓 Ping', id: `${effectivePrefix}ping` })
+                            },
+                            {
+                                name: 'quick_reply',
+                                buttonParamsJson: JSON.stringify({ display_text: '⚙️ Settings', id: `${effectivePrefix}settings` })
+                            }
+                        ]
+                    }
+                }
+            },
+            { quoted: fq }
+        );
 
         await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
     },

@@ -127,27 +127,26 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
             header: { hasMediaAttachment: false },
             nativeFlowMessage: {
               buttons: [
-                { name: 'single_select', buttonParamsJson: JSON.stringify({ title: '📖 Browse Categories', sections }) }
+                {
+                  name: 'quick_reply',
+                  buttonParamsJson: JSON.stringify({ display_text: '📜 General', id: `${effectivePrefix}generalmenu` })
+                },
+                {
+                  name: 'quick_reply',
+                  buttonParamsJson: JSON.stringify({ display_text: '🎬 Downloads', id: `${effectivePrefix}downloadmenu` })
+                },
+                {
+                  name: 'quick_reply',
+                  buttonParamsJson: JSON.stringify({ display_text: '👥 Groups', id: `${effectivePrefix}groupmenu` })
+                }
               ],
               messageParamsJson: ''
             }
           }
         }), { quoted: fq, userJid: client.user.id });
         await client.relayMessage(m.chat, interactiveMsg.message, { messageId: interactiveMsg.key.id });
-      } catch {
-        await client.sendMessage(m.chat, {
-          listMessage: {
-            title: 'VIEW OPTIONS',
-            description: 'Select a category to view its commands.',
-            buttonText: '📖 Browse Commands',
-            listType: 1,
-            sections: sections.map(s => ({
-              title: s.title,
-              rows: s.rows.map(r => ({ title: r.title, description: r.description, rowId: r.id }))
-            })),
-            footer: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
-          },
-        }, { quoted: fq });
+      } catch (e) {
+        console.error('Fullmenu interactive error:', e.message);
       }
     }
   };

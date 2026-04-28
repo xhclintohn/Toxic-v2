@@ -105,17 +105,18 @@ export default {
                             {
                                 name: 'cta_url',
                                 buttonParamsJson: JSON.stringify({
-                                    display_text: 'GitHub Repo',
+                                    display_text: '⭐ GitHub Repo',
                                     url: 'https://github.com/xhclintohn/Toxic-MD',
                                     merchant_url: 'https://github.com/xhclintohn/Toxic-MD'
                                 })
                             },
                             {
-                                name: 'single_select',
-                                buttonParamsJson: JSON.stringify({
-                                    title: '𝐕𝐈𝐄𝐖☇ 𝐎𝐏𝐓𝐈𝐎𝐍𝐒 ☑',
-                                    sections
-                                })
+                                name: 'quick_reply',
+                                buttonParamsJson: JSON.stringify({ display_text: '📖 Full Menu', id: `${prefix}fullmenu` })
+                            },
+                            {
+                                name: 'quick_reply',
+                                buttonParamsJson: JSON.stringify({ display_text: '🏓 Ping', id: `${prefix}ping` })
                             }
                         ],
                         messageParamsJson: JSON.stringify({})
