@@ -90,7 +90,13 @@ function smsg(conn, m, store, resolvedChatJid = null) {
       m.mtype = 'unknown';
     }
 
-    if (m.mtype === "viewOnceMessage" && m.message[m.mtype]) {
+    if (m.mtype === "deviceSentMessage" && m.message.deviceSentMessage?.message) {
+      m.mtype = getContentType(m.message.deviceSentMessage.message);
+      m.msg = m.message.deviceSentMessage.message[m.mtype];
+    } else if (m.mtype === "ephemeralMessage" && m.message.ephemeralMessage?.message) {
+      m.mtype = getContentType(m.message.ephemeralMessage.message);
+      m.msg = m.message.ephemeralMessage.message[m.mtype];
+    } else if (m.mtype === "viewOnceMessage" && m.message[m.mtype]) {
       m.msg = m.message[m.mtype].message[getContentType(m.message[m.mtype].message)];
     } else {
       m.msg = m.message[m.mtype];
