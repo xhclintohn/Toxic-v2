@@ -76,6 +76,8 @@ export default async (context) => {
                 }),
                 { quoted: fq }
             );
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+
             await client.relayMessage(m.chat, toggleMsg.message, { messageId: toggleMsg.key.id });
             await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
         } catch (error) {

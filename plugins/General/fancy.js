@@ -116,6 +116,8 @@ export default {
         },
         { quoted: fq }
       );
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+
       await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
 
     } catch (error) {

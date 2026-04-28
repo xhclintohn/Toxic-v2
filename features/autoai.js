@@ -207,43 +207,48 @@ export default async (context) => {
                 return;
             }
         } else if (!autoaiOn && chatbotpmOn && m.isGroup) {
-            // chatbotpm is DM-only; autoai off means no group replies
-            console.log('[AUTOAI] Skip — chatbotpm on but this is a group (need autoai on for groups)');
+            // chatbotpm=on means DM-only; groups need autoai=on
+            console.log('[AUTOAI] Skip — chatbotpm on, but this is a group (autoai off). Enable autoai for group responses.');
             return;
         }
 
         const isGroup = !!m.isGroup;
 
         if (isGroup) {
-            const botNum = (botNumber || client.user?.id || '').split('@')[0].split(':')[0];
-            const bLidKey = m._botLidKey || '';
-            const bodyStr = m.body || m.text || '';
-            const isMentionedInBody = (botNum.length > 5 && bodyStr.includes('@' + botNum)) || (bLidKey && bLidKey.length > 5 && bodyStr.includes('@' + bLidKey));
-            const _allMentioned = [
-                  ...(m.mentionedJid || []),
-                  ...(m.msg?.contextInfo?.mentionedJid || []),
-                  ...(m.message?.extendedTextMessage?.contextInfo?.mentionedJid || []),
-              ];
-              const isMentioned = isMentionedInBody || _allMentioned.some(j => {
-                  const jk = (j || '').split('@')[0].split(':')[0];
-                  return jk === botNum || (bLidKey && jk === bLidKey);
-              });
-            const isReplyToBot = (() => {
-                const _raw = m.message || {};
-                let qSender = '';
-                for (const [, _mo] of Object.entries(_raw)) {
-                    if (_mo && typeof _mo === 'object' && _mo.contextInfo?.participant) {
-                        qSender = _mo.contextInfo.participant; break;
+            // autoai=ON → respond to ALL group messages (chatbotpm for groups)
+            // autoai=OFF → only respond when @mentioned or bot is replied to
+            if (!autoaiOn) {
+                const botNum = (botNumber || client.user?.id || '').split('@')[0].split(':')[0];
+                const bLidKey = m._botLidKey || '';
+                const bodyStr = m.body || m.text || '';
+                const isMentionedInBody = (botNum.length > 5 && bodyStr.includes('@' + botNum)) ||
+                    (bLidKey && bLidKey.length > 5 && bodyStr.includes('@' + bLidKey));
+                const _allMentioned = [
+                    ...(m.mentionedJid || []),
+                    ...(m.msg?.contextInfo?.mentionedJid || []),
+                    ...(m.message?.extendedTextMessage?.contextInfo?.mentionedJid || []),
+                ];
+                const isMentioned = isMentionedInBody || _allMentioned.some(j => {
+                    const jk = (j || '').split('@')[0].split(':')[0];
+                    return jk === botNum || (bLidKey && jk === bLidKey);
+                });
+                const isReplyToBot = (() => {
+                    const _raw = m.message || {};
+                    let qSender = '';
+                    for (const [, _mo] of Object.entries(_raw)) {
+                        if (_mo && typeof _mo === 'object' && _mo.contextInfo?.participant) {
+                            qSender = _mo.contextInfo.participant; break;
+                        }
                     }
+                    if (!qSender) qSender = m.quoted?.sender || m.msg?.contextInfo?.participant || '';
+                    if (!qSender) return false;
+                    const qk = qSender.split('@')[0].split(':')[0];
+                    return qk === botNum || (bLidKey && qk === bLidKey);
+                })();
+                if (!isMentioned && !isReplyToBot) {
+                    console.log('[AUTOAI] Group skip — autoai off, bot not @mentioned/replied to');
+                    return;
                 }
-                if (!qSender) qSender = m.quoted?.sender || m.msg?.contextInfo?.participant || '';
-                if (!qSender) return false;
-                const qk = qSender.split('@')[0].split(':')[0];
-                return qk === botNum || (bLidKey && qk === bLidKey);
-            })();
-            if (!isMentioned && !isReplyToBot) {
-                console.log('[AUTOAI] Group skip — bot not @mentioned and not replied to');
-                return;
             }
         } else {
             // accept @s.whatsapp.net and @lid (LID resolution may not have fired)
@@ -255,7 +260,11 @@ export default async (context) => {
         }
 
         const rawMsg = m.message;
-        const msgType = Object.keys(rawMsg || {})[0] || '';
+        // Skip meta-only keys to find the real content type
+        const _META_KEYS = new Set(['messageContextInfo','senderKeyDistributionMessage','messageSecret']);
+        const msgType = Object.keys(rawMsg || {}).find(k => !_META_KEYS.has(k)) ||
+                        Object.keys(rawMsg || {})[0] || '';
+        console.log('[AUTOAI] rawMsg keys:', Object.keys(rawMsg || {}).join(','), '| resolved type:', msgType);
         if (msgType === 'videoMessage' || rawMsg?.videoMessage ||
             msgType === 'reactionMessage' || msgType === 'protocolMessage' ||
             msgType === 'keepInChatMessage' || msgType === 'encReactionMessage' ||
@@ -298,7 +307,11 @@ export default async (context) => {
             return;
         }
 
-        const hasImage = !!(rawMsg?.imageMessage || msgType === 'imageMessage');
+        // Check multiple paths — Baileys may nest the image under different keys
+        const _innerImage = rawMsg?.imageMessage || m.msg?.imageMessage ||
+            (msgType === 'imageMessage' ? rawMsg[msgType] : null);
+        const hasImage = !!_innerImage;
+        console.log('[AUTOAI] hasImage:', hasImage, '| hasDoc:', !!(rawMsg?.documentMessage || rawMsg?.documentWithCaptionMessage));
         const hasDoc = !!(rawMsg?.documentMessage || rawMsg?.documentWithCaptionMessage || msgType === 'documentMessage' || msgType === 'documentWithCaptionMessage');
 
         let userContent;
@@ -309,7 +322,7 @@ export default async (context) => {
             try {
                 const buf = await _downloadBuf(client, m, 'image');
                 if (buf && buf.length > 0) {
-                    const mime = rawMsg?.imageMessage?.mimetype || 'image/jpeg';
+                    const mime = _innerImage?.mimetype || rawMsg?.imageMessage?.mimetype || 'image/jpeg';
                     userContent = [
                         { type: 'text', text: textContent || 'What do you see in this image?' },
                         { type: 'image_url', image_url: { url: `data:${mime};base64,${buf.toString('base64')}` } }
@@ -389,9 +402,19 @@ export default async (context) => {
             const baseHistory = [{ role: 'system', content: SYSTEM_PROMPT }, ...history.slice(-16)];
             if (useVision) {
                 try {
-                    response = await _callGroq('meta-llama/llama-4-scout-17b-16e-instruct', [...baseHistory, { role: 'user', content: userContent }], 500);
-                } catch {
-                    const fallback = textContent ? `[Image received] ${textContent}` : '[Image received]';
+                    // Try vision models in order of availability
+                const _visionModels = ['llama-3.2-11b-vision-preview','meta-llama/llama-4-scout-17b-16e-instruct','llama-3.2-90b-vision-preview'];
+                for (const _vm of _visionModels) {
+                    try {
+                        response = await _callGroq(_vm, [...baseHistory, { role: 'user', content: userContent }], 600);
+                        if (response) { console.log('[AUTOAI] Vision model used:', _vm); break; }
+                    } catch(e) { console.log('[AUTOAI] Vision model', _vm, 'failed:', e.response?.status || e.message); }
+                }
+                if (!response) {
+                    // All vision models failed — acknowledge the image in text
+                    const fallback = textContent
+                        ? `[The user sent an image with this caption: "${textContent}". Vision is unavailable right now, acknowledge you received the image and respond to the caption.]`
+                        : `[The user sent an image but vision processing is unavailable right now. Acknowledge you received their image and tell them to try the .vision command for image analysis.]`;
                     response = await _callGroq('llama-3.1-8b-instant', [...baseHistory, { role: 'user', content: fallback }], 300);
                 }
             } else {

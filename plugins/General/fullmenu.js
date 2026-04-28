@@ -143,6 +143,8 @@ export default {
           }
         }
       }), { quoted: fq, userJid: client.user.id });
+      await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+
       await client.relayMessage(m.chat, interactiveMsg.message, { messageId: interactiveMsg.key.id });
     } catch (e) {
       console.error('Fullmenu interactive error:', e.message);

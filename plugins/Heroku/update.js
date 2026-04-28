@@ -103,7 +103,8 @@ export default async (context) => {
                         { quoted: fq }
                     );
 
-                    return await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
+                    return await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+ await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
                 }
             }
 
@@ -148,6 +149,9 @@ export default async (context) => {
                     },
                     { quoted: fq }
                 );
+
+                await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+
 
                 await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
             }
