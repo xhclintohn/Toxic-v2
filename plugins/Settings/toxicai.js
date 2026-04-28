@@ -82,10 +82,10 @@ export default {
                             }]
                         }
                     }
-                }, { quoted: fq });
-                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-
-                await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
+                }, { userJid: client.user.id });
+                if (_msg?.key?.id) {
+                    await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
+                }
             }
         } catch {
             client.sendMessage(m.chat, { text: fmt('TOXICAGENT', 'something broke. try again.') }, { quoted: fq });
