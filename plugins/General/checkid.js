@@ -51,7 +51,6 @@ export default {
             const bodyText = "╭───(    TOXIC-MD    )───\n├───≫ " + type + " JID ≪───\n├ \n├ *Link:* " + link + "\n├ *" + type + " ID:* `" + id + "`\n╰──────────────────☉";
 
             const fq = getFakeQuoted(m);
-        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
             try {
                 const msg = generateWAMessageFromContent(
                     m.chat,

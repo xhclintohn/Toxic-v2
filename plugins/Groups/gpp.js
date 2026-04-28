@@ -12,12 +12,21 @@ export default async (context) => {
         const fq = getFakeQuoted(m);
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
         
-        if (!IsGroup) return m.reply(formatStylishReply("Group only command idiot"));
+        if (!IsGroup) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply(formatStylishReply("Group only command idiot"));
+        }
         
-        if (!isBotAdmin) return m.reply(formatStylishReply("I need to be *admin* to change group picture. Please make me admin first."));
+        if (!isBotAdmin) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply(formatStylishReply("I need to be *admin* to change group picture. Please make me admin first."));
+        }
         
         const isAdmin = m.isAdmin;
-        if (!isAdmin) return m.reply(formatStylishReply("You're not admin!"));
+        if (!isAdmin) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply(formatStylishReply("You're not admin!"));
+        }
         
         let imageBuffer;
         
@@ -42,10 +51,12 @@ export default async (context) => {
             return m.reply(formatStylishReply("Send or reply with image"));
         }
         
-        if (!imageBuffer) return m.reply(formatStylishReply("Invalid image"));
+        if (!imageBuffer) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return m.reply(formatStylishReply("Invalid image"));
+        }
         
         try {
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
             await client.updateProfilePicture(m.chat, imageBuffer);
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
             return m.reply(formatStylishReply("Group picture updated"));

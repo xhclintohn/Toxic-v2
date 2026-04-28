@@ -57,10 +57,8 @@ export default async (context) => {
             const info = await client.groupGetInviteInfo(inviteCode);
             const subject = info?.subject || info?.groupMetadata?.subject || "Unknown Group";
 
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
             await client.groupAcceptInvite(inviteCode);
-
-            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
             return m.reply(
                 `╭───(    TOXIC-MD    )───\n├───≫ JOINED ≪───\n├ \n├ Joined: *${subject}*\n├ Don't spam, or I'll ghost you.\n├ — ${botname}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             );

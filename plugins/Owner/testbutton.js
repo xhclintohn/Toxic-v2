@@ -3,10 +3,10 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
 const GITHUB = 'https://github.com/xhclintohn/Toxic-MD';
 
-async function sendBtn(client, chat, content, fq) {
+async function sendBtn(client, chat, content, fq, rawMsg) {
     const msg = generateWAMessageFromContent(
         chat,
-        proto.Message.fromObject({ interactiveMessage: content }),
+        rawMsg || proto.Message.fromObject({ interactiveMessage: content }),
         { quoted: fq }
     );
     await client.relayMessage(chat, msg.message, { messageId: msg.key.id });
@@ -42,7 +42,7 @@ export default {
         }
 
         try {
-            await client.sendMessage(m.chat, {
+            await sendBtn(client, m.chat, {}, fq, proto.Message.fromObject({
                 listMessage: {
                     title: 'Test 2 of 5 — list picker',
                     description: 'Tap the button below to open a selection list.',
@@ -58,7 +58,7 @@ export default {
                     }],
                     footer: 'Toxic-MD'
                 }
-            }, { quoted: fq });
+            }));
         } catch {
             await m.reply('list picker failed to render.');
         }

@@ -16,7 +16,6 @@ export default async (context) => {
         }
     }
 
-    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
     if (!m.isGroup) return m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ This command is meant for groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
     let info = await client.groupMetadata(m.chat);
@@ -59,4 +58,5 @@ export default async (context) => {
         image: { url: pp }, 
         caption: caption
     }, { quoted: fq });
+    await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
 };
