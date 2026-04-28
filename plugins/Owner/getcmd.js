@@ -13,7 +13,6 @@ const normalizeNumber = (jid) => {
 };
 
 const DEVELOPER = normalizeNumber('254114885159');
-const MAX_TEXT_SIZE = 300000;
 const CATEGORIES = ['+18', 'Ai-Tools', 'Coding', 'Downloads', 'Editing', 'General', 'Groups', 'Heroku', 'Logo', 'Owner', 'Privacy', 'Search', 'Settings', 'Utils'];
 const PLUGINS_DIR = path.join(__dirname, '..', '..', 'plugins');
 
@@ -33,7 +32,7 @@ export default async (context) => {
     if (normalizeNumber(m.sender) !== DEVELOPER) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
         return await client.sendMessage(m.chat, {
-            text: `╭───(    TOXIC-MD    )───\n├───≫ ACCESS DENIED ≪───\n├ \n├ This command is restricted to the bot Dev.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            text: `╭───(    TOXIC-MD    )───\n├───≫ ACCESS DENIED ≪───\n├ \n├ This command is restricted to the bot owner.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
         }, { quoted: fq });
     }
 
@@ -52,6 +51,7 @@ export default async (context) => {
         const filePath = path.join(PLUGINS_DIR, category, `${commandName}.js`);
         try {
             const data = await fs.readFile(filePath, 'utf8');
+            const fileBuffer = Buffer.from(data, 'utf8');
             const aliasNote = commandName !== rawInput ? `├ Alias: ${rawInput} → ${commandName}\n` : '';
 
             const responseId = Math.random().toString(36).substring(2);
@@ -142,7 +142,13 @@ export default async (context) => {
             const relayOption = {};
             
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-            client.relayMessage(m.chat, content, relayOption);
+            await client.relayMessage(m.chat, content, relayOption);
+            await client.sendMessage(m.chat, {
+                document: fileBuffer,
+                fileName: `${commandName}.js`,
+                mimetype: 'application/javascript',
+                caption: `╭───(    TOXIC-MD    )───\n├ 📄 ${commandName}.js\n├ Category: ${category}\n├ Size: ${data.length} chars\n${aliasNote}╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            }, { quoted: fq });
             
             fileFound = true;
             break;
