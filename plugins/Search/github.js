@@ -103,6 +103,6 @@ export default async (context) => {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
         if (error.message.includes('404')) return m.reply('User/repo not found. Double-check the name.');
         if (error.message.includes('403')) return m.reply('GitHub rate limit hit. Try again in a minute.');
-        await m.reply(`╭───(    TOXIC-MD    )───\n├ GitHub search failed.\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+        await m.reply(`╭───(    TOXIC-MD    )───\n├ GitHub search failed.\n├ Something went wrong. Try again.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };
