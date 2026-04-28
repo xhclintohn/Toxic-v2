@@ -6,17 +6,40 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const _SUPPRESS_LOG_PREFIXES = [
+    'Closing session',
+    'Closing open session in favor of incoming prekey bundle',
+    'Failed to decrypt message with any known session',
+    'Session error:',
+    'Bad MAC',
+    '[LID] ',
+];
+const _matchesSuppress = (s) => _SUPPRESS_LOG_PREFIXES.some(p => s.startsWith(p));
+
 const _nativeLog = console.log;
 console.log = (...a) => {
-    if (typeof a[0] === 'string' && (
-        a[0] === 'Closing session:' ||
-        a[0] === 'Closing open session in favor of incoming prekey bundle' ||
-        a[0] === 'Failed to decrypt message with any known session' ||
-        a[0].startsWith('Session error:') ||
-        a[0].startsWith('Bad MAC') ||
-        a[0].startsWith('[LID] ')
-    )) return;
+    if (typeof a[0] === 'string' && _matchesSuppress(a[0])) return;
     _nativeLog(...a);
+};
+const _nativeWarn = console.warn;
+console.warn = (...a) => {
+    if (typeof a[0] === 'string' && _matchesSuppress(a[0])) return;
+    _nativeWarn(...a);
+};
+const _nativeError = console.error;
+console.error = (...a) => {
+    if (typeof a[0] === 'string' && _matchesSuppress(a[0])) return;
+    _nativeError(...a);
+};
+
+const _origWrite = process.stdout.write.bind(process.stdout);
+process.stdout.write = function(chunk, encoding, callback) {
+    if (typeof chunk === 'string' && _SUPPRESS_LOG_PREFIXES.some(p => chunk.startsWith(p) || chunk.includes('\n' + p))) {
+        if (typeof encoding === 'function') encoding();
+        else if (typeof callback === 'function') callback();
+        return true;
+    }
+    return _origWrite(chunk, encoding, callback);
 };
 
 import toxicConnect, { useMultiFileAuthState, DisconnectReason, downloadContentFromMessage, jidDecode, proto, getContentType, makeCacheableSignalKeyStore, Browsers, generateWAMessageContent, generateWAMessageFromContent, jidNormalizedUser, S_WHATSAPP_NET } from '@whiskeysockets/baileys';
