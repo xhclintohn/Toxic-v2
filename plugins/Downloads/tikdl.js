@@ -28,7 +28,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
           await client.sendMessage(m.chat, { video: buf, caption: cap, mimetype: 'video/mp4', gifPlayback: false }, { quoted: fq });
       } catch (e) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-          m.reply(`╭───(    TOXIC-MD    )───\n├ Failed: ${e.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+          m.reply(`╭───(    TOXIC-MD    )───\n├ TikTok download failed.\n├ The video might be private or the\n├ service is down. Try again later.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
   };
   
