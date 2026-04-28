@@ -164,6 +164,43 @@ export default async (context) => {
         return;
     }
 
+    if (m.isGroup) {
+        const _rawBotId = client.user?.id || '';
+        const botNum = _rawBotId.split('@')[0].split(':')[0];
+        const botLid = (client.user?.lid || '').split('@')[0].split(':')[0];
+        const bodyStr = m.body || m.text || msgBody || '';
+        const _allMentioned = [
+            ...(m.mentionedJid || []),
+            ...(m.msg?.contextInfo?.mentionedJid || []),
+            ...(m.message?.extendedTextMessage?.contextInfo?.mentionedJid || []),
+            ...(m.message?.imageMessage?.contextInfo?.mentionedJid || []),
+            ...(m.message?.videoMessage?.contextInfo?.mentionedJid || []),
+        ];
+        const _numMatch = (j) => {
+            const jk = (j || '').split('@')[0].split(':')[0];
+            return (botNum && jk === botNum) || (botLid && jk === botLid);
+        };
+        const isMentioned = (botNum.length > 4 && bodyStr.includes('@' + botNum)) ||
+            (botLid.length > 4 && bodyStr.includes('@' + botLid)) ||
+            _allMentioned.some(_numMatch);
+        const _qCtx = (() => {
+            const _raw = m.message || {};
+            for (const [, _mo] of Object.entries(_raw)) {
+                if (_mo && typeof _mo === 'object') {
+                    const ctx = _mo.contextInfo;
+                    if (ctx?.participant) return ctx.participant;
+                    if (ctx?.remoteJid && ctx?.quotedMessage) return ctx.remoteJid;
+                }
+            }
+            return m.quoted?.sender || m.msg?.contextInfo?.participant || '';
+        })();
+        const isReplyToBot = _numMatch(_qCtx);
+        if (!isMentioned && !isReplyToBot) {
+            console.log('[TOXICAI] Group skip — bot not @mentioned and not replied to');
+            return;
+        }
+    }
+
     const body = (msgBody || '').trim();
     if (!body && !m.message?.imageMessage && !m.quoted) return;
 

@@ -80,7 +80,7 @@ async function runCmd(context, cmdStr) {
     const prevBody = m.body;
     m.body = `${usedPrefix}${resolvedName}${joinedArgs ? ' ' + joinedArgs : ''}`;
     try {
-        await target({ ...context, args: cmdArgs, text: joinedArgs, q: joinedArgs, body: joinedArgs });
+        await target({ ...context, isBotAdmin: m.isBotAdmin, isAdmin: m.isAdmin, args: cmdArgs, text: joinedArgs, q: joinedArgs, body: joinedArgs });
         return { ok: true, name: cmdName };
     } catch (e) {
         console.error(`❌ [AUTOAI] cmd "${cmdName}" threw:`, e.message);
@@ -226,8 +226,6 @@ export default async (context) => {
                 ...(m.message?.imageMessage?.contextInfo?.mentionedJid || []),
                 ...(m.message?.videoMessage?.contextInfo?.mentionedJid || []),
             ];
-            console.log('[AUTOAI-DBG] botNum:', botNum, '| botLid:', botLid, '| body:', bodyStr.slice(0,80));
-            console.log('[AUTOAI-DBG] mentionedJids:', _allMentioned.join(',') || 'none');
             const _numMatch = (j) => {
                 const jk = (j || '').split('@')[0].split(':')[0];
                 return (botNum && jk === botNum) || (botLid && jk === botLid);
@@ -247,9 +245,7 @@ export default async (context) => {
                 }
                 return m.quoted?.sender || m.msg?.contextInfo?.participant || '';
             })();
-            console.log('[AUTOAI-DBG] quotedParticipant:', _qCtx || 'none');
             const isReplyToBot = _numMatch(_qCtx);
-            console.log('[AUTOAI-DBG] isMentioned:', isMentioned, '| isReplyToBot:', isReplyToBot);
             if (!isMentioned && !isReplyToBot) {
                 console.log('[AUTOAI] Group skip — bot not @mentioned and not replied to');
                 return;
