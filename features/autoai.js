@@ -401,8 +401,6 @@ export default async (context) => {
         try {
             const baseHistory = [{ role: 'system', content: SYSTEM_PROMPT }, ...history.slice(-16)];
             if (useVision) {
-                try {
-                    // Try vision models in order of availability
                 const _visionModels = ['llama-3.2-11b-vision-preview','meta-llama/llama-4-scout-17b-16e-instruct','llama-3.2-90b-vision-preview'];
                 for (const _vm of _visionModels) {
                     try {
@@ -411,11 +409,10 @@ export default async (context) => {
                     } catch(e) { console.log('[AUTOAI] Vision model', _vm, 'failed:', e.response?.status || e.message); }
                 }
                 if (!response) {
-                    // All vision models failed — acknowledge the image in text
-                    const fallback = textContent
-                        ? `[The user sent an image with this caption: "${textContent}". Vision is unavailable right now, acknowledge you received the image and respond to the caption.]`
-                        : `[The user sent an image but vision processing is unavailable right now. Acknowledge you received their image and tell them to try the .vision command for image analysis.]`;
-                    response = await _callGroq('llama-3.1-8b-instant', [...baseHistory, { role: 'user', content: fallback }], 300);
+                    const _fallback = textContent
+                        ? `[The user sent an image with this caption: "${textContent}". Vision is unavailable, acknowledge you got the image and respond to the caption.]`
+                        : `[The user sent an image but vision is unavailable. Acknowledge you received their image and tell them to try the .vision command.]`;
+                    response = await _callGroq('llama-3.1-8b-instant', [...baseHistory, { role: 'user', content: _fallback }], 300);
                 }
             } else {
                 response = await _callGroq('llama-3.1-8b-instant', [...baseHistory, { role: 'user', content: userContent }], 300);
