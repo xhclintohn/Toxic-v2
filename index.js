@@ -803,7 +803,7 @@ async function startToxic() {
             try {
               const nfr = mek.message.interactiveResponseMessage.nativeFlowResponseMessage;
               if (nfr?.paramsJson) {
-                const parsed = JSON.parse(nfr.paramsJson);
+                const parsed = typeof nfr.paramsJson === 'string' ? JSON.parse(nfr.paramsJson) : nfr.paramsJson;
                 const selectedCmd = parsed?.id;
                 if (selectedCmd) {
                   const effectivePrefix = settings?.prefix || '.';

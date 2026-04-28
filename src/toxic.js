@@ -268,7 +268,7 @@ export default async (client, m, chatUpdate, store) => {
         const _allPfx = ['.','!','#','/','$','?','+','-','*','\~','@','%','&','^','=','|'];
         let _fmBody = (m.text || m.body || m.message?.conversation || m.message?.extendedTextMessage?.text || '').trim();
         if (!_fmBody && m.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson) {
-            try { _fmBody = JSON.parse(m.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson)?.id || ''; } catch {}
+            try { const _pfj = m.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson; _fmBody = (typeof _pfj === 'string' ? JSON.parse(_pfj) : _pfj)?.id || ''; } catch {}
         }
         if (!_fmBody && m.message?.buttonsResponseMessage?.selectedButtonId) {
             _fmBody = m.message.buttonsResponseMessage.selectedButtonId;
@@ -309,8 +309,9 @@ export default async (client, m, chatUpdate, store) => {
 
         if (m.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson) {
             try {
-                const params = JSON.parse(m.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson);
-                body = params.id || body;
+                const _pfj = m.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson;
+                const params = typeof _pfj === 'string' ? JSON.parse(_pfj) : _pfj;
+                body = params?.id || body;
             } catch (e) {}
         }
 
