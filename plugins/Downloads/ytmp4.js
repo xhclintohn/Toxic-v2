@@ -45,7 +45,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
           await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
       } catch (e) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-          m.reply(`╭───(    TOXIC-MD    )───\n├ Failed: ${e.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+          m.reply(`╭───(    TOXIC-MD    )───\n├ YouTube MP4 download failed.\n├ Video might be age-restricted,\n├ unavailable, or too large.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
       }
   };
   
