@@ -52,23 +52,24 @@ export default async (context) => {
 
         if (isEnabled === action) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-          return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's already ${value.toUpperCase()}, genius. Stop wasting my time.`) }, { quoted: fq });
+          return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's already ${value.toUpperCase()}, genius. Stop wasting my time.\n├ \n├ 📌 Usage: ${prefix}antiforeign on | ${prefix}antiforeign off`) }, { quoted: fq });
         }
 
         await updateGroupSetting(jid, 'antiforeign', action);
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's now ${value.toUpperCase()}. Foreigners better watch out or get yeeted!`) }, { quoted: fq });
+        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's now ${value.toUpperCase()}. Foreigners better watch out or get yeeted!\n├ \n├ 📌 Usage: ${prefix}antiforeign on | ${prefix}antiforeign off`) }, { quoted: fq });
       }
 
             const _devMode = await getDeviceMode();
       if (_devMode === 'ios') {
-          await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's ${isEnabled ? 'ON' : 'OFF'} in this group, dipshit. Pick a vibe!`) }, { quoted: fq });
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+          await client.sendMessage(m.chat, { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's ${isEnabled ? 'ON' : 'OFF'} in this group, dipshit. Pick a vibe!\n├ \n├ 📌 Usage: ${prefix}antiforeign on | ${prefix}antiforeign off`) }, { quoted: fq });
       } else {
     const _msg = generateWAMessageFromContent(
             m.chat,
             {
                 interactiveMessage: {
-                    body: { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's ${isEnabled ? 'ON' : 'OFF'} in this group, dipshit. Pick a vibe!`) },
+                    body: { text: formatStylishReply("ANTIFOREIGN", `Antiforeign's ${isEnabled ? 'ON' : 'OFF'} in this group, dipshit. Pick a vibe!\n├ \n├ 📌 Usage: ${prefix}antiforeign on | ${prefix}antiforeign off`) },
                     footer: { text: '' },
                     nativeFlowMessage: {
                         buttons: [
@@ -90,6 +91,8 @@ export default async (context) => {
             },
             { quoted: fq }
           );
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
           await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
       }
     } catch (error) {

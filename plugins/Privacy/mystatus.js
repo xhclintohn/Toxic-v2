@@ -27,6 +27,7 @@ export default async (context) => {
 
                 const _devMode = await getDeviceMode();
         if (_devMode === 'ios') {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
             await client.sendMessage(m.chat, { text: fmt('Who can see your status?\nSelect an option below.') }, { quoted: fq });
         } else {
     const _msg = generateWAMessageFromContent(m.chat, {
@@ -51,6 +52,8 @@ export default async (context) => {
                     }
                 }
             }, { quoted: fq });
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
             await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
         }
     });

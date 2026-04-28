@@ -40,23 +40,24 @@ export default async (context) => {
 
             if (isEnabled === action) {
                 await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-                return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag is already ${value.toUpperCase()}, genius!`) }, { quoted: fq });
+                return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag is already ${value.toUpperCase()}, genius!\n├ \n├ 📌 Usage: ${prefix}antitag on | ${prefix}antitag off`) }, { quoted: fq });
             }
 
             await updateGroupSetting(jid, 'antitag', action);
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-            return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag has been turned ${value.toUpperCase()} for this group.`) }, { quoted: fq });
+            return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag has been turned ${value.toUpperCase()} for this group.\n├ \n├ 📌 Usage: ${prefix}antitag on | ${prefix}antitag off`) }, { quoted: fq });
         }
 
                 const _devMode = await getDeviceMode();
         if (_devMode === 'ios') {
-            await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, peasant!`) }, { quoted: fq });
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+            await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, peasant!\n├ \n├ 📌 Usage: ${prefix}antitag on | ${prefix}antitag off`) }, { quoted: fq });
         } else {
     const _msg = generateWAMessageFromContent(
             m.chat,
             {
                 interactiveMessage: {
-                    body: { text: formatStylishReply("ANTITAG", `Antitag's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, peasant!`) },
+                    body: { text: formatStylishReply("ANTITAG", `Antitag's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, peasant!\n├ \n├ 📌 Usage: ${prefix}antitag on | ${prefix}antitag off`) },
                     footer: { text: '' },
                     nativeFlowMessage: {
                         buttons: [
@@ -78,6 +79,8 @@ export default async (context) => {
             },
             { quoted: fq }
           );
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
           await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
         }
     });

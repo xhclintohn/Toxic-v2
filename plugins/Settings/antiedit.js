@@ -34,7 +34,7 @@ export default async (context) => {
 
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply("ANTIEDIT", `Antiedit's already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time.`) },
+            { text: formatStylishReply("ANTIEDIT", `Antiedit's already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time.\n├ \n├ 📌 Usage: ${prefix}antiedit on | ${prefix}antiedit off`) },
             { quoted: fq, ad: true }
           );
         }
@@ -43,20 +43,21 @@ export default async (context) => {
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply("ANTIEDIT", `Antiedit ${value.toUpperCase()} activated! ${action ? 'Every sneaky edit gets caught now. No hiding.' : 'Edits fly under the radar. Your loss.'}`) },
+          { text: formatStylishReply("ANTIEDIT", `Antiedit ${value.toUpperCase()} activated! ${action ? 'Every sneaky edit gets caught now. No hiding.' : 'Edits fly under the radar. Your loss.'}\n├ \n├ 📌 Usage: ${prefix}antiedit on | ${prefix}antiedit off`) },
           { quoted: fq, ad: true }
         );
       }
 
             const _devMode = await getDeviceMode();
       if (_devMode === 'ios') {
-          await client.sendMessage(m.chat, { text: formatStylishReply("ANTIEDIT", `Antiedit's ${settings.antiedit ? 'ON' : 'OFF'}. Pick your poison.`) }, { quoted: fq });
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+          await client.sendMessage(m.chat, { text: formatStylishReply("ANTIEDIT", `Antiedit's ${settings.antiedit ? 'ON' : 'OFF'}. Pick your poison.\n├ \n├ 📌 Usage: ${prefix}antiedit on | ${prefix}antiedit off`) }, { quoted: fq });
       } else {
     const _msg = generateWAMessageFromContent(
             m.chat,
             {
                 interactiveMessage: {
-                    body: { text: formatStylishReply("ANTIEDIT", `Antiedit's ${settings.antiedit ? 'ON' : 'OFF'}. Pick your poison.`) },
+                    body: { text: formatStylishReply("ANTIEDIT", `Antiedit's ${settings.antiedit ? 'ON' : 'OFF'}. Pick your poison.\n├ \n├ 📌 Usage: ${prefix}antiedit on | ${prefix}antiedit off`) },
                     footer: { text: '' },
                     nativeFlowMessage: {
                         buttons: [
@@ -78,6 +79,8 @@ export default async (context) => {
             },
             { quoted: fq }
           );
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
           await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
       }
     } catch (error) {

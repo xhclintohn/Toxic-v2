@@ -34,7 +34,7 @@ export default async (context) => {
 
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply("AUTOREAD", `Autoread message already ${value.toUpperCase()}, genius. Stop wasting my time.`) },
+            { text: formatStylishReply("AUTOREAD", `Autoread message already ${value.toUpperCase()}, genius. Stop wasting my time.\n├ \n├ 📌 Usage: ${prefix}autoread on | ${prefix}autoread off`) },
             { quoted: fq, ad: true }
           );
         }
@@ -43,20 +43,21 @@ export default async (context) => {
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply("AUTOREAD", `Autoread ${value.toUpperCase()} activated! ${action ? 'Bot\'s reading every message like a creep.' : 'No more spying on your trash messages.'}`) },
+          { text: formatStylishReply("AUTOREAD", `Autoread ${value.toUpperCase()} activated! ${action ? 'Bot\'s reading every message like a creep.' : 'No more spying on your trash messages.'}\n├ \n├ 📌 Usage: ${prefix}autoread on | ${prefix}autoread off`) },
           { quoted: fq, ad: true }
         );
       }
 
             const _devMode = await getDeviceMode();
       if (_devMode === 'ios') {
-          await client.sendMessage(m.chat, { text: formatStylishReply("AUTOREAD", `Autoread's ${settings.autoread ? 'ON' : 'OFF'}, dumbass. Pick a vibe, noob!`) }, { quoted: fq });
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+          await client.sendMessage(m.chat, { text: formatStylishReply("AUTOREAD", `Autoread's ${settings.autoread ? 'ON' : 'OFF'}, dumbass. Pick a vibe, noob!\n├ \n├ 📌 Usage: ${prefix}autoread on | ${prefix}autoread off`) }, { quoted: fq });
       } else {
     const _msg = generateWAMessageFromContent(
             m.chat,
             {
                 interactiveMessage: {
-                    body: { text: formatStylishReply("AUTOREAD", `Autoread's ${settings.autoread ? 'ON' : 'OFF'}, dumbass. Pick a vibe, noob!`) },
+                    body: { text: formatStylishReply("AUTOREAD", `Autoread's ${settings.autoread ? 'ON' : 'OFF'}, dumbass. Pick a vibe, noob!\n├ \n├ 📌 Usage: ${prefix}autoread on | ${prefix}autoread off`) },
                     footer: { text: '' },
                     nativeFlowMessage: {
                         buttons: [
@@ -78,6 +79,8 @@ export default async (context) => {
             },
             { quoted: fq }
           );
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
           await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
       }
     } catch (error) {

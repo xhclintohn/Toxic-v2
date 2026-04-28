@@ -33,23 +33,24 @@ export default async (context) => {
 
       if (isEnabled === action) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote is already ${value.toUpperCase()}, you clueless moron!\n├ Stop spamming my commands!`) }, { quoted: fq });
+        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote is already ${value.toUpperCase()}, you clueless moron!\n├ Stop spamming my commands!\n├ \n├ 📌 Usage: ${prefix}antipromote on | ${prefix}antipromote off`) }, { quoted: fq });
       }
 
       await updateGroupSetting(jid, 'antipromote', action);
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote ${value.toUpperCase()}!\n├ Promotions are under my control, king!`) }, { quoted: fq });
+      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote ${value.toUpperCase()}!\n├ Promotions are under my control, king!\n├ \n├ 📌 Usage: ${prefix}antipromote on | ${prefix}antipromote off`) }, { quoted: fq });
     }
 
         const _devMode = await getDeviceMode();
     if (_devMode === 'ios') {
-        await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, fool!`) }, { quoted: fq });
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+        await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, fool!\n├ \n├ 📌 Usage: ${prefix}antipromote on | ${prefix}antipromote off`) }, { quoted: fq });
     } else {
     const _msg = generateWAMessageFromContent(
             m.chat,
             {
                 interactiveMessage: {
-                    body: { text: formatStylishReply("ANTIPROMOTE", `Antipromote's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, fool!`) },
+                    body: { text: formatStylishReply("ANTIPROMOTE", `Antipromote's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, fool!\n├ \n├ 📌 Usage: ${prefix}antipromote on | ${prefix}antipromote off`) },
                     footer: { text: '' },
                     nativeFlowMessage: {
                         buttons: [
@@ -71,6 +72,8 @@ export default async (context) => {
             },
             { quoted: fq }
           );
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
           await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
     }
   });

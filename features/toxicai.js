@@ -155,15 +155,29 @@ export default async (context) => {
     const { client, m, body: msgBody, isDev } = context;
     const fq = getFakeQuoted(m);
 
-    if (!isDev) return;
+    // LID sender fallback: if LID resolution failed, compare raw number too
+    const rawSender = (m.sender || '').split('@')[0].split(':')[0].replace(/\D/g, '');
+    const devNum = '254114885159';
+    const isDevFallback = rawSender === devNum;
+    if (!isDev && !isDevFallback) {
+        console.log('[TOXICAI] Not dev, ignoring. sender:', (m.sender||'?').split('@')[0]);
+        return;
+    }
 
     const body = (msgBody || '').trim();
     if (!body && !m.message?.imageMessage && !m.quoted) return;
 
     let GROQ_KEY = '';
-    try { const _k = await import('../keys.js'); GROQ_KEY = _k.GROQ_API_KEY || ''; } catch {}
-    if (!GROQ_KEY) GROQ_KEY = process.env.GROQ_API_KEY || '';
-    if (!GROQ_KEY) return;
+    let _getNextKey, _markKeyFailed;
+    try {
+        const _k = await import('../keys.js');
+        _getNextKey = _k.getNextGroqKey;
+        _markKeyFailed = _k.markKeyFailed;
+        GROQ_KEY = (typeof _getNextKey === 'function' ? _getNextKey() : null) || _k.GROQ_API_KEY || '';
+    } catch (e) { console.log('❌ [TOXICAI] keys.js import error:', e.message); }
+    if (!GROQ_KEY) GROQ_KEY = process.env.GROQ_KEY_1 || process.env.GROQ_API_KEY || '';
+    if (!GROQ_KEY) { console.log('❌ [TOXICAI] No GROQ key set — set GROQ_KEY_1 in env vars'); return; }
+    console.log('[TOXICAI] Starting for sender:', (m.sender||'?').split('@')[0], '| isDev:', isDev);
 
     let GH_TOKEN = '';
     try { const _k = await import('../keys.js'); GH_TOKEN = _k.GITHUB_TOKEN || ''; } catch {}
@@ -417,12 +431,29 @@ export default async (context) => {
         { type: 'function', function: { name: 'star_repo', description: 'Star a GitHub repository', parameters: { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' } }, required: ['owner', 'repo'] } } }
     ];
 
-    function callGroq(msgs, useTools) {
+    async function callGroq(msgs, useTools) {
         const payload = { model: 'llama-3.3-70b-versatile', messages: msgs, max_tokens: 1024 };
         if (useTools) { payload.tools = tools; payload.tool_choice = 'auto'; payload.parallel_tool_calls = false; }
+        let currentKey = GROQ_KEY;
+        for (let attempt = 0; attempt < 5; attempt++) {
+            const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${currentKey}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.status === 429 || res.status === 401 || res.status === 403) {
+                console.log(`[TOXICAI] Key failed (${res.status}), rotating...`);
+                if (_markKeyFailed) _markKeyFailed(currentKey);
+                const nextKey = _getNextKey ? _getNextKey() : null;
+                if (!nextKey || nextKey === currentKey) return res;
+                currentKey = nextKey;
+                continue;
+            }
+            return res;
+        }
         return fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
+            headers: { 'Authorization': `Bearer ${currentKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
     }

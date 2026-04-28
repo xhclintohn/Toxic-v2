@@ -42,6 +42,7 @@ export default {
 
                 const _devMode = await getDeviceMode();
         if (_devMode === 'ios') {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
             await client.sendMessage(m.chat, { text: fmt('AUTO AI', [`Status: ${isOn ? '✅ ON' : '❌ OFF'}`, 'DMs: replies to every message', 'Groups: replies when @mentioned or replied to']) }, { quoted: fq });
         } else {
     const _msg = generateWAMessageFromContent(
@@ -68,6 +69,8 @@ export default {
               },
               { quoted: fq }
             );
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
             await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
         }
       } catch {

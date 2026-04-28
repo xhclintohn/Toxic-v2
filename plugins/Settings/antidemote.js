@@ -33,23 +33,24 @@ export default async (context) => {
 
       if (isEnabled === action) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote is already ${value.toUpperCase()}, you brainless fool!\n├ Quit wasting my time!`) }, { quoted: fq });
+        return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote is already ${value.toUpperCase()}, you brainless fool!\n├ Quit wasting my time!\n├ \n├ 📌 Usage: ${prefix}antidemote on | ${prefix}antidemote off`) }, { quoted: fq });
       }
 
       await updateGroupSetting(jid, 'antidemote', action);
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote ${value.toUpperCase()}!\n├ Demotions are under my watch, king!`) }, { quoted: fq });
+      return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote ${value.toUpperCase()}!\n├ Demotions are under my watch, king!\n├ \n├ 📌 Usage: ${prefix}antidemote on | ${prefix}antidemote off`) }, { quoted: fq });
     }
 
         const _devMode = await getDeviceMode();
     if (_devMode === 'ios') {
-        await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, fool!`) }, { quoted: fq });
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+        await client.sendMessage(m.chat, { text: formatStylishReply("ANTIDEMOTE", `Antidemote's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, fool!\n├ \n├ 📌 Usage: ${prefix}antidemote on | ${prefix}antidemote off`) }, { quoted: fq });
     } else {
     const _msg = generateWAMessageFromContent(
             m.chat,
             {
                 interactiveMessage: {
-                    body: { text: formatStylishReply("ANTIDEMOTE", `Antidemote's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, fool!`) },
+                    body: { text: formatStylishReply("ANTIDEMOTE", `Antidemote's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, fool!\n├ \n├ 📌 Usage: ${prefix}antidemote on | ${prefix}antidemote off`) },
                     footer: { text: '' },
                     nativeFlowMessage: {
                         buttons: [
@@ -71,6 +72,8 @@ export default async (context) => {
             },
             { quoted: fq }
           );
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
           await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
     }
   });

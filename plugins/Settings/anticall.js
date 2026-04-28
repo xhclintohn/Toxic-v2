@@ -35,7 +35,7 @@ export default async (context) => {
 
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply("ANTICALL", `Yo, genius! Anticall is already ${value.toUpperCase()}! Stop wasting my time, moron.`) },
+            { text: formatStylishReply("ANTICALL", `Yo, genius! Anticall is already ${value.toUpperCase()}! Stop wasting my time, moron.\n├ \n├ 📌 Usage: ${prefix}anticall on | ${prefix}anticall off`) },
             { quoted: fq, ad: true }
           );
         }
@@ -44,20 +44,21 @@ export default async (context) => {
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply("ANTICALL", `Anticall ${value.toUpperCase()}! Callers will get wrecked!`) },
+          { text: formatStylishReply("ANTICALL", `Anticall ${value.toUpperCase()}! Callers will get wrecked!\n├ \n├ 📌 Usage: ${prefix}anticall on | ${prefix}anticall off`) },
           { quoted: fq, ad: true }
         );
       }
 
             const _devMode = await getDeviceMode();
       if (_devMode === 'ios') {
-          await client.sendMessage(m.chat, { text: formatStylishReply("ANTICALL", `Anticall Status: ${isEnabled ? 'ON' : 'OFF'}. Pick a vibe, noob!`) }, { quoted: fq });
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+          await client.sendMessage(m.chat, { text: formatStylishReply("ANTICALL", `Anticall Status: ${isEnabled ? 'ON' : 'OFF'}. Pick a vibe, noob!\n├ \n├ 📌 Usage: ${prefix}anticall on | ${prefix}anticall off`) }, { quoted: fq });
       } else {
     const _msg = generateWAMessageFromContent(
             m.chat,
             {
                 interactiveMessage: {
-                    body: { text: formatStylishReply("ANTICALL", `Anticall Status: ${isEnabled ? 'ON' : 'OFF'}. Pick a vibe, noob!`) },
+                    body: { text: formatStylishReply("ANTICALL", `Anticall Status: ${isEnabled ? 'ON' : 'OFF'}. Pick a vibe, noob!\n├ \n├ 📌 Usage: ${prefix}anticall on | ${prefix}anticall off`) },
                     footer: { text: '' },
                     nativeFlowMessage: {
                         buttons: [
@@ -79,6 +80,8 @@ export default async (context) => {
             },
             { quoted: fq }
           );
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
           await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
       }
     } catch (error) {

@@ -42,6 +42,7 @@ export default async (context) => {
 
             const _devMode = await getDeviceMode();
       if (_devMode === 'ios') {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
           await client.sendMessage(m.chat, { text: fmtMsg(`REACTION SETTINGS\n├ Current: ${currentText}\n├ \n├ Use "${prefix}reaction random" for random\n├ Use "${prefix}reaction <emoji>" for specific`) }, { quoted: fq });
       } else {
     const _msg = generateWAMessageFromContent(
@@ -70,6 +71,8 @@ export default async (context) => {
             },
             { quoted: fq }
           );
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
           await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
       }
     } catch (error) {

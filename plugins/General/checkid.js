@@ -57,7 +57,7 @@ export default {
                     {
                         interactiveMessage: {
                             body: { text: bodyText },
-                            footer: { text: `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` },
+                            footer: { text: '' },
                             nativeFlowMessage: {
                                 messageVersion: 1,
                                 buttons: [

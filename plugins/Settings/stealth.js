@@ -41,6 +41,7 @@ export default async (context) => {
 
                         const _devMode = await getDeviceMode();
             if (_devMode === 'ios') {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
                 await client.sendMessage(m.chat, { text: fmt(`Stealth Mode: *${isEnabled ? 'ON 👻' : 'OFF 💡'}*\n├ Usage: *${prefix}stealth on/off*\n├ When ON, bot auto-deletes commands + replies after 8s.`) }, { quoted: fq });
             } else {
     const _stealthMsg = generateWAMessageFromContent(

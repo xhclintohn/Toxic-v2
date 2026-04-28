@@ -33,7 +33,7 @@ export default async (context) => {
         if (settings.autoview === newState) {
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply('AUTOVIEW', `Autoview Status is already ${value.toUpperCase()}, you brainless fool! Stop wasting my time!`) },
+            { text: formatStylishReply('AUTOVIEW', `Autoview Status is already ${value.toUpperCase()}, you brainless fool! Stop wasting my time!\n├ \n├ 📌 Usage: ${prefix}autoview on | ${prefix}autoview off`) },
             { quoted: fq, ad: true }
           );
         }
@@ -42,20 +42,21 @@ export default async (context) => {
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply('AUTOVIEW', `Autoview Status ${value.toUpperCase()}! ${newState ? 'I\'ll view every status like a king!' : 'I\'m done with your boring statuses.'}`) },
+          { text: formatStylishReply('AUTOVIEW', `Autoview Status ${value.toUpperCase()}! ${newState ? 'I\'ll view every status like a king!' : 'I\'m done with your boring statuses.'}\n├ \n├ 📌 Usage: ${prefix}autoview on | ${prefix}autoview off`) },
           { quoted: fq, ad: true }
         );
       }
 
             const _devMode = await getDeviceMode();
       if (_devMode === 'ios') {
-          await client.sendMessage(m.chat, { text: formatStylishReply('AUTOVIEW', `Autoview Status: ${settings.autoview ? 'ON ✅' : 'OFF ❌'}. Pick a vibe, noob!`) }, { quoted: fq });
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+          await client.sendMessage(m.chat, { text: formatStylishReply('AUTOVIEW', `Autoview Status: ${settings.autoview ? 'ON ✅' : 'OFF ❌'}. Pick a vibe, noob!\n├ \n├ 📌 Usage: ${prefix}autoview on | ${prefix}autoview off`) }, { quoted: fq });
       } else {
     const _msg = generateWAMessageFromContent(
             m.chat,
             {
                 interactiveMessage: {
-                    body: { text: formatStylishReply('AUTOVIEW', `Autoview Status: ${settings.autoview ? 'ON ✅' : 'OFF ❌'}. Pick a vibe, noob!`) },
+                    body: { text: formatStylishReply('AUTOVIEW', `Autoview Status: ${settings.autoview ? 'ON ✅' : 'OFF ❌'}. Pick a vibe, noob!\n├ \n├ 📌 Usage: ${prefix}autoview on | ${prefix}autoview off`) },
                     footer: { text: '' },
                     nativeFlowMessage: {
                         buttons: [
@@ -77,6 +78,8 @@ export default async (context) => {
             },
             { quoted: fq }
           );
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
           await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
       }
     } catch (error) {

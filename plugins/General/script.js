@@ -39,7 +39,7 @@ export default {
         const msg = generateWAMessageFromContent(m.chat, proto.Message.fromObject({
           interactiveMessage: {
             body: { text: replyText },
-            footer: { text: `©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` },
+            footer: { text: '' },
             header: { hasMediaAttachment: false },
             contextInfo: {
               externalAdReply: {

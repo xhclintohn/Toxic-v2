@@ -41,6 +41,7 @@ export default async (context) => {
 
                         const _devMode = await getDeviceMode();
             if (_devMode === 'ios') {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
                 await client.sendMessage(m.chat, { text: fmt(`Multi-prefix: *${isEnabled ? 'ON 🔥' : 'OFF 🧊'}*\n├ When ON: . ! / # all trigger commands.\n├ When OFF: only *${settings.prefix || '.'}* works.`) }, { quoted: fq });
             } else {
     const _multiprefixMsg = generateWAMessageFromContent(

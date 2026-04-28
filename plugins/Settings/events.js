@@ -71,6 +71,7 @@ export default async (context) => {
 
             const _devMode = await getDeviceMode();
       if (_devMode === 'ios') {
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
           await client.sendMessage(m.chat, { text: formatStylishReply(
             `Events Status: ${isEnabled ? 'ON 🥶' : 'OFF 😴'}. Pick a vibe, noob! 😈`
           ) }, { quoted: fq });
@@ -103,6 +104,8 @@ export default async (context) => {
             },
             { quoted: fq }
           );
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
           await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
       }
     } catch (error) {

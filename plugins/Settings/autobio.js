@@ -34,7 +34,7 @@ export default async (context) => {
 
           return await client.sendMessage(
             m.chat,
-            { text: formatStylishReply("AUTOBIO", `Autobio's already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time.`) },
+            { text: formatStylishReply("AUTOBIO", `Autobio's already ${value.toUpperCase()}, you brain-dead fool! Stop wasting my time.\n├ \n├ 📌 Usage: ${prefix}autobio on | ${prefix}autobio off`) },
             { quoted: fq, ad: true }
           );
         }
@@ -43,20 +43,21 @@ export default async (context) => {
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
         return await client.sendMessage(
           m.chat,
-          { text: formatStylishReply("AUTOBIO", `Autobio ${value.toUpperCase()} activated! ${action ? 'Bot\'s flexing status updates every 10 seconds, bow down!' : 'No more status flexing, you\'re not worth it.'}`) },
+          { text: formatStylishReply("AUTOBIO", `Autobio ${value.toUpperCase()} activated! ${action ? 'Bot\'s flexing status updates every 10 seconds, bow down!' : 'No more status flexing, you\'re not worth it.'}\n├ \n├ 📌 Usage: ${prefix}autobio on | ${prefix}autobio off`) },
           { quoted: fq, ad: true }
         );
       }
 
             const _devMode = await getDeviceMode();
       if (_devMode === 'ios') {
-          await client.sendMessage(m.chat, { text: formatStylishReply("AUTOBIO", `Autobio's ${settings.autobio ? 'ON' : 'OFF'}, dumbass. Pick a vibe, noob!`) }, { quoted: fq });
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+          await client.sendMessage(m.chat, { text: formatStylishReply("AUTOBIO", `Autobio's ${settings.autobio ? 'ON' : 'OFF'}, dumbass. Pick a vibe, noob!\n├ \n├ 📌 Usage: ${prefix}autobio on | ${prefix}autobio off`) }, { quoted: fq });
       } else {
     const _msg = generateWAMessageFromContent(
             m.chat,
             {
                 interactiveMessage: {
-                    body: { text: formatStylishReply("AUTOBIO", `Autobio's ${settings.autobio ? 'ON' : 'OFF'}, dumbass. Pick a vibe, noob!`) },
+                    body: { text: formatStylishReply("AUTOBIO", `Autobio's ${settings.autobio ? 'ON' : 'OFF'}, dumbass. Pick a vibe, noob!\n├ \n├ 📌 Usage: ${prefix}autobio on | ${prefix}autobio off`) },
                     footer: { text: '' },
                     nativeFlowMessage: {
                         buttons: [
@@ -78,6 +79,8 @@ export default async (context) => {
             },
             { quoted: fq }
           );
+          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
           await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
       }
     } catch (error) {

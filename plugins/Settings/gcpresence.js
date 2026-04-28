@@ -45,6 +45,7 @@ export default async (context) => {
 
                 const _devMode = await getDeviceMode();
         if (_devMode === 'ios') {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
             await client.sendMessage(m.chat, { text: fmt(`GCPresence Settings\n├ Status: ${status}\n├ \n├ Group: Fake typing/recording indicator\n├ DMs: Always enabled`) }, { quoted: fq });
         } else {
     const _msg = generateWAMessageFromContent(

@@ -46,6 +46,7 @@ export default {
 
                         const _devMode = await getDeviceMode();
             if (_devMode === 'ios') {
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
                 await client.sendMessage(m.chat, { text: fmt('TOXICAGENT', [
                             `Status: ${isOn ? '✅ ON' : '❌ OFF'}`,
                             'Handles: create/delete/rename repos, upload files,',
@@ -82,6 +83,8 @@ export default {
                         }
                     }
                 }, { quoted: fq });
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+
                 await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
             }
         } catch {

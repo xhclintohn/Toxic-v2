@@ -50,7 +50,7 @@ export default async (context) => {
                 proto.Message.fromObject({
                     interactiveMessage: {
                         body: { text: bodyText },
-                        footer: { text: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
+                        footer: { text: '' },
                         carouselMessage: {
                             cards: [{
                                 header: { title: 'Wᴇʟᴄᴏᴍᴇ Settings', hasMediaAttachment: false },
