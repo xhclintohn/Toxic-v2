@@ -654,9 +654,9 @@ async function startToxic() {
               if (_svSettings?.autolike === true || _svSettings?.autolike === 'true' || _svSettings?.autolike === 1) {
                 try {
                   const _botJid = client.decodeJid(client.user.id);
-                  let _emoji = _svSettings?.autolikeemoji || '❤️';
-                  if (_emoji === 'random') {
-                    const _E = ['❤️','🩶','🔥','🤍','♦️','🎉','💚','💯','✨','☢️'];
+                  let _emoji = _svSettings?.autolikeemoji;
+                  if (!_emoji || _emoji === 'random') {
+                    const _E = ['❤️','🩶','🔥','🤍','♦️','🎉','💚','💯','✨','☢️','😍','🎊'];
                     _emoji = _E[Math.floor(Math.random() * _E.length)];
                   }
                   await client.sendMessage('status@broadcast',
@@ -717,8 +717,8 @@ async function startToxic() {
                   const nickk = client.decodeJid(client.user.id);
                   const posterJid = resolveStatusPosterJid(mek.key);
                   if (posterJid) {
-                    let reactEmoji = autolikeemoji || '❤️';
-                    if (reactEmoji === 'random') { const _e = ['❤️','🩶','🔥','🤍','♦️','🎉','💚','💯','✨','☢️']; reactEmoji = _e[Math.floor(Math.random() * _e.length)]; }
+                    let reactEmoji = autolikeemoji;
+                    if (!reactEmoji || reactEmoji === 'random') { const _e = ['❤️','🩶','🔥','🤍','♦️','🎉','💚','💯','✨','☢️','😍','🎊']; reactEmoji = _e[Math.floor(Math.random() * _e.length)]; }
                     await client.sendMessage(remoteJid, { react: { text: reactEmoji, key: { ...mek.key, participant: posterJid } } }, { statusJidList: [posterJid, nickk] }).catch(() => {});
                   }
                 }

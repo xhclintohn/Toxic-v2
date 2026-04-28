@@ -8,19 +8,19 @@ import path from 'path';
 import asyncPkg from 'async';
 const { queue } = asyncPkg;
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 
 const commandQueue = queue(async (task, callback) => {
     try {
         await task.run(task.context);
     } catch (error) {
-    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-        console.error(`Sticker error: ${error.message}`);
+        console.error(`Sticker queue error: ${error.message}`);
     }
     callback();
 }, 1);
 
 export default async (context) => {
-    const { client, m, packname, author } = context;
+    const { client, m, packname } = context;
     const fq = getFakeQuoted(m);
 
     await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
@@ -28,54 +28,55 @@ export default async (context) => {
     commandQueue.push({
         context,
         run: async ({ client, m }) => {
+            const fq = getFakeQuoted(m);
             try {
-                let mediaMessage = null;
+                let mediaMsg = null;
+                let mediaType = null;
 
-                if (m.message && (m.message.imageMessage || m.message.videoMessage)) {
-                    mediaMessage = m.message.imageMessage || m.message.videoMessage;
-                } else if (m.quoted && m.quoted.message) {
-                    mediaMessage = m.quoted.message.imageMessage || 
-                                  m.quoted.message.videoMessage ||
-                                  m.quoted.message.stickerMessage;
-                } else if (m.message?.extendedTextMessage?.contextInfo?.quotedMessage) {
-                    const quotedMsg = m.message.extendedTextMessage.contextInfo.quotedMessage;
-                    mediaMessage = quotedMsg.imageMessage || quotedMsg.videoMessage || quotedMsg.stickerMessage;
+                if (m.message?.imageMessage) {
+                    mediaMsg = m.message.imageMessage;
+                    mediaType = 'image';
+                } else if (m.message?.videoMessage) {
+                    mediaMsg = m.message.videoMessage;
+                    mediaType = 'video';
+                } else if (m.message?.stickerMessage) {
+                    mediaMsg = m.message.stickerMessage;
+                    mediaType = 'sticker';
+                } else if (m.quoted) {
+                    if (m.quoted.mtype === 'imageMessage') {
+                        mediaMsg = m.quoted;
+                        mediaType = 'image';
+                    } else if (m.quoted.mtype === 'videoMessage') {
+                        mediaMsg = m.quoted;
+                        mediaType = 'video';
+                    } else if (m.quoted.mtype === 'stickerMessage') {
+                        mediaMsg = m.quoted;
+                        mediaType = 'sticker';
+                    }
                 }
 
-                if (!mediaMessage) {
+                if (!mediaMsg) {
                     await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
                     return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STICKER ≪───\n├ \n├ Where\'s the fvcking image or\n├ short video, idiot.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
                 }
 
-                const isVideo = !!mediaMessage.videoMessage;
-                if (isVideo && mediaMessage.videoMessage.seconds > 30) {
+                if (mediaType === 'video' && mediaMsg.seconds > 30) {
                     await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
                     return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STICKER ≪───\n├ \n├ Videos must be 30 seconds or shorter.\n├ Learn to read, moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
                 }
 
-                let mediaToDownload = null;
-                if (m.message && (m.message.imageMessage || m.message.videoMessage)) {
-                    mediaToDownload = m;
-                } else if (m.quoted) {
-                    mediaToDownload = m.quoted;
-                } else if (m.message?.extendedTextMessage?.contextInfo?.quotedMessage) {
-                    mediaToDownload = {
-                        message: m.message.extendedTextMessage.contextInfo.quotedMessage,
-                        key: m.key
-                    };
-                }
+                const dlType = mediaType === 'sticker' ? 'sticker' : mediaType;
+                const stream = await downloadContentFromMessage(mediaMsg, dlType);
+                let buffer = Buffer.from([]);
+                for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
 
-                if (!mediaToDownload) {
-                    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-                    return m.reply('╭───(    TOXIC-MD    )───\n├───≫ STICKER ≪───\n├ \n├ Couldn\'t find media to download.\n├ You\'re hopeless.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
-                }
+                const ext = mediaType === 'video' ? 'mp4' : 'jpg';
+                const tempFile = path.join(__dirname, `temp-sticker-${Date.now()}.${ext}`);
+                await fs.writeFile(tempFile, buffer);
 
-                const tempFile = path.join(__dirname, `temp-sticker-${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`);
-                const mediaPath = await client.downloadAndSaveMediaMessage(mediaToDownload, tempFile.replace(path.extname(tempFile), ''));
-
-                const sticker = new Sticker(mediaPath, {
-                    pack: packname || 'p',
-                    author: author || '𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 [dev]',
+                const sticker = new Sticker(tempFile, {
+                    pack: packname || 'Toxic-MD',
+                    author: '𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧 [dev]',
                     type: StickerTypes.FULL,
                     categories: ['🤩', '🎉'],
                     id: '12345',
@@ -83,18 +84,14 @@ export default async (context) => {
                     background: 'transparent'
                 });
 
-                const buffer = await sticker.toBuffer();
-
+                const stickerBuffer = await sticker.toBuffer();
                 await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-                await client.sendMessage(m.chat, { sticker: buffer }, { quoted: fq });
-
-                await fs.unlink(mediaPath).catch(() => {});
-                if (mediaPath !== tempFile) await fs.unlink(tempFile).catch(() => {});
+                await client.sendMessage(m.chat, { sticker: stickerBuffer }, { quoted: fq });
+                await fs.unlink(tempFile).catch(() => {});
 
             } catch (error) {
-    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
                 console.error(`Sticker error: ${error.message}`);
-                await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
                 await m.reply('╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Error while creating sticker.\n├ Try again, you failure.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧');
             }
         }

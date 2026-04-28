@@ -1,11 +1,31 @@
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
+const parseDuration = (input) => {
+    const m = String(input).toLowerCase().match(/^(\d+)\s*(s|m|h|d)$/);
+    if (m) {
+        const n = parseInt(m[1], 10);
+        if (m[2] === 's') return n;
+        if (m[2] === 'm') return n * 60;
+        if (m[2] === 'h') return n * 3600;
+        if (m[2] === 'd') return n * 86400;
+    }
+    if (/^\d+$/.test(input)) return parseInt(input, 10);
+    return null;
+};
+
+const durationLabel = (secs) => {
+    if (secs >= 86400 && secs % 86400 === 0) return `${secs / 86400}d`;
+    if (secs >= 3600 && secs % 3600 === 0) return `${secs / 3600}h`;
+    if (secs >= 60 && secs % 60 === 0) return `${secs / 60}m`;
+    return `${secs}s`;
+};
+
 export default {
   name: 'pinm',
   aliases: ['pinmessage', 'pinmsg'],
-  description: 'Pin a message in the group (reply to a message)',
+  description: 'Pin a replied-to message. Usage: reply + duration (1s / 30m / 6h / 7d)',
   run: async (context) => {
-    const { client, m, prefix, IsGroup } = context;
+    const { client, m, prefix, IsGroup, args } = context;
     const fq = getFakeQuoted(m);
     await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
@@ -19,19 +39,18 @@ export default {
     if (!m.quoted) {
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       return client.sendMessage(m.chat, {
-        text: `╭───(    TOXIC-MD    )───\n├ \n├ Please reply to the message you want to pin.\n├ Example: ${prefix}pinm 86400\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+        text: `╭───(    TOXIC-MD    )───\n├ \n├ Reply to a message to pin it.\n├ \n├ Examples:\n├ ${prefix}pinm 1h  → pin for 1 hour\n├ ${prefix}pinm 30m → pin for 30 minutes\n├ ${prefix}pinm 7d  → pin for 7 days\n├ ${prefix}pinm 60s → pin for 60 seconds\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: fq });
     }
 
-    const args = m.body.trim().split(/\s+/);
-    let time = 86400;
+    const rawInput = args[0] || '86400';
+    const time = parseDuration(rawInput);
 
-    if (args[1]) {
-      const input = args[1].toLowerCase();
-      if (input === '24h' || input === '1d') time = 86400;
-      else if (input === '7d') time = 604800;
-      else if (input === '30d') time = 2592000;
-      else if (!isNaN(input)) time = parseInt(input);
+    if (!time || time <= 0) {
+      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+      return client.sendMessage(m.chat, {
+        text: `╭───(    TOXIC-MD    )───\n├ \n├ Invalid duration. Use:\n├ 1s / 5m / 2h / 30d\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+      }, { quoted: fq });
     }
 
     try {
@@ -44,10 +63,9 @@ export default {
 
       await client.sendMessage(m.chat, { pin: messageKey, type: 1, time });
 
-      const durationLabel = time === 86400 ? '24 hours' : time === 604800 ? '7 days' : time === 2592000 ? '30 days' : `${time}s`;
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
       await client.sendMessage(m.chat, {
-        text: `╭───(    TOXIC-MD    )───\n├ \n├ ✅ Message pinned successfully!\n├ Duration: ${durationLabel}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+        text: `╭───(    TOXIC-MD    )───\n├ \n├ ✅ Message pinned!\n├ Duration: ${durationLabel(time)}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
       }, { quoted: fq });
 
     } catch (error) {
