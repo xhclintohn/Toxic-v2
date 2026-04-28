@@ -22,7 +22,6 @@ export default {
             }, { quoted: fq });
         }
         try {
-            // eslint-disable-next-line no-new-func
             const result = Function('"use strict"; return (' + expr + ')')();
             if (result === undefined || result === null || !isFinite(result)) throw new Error('invalid result');
             return client.sendMessage(m.chat, {

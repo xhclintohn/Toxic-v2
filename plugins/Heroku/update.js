@@ -61,7 +61,6 @@ export default async (context) => {
             const alreadyDeployed = deployedSha.includes(latestSha);
 
             if (alreadyDeployed) {
-                // FIX: Menambahkan wrapper viewOnceMessage
                 const msg = generateWAMessageFromContent(
                     m.chat,
                     {
@@ -102,7 +101,6 @@ export default async (context) => {
                 return await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
             }
 
-            // FIX: Menambahkan wrapper viewOnceMessage
             const msg = generateWAMessageFromContent(
                 m.chat,
                 {

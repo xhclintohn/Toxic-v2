@@ -19,7 +19,6 @@ export default {
 
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
 
-      // ====================== TARGET GROUP ======================
       let targetGroupJid = m.chat;
 
       if (!IsGroup) {
@@ -49,7 +48,6 @@ export default {
         }
       }
 
-      // ====================== MEDIA / TEXT DETECTION ======================
       const quoted = m.quoted || m;
       const messageType = getContentType(quoted.message || quoted);
       const mime = quoted?.mimetype || 
@@ -75,7 +73,6 @@ export default {
         }
       };
 
-      // ====================== POST STATUS ======================
       if (messageType === 'imageMessage' || /image/.test(mime)) {
         const buffer = await getBuffer(quoted, 'image');
         await client.sendMessage(targetGroupJid, {

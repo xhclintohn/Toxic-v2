@@ -42,13 +42,11 @@ export default {
         const cmdName = args[0].toLowerCase().replace(/^\./, '');
 
         const helpData = {
-            // ── Anime Commands ─────────────────────────────────────────────
             waifu: { usage: `${effectivePrefix}waifu`, desc: 'Get a random anime waifu image. Aliases: animegirl, waifupic' },
             neko: { usage: `${effectivePrefix}neko`, desc: 'Get a random neko (catgirl) image. Aliases: catgirl, nekopic' },
             husbando: { usage: `${effectivePrefix}husbando`, desc: 'Get a random husbando image. Aliases: animeguy, husbandopic' },
             maid: { usage: `${effectivePrefix}maid`, desc: 'Get a random anime maid image.' },
             uniform: { usage: `${effectivePrefix}uniform`, desc: 'Get a random anime uniform image.' },
-            // ── Text Effects ────────────────────────────────────────────────
             glossysilver: { usage: `${effectivePrefix}glossysilver <text>`, desc: 'Generate glossy silver 3D text (max 50 chars).' },
             glitchtext: { usage: `${effectivePrefix}glitchtext <text>`, desc: 'Generate digital glitch text effect.' },
             advancedglow: { usage: `${effectivePrefix}advancedglow <text>`, desc: 'Generate advanced glowing text.' },
@@ -79,7 +77,6 @@ export default {
             blackpinkstyle: { usage: `${effectivePrefix}blackpinkstyle <text>`, desc: 'Generate Blackpink style text.' },
             erasertext: { usage: `${effectivePrefix}erasertext <text>`, desc: 'Generate eraser deleting text effect.' },
             cartoonstyle: { usage: `${effectivePrefix}cartoonstyle <text>`, desc: 'Generate cartoon graffiti text.' },
-            // ── AI Commands ─────────────────────────────────────────────────
             sora: { usage: `${effectivePrefix}sora <description>`, desc: 'Generate a cinematic AI image scene. Aliases: soraai, aifilm' },
             menu: { usage: `${effectivePrefix}menu`, desc: 'Shows the main interactive menu with all categories.' },
             fullmenu: { usage: `${effectivePrefix}fullmenu`, desc: 'Shows all commands listed by category.' },

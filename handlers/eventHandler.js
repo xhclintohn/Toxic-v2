@@ -6,8 +6,6 @@ const DEVELOPER_NUMBER = "254114885159";
 
 const _num = (jid) => (jid || '').split('@')[0].split(':')[0].replace(/\D/g, '');
 
-// Event participants can be objects {id, phoneNumber, admin} or plain strings
-// Extract the best JID string — prefer phoneNumber (real phone) over id (may be LID)
 const extractJid = (p) => {
     if (typeof p === 'string') return p;
     if (!p) return '';
@@ -16,7 +14,6 @@ const extractJid = (p) => {
     return p.id || p.jid || '';
 };
 
-// Normalise any participant value (object or string) to a @s.whatsapp.net JID
 const normalizeJid = (p) => {
     const jid = extractJid(p);
     if (!jid) return '';
@@ -34,7 +31,6 @@ const Events = async (client, event, pict) => {
     const botRaw = client.decodeJid ? client.decodeJid(client.user.id) : (client.user?.id || '');
     const botJid = normalizeJid(botRaw);
 
-    // Fetch metadata independently — failure must NOT abort welcome/goodbye/etc.
     let metadata = null;
     try {
         metadata = await client.groupMetadata(event.id);
@@ -76,7 +72,6 @@ const Events = async (client, event, pict) => {
         })
     );
 
-    // Auto-promote developer + antiforeign on join
     if (event.action === "add") {
         try { await antiforeign(client, event); } catch (e) {
             console.log('[EVENTS] antiforeign error:', e.message);
@@ -90,21 +85,20 @@ const Events = async (client, event, pict) => {
                         return normalizeJid(fpJid) === botJid && fp.admin !== null;
                     });
                     if (botIsAdmin) {
-                        const devJid = normalizeJid(p);
+                        const rawDevJid = extractJid(p);
+                        const devJid = resolveTargetJid(rawDevJid, freshMeta.participants) || normalizeJid(p);
+                        if (!devJid || devJid.endsWith('@lid')) return;
                         await client.groupParticipantsUpdate(event.id, [devJid], "promote");
                         await client.sendMessage(event.id, {
                             text: `╭───(    TOXIC-MD    )───\n├───≫ AUTO-PROMOTED ≪───\n├ \n├ 👑 The developer has joined.\n├ Auto-promoted to admin.\n╰──────────────────☉\n> ©𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
                             mentions: [devJid]
                         });
                     }
-                } catch (e) {
-                    console.log('[EVENTS] dev auto-promote error:', e.message);
-                }
+                } catch (e) {}
             }
         }
     }
 
-    // Welcome
     if (welcomeEnabled && event.action === "add") {
         for (let i = 0; i < participants.length; i++) {
             const p = participants[i];
@@ -139,14 +133,12 @@ const Events = async (client, event, pict) => {
         }
     }
 
-    // Reset warns on leave
     if (event.action === "remove") {
         for (const p of participants) {
             try { await resetWarn(event.id, normalizeJid(p)); } catch {}
         }
     }
 
-    // Goodbye
     if (goodbyeEnabled && event.action === "remove") {
         for (let i = 0; i < participants.length; i++) {
             const p = participants[i];
@@ -180,21 +172,17 @@ const Events = async (client, event, pict) => {
         }
     }
 
-    // Antidemote — use resolveTargetJid for LID-safe resolution
     if (event.action === "demote" && antidemote) {
         try {
             const participantObj = participants[0];
             const participantJidRaw = extractJid(participantObj);
-            // Resolve to real phone JID using group metadata participants
             const nParticipant = resolveTargetJid(participantJidRaw, metadata.participants) || normalizeJid(participantObj);
-            // Always derive display from RESOLVED jid so we never show a LID number
             const participantDisplay = _num(nParticipant) || nParticipant.split("@")[0].split(":")[0];
 
             const authorJidRaw = event.author || '';
             const nAuthor = authorJidRaw
                 ? (resolveTargetJid(authorJidRaw, metadata.participants) || normalizeJid(authorJidRaw))
                 : null;
-            // Always derive display from RESOLVED jid so we never show a LID number
             const authorDisplay = nAuthor ? (_num(nAuthor) || nAuthor.split("@")[0].split(":")[0]) : '';
 
 
@@ -243,14 +231,12 @@ const Events = async (client, event, pict) => {
             const participantObj = participants[0];
             const participantJidRaw = extractJid(participantObj);
             const nParticipant = resolveTargetJid(participantJidRaw, metadata.participants) || normalizeJid(participantObj);
-            // Always derive display from RESOLVED jid so we never show a LID number
             const participantDisplay = _num(nParticipant) || nParticipant.split("@")[0].split(":")[0];
 
             const authorJidRaw = event.author || '';
             const nAuthor = authorJidRaw
                 ? (resolveTargetJid(authorJidRaw, metadata.participants) || normalizeJid(authorJidRaw))
                 : null;
-            // Always derive display from RESOLVED jid so we never show a LID number
             const authorDisplay = nAuthor ? (_num(nAuthor) || nAuthor.split("@")[0].split(":")[0]) : '';
 
 

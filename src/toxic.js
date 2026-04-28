@@ -101,7 +101,6 @@ function resolveLidToPhoneNumber(lidJid) {
         const lidNumber = lidJid.split('@')[0].split(':')[0];
         const mapped = lidMappingCache.get(lidNumber) || (globalThis.lidPhoneCache && globalThis.lidPhoneCache.get(lidNumber));
         if (mapped) return mapped + '@s.whatsapp.net';
-        // Session file fallback: lid-mapping-<lid>_reverse.json → phone number
         try {
             const sessionDir = path.join(__dirname, '../Session');
             const revFile = path.join(sessionDir, `lid-mapping-${lidNumber}_reverse.json`);
@@ -458,7 +457,6 @@ export default async (client, m, chatUpdate, store) => {
             if (Owner) isAdmin = true;
         }
 
-        // Assign computed admin status to m so features can access them
         m.isAdmin = isAdmin;
         m.isBotAdmin = isBotAdmin;
 
@@ -597,18 +595,15 @@ export default async (client, m, chatUpdate, store) => {
                 if (!deletedRemoteJid || deletedRemoteJid === 'status@broadcast' || deletedRemoteJid.includes('@broadcast') || deletedRemoteJid.includes('@newsletter')) {
                     return;
                 }
-                // Resolve deletedRemoteJid if it's a LID DM
                 const normalizedDeletedJid = deletedRemoteJid.endsWith('@lid') ? (resolveLidToPhoneNumber(deletedRemoteJid) || deletedRemoteJid) : deletedRemoteJid;
                 let deletedMessage = null;
                 let chatJidToSearch = normalizedDeletedJid;
-                // 1) SQL store
                 const sqlRow = await msgStore.getMessage(deletedMessageId);
                 if (sqlRow) {
                     deletedMessage = { key: sqlRow.message?.key || { id: deletedMessageId, remoteJid: sqlRow.jid, participant: sqlRow.sender }, message: sqlRow.message?.message || {}, pushName: sqlRow.message?.pushName || '' };
                     chatJidToSearch = sqlRow.jid;
                 } else {
                 }
-                // 2) in-memory store fallback
                 if (!deletedMessage && store?.chats && store?.messageMap) {
                     if (store.messageMap?.[deletedMessageId]) chatJidToSearch = store.messageMap[deletedMessageId].normalizedJid;
                     if (store.chats?.[chatJidToSearch]) deletedMessage = store.chats[chatJidToSearch].find(msg => msg.key.id === deletedMessageId);
@@ -628,13 +623,11 @@ export default async (client, m, chatUpdate, store) => {
                     }
                 }
                 if (deletedMessage) {
-                        // Resolve botJid — must be phone JID, never LID
                         let botJid = client.decodeJid(client.user.id);
                         if (botJid && botJid.endsWith('@lid')) {
                             const resolved = resolveLidToPhoneNumber(botJid);
                             if (resolved && !resolved.endsWith('@lid')) botJid = resolved;
                         }
-                        // Resolve sender LID — async resolveSenderJid uses group metadata (same as warn.js) + all fallbacks
                         let senderRaw = deletedMessage.key.participant || deletedMessage.key.remoteJid || '';
                         if (senderRaw.endsWith('@lid')) {
                             const resolved = await resolveSenderJid(senderRaw, chatJidToSearch, client).catch(() => null);
@@ -644,7 +637,6 @@ export default async (client, m, chatUpdate, store) => {
                             }
                         }
                         const sender = client.decodeJid(senderRaw);
-                        // Resolve deleter LID — same approach
                         let deleterRaw = m.key.participant || '';
                         if (deleterRaw.endsWith('@lid')) {
                             const resolved = await resolveSenderJid(deleterRaw, chatJidToSearch, client).catch(() => null);

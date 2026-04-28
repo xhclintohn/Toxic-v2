@@ -18,7 +18,6 @@ export default async (client, m, isBotAdmin, itsMe, isAdmin, Owner, body) => {
     if (antitag && !Owner && isBotAdmin && !isAdmin && m.mentionedJid && m.mentionedJid.length > 10) {
         if (itsMe) return;
 
-        // Resolve real phone JID — same pattern as warn.js plugin
         const groupMetadata = await client.groupMetadata(m.chat);
         const sender = resolveTargetJid(m.sender, groupMetadata.participants);
         if (!sender) return;
@@ -29,7 +28,6 @@ export default async (client, m, isBotAdmin, itsMe, isAdmin, Owner, body) => {
                 text: `@${username}, do not mass tag!`,
                 contextInfo: { mentionedJid: [sender] }
             }, { quoted: m });
-            // Delete using original key — WhatsApp resolves LID participant internally
             await client.sendMessage(m.chat, {
                 delete: {
                     remoteJid: m.chat,

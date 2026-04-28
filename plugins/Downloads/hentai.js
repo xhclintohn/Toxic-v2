@@ -35,7 +35,6 @@ export default async (context) => {
 
     await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
     try {
-        // Step 1: Search using thehentai-search API
         const encodedQuery = encodeURIComponent(text);
         const searchResponse = await fetchWithRetry(
             `https://api.privatezia.biz.id/api/anime/thehentai-search?query=${encodedQuery}`,
@@ -44,13 +43,11 @@ export default async (context) => {
 
         const searchData = await searchResponse.json();
 
-        // Validate search response
         if (!searchData || !searchData.status || !searchData.data || !searchData.data.posts || searchData.data.posts.length === 0) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return m.reply(formatStylishReply("No results found for your query, fam! 😢 Try a different search term."));
         }
 
-        // Get the first result's URL
         const firstResult = searchData.data.posts[0];
         const contentUrl = firstResult.url;
         const title = firstResult.title || "No title available";
@@ -58,7 +55,6 @@ export default async (context) => {
         const views = firstResult.views || "Unknown";
         const date = firstResult.date || "Unknown";
 
-        // Step 2: Fetch gallery using thehentai-download API
         const encodedContentUrl = encodeURIComponent(contentUrl);
         const downloadResponse = await fetchWithRetry(
             `https://api.privatezia.biz.id/api/anime/thehentai-download?url=${encodedContentUrl}`,
@@ -67,7 +63,6 @@ export default async (context) => {
 
         const downloadData = await downloadResponse.json();
 
-        // Validate download response
         if (!downloadData || !downloadData.status || !downloadData.data || !downloadData.data.gallery || downloadData.data.gallery.length === 0) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return m.reply(formatStylishReply("Couldn’t fetch the gallery for this content, fam! 😢 Try again later."));
@@ -76,7 +71,6 @@ export default async (context) => {
         const gallery = downloadData.data.gallery;
         const description = downloadData.data.description || "No description available";
 
-        // Send gallery images
         for (const image of gallery) {
             await client.sendMessage(
                 m.chat,

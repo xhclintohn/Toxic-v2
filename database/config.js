@@ -176,7 +176,6 @@ let Database = null;
       _db.pragma('busy_timeout = 5000');
       _db.pragma('mmap_size = 268435456');
       _db.exec(SQLITE_SCHEMA);
-      // Migrate existing SQLite DBs: add missing columns
       try { _db.prepare('ALTER TABLE group_settings ADD COLUMN antiforeign INTEGER DEFAULT 0').run(); } catch {}
       _backend = 'sqlite';
       console.log(`✅ [DB] Using SQLite (${_sqliteDriver})`);
@@ -201,7 +200,6 @@ let Database = null;
               new Promise((_, rej) => setTimeout(() => rej(new Error('PG connect timeout')), 20000))
           ]);
           for (const sql of PG_SCHEMA) { try { await pool.query(sql); } catch {} }
-          // Migrate existing DBs: add missing columns
           const PG_MIGRATIONS = [
               `ALTER TABLE group_settings ADD COLUMN IF NOT EXISTS antiforeign INTEGER DEFAULT 0`,
           ];

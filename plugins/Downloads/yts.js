@@ -31,7 +31,6 @@ export default async (context) => {
       );
     }
 
-    // Take first 5 results
     const videos = searchResult.videos.slice(0, 5);
 
     let replyText = `🔎 *YouTube Search Results for:* ${text}\n\n`;
@@ -57,7 +56,6 @@ export default async (context) => {
       { quoted: fq, ad: true }
     );
 
-    // Optionally send thumbnail of the first result
     await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
     await client.sendMessage(
       m.chat,

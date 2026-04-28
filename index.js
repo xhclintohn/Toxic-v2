@@ -216,20 +216,16 @@ function invalidateSettingsCache() {
   try { invalidateSettings(); } catch (e) {}
 }
 
-// Resolve a LID JID to a phone JID using every available method.
-// Same participant-field strategy as isBotAdmin (phoneNumber, id, pn fields).
 async function resolveLidForStatus(sock, rawLidJid) {
   if (!rawLidJid || !rawLidJid.endsWith('@lid')) return rawLidJid;
   const lidNum = rawLidJid.split('@')[0].split(':')[0];
 
-  // Step 1: in-memory cache (fastest, zero I/O)
   const fromCache = lidPhoneCache?.get(lidNum);
   if (fromCache) {
     const n = String(fromCache).replace(/\D/g, '');
     if (n && n !== lidNum) { console.log(`[LID] Cache hit: ${rawLidJid} → ${n}@s.whatsapp.net`); return n + '@s.whatsapp.net'; }
   }
 
-  // Step 2: signalRepository.lidMapping.getPNForLID (synchronous, built-in WhatsApp table)
   if (sock.signalRepository?.lidMapping?.getPNForLID) {
     const variants = [rawLidJid, `${lidNum}:0@lid`, `${lidNum}:1@lid`, `${lidNum}@s.whatsapp.net`];
     for (const v of variants) {
@@ -247,7 +243,6 @@ async function resolveLidForStatus(sock, rawLidJid) {
     }
   }
 
-  // Step 2.5: session file mapping written by Baileys (lid-mapping-<lid>_reverse.json → cleanJid)
   try {
     const revFile = path.join(sessionName, `lid-mapping-${lidNum}_reverse.json`);
     if (fs.existsSync(revFile)) {
@@ -264,19 +259,14 @@ async function resolveLidForStatus(sock, rawLidJid) {
     }
   } catch {}
 
-  // Step 3: scan ALL groups for a participant with this LID — uses phoneNumber/id/pn fields
-  // (same approach as isBotAdmin: pPhone = p.phoneNumber || p.phone_number || p.pn)
   try {
     const allGroups = await sock.groupFetchAllParticipating();
     for (const [, meta] of Object.entries(allGroups || {})) {
       for (const p of meta.participants || []) {
-        // Match by LID field
         const pLidNum = (p.lid || p.id || '').split('@')[0].split(':')[0].replace(/\D/g, '');
         if (pLidNum !== lidNum) continue;
-        // Priority: phoneNumber field (most explicit)
         const pPhone = (p.phoneNumber || p.phone_number || p.pn || '').toString().replace(/\D/g, '');
         if (pPhone && pPhone.length >= 7) { cacheLidPhone(lidNum, pPhone); console.log(`[LID] Group scan (phoneNumber): ${rawLidJid} → ${pPhone}@s.whatsapp.net`); return pPhone + '@s.whatsapp.net'; }
-        // Fallback: non-LID id/jid
         const pBase = p.id || p.jid || '';
         if (pBase && !pBase.endsWith('@lid') && pBase.includes('@')) {
           const n = pBase.split('@')[0].split(':')[0].replace(/\D/g, '');
@@ -286,7 +276,6 @@ async function resolveLidForStatus(sock, rawLidJid) {
     }
   } catch (e) { console.log(`[LID] Group scan error: ${e.message}`); }
 
-  // Step 4: async DB + signalRepo multiple-format lookup (resolvePhoneFromLidAsync)
   try {
     const phone = await resolvePhoneFromLidAsync(rawLidJid);
     if (phone && typeof phone === 'string') {
@@ -315,7 +304,6 @@ async function handleAutoViewStatus(sock, m) {
   try {
     await sock.readMessages([resolvedKey]);
   } catch (err) {
-    // Fallback: try with raw LID if we resolved it to a different JID
     if (participantJid !== rawParticipant && rawParticipant) {
       try {
         await sock.readMessages([{ ...m.key, participant: rawParticipant }]);
@@ -332,10 +320,8 @@ function resolveStatusPosterJid(key = {}) {
   const server = decoded[1] || '';
   if (!user) return '';
   if (server === 'lid') {
-    // LID number is NOT the phone number — resolve from cache
     const cached = lidPhoneCache?.get(user);
     if (cached) return String(cached).replace(/\D/g, '') + '@s.whatsapp.net';
-    // No cache hit — return LID as-is, autolike will send to LID (WhatsApp sometimes handles it)
     return rawParticipant;
   }
   return user + '@' + server;
@@ -539,7 +525,6 @@ async function startToxic() {
         const itemAttrs = { id: msgId };
         if (isPinning) {
           let rawSender = (typeof messageKey === 'object') ? (messageKey.participant || (messageKey.fromMe ? (client.user?.id || jid) : messageKey.remoteJid)) : jid;
-          // Resolve LID sender to real phone JID — WhatsApp server rejects pin IQs with LID senders
           if (rawSender && rawSender.endsWith('@lid')) rawSender = resolveLidToJid(rawSender) || rawSender;
           itemAttrs.sender = jidNormalizedUser(rawSender || jid);
           itemAttrs.type = duration;
@@ -612,8 +597,6 @@ async function startToxic() {
           if (!mek || !mek.key) return;
           if (mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') {
           }
-          // Allow status@broadcast through even if mek.message is absent (delivery stubs)
-          // All other messages without a body are skipped as before
           if (!mek.message && mek.key.remoteJid !== 'status@broadcast') return;
 
           if ((mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') && !mek.key.fromMe) {
@@ -698,7 +681,6 @@ async function startToxic() {
             remoteJid = resolveLidToJid(mek.key.remoteJid);
           }
 
-          // Status messages arrive as type='append', not 'notify' — allow them through
           if (type !== 'notify' && remoteJid !== 'status@broadcast') return;
           const ts = mek?.messageTimestamp;
           const tsN = ts ? (typeof ts === 'object' ? Number(ts.low||0)+Number(ts.high||0)*4294967296 : Number(ts)) : 0;

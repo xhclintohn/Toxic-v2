@@ -9,7 +9,6 @@ export default {
         await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
     try {
-      // Use 'text' (args after command) not 'm.text' (full body including command name)
       const query = (text || '').trim();
       if (!query) return m.reply("╭───(    TOXIC-MD    )───\n├ Give me a song name, you tone-deaf cretin.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
 

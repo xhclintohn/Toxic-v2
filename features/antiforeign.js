@@ -5,7 +5,6 @@ const DEV_NUMBER = '254114885159';
 
 const cleanNum = (jid) => (jid || '').split('@')[0].split(':')[0].replace(/\D/g, '');
 
-// Participants can have LID in id — use phoneNumber field first for the real phone number
 const _pNum = (p) => {
     if (typeof p === 'string') return cleanNum(p);
     const phone = p.phoneNumber || p.phone_number || '';
@@ -15,7 +14,6 @@ const _pNum = (p) => {
     return cleanNum(p.lid || base);
 };
 
-// Extract JID string from a participant that may be an object or a string
 const extractJid = (p) => {
     if (typeof p === 'string') return p;
     if (!p) return '';
@@ -35,22 +33,18 @@ export default async (client, event) => {
         const botRaw = client.decodeJid ? client.decodeJid(client.user.id) : (client.user?.id || '');
         const botNum = cleanNum(botRaw);
 
-        // Use _pNum to get phone from participants (p.id may be LID)
         const isBotAdmin = metadata.participants.some(p => {
             return _pNum(p) === botNum && (p.admin === 'admin' || p.admin === 'superadmin');
         });
 
         if (!isBotAdmin) return;
 
-        // Country code = first 3 digits of bot number (e.g. "254" for Kenya)
         const BOT_COUNTRY_CODE = botNum.slice(0, 3);
 
         for (const participant of event.participants) {
-            // Extract JID string from participant (may be an object with id/phoneNumber)
             const participantJid = extractJid(participant);
             if (!participantJid) continue;
 
-            // Resolve real phone JID — same pattern as warn.js plugin
             const resolvedJid = resolveTargetJid(participantJid, metadata.participants);
             if (!resolvedJid) continue; // can't resolve LID, skip safely
 
@@ -59,7 +53,6 @@ export default async (client, event) => {
             if (pNum === DEV_NUMBER) continue;
             if (pNum === botNum) continue;
 
-            // Check country code match
             const isForeign = !pNum.startsWith(BOT_COUNTRY_CODE.slice(0, 2));
             if (isForeign) {
                 try {

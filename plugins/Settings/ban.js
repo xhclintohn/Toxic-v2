@@ -17,7 +17,6 @@ export default async (context) => {
 
         const sudoUsers = await getSudoUsers();
 
-        // Fetch fresh group metadata for LID resolution (most reliable for quoted/mentioned users)
         let freshParticipants = [];
         if (m.chat && m.chat.endsWith('@g.us')) {
             try {
@@ -25,7 +24,6 @@ export default async (context) => {
                 freshParticipants = freshMeta.participants || [];
             } catch {}
         }
-        // Fallback to context participants
         if (!freshParticipants.length) freshParticipants = context.participants || [];
 
         let numberToBan;
@@ -46,7 +44,6 @@ export default async (context) => {
             return await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ BAN ≪───\n├ \n├ Please provide a valid number or quote a user, moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
         }
 
-        // Sanity check — LID numbers are 15+ digits and not a phone number
         if (numberToBan.length > 15) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             return await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ BAN ≪───\n├ \n├ Couldn't resolve that user's phone number (LID address).\n├ Ask them to send a message first so the bot can map them.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

@@ -5,7 +5,6 @@ const fmt = (msg) => `╭───(    TOXIC-MD    )───\n├  ${msg}\n╰�
 
 const _num = (jid) => (jid || '').split('@')[0].split(':')[0].replace(/\D/g, '');
 
-// Participants can have LID in id — use phoneNumber field first for the real phone number
 const _pNum = (p) => {
     const phone = p.phoneNumber || p.phone_number || '';
     if (phone) return _num(phone);
@@ -25,7 +24,6 @@ export default async (client, m) => {
         const mode = (groupSettings.antistatusmention || 'off').toLowerCase();
         if (!mode || mode === 'off' || mode === 'false') return;
 
-        // Fetch fresh metadata and resolve sender via resolveTargetJid (same as warn.js)
         const groupMetadata = await client.groupMetadata(m.chat);
         const sender = resolveTargetJid(m.sender, groupMetadata.participants);
 
@@ -38,7 +36,6 @@ export default async (client, m) => {
         const botRaw = client.decodeJid ? client.decodeJid(client.user.id) : (client.user?.id || '');
         const botNum = _num(botRaw);
 
-        // Re-derive admin status using _pNum (checks phoneNumber first, then non-LID id)
         const isAdmin = groupMetadata.participants.some(p => {
             return _pNum(p) === senderNum && (p.admin === 'admin' || p.admin === 'superadmin');
         });
@@ -65,7 +62,6 @@ export default async (client, m) => {
             return;
         }
 
-        // Delete using original key — WhatsApp handles LID participant internally
         try {
             await client.sendMessage(m.chat, {
                 delete: {
@@ -94,7 +90,6 @@ export default async (client, m) => {
             return;
         }
 
-        // warn / delete / true — warn then kick at limit
         const MAX_WARNS = await getWarnLimit(m.chat);
         const newCount = await addWarn(m.chat, username);
         const remaining = MAX_WARNS - newCount;
