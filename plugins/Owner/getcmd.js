@@ -142,7 +142,7 @@ export default async (context) => {
             const relayOption = {};
             
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-            dino.relayMessage(m.chat, content, relayOption);
+            client.relayMessage(m.chat, content, relayOption);
             
             fileFound = true;
             break;
