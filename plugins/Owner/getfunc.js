@@ -12,7 +12,6 @@ const normalizeNumber = (jid) => {
 };
 
 const DEVELOPER = normalizeNumber('254114885159');
-const MAX_TEXT_SIZE = 3000;
 const FEATURES_DIR = path.join(__dirname, '..', '..', 'features');
 
 export default async (context) => {
@@ -43,11 +42,9 @@ export default async (context) => {
         const data = await fs.readFile(filePath, 'utf8');
         const fileBuffer = Buffer.from(data, 'utf8');
 
-        if (data.length <= MAX_TEXT_SIZE) {
-            await client.sendMessage(m.chat, {
-                text: `╭───(    TOXIC-MD    )───\n├───≫ FEATURE FILE ≪───\n├ \n├ File: ${funcName}.js\n├ Size: ${data.length} chars\n├ \n\`\`\`javascript\n${data}\n\`\`\`\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-            }, { quoted: fq });
-        }
+        await client.sendMessage(m.chat, {
+            text: `╭───(    TOXIC-MD    )───\n├───≫ FEATURE FILE ≪───\n├ \n├ File: ${funcName}.js\n├ Size: ${data.length} chars\n├ \n\`\`\`javascript\n${data}\n\`\`\`\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+        }, { quoted: fq });
 
         await client.sendMessage(m.chat, {
             document: fileBuffer,
