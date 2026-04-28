@@ -126,6 +126,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
             footer: { text: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
             header: { hasMediaAttachment: false },
             nativeFlowMessage: {
+              messageVersion: 1,
               buttons: [
                 {
                   name: 'quick_reply',
@@ -139,8 +140,7 @@ import { getFakeQuoted } from '../../lib/fakeQuoted.js';
                   name: 'quick_reply',
                   buttonParamsJson: JSON.stringify({ display_text: '👥 Groups', id: `${effectivePrefix}groupmenu` })
                 }
-              ],
-              messageParamsJson: ''
+              ]
             }
           }
         }), { quoted: fq, userJid: client.user.id });

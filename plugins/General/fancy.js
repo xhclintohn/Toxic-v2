@@ -106,6 +106,7 @@ export default {
             body: { text: styledText },
             footer: { text: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
             nativeFlowMessage: {
+              messageVersion: 1,
               buttons: [{
                 name: 'cta_copy',
                 buttonParamsJson: JSON.stringify({ display_text: '📋 Copy Text', copy_code: styledText })

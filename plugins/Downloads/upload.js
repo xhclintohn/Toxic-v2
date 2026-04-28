@@ -43,6 +43,7 @@ import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
                       body: { text: resultText },
                       footer: { text: '' },
                       nativeFlowMessage: {
+                          messageVersion: 1,
                           buttons: [{
                               name: 'cta_copy',
                               buttonParamsJson: JSON.stringify({ display_text: '📋 Copy Link', copy_code: link })

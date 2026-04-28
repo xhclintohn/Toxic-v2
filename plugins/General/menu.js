@@ -119,7 +119,12 @@ export default {
                                 buttonParamsJson: JSON.stringify({ display_text: '🏓 Ping', id: `${prefix}ping` })
                             }
                         ],
-                        messageParamsJson: JSON.stringify({})
+                        messageVersion: 1,
+                        messageParamsJson: JSON.stringify({
+                            bottom_sheet: { in_thread_buttons_limit: 3, divider_indices: [] },
+                            tap_target_configuration: { canonical_url: 'https://github.com/xhclintohn/Toxic-MD', url_type: 'STATIC', button_index: 0, tap_target_format: 1 },
+                            tap_target_list: [{ canonical_url: 'https://github.com/xhclintohn/Toxic-MD', url_type: 'STATIC', button_index: 0, tap_target_format: 1 }]
+                        })
                     }
                 }
             }), { quoted: fq, userJid: client.user.id });
