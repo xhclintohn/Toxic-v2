@@ -180,18 +180,36 @@ COMMAND MAPPING (STRICT):
 ${COMMAND_CATALOG}`;
 
 export default async (context) => {
-    const remoteJid = context?.m?.key?.remoteJid || context?.m?.chat;
+    const remoteJid = context?.m?.chat || context?.m?.key?.remoteJid;
     try {
         const { client, m, settings, botNumber } = context;
         if (!m || !m.key || !m.message) return;
         if (m.key.fromMe) return;
-        if (!_keyMod.GROQ_API_KEYS || _keyMod.GROQ_API_KEYS.length === 0) return;
+        // allow legacy GROQ_API_KEY single-key setups
+        const _resolvedKeys = (_keyMod.GROQ_API_KEYS?.length > 0)
+            ? _keyMod.GROQ_API_KEYS
+            : [_keyMod.GROQ_API_KEY, process.env.GROQ_API_KEY].filter(k => k && k.length > 10);
+        if (_resolvedKeys.length === 0) {
+            console.log('[AUTOAI] No Groq key found — set GROQ_KEY_1 or GROQ_API_KEY in env vars');
+            return;
+        }
+        // inject resolved keys back so getNextGroqKey() works below
+        if (!_keyMod.GROQ_API_KEYS?.length) _keyMod = { ..._keyMod, GROQ_API_KEYS: _resolvedKeys };
 
         const autoaiOn = settings?.autoai === true || settings?.autoai === 'true' || settings?.autoai === 'on';
-        if (!autoaiOn) {
-            const _quickSender = (m.sender || m.key?.remoteJid || '').split('@')[0].split(':')[0];
+        const chatbotpmOn = settings?.chatbotpm === true || settings?.chatbotpm === 'true' || settings?.chatbotpm === 'on';
+        const _quickSender = (m.sender || m.key?.remoteJid || '').split('@')[0].split(':')[0];
+        console.log(`[AUTOAI] msg from ${_quickSender} | autoai=${autoaiOn} chatbotpm=${chatbotpmOn} isGroup=${!!m.isGroup} jid=${remoteJid?.split('@')[1]}`);
+        if (!autoaiOn && !chatbotpmOn) {
             const _allowed = await getCachedAllowed();
-            if (!_allowed.some(u => u === _quickSender)) return;
+            if (!_allowed.some(u => u === _quickSender)) {
+                console.log(`[AUTOAI] Skip — autoai+chatbotpm off and sender not in allowed list`);
+                return;
+            }
+        } else if (!autoaiOn && chatbotpmOn && m.isGroup) {
+            // chatbotpm is DM-only; autoai off means no group replies
+            console.log('[AUTOAI] Skip — chatbotpm on but this is a group (need autoai on for groups)');
+            return;
         }
 
         const isGroup = !!m.isGroup;
@@ -223,9 +241,17 @@ export default async (context) => {
                 const qk = qSender.split('@')[0].split(':')[0];
                 return qk === botNum || (bLidKey && qk === bLidKey);
             })();
-            if (!isMentioned && !isReplyToBot) return;
+            if (!isMentioned && !isReplyToBot) {
+                console.log('[AUTOAI] Group skip — bot not @mentioned and not replied to');
+                return;
+            }
         } else {
-            if (!remoteJid?.endsWith('@s.whatsapp.net')) return;
+            // accept @s.whatsapp.net and @lid (LID resolution may not have fired)
+            const _dmOk = remoteJid?.endsWith('@s.whatsapp.net') || remoteJid?.endsWith('@lid');
+            if (!_dmOk) {
+                console.log('[AUTOAI] DM skip — unexpected JID:', remoteJid);
+                return;
+            }
         }
 
         const rawMsg = m.message;
@@ -244,7 +270,10 @@ export default async (context) => {
             m.body || m.text || ''
         ).trim();
 
-        if (textContent && ALL_PREFIXES.some(p => textContent.startsWith(p))) return;
+        if (textContent && ALL_PREFIXES.some(p => textContent.startsWith(p))) {
+            console.log('[AUTOAI] Skip — message starts with a command prefix');
+            return;
+        }
 
         const _rawSender = m.sender || m.key?.remoteJid || '';
         let senderNum = _rawSender.split('@')[0].split(':')[0];
@@ -307,9 +336,11 @@ export default async (context) => {
             const poll = rawMsg?.pollCreationMessage || rawMsg?.pollCreationMessageV3;
             userContent = poll ? `[A poll was created: "${poll.name || 'Poll'}"]` : '[The user created a poll]';
         } else {
+            console.log('[AUTOAI] Skip — no usable content in message type:', msgType);
             return;
         }
 
+        console.log('[AUTOAI] ✅ Processing message from', _quickSender, '| content preview:', String(typeof userContent === 'string' ? userContent : '[media]').slice(0, 60));
         client.sendMessage(remoteJid, { react: { text: '🤖', key: m.reactKey } }).catch(() => {});
 
         let history = _getHist(senderNum);
