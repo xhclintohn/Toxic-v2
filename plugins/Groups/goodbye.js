@@ -2,6 +2,7 @@ import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
 import { getGroupSettings, updateGroupSetting } from '../../database/config.js';
 import middleware from '../../utils/botUtil/middleware.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+import { getDeviceMode } from '../../lib/deviceMode.js';
 
 export default async (context) => {
     await middleware(context, async () => {
@@ -27,21 +28,28 @@ export default async (context) => {
                 const action = value === 'on';
                 if (isEnabled === action) {
                     await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } }).catch(() => {});
-                    return await client.sendMessage(m.chat, { text: fmt(`Bruh 🙄 Goodbye is already ${value.toUpperCase()} in this group. Were you dropped as a kid?`) }, { quoted: fq });
+                    return await client.sendMessage(m.chat, { text: fmt(`Bruh Goodbye is already ${value.toUpperCase()} in this group.`) }, { quoted: fq });
                 }
                 await updateGroupSetting(jid, 'goodbye', action);
                 await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
                 return await client.sendMessage(m.chat, {
-                    text: fmt(`Goodbye messages ${value.toUpperCase()}! 🔥 ${action ? "Leavers will get roasted on their way out 😈" : "Let them leave in silence like the nobodies they are 🧊"}`)
+                    text: fmt(`Goodbye messages ${value.toUpperCase()}! ${action ? "Leavers will get roasted on their way out" : "Let them leave in silence like the nobodies they are"}`)
                 }, { quoted: fq });
             }
 
-            // carousel + single_select (iOS  Android )
+            const bodyText = fmt(`Goodbye messages are currently *${isEnabled ? 'ON' : 'OFF'}*\nUse: *${prefix}goodbye on/off* to toggle.`);
+            const device = await getDeviceMode();
+
+            if (device === 'ios') {
+                await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
+                return await client.sendMessage(m.chat, { text: bodyText }, { quoted: fq });
+            }
+
             const toggleMsg = generateWAMessageFromContent(
                 m.chat,
                 proto.Message.fromObject({
                     interactiveMessage: {
-                        body: { text: fmt(`Goodbye messages are currently *${isEnabled ? 'ON 🥶' : 'OFF 😴'}*\n\nUse the button below to toggle.`) },
+                        body: { text: bodyText },
                         footer: { text: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
                         carouselMessage: {
                             cards: [{
@@ -55,8 +63,8 @@ export default async (context) => {
                                             sections: [{
                                                 title: 'Goodbye Messages',
                                                 rows: [
-                                                    { title: 'ON ', description: 'Enable goodbye messages', id: `${prefix}goodbye on` },
-                                                    { title: 'OFF ', description: 'Disable goodbye messages', id: `${prefix}goodbye off` }
+                                                    { title: 'ON', description: 'Enable goodbye messages', id: `${prefix}goodbye on` },
+                                                    { title: 'OFF', description: 'Disable goodbye messages', id: `${prefix}goodbye off` }
                                                 ]
                                             }]
                                         })
@@ -71,9 +79,9 @@ export default async (context) => {
             await client.relayMessage(m.chat, toggleMsg.message, { messageId: toggleMsg.key.id });
             await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } });
         } catch (error) {
-    await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } }).catch(() => {});
+            await client.sendMessage(m.chat, { react: { text: '', key: m.reactKey } }).catch(() => {});
             console.error('Toxic-MD: Error in goodbye.js:', error);
-            await client.sendMessage(m.chat, { text: fmt(`Something crashed. Typical. 💀 Error: ${error.message}`) }, { quoted: fq });
+            await client.sendMessage(m.chat, { text: fmt(`Something crashed. Error: ${error.message}`) }, { quoted: fq });
         }
     });
 };

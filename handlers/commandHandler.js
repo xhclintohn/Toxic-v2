@@ -67,7 +67,7 @@ const EXTRA_ALIASES = {
   github:     ['gh', 'git', 'gitinfo'],
   npm:        ['npminfo', 'nodepackage'],
   wallpaper:  ['wallpaperimg', 'bgimage'],
-  uptime:     ['ut', 'servertime', 'runtime'],
+  uptime:     ['up', 'ut', 'servertime', 'runtime', 'botuptime', 'howlong'],
   profile:    ['me', 'myprofile', 'getpp', 'whois'],
   settings:   ['config', 'botconfig', 'botsettings', 'mysettings'],
   ban:        ['blacklist', 'banuser'],

@@ -2,6 +2,7 @@ import { getSettings, updateSetting } from '../../database/config.js';
 import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
 import ownerMiddleware from '../../utils/botUtil/Ownermiddleware.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+import { getDeviceMode } from '../../lib/deviceMode.js';
 
 const MODES = {
     public:  { emoji: '🌐', label: 'PUBLIC',  desc: 'Everyone can use commands, anywhere.' },
@@ -19,13 +20,13 @@ const CRANKY = {
 
 export default {
     name: 'mode',
-    aliases: ['botmode', 'setmode'],
+    aliases: ['botmode', 'setmode', 'changemode', 'switchmode'],
     description: 'Control who can use the bot and where',
     run: async (context) => {
         await ownerMiddleware(context, async () => {
             const { client, m, args, prefix } = context;
             const fq = getFakeQuoted(m);
-        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+            await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
             const fmt = (title, lines) => {
                 const body = (Array.isArray(lines) ? lines : [lines]).map(l => `├ ${l}`).join('\n');
@@ -34,27 +35,45 @@ export default {
 
             const sendModeButtons = async (currentMode) => {
                 const sections = [{
-                    title: '⚙️ Select Bot Mode',
+                    title: 'Select Bot Mode',
                     highlight_label: '',
                     rows: [
-                        { header: '🌐 PUBLIC', title: `${currentMode === 'public' ? '▶ ' : ''}🌐 PUBLIC`, description: 'Everyone can use commands anywhere', id: `${prefix}mode public` },
-                        { header: '🔒 PRIVATE', title: `${currentMode === 'private' ? '▶ ' : ''}🔒 PRIVATE`, description: 'Only owner can use commands', id: `${prefix}mode private` },
-                        { header: '👥 GROUP', title: `${currentMode === 'group' ? '▶ ' : ''}👥 GROUP`, description: 'Groups only, DMs ignored', id: `${prefix}mode group` },
-                        { header: '📩 INBOX', title: `${currentMode === 'inbox' ? '▶ ' : ''}📩 INBOX`, description: 'DMs only, groups ignored', id: `${prefix}mode inbox` },
+                        { header: 'PUBLIC', title: `${currentMode === 'public' ? '> ' : ''}PUBLIC`, description: 'Everyone can use commands anywhere', id: `${prefix}mode public` },
+                        { header: 'PRIVATE', title: `${currentMode === 'private' ? '> ' : ''}PRIVATE`, description: 'Only owner can use commands', id: `${prefix}mode private` },
+                        { header: 'GROUP', title: `${currentMode === 'group' ? '> ' : ''}GROUP`, description: 'Groups only, DMs ignored', id: `${prefix}mode group` },
+                        { header: 'INBOX', title: `${currentMode === 'inbox' ? '> ' : ''}INBOX`, description: 'DMs only, groups ignored', id: `${prefix}mode inbox` },
                     ]
                 }];
+
+                const bodyText = `Current: ${MODES[currentMode]?.emoji || '🌐'} ${(currentMode || 'public').toUpperCase()} — tap to switch`;
+                const device = await getDeviceMode();
+
+                if (device === 'ios') {
+                    return await client.sendMessage(m.chat, {
+                        text: fmt('BOT MODE', [
+                            `Active: ${MODES[currentMode]?.emoji || '🌐'} ${(currentMode || 'public').toUpperCase()}`,
+                            ``,
+                            `PUBLIC  — Everyone can use commands everywhere`,
+                            `PRIVATE — Only you can use commands`,
+                            `GROUP   — Groups only, DMs ignored`,
+                            `INBOX   — DMs only, groups ignored`,
+                            ``,
+                            `Use: *${prefix}mode public/private/group/inbox*`
+                        ])
+                    }, { quoted: fq });
+                }
 
                 try {
                     const interactiveMsg = generateWAMessageFromContent(m.chat, proto.Message.fromObject({
                         interactiveMessage: {
-                            body: { text: `Current: ${MODES[currentMode]?.emoji || '🌐'} ${(currentMode || 'public').toUpperCase()} — tap to switch` },
+                            body: { text: bodyText },
                             footer: { text: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
                             header: { hasMediaAttachment: false },
                             nativeFlowMessage: {
                                 buttons: [
                                     {
                                         name: 'single_select',
-                                        buttonParamsJson: JSON.stringify({ title: '⚙️ Choose Mode', sections })
+                                        buttonParamsJson: JSON.stringify({ title: 'Choose Mode', sections })
                                     }
                                 ],
                                 messageParamsJson: ''
@@ -68,7 +87,7 @@ export default {
                         listMessage: {
                             title: 'BOT MODE',
                             description: `Current: ${(currentMode || 'public').toUpperCase()} — pick one to switch`,
-                            buttonText: '⚙️ Choose Mode',
+                            buttonText: 'Choose Mode',
                             listType: 1,
                             sections: sections.map(s => ({ title: s.title, rows: s.rows.map(r => ({ title: r.title, description: r.description, rowId: r.id })) })),
                             footer: '©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',

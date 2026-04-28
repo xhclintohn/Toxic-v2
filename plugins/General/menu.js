@@ -6,10 +6,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+import { getDeviceMode } from '../../lib/deviceMode.js';
 
 export default {
     name: 'menu',
-    aliases: ['commands', 'list'],
+    aliases: ['commands', 'list', 'cmds', 'm', 'help', 'cmd', 'commandlist', 'allcmds'],
     description: 'Displays the Toxic-MD command menu',
     run: async (context) => {
         const { client, m, mode, pict, botname, prefix } = context;
@@ -21,7 +22,7 @@ export default {
         const cleanText = bodyText.trimStart().slice(prefix.length).trimStart();
         const firstWord = cleanText.split(' ')[0].toLowerCase();
 
-        if (cleanText !== '' && !['menu', 'commands', 'list'].includes(firstWord)) {
+        if (cleanText !== '' && !['menu', 'commands', 'list', 'cmds', 'm', 'help', 'cmd', 'commandlist', 'allcmds'].includes(firstWord)) {
             const commandName = cleanText.split(' ')[0];
             return client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ Eʀʀᴏʀ ≪───\n├ \n├ Yo ${m.pushName}, what's with the\n├ extra bullshit after "${commandName}"?\n├ Just type *${prefix}menu* properly, moron.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
@@ -38,9 +39,9 @@ export default {
             `├ Prefix: ${prefix}\n` +
             `├ Mode: ${mode}\n` +
             `├ \n` +
-            `├ Select a button below.\n` +
+            `├ Select a category below.\n` +
             `╰──────────────────☉\n` +
-            `> xD`;
+            `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
         const sections = [
             {
@@ -48,7 +49,7 @@ export default {
                 highlight_label: '© 丨几匚',
                 rows: [
                     { title: '𝐅𝐮𝐥𝐥𝐌𝐞𝐧𝐮', description: 'Display all commands', id: `${prefix}fullmenu` },
-                    { title: '𝐃𝐞𝐯', description: "Send developer contact", id: `${prefix}dev` },
+                    { title: '𝐃𝐞𝐯', description: 'Send developer contact', id: `${prefix}dev` },
                     { title: '𝐑𝐞𝐩𝐨𝐫𝐭', description: 'Report a bug to dev', id: `${prefix}report` },
                 ],
             },
@@ -59,6 +60,7 @@ export default {
                     { title: '𝐏𝐢𝐧𝐠', description: 'Check bot speed', id: `${prefix}ping` },
                     { title: '𝐒𝐞𝐭𝐭𝐢𝐧𝐠𝐬', description: 'Show bot settings', id: `${prefix}settings` },
                     { title: '𝐌𝐨𝐝𝐞', description: 'Toggle bot mode', id: `${prefix}mode` },
+                    { title: '𝐔𝐩𝐭𝐢𝐦𝐞', description: 'Check how long bot has been running', id: `${prefix}uptime` },
                 ],
             },
             {
@@ -73,19 +75,26 @@ export default {
                     { title: '𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐌𝐞𝐧𝐮', description: 'Media downloaders', id: `${prefix}downloadmenu` },
                     { title: '𝐄𝐝𝐢𝐭𝐢𝐧𝐠𝐌𝐞𝐧𝐮', description: 'Media editing tools', id: `${prefix}editingmenu` },
                     { title: '𝐄𝐟𝐟𝐞𝐜𝐭𝐬𝐌𝐞𝐧𝐮', description: 'Text effect commands', id: `${prefix}effectsmenu` },
-                    { title: '𝐀𝐧𝐢𝐦𝐞𝐌𝐞𝐧𝐮', description: 'Anime image commands', id: `${prefix}animemenu` },
                     { title: '𝐔𝐭𝐢𝐥𝐬𝐌𝐞𝐧𝐮', description: 'Utility commands', id: `${prefix}utilsmenu` },
-                    { title: '𝐑𝐞𝐚𝐜𝐭𝐢𝐨𝐧𝐬𝐌𝐞𝐧𝐮', description: 'Reaction commands', id: `${prefix}reactionsmenu` },
                     { title: '𝐏𝐫𝐢𝐯𝐚𝐜𝐲𝐌𝐞𝐧𝐮', description: 'Privacy commands', id: `${prefix}privacymenu` },
                 ],
             },
         ];
 
+        const device = await getDeviceMode();
+
+        if (device === 'ios') {
+            await client.sendMessage(m.chat, {
+                text: menuText, mentions: [m.sender]
+            }, { quoted: fq });
+            return;
+        }
+
         try {
-            const msg = await generateWAMessageFromContent(m.chat, proto.Message.fromObject({
+            const msg = generateWAMessageFromContent(m.chat, proto.Message.fromObject({
                 interactiveMessage: {
                     body: { text: menuText },
-                    footer: { text: `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧` },
+                    footer: { text: '> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧' },
                     header: { hasMediaAttachment: false },
                     contextInfo: {
                         mentionedJid: [m.sender],
@@ -101,30 +110,24 @@ export default {
                         }
                     },
                     nativeFlowMessage: {
+                        messageVersion: 1,
                         buttons: [
                             {
                                 name: 'cta_url',
                                 buttonParamsJson: JSON.stringify({
-                                    display_text: '⭐ GitHub Repo',
+                                    display_text: 'GitHub Repo',
                                     url: 'https://github.com/xhclintohn/Toxic-MD',
                                     merchant_url: 'https://github.com/xhclintohn/Toxic-MD'
                                 })
                             },
                             {
-                                name: 'quick_reply',
-                                buttonParamsJson: JSON.stringify({ display_text: '📖 Full Menu', id: `${prefix}fullmenu` })
-                            },
-                            {
-                                name: 'quick_reply',
-                                buttonParamsJson: JSON.stringify({ display_text: 'Ping', id: `${prefix}ping` })
+                                name: 'single_select',
+                                buttonParamsJson: JSON.stringify({
+                                    title: 'Browse Commands',
+                                    sections: sections
+                                })
                             }
-                        ],
-                        messageVersion: 1,
-                        messageParamsJson: JSON.stringify({
-                            bottom_sheet: { in_thread_buttons_limit: 3, divider_indices: [] },
-                            tap_target_configuration: { canonical_url: 'https://github.com/xhclintohn/Toxic-MD', url_type: 'STATIC', button_index: 0, tap_target_format: 1 },
-                            tap_target_list: [{ canonical_url: 'https://github.com/xhclintohn/Toxic-MD', url_type: 'STATIC', button_index: 0, tap_target_format: 1 }]
-                        })
+                        ]
                     }
                 }
             }), { quoted: fq, userJid: client.user.id });
@@ -149,15 +152,15 @@ export default {
             }, { quoted: fq });
             await client.sendMessage(m.chat, {
                 listMessage: {
-                    title: '𝐕𝐈𝐄𝐖☇ 𝐎𝐏𝐓𝐈𝐎𝐍𝐒 ☑',
+                    title: '𝐕𝐈𝐄𝐖 𝐎𝐏𝐓𝐈𝐎𝐍𝐒',
                     description: 'Select a category to view its commands.',
-                    buttonText: '📖 Browse Commands',
+                    buttonText: 'Browse Commands',
                     listType: 1,
                     sections: sections.map(s => ({
                         title: s.title,
                         rows: s.rows.map(r => ({ title: r.title, description: r.description, rowId: r.id }))
                     })),
-                    footer: `> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                    footer: '> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧',
                 },
             }, { quoted: fq });
         }

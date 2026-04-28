@@ -1,6 +1,7 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getSettings, updateSetting } from '../../database/config.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+import { getDeviceMode } from '../../lib/deviceMode.js';
 
 const DEV_NUMBER = '254114885159';
 
@@ -43,35 +44,46 @@ export default {
 
             const isOn = settings.toxicagent === true || settings.toxicagent === 'true';
 
-            const _msg = generateWAMessageFromContent(m.chat, {
-                interactiveMessage: {
-                    body: {
-                        text: fmt('TOXICAGENT', [
+                        const _devMode = await getDeviceMode();
+            if (_devMode === 'ios') {
+                await client.sendMessage(m.chat, { text: fmt('TOXICAGENT', [
                             `Status: ${isOn ? '✅ ON' : '❌ OFF'}`,
                             'Handles: create/delete/rename repos, upload files,',
                             '         list branches, create issues, star repos',
                             '',
                             'Say "clear conversation" to reset memory'
-                        ])
-                    },
-                    footer: { text: '' },
-                    nativeFlowMessage: {
-                        buttons: [{
-                            name: 'single_select',
-                            buttonParamsJson: JSON.stringify({
-                                title: 'Toggle ToxicAgent',
-                                sections: [{
-                                    rows: [
-                                        { title: 'ON ✅', description: 'Enable GitHub AI agent', id: `${prefix}toxicai on` },
-                                        { title: 'OFF ❌', description: 'Disable GitHub AI agent', id: `${prefix}toxicai off` }
-                                    ]
-                                }]
-                            })
-                        }]
+                        ]) }, { quoted: fq });
+            } else {
+    const _msg = generateWAMessageFromContent(m.chat, {
+                    interactiveMessage: {
+                        body: {
+                            text: fmt('TOXICAGENT', [
+                                `Status: ${isOn ? '✅ ON' : '❌ OFF'}`,
+                                'Handles: create/delete/rename repos, upload files,',
+                                '         list branches, create issues, star repos',
+                                '',
+                                'Say "clear conversation" to reset memory'
+                            ])
+                        },
+                        footer: { text: '' },
+                        nativeFlowMessage: {
+                            buttons: [{
+                                name: 'single_select',
+                                buttonParamsJson: JSON.stringify({
+                                    title: 'Toggle ToxicAgent',
+                                    sections: [{
+                                        rows: [
+                                            { title: 'ON ✅', description: 'Enable GitHub AI agent', id: `${prefix}toxicai on` },
+                                            { title: 'OFF ❌', description: 'Disable GitHub AI agent', id: `${prefix}toxicai off` }
+                                        ]
+                                    }]
+                                })
+                            }]
+                        }
                     }
-                }
-            }, { quoted: fq });
-            await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
+                }, { quoted: fq });
+                await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
+            }
         } catch {
             client.sendMessage(m.chat, { text: fmt('TOXICAGENT', 'something broke. try again.') }, { quoted: fq });
         }

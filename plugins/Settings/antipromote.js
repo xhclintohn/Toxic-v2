@@ -2,6 +2,7 @@ import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getSettings, getGroupSettings, updateGroupSetting } from '../../database/config.js';
 import ownerMiddleware from '../../utils/botUtil/Ownermiddleware.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+import { getDeviceMode } from '../../lib/deviceMode.js';
 
 export default async (context) => {
   await ownerMiddleware(context, async () => {
@@ -40,32 +41,37 @@ export default async (context) => {
       return await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote ${value.toUpperCase()}!\n├ Promotions are under my control, king!`) }, { quoted: fq });
     }
 
+        const _devMode = await getDeviceMode();
+    if (_devMode === 'ios') {
+        await client.sendMessage(m.chat, { text: formatStylishReply("ANTIPROMOTE", `Antipromote's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, fool!`) }, { quoted: fq });
+    } else {
     const _msg = generateWAMessageFromContent(
-        m.chat,
-        {
-            interactiveMessage: {
-                body: { text: formatStylishReply("ANTIPROMOTE", `Antipromote's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, fool!`) },
-                footer: { text: '' },
-                nativeFlowMessage: {
-                    buttons: [
-                        {
-                            name: 'single_select',
-                            buttonParamsJson: JSON.stringify({
-                                title: 'Choose an option',
-                                sections: [{
-                                    rows: [
-                                                                                                { title: 'ON ✅', id: `${prefix}antipromote on` },
-                                                        { title: 'OFF ❌', id: `${prefix}antipromote off` }
-                                    ]
-                                }]
-                            })
-                        }
-                    ]
+            m.chat,
+            {
+                interactiveMessage: {
+                    body: { text: formatStylishReply("ANTIPROMOTE", `Antipromote's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, fool!`) },
+                    footer: { text: '' },
+                    nativeFlowMessage: {
+                        buttons: [
+                            {
+                                name: 'single_select',
+                                buttonParamsJson: JSON.stringify({
+                                    title: 'Choose an option',
+                                    sections: [{
+                                        rows: [
+                                                                                                    { title: 'ON ✅', id: `${prefix}antipromote on` },
+                                                            { title: 'OFF ❌', id: `${prefix}antipromote off` }
+                                        ]
+                                    }]
+                                })
+                            }
+                        ]
+                    }
                 }
-            }
-        },
-        { quoted: fq }
-      );
-      await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
+            },
+            { quoted: fq }
+          );
+          await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
+    }
   });
 };

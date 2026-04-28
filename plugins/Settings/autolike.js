@@ -2,6 +2,7 @@ import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getSettings, updateSetting } from '../../database/config.js';
 import ownerMiddleware from '../../utils/botUtil/Ownermiddleware.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+import { getDeviceMode } from '../../lib/deviceMode.js';
 
 export default async (context) => {
   await ownerMiddleware(context, async () => {
@@ -38,31 +39,36 @@ export default async (context) => {
         ? `ON (${currentEmoji === 'random' ? 'Random emojis' : currentEmoji + ' emoji'})`
         : 'OFF';
 
-      const _msg = generateWAMessageFromContent(
-        m.chat,
-        {
-          interactiveMessage: {
-            body: { text: fmtMsg(`Current: ${statusText}\n├ \n├ Use "${prefix}reaction <emoji>" to change emoji`) },
-            footer: { text: '' },
-            nativeFlowMessage: {
-              buttons: [{
-                name: 'single_select',
-                buttonParamsJson: JSON.stringify({
-                  title: 'Choose an option',
-                  sections: [{
-                    rows: [
-                      { title: 'ON ✅', id: `${prefix}autolike on` },
-                      { title: 'OFF ❌', id: `${prefix}autolike off` }
-                    ]
+            const _devMode = await getDeviceMode();
+      if (_devMode === 'ios') {
+          await client.sendMessage(m.chat, { text: fmtMsg(`Current: ${statusText}\n├ \n├ Use "${prefix}reaction <emoji>" to change emoji`) }, { quoted: fq });
+      } else {
+    const _msg = generateWAMessageFromContent(
+            m.chat,
+            {
+              interactiveMessage: {
+                body: { text: fmtMsg(`Current: ${statusText}\n├ \n├ Use "${prefix}reaction <emoji>" to change emoji`) },
+                footer: { text: '' },
+                nativeFlowMessage: {
+                  buttons: [{
+                    name: 'single_select',
+                    buttonParamsJson: JSON.stringify({
+                      title: 'Choose an option',
+                      sections: [{
+                        rows: [
+                          { title: 'ON ✅', id: `${prefix}autolike on` },
+                          { title: 'OFF ❌', id: `${prefix}autolike off` }
+                        ]
+                      }]
+                    })
                   }]
-                })
-              }]
-            }
-          }
-        },
-        { quoted: fq }
-      );
-      await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
+                }
+              }
+            },
+            { quoted: fq }
+          );
+          await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
+      }
     } catch (error) {
     await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error('Autolike command error:', error);

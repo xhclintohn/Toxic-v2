@@ -2,6 +2,7 @@ import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getSettings, updateSetting } from '../../database/config.js';
 import ownerMiddleware from '../../utils/botUtil/Ownermiddleware.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+import { getDeviceMode } from '../../lib/deviceMode.js';
 
 export default async (context) => {
     await ownerMiddleware(context, async () => {
@@ -38,31 +39,36 @@ export default async (context) => {
                 return await client.sendMessage(m.chat, { text: fmt(`Multi-prefix: *OFF 🧊* — single prefix only: *${settings.prefix || '.'}*`) }, { quoted: fq });
             }
 
-            const _multiprefixMsg = generateWAMessageFromContent(
-                m.chat,
-                {
-                    interactiveMessage: {
-                        body: { text: fmt(`Multi-prefix: *${isEnabled ? 'ON 🔥' : 'OFF 🧊'}*\n├ When ON: . ! / # all trigger commands.\n├ When OFF: only *${settings.prefix || '.'}* works.`) },
-                        footer: { text: '' },
-                        nativeFlowMessage: {
-                            buttons: [{
-                                name: 'single_select',
-                                buttonParamsJson: JSON.stringify({
-                                    title: 'Choose an option',
-                                    sections: [{
-                                        rows: [
-                                            { title: 'ON 🔥', id: `${prefix}multiprefix on` },
-                                            { title: 'OFF 🧊', id: `${prefix}multiprefix off` }
-                                        ]
-                                    }]
-                                })
-                            }]
+                        const _devMode = await getDeviceMode();
+            if (_devMode === 'ios') {
+                await client.sendMessage(m.chat, { text: fmt(`Multi-prefix: *${isEnabled ? 'ON 🔥' : 'OFF 🧊'}*\n├ When ON: . ! / # all trigger commands.\n├ When OFF: only *${settings.prefix || '.'}* works.`) }, { quoted: fq });
+            } else {
+    const _multiprefixMsg = generateWAMessageFromContent(
+                    m.chat,
+                    {
+                        interactiveMessage: {
+                            body: { text: fmt(`Multi-prefix: *${isEnabled ? 'ON 🔥' : 'OFF 🧊'}*\n├ When ON: . ! / # all trigger commands.\n├ When OFF: only *${settings.prefix || '.'}* works.`) },
+                            footer: { text: '' },
+                            nativeFlowMessage: {
+                                buttons: [{
+                                    name: 'single_select',
+                                    buttonParamsJson: JSON.stringify({
+                                        title: 'Choose an option',
+                                        sections: [{
+                                            rows: [
+                                                { title: 'ON 🔥', id: `${prefix}multiprefix on` },
+                                                { title: 'OFF 🧊', id: `${prefix}multiprefix off` }
+                                            ]
+                                        }]
+                                    })
+                                }]
+                            }
                         }
-                    }
-                },
-                { quoted: fq }
-            );
-            await client.relayMessage(m.chat, _multiprefixMsg.message, { messageId: _multiprefixMsg.key.id });
+                    },
+                    { quoted: fq }
+                );
+                await client.relayMessage(m.chat, _multiprefixMsg.message, { messageId: _multiprefixMsg.key.id });
+            }
         } catch (err) {
     await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });

@@ -4,6 +4,7 @@ import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 
 import { herokuAppName as HEROKU_APP_NAME, getHerokuApiKey } from '../../config/settings.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+import { getDeviceMode } from '../../lib/deviceMode.js';
 const HEROKU_API_KEY = getHerokuApiKey();
 
 export default async (context) => {
@@ -61,14 +62,63 @@ export default async (context) => {
             const alreadyDeployed = deployedSha.includes(latestSha);
 
             if (alreadyDeployed) {
-                const msg = generateWAMessageFromContent(
+                                const _devMode = await getDeviceMode();
+                if (_devMode === 'ios') {
+                    await client.sendMessage(m.chat, { text: "Your bot is already on the latest version, genius." }, { quoted: fq });
+                } else {
+    const msg = generateWAMessageFromContent(
+                        m.chat,
+                        {
+                            viewOnceMessage: {
+                                message: {
+                                    interactiveMessage: {
+                                        body: {
+                                            text: "Your bot is already on the latest version, genius."
+                                        },
+                                        footer: {
+                                            text: "Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
+                                        },
+                                        nativeFlowMessage: {
+                                            buttons: [
+                                                {
+                                                    name: "single_select",
+                                                    buttonParamsJson: JSON.stringify({
+                                                        title: "Want something else?",
+                                                        sections: [
+                                                            {
+                                                                rows: [
+                                                                    { title: "Menu", description: "Get command list", id: `${prefix}menu` },
+                                                                    { title: "Settings", description: "Bot settings", id: `${prefix}settings` },
+                                                                ],
+                                                            },
+                                                        ],
+                                                    }),
+                                                },
+                                            ],
+                                        },
+                                    }
+                                }
+                            }
+                        },
+                        { quoted: fq }
+                    );
+
+                    return await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
+                }
+            }
+
+                        const _devMode = await getDeviceMode();
+            if (_devMode === 'ios') {
+                await client.sendMessage(m.chat, { text: `🆕 Update Available, Dumbass\n\nNew version found. You're still using outdated garbage.\n\n📌 *Commit:* ${latestCommit.commit.message}\n👤 *Author:* ${latestCommit.commit.author.name}\n🕒 *Date:* ${new Date(latestCommit.commit.author.date).toLocaleString()}\n\nTo update your worthless bot, tap the button below. if you're unable to tap the buttons type ${prefix}triggerupdate Don't ask me how to tap, you monkey. 🐒😂` }, { quoted: fq });
+            } else {
+    const msg = generateWAMessageFromContent(
                     m.chat,
                     {
                         viewOnceMessage: {
                             message: {
                                 interactiveMessage: {
                                     body: {
-                                        text: "Your bot is already on the latest version, genius."
+                                        text: `🆕 Update Available, Dumbass\n\nNew version found. You're still using outdated garbage.\n\n📌 *Commit:* ${latestCommit.commit.message}\n👤 *Author:* ${latestCommit.commit.author.name}\n🕒 *Date:* ${new Date(latestCommit.commit.author.date).toLocaleString()}\n\nTo update your worthless bot, tap the button below. if you're unable to tap the buttons type ${prefix}triggerupdate Don't ask me how to tap, you monkey. 🐒😂`
                                     },
                                     footer: {
                                         text: "Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
@@ -78,12 +128,13 @@ export default async (context) => {
                                             {
                                                 name: "single_select",
                                                 buttonParamsJson: JSON.stringify({
-                                                    title: "Want something else?",
+                                                    title: "UPDATE OPTIONS",
                                                     sections: [
                                                         {
+                                                            title: "What do you want?",
                                                             rows: [
-                                                                { title: "Menu", description: "Get command list", id: `${prefix}menu` },
-                                                                { title: "Settings", description: "Bot settings", id: `${prefix}settings` },
+                                                                { title: "🚀 Trigger Update", description: "Update now", id: `${prefix}triggerupdate` },
+                                                                { title: "Menu", description: "Back to command list", id: `${prefix}menu` },
                                                             ],
                                                         },
                                                     ],
@@ -98,48 +149,8 @@ export default async (context) => {
                     { quoted: fq }
                 );
 
-                return await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
+                await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
             }
-
-            const msg = generateWAMessageFromContent(
-                m.chat,
-                {
-                    viewOnceMessage: {
-                        message: {
-                            interactiveMessage: {
-                                body: {
-                                    text: `🆕 Update Available, Dumbass\n\nNew version found. You're still using outdated garbage.\n\n📌 *Commit:* ${latestCommit.commit.message}\n👤 *Author:* ${latestCommit.commit.author.name}\n🕒 *Date:* ${new Date(latestCommit.commit.author.date).toLocaleString()}\n\nTo update your worthless bot, tap the button below. if you're unable to tap the buttons type ${prefix}triggerupdate Don't ask me how to tap, you monkey. 🐒😂`
-                                },
-                                footer: {
-                                    text: "Pσɯҽɾҽԃ Ⴆყ Tσxιƈ-ɱԃȥ"
-                                },
-                                nativeFlowMessage: {
-                                    buttons: [
-                                        {
-                                            name: "single_select",
-                                            buttonParamsJson: JSON.stringify({
-                                                title: "UPDATE OPTIONS",
-                                                sections: [
-                                                    {
-                                                        title: "What do you want?",
-                                                        rows: [
-                                                            { title: "🚀 Trigger Update", description: "Update now", id: `${prefix}triggerupdate` },
-                                                            { title: "Menu", description: "Back to command list", id: `${prefix}menu` },
-                                                        ],
-                                                    },
-                                                ],
-                                            }),
-                                        },
-                                    ],
-                                },
-                            }
-                        }
-                    }
-                },
-                { quoted: fq }
-            );
-
-            await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
 
         } catch (error) {
             const errorMessage = error.response?.data?.message || error.message;

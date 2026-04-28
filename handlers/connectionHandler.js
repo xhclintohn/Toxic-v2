@@ -4,16 +4,17 @@ import { DisconnectReason, generateWAMessageFromContent } from '@whiskeysockets/
 import { addSudoUser, getSudoUsers } from '../database/config.js';
 import { getCachedSettings } from '../lib/settingsCache.js';
 import { commands, totalCommands } from '../handlers/commandHandler.js';
+import { getDeviceMode } from '../lib/deviceMode.js';
 
 const botName = process.env.BOTNAME || "Toxic-MD";
 let hasSentStartMessage = false;
 
 function getGreeting() {
   const hour = DateTime.now().setZone("Africa/Nairobi").hour;
-  if (hour >= 5 && hour < 12) return "Hey there! Ready to kick off the day? 🚀";
+  if (hour >= 5 && hour < 12) return "Hey there! Ready to kick off the day?";
   if (hour >= 12 && hour < 18) return "What's up? Time to make things happen!";
-  if (hour >= 18 && hour < 22) return "Evening vibes! Let's get to it! 🌟";
-  return "Late night? Let's see what's cooking! 🌙";
+  if (hour >= 18 && hour < 22) return "Evening vibes! Let's get to it!";
+  return "Late night? Let's see what's cooking!";
 }
 
 function getCurrentTime() {
@@ -98,36 +99,43 @@ async function connectionHandler(socket, connectionUpdate, reconnect) {
           viewOnce: true
         });
 
-        const buttonsMsg = generateWAMessageFromContent(
-  botJid,
-  {
-    interactiveMessage: {
-      body: {
-        text: `*Bot is ready!*\n*Pick an option below to get started.*`
-      },
-      footer: { text: `Powered by ${botName}` },
-      nativeFlowMessage: {
-        messageVersion: 1,
-        buttons: [
-          {
-            name: 'quick_reply',
-            buttonParamsJson: JSON.stringify({ display_text: 'Menu', id: `${effectivePrefix}menu` })
-          },
-          {
-            name: 'quick_reply',
-            buttonParamsJson: JSON.stringify({ display_text: 'Settings', id: `${effectivePrefix}settings` })
-          },
-          {
-            name: 'quick_reply',
-            buttonParamsJson: JSON.stringify({ display_text: 'Ping', id: `${effectivePrefix}ping` })
-          }
-        ]
-      }
-    }
-  },
-  {}
-);
-        await socket.relayMessage(botJid, buttonsMsg.message, { messageId: buttonsMsg.key.id });
+        const device = await getDeviceMode();
+
+        if (device !== 'ios') {
+          const buttonsMsg = generateWAMessageFromContent(
+            botJid,
+            {
+              interactiveMessage: {
+                body: {
+                  text: `*Bot is ready!*\n*Pick an option below to get started.*`
+                },
+                footer: { text: `Powered by ${botName}` },
+                nativeFlowMessage: {
+                  messageVersion: 1,
+                  buttons: [
+                    {
+                      name: 'single_select',
+                      buttonParamsJson: JSON.stringify({
+                        title: 'Get Started',
+                        sections: [{
+                          title: 'Quick Actions',
+                          rows: [
+                            { title: 'Menu', description: 'View all commands', id: `${effectivePrefix}menu` },
+                            { title: 'Settings', description: 'Bot configuration', id: `${effectivePrefix}settings` },
+                            { title: 'Ping', description: 'Check bot speed', id: `${effectivePrefix}ping` },
+                            { title: 'Uptime', description: 'How long bot has been running', id: `${effectivePrefix}uptime` }
+                          ]
+                        }]
+                      })
+                    }
+                  ]
+                }
+              }
+            },
+            {}
+          );
+          await socket.relayMessage(botJid, buttonsMsg.message, { messageId: buttonsMsg.key.id });
+        }
       } catch (error) {}
 
       hasSentStartMessage = true;

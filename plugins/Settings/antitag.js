@@ -2,6 +2,7 @@ import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getGroupSettings, updateGroupSetting } from '../../database/config.js';
 import ownerMiddleware from '../../utils/botUtil/Ownermiddleware.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+import { getDeviceMode } from '../../lib/deviceMode.js';
 
 export default async (context) => {
     await ownerMiddleware(context, async () => {
@@ -47,32 +48,37 @@ export default async (context) => {
             return await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag has been turned ${value.toUpperCase()} for this group.`) }, { quoted: fq });
         }
 
-        const _msg = generateWAMessageFromContent(
-        m.chat,
-        {
-            interactiveMessage: {
-                body: { text: formatStylishReply("ANTITAG", `Antitag's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, peasant!`) },
-                footer: { text: '' },
-                nativeFlowMessage: {
-                    buttons: [
-                        {
-                            name: 'single_select',
-                            buttonParamsJson: JSON.stringify({
-                                title: 'Choose an option',
-                                sections: [{
-                                    rows: [
-                                                                                                { title: 'ON ✅', id: `${prefix}antitag on` },
-                                                        { title: 'OFF ❌', id: `${prefix}antitag off` }
-                                    ]
-                                }]
-                            })
-                        }
-                    ]
+                const _devMode = await getDeviceMode();
+        if (_devMode === 'ios') {
+            await client.sendMessage(m.chat, { text: formatStylishReply("ANTITAG", `Antitag's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, peasant!`) }, { quoted: fq });
+        } else {
+    const _msg = generateWAMessageFromContent(
+            m.chat,
+            {
+                interactiveMessage: {
+                    body: { text: formatStylishReply("ANTITAG", `Antitag's ${isEnabled ? 'ON' : 'OFF'} right now. Pick one, peasant!`) },
+                    footer: { text: '' },
+                    nativeFlowMessage: {
+                        buttons: [
+                            {
+                                name: 'single_select',
+                                buttonParamsJson: JSON.stringify({
+                                    title: 'Choose an option',
+                                    sections: [{
+                                        rows: [
+                                                                                                    { title: 'ON ✅', id: `${prefix}antitag on` },
+                                                            { title: 'OFF ❌', id: `${prefix}antitag off` }
+                                        ]
+                                    }]
+                                })
+                            }
+                        ]
+                    }
                 }
-            }
-        },
-        { quoted: fq }
-      );
-      await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
+            },
+            { quoted: fq }
+          );
+          await client.relayMessage(m.chat, _msg.message, { messageId: _msg.key.id });
+        }
     });
 };

@@ -1,5 +1,6 @@
 import { generateWAMessageFromContent, proto } from '@whiskeysockets/baileys';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+import { getDeviceMode } from '../../lib/deviceMode.js';
 
 const GITHUB = 'https://github.com/xhclintohn/Toxic-MD';
 
@@ -43,39 +44,44 @@ export default {
 
         try {
             // carousel + single_select (BuuClient-verified: iOS  Android )
-            const carouselMsg = generateWAMessageFromContent(
-                m.chat,
-                proto.Message.fromObject({
-                    interactiveMessage: {
-                        body: { text: 'Test 2 of 5 — carousel single_select\n\nTap the button below to open a selection list.' },
-                        footer: { text: 'Toxic-MD' },
-                        carouselMessage: {
-                            cards: [{
-                                header: { title: 'Quick Commands', hasMediaAttachment: false },
-                                body: { text: 'Pick a command to run:' },
-                                nativeFlowMessage: {
-                                    buttons: [{
-                                        name: 'single_select',
-                                        buttonParamsJson: JSON.stringify({
-                                            title: 'Select a command',
-                                            sections: [{
-                                                title: 'Bot Commands',
-                                                rows: [
-                                                    { title: 'Ping', description: 'Check bot response time', id: `${prefix}ping` },
-                                                    { title: 'Alive', description: 'Confirm bot is running', id: `${prefix}alive` },
-                                                    { title: 'Menu', description: 'Open the main menu', id: `${prefix}menu` }
-                                                ]
-                                            }]
-                                        })
-                                    }]
-                                }
-                            }]
+                        const _devMode = await getDeviceMode();
+            if (_devMode === 'ios') {
+                await client.sendMessage(m.chat, { text: 'Test 2 of 5 — carousel single_select\n\nTap the button below to open a selection list.' }, { quoted: fq });
+            } else {
+    const carouselMsg = generateWAMessageFromContent(
+                    m.chat,
+                    proto.Message.fromObject({
+                        interactiveMessage: {
+                            body: { text: 'Test 2 of 5 — carousel single_select\n\nTap the button below to open a selection list.' },
+                            footer: { text: 'Toxic-MD' },
+                            carouselMessage: {
+                                cards: [{
+                                    header: { title: 'Quick Commands', hasMediaAttachment: false },
+                                    body: { text: 'Pick a command to run:' },
+                                    nativeFlowMessage: {
+                                        buttons: [{
+                                            name: 'single_select',
+                                            buttonParamsJson: JSON.stringify({
+                                                title: 'Select a command',
+                                                sections: [{
+                                                    title: 'Bot Commands',
+                                                    rows: [
+                                                        { title: 'Ping', description: 'Check bot response time', id: `${prefix}ping` },
+                                                        { title: 'Alive', description: 'Confirm bot is running', id: `${prefix}alive` },
+                                                        { title: 'Menu', description: 'Open the main menu', id: `${prefix}menu` }
+                                                    ]
+                                                }]
+                                            })
+                                        }]
+                                    }
+                                }]
+                            }
                         }
-                    }
-                }),
-                { quoted: fq }
-            );
-            await client.relayMessage(m.chat, carouselMsg.message, { messageId: carouselMsg.key.id });
+                    }),
+                    { quoted: fq }
+                );
+                await client.relayMessage(m.chat, carouselMsg.message, { messageId: carouselMsg.key.id });
+            }
         } catch {
             await m.reply('carousel single_select failed to render.');
         }

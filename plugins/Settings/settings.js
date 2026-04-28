@@ -154,6 +154,13 @@ export default {
           `${prefix}stealth on/off`,
           `${prefix}stealth on`
         ) +
+                fmt(
+          'Device Mode',
+          'Button display mode: android uses select list buttons, ios uses text-only responses.',
+          settings.device || process.env.DEVICE || 'default (android)',
+          `\${prefix}device android/ios/default`,
+          `\${prefix}device ios`
+        ) +
         `├───≫ Tips ≪───\n` +
         `├ Only owner/sudo can change settings.\n` +
         `├ Settings save instantly to database.\n` +
