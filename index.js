@@ -6,6 +6,19 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const _nativeLog = console.log;
+console.log = (...a) => {
+    if (typeof a[0] === 'string' && (
+        a[0] === 'Closing session:' ||
+        a[0] === 'Closing open session in favor of incoming prekey bundle' ||
+        a[0] === 'Failed to decrypt message with any known session' ||
+        a[0].startsWith('Session error:') ||
+        a[0].startsWith('Bad MAC') ||
+        a[0].startsWith('[LID] ')
+    )) return;
+    _nativeLog(...a);
+};
+
 import toxicConnect, { useMultiFileAuthState, DisconnectReason, downloadContentFromMessage, jidDecode, proto, getContentType, makeCacheableSignalKeyStore, Browsers, generateWAMessageContent, generateWAMessageFromContent, jidNormalizedUser, S_WHATSAPP_NET } from '@whiskeysockets/baileys';
 import { makeStore } from './lib/MakeStore.js';
 

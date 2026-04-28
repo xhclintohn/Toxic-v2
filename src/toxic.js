@@ -30,6 +30,7 @@ import { lidMappingCache } from '../handlers/smsg.js';
 import { resolveTargetJid, resolveSenderJid } from '../lib/lidResolver.js';
 
 const DEV_NUMBER = '254114885159';
+const OWNER_NUMBER_ENV = (process.env.OWNER_NUMBER || '').replace(/\D/g, '').slice(-12) || null;
 
 process.setMaxListeners(50);
 cleanupOldMessages();
@@ -374,7 +375,8 @@ export default async (client, m, chatUpdate, store) => {
         const itsMe = senderNormalized === botNormalized;
         let isDev = isDevNumber(m.sender);
         const isSudo = sudoUsers.some(s => normalizeNumber(String(s)) === senderNormalized);
-        const Owner = itsMe || isDev || isSudo;
+        const isEnvOwner = !!(OWNER_NUMBER_ENV && senderNormalized === OWNER_NUMBER_ENV);
+        const Owner = itsMe || isDev || isSudo || isEnvOwner;
         let text = args.join(" ");
         const arg = budy.trim().substring(budy.indexOf(" ") + 1);
         const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
@@ -537,7 +539,7 @@ export default async (client, m, chatUpdate, store) => {
                     msgToxic, botNumber, itsMe, packname: settings.packname, generateProfilePicture, groupMetadata: m.metadata || {},
                     toxicspeed, mycode, fetchJson, exec, getRandom, UploadFileUgu, TelegraPh, prefix: usedPrefix, cmd,
                     botname, mode, gcpresence, antitag, antidelete: antideleteSetting, fetchBuffer, sendJson, settings,
-                    getGroupAdmins: () => [], pict, Tag, stealth, multiprefix, isDev, isSudo, fakeQuoted, fq: fakeQuoted,
+                    getGroupAdmins: () => [], pict, Tag, stealth, multiprefix, isDev, isSudo, isEnvOwner, fakeQuoted, fq: fakeQuoted,
                     isGroup: m.isGroup, command: commandName, sock: client
                 };
                 if (typeof cmd.run === 'function') await cmd.run(stCtx);
@@ -752,7 +754,7 @@ export default async (client, m, chatUpdate, store) => {
                 }
                 const cmdCtx = {
                     client, m, args, text, prefix: usedPrefix, command: commandName, pushname, botNumber,
-                    itsMe, isDev, isSudo, Owner, settings, Tag, msgToxic, budy, sock: client, store,
+                    itsMe, isDev, isSudo, isEnvOwner, Owner, settings, Tag, msgToxic, budy, sock: client, store,
                     isAdmin, isBotAdmin, mode, pict, botname, totalCommands, isGroup: m.isGroup,
                     participants, groupMetadata, body, fq: fakeQuoted, fakeQuoted, mime, qmsg,
                     packname: settings.packname, generateProfilePicture, toxicspeed, mycode, fetchJson,
