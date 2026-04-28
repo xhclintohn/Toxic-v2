@@ -652,7 +652,7 @@ async function startToxic() {
               if (_svSettings?.autoview === true || _svSettings?.autoview === 'true' || _svSettings?.autoview === 1) {
                 try {
                   await client.sendReceipts([_resolvedKey], 'read');
- }
+                } catch (e) {}
               }
 
               if (_svSettings?.autolike === true || _svSettings?.autolike === 'true' || _svSettings?.autolike === 1) {
@@ -667,7 +667,7 @@ async function startToxic() {
                     { react: { text: _emoji, key: { ...mek.key, participant: _posterJid } } },
                     { statusJidList: [_posterJid, _botJid].filter(Boolean) }
                   );
- }
+                } catch (e) {}
               }
             })();
             return;

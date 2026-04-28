@@ -723,6 +723,7 @@ export default async (client, m, chatUpdate, store) => {
                     } catch (error) { console.log('❌ [ANTIEDIT ERROR]:', error.message); }
                 }
             }
+        })().catch(() => {});
 
         if (cmd) {
             try {
