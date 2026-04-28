@@ -276,6 +276,15 @@ export default async (client, m, chatUpdate, store) => {
         if (!_fmBody && m.message?.templateButtonReplyMessage?.selectedId) {
             _fmBody = m.message.templateButtonReplyMessage.selectedId;
         }
+        if (!_fmBody && m.message?.deviceSentMessage?.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson) {
+            try { const _pfj = m.message.deviceSentMessage.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson; _fmBody = (typeof _pfj === 'string' ? JSON.parse(_pfj) : _pfj)?.id || ''; } catch {}
+        }
+        if (!_fmBody && m.message?.deviceSentMessage?.message?.buttonsResponseMessage?.selectedButtonId) {
+            _fmBody = m.message.deviceSentMessage.message.buttonsResponseMessage.selectedButtonId;
+        }
+        if (!_fmBody && m.message?.ephemeralMessage?.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson) {
+            try { const _pfj = m.message.ephemeralMessage.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson; _fmBody = (typeof _pfj === 'string' ? JSON.parse(_pfj) : _pfj)?.id || ''; } catch {}
+        }
         if (!_fmBody || !_allPfx.some(p => _fmBody.startsWith(p))) return;
     }
 
@@ -779,7 +788,7 @@ export default async (client, m, chatUpdate, store) => {
             prefix: usedPrefix, fq: fakeQuoted, pushname }).catch(e => console.log('❌ [AUTOAI]:', e.message));
 
         // toxicai: developer-only GitHub AI agent
-        if (settings?.toxicai === true || settings?.toxicai === 'true') {
+        if (settings?.toxicagent === true || settings?.toxicagent === 'true') {
             toxicaiFeature({ client, m, body, isDev, settings, fq: fakeQuoted, prefix: usedPrefix }).catch(e => console.log('❌ [TOXICAI]:', e.message));
         }
 
