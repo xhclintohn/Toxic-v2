@@ -39,8 +39,13 @@ export default async (context) => {
             }
             msg += "╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧";
 
-            await client.sendMessage(m.sender, { text: msg }, { quoted: fq });
-            await m.reply("╭───(    TOXIC-MD    )───\n├ Vars sent to your DM only. 🔒\n├ Sensitive keys are always redacted.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+            const dmJid = typeof m.sender === 'string' && m.sender.endsWith('@s.whatsapp.net') ? m.sender : null;
+            if (dmJid) {
+                await client.sendMessage(dmJid, { text: msg }, { quoted: fq });
+                await m.reply("╭───(    TOXIC-MD    )───\n├ Vars sent to your DM only. 🔒\n├ Sensitive keys are always redacted.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+            } else {
+                await m.reply("╭───(    TOXIC-MD    )───\n├ Couldn't resolve your JID for DM.\n├ Use this command from DM only.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧");
+            }
         } catch (error) {
     await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
             await m.reply(`╭───(    TOXIC-MD    )───\n├ Failed to fetch config vars.\n├ ${error.response?.data || error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);

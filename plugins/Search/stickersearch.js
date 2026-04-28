@@ -3,8 +3,8 @@ import axios from 'axios';
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 
 export default {
-  name: 'sticker',
-  aliases: ['s', 'stick'],
+  name: 'stickersearch',
+  aliases: ['ss', 'stick', 'stickers'],
   description: 'Fetches GIF stickers from Tenor with your search term',
   run: async (context) => {
     const { client, m, text, botname } = context;
