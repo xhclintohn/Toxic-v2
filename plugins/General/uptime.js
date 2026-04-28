@@ -24,7 +24,7 @@ export default async (context) => {
     };
 
     const uptimeText = formatUptime(process.uptime());
-    const replyText = `╭───(    TOXIC-MD    )───\n├───≫ Uᴘᴛɪᴍᴇ ≪───\n├ \n├ *${botname} Uptime, Bitches*\n├ \n├ I've been awake for *${uptimeText}*,\n├ running shit like a boss.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+    const replyText = `╭───(    TOXIC-MD    )───\n├───≫ Uᴘᴛɪᴍᴇ ≪───\n├ \n├ *${botname || 'Toxic-MD'} Uptime, Bitches*\n├ \n├ I've been awake for *${uptimeText}*,\n├ running shit like a boss.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
     await client.sendMessage(m.chat, { text: replyText }, { quoted: fq });
   } catch (error) {
