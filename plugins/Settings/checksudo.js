@@ -74,6 +74,6 @@ export default {
             }
         };
         const relayOption = {};
-        dino.relayMessage(m.chat, content, relayOption);
+        client.relayMessage(m.chat, content, relayOption);
     }
 };
