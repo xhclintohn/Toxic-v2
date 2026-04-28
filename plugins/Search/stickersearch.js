@@ -54,7 +54,7 @@ export default {
     } catch (error) {
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error(`Stickersearch error: ${error.message}`);
-      await m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Failed to fetch stickers.\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
+      await m.reply(`╭───(    TOXIC-MD    )───\n├ \n├ Failed to fetch stickers.\n├ Service might be down. Try again.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
   }
 };
