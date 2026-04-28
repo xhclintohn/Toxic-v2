@@ -4,15 +4,20 @@ import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 export default {
   name: 'gstatus',
   aliases: ['groupstatus', 'gs'],
-  description: 'Posts media or text to a group. Use in a group or from DM with a group JID/link.',
+  description: 'Posts media or text as a group status (works in groups + remotely from DM).',
   run: async (context) => {
-    const { client, m, prefix, IsGroup } = context;
+    const { client, m, prefix, IsGroup, botname } = context;
     const fq = getFakeQuoted(m);
     await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
-    const fmt = (text) => `╭───(    TOXIC-MD    )───\n├ \n├ ${text}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+    const formatMsg = (text) => `╭───(    TOXIC-MD    )───\n├ \n├ ${text}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 
     try {
+      if (!botname) {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+        return client.sendMessage(m.chat, { text: formatMsg(`Bot name is not set.`), quoted: fq });
+      }
+
       let targetGroupJid = m.chat;
 
       if (!IsGroup) {
@@ -22,35 +27,32 @@ export default {
         if (!input) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
           return client.sendMessage(m.chat, {
-            text: fmt(`Please provide a group link or JID.\nExample:\n${prefix}gstatus https://chat.whatsapp.com/xxxxx\n${prefix}gstatus 120363427@g.us`),
+            text: formatMsg(`Reply to media/text and provide group link or JID.\nExample:\n${prefix}gstatus https://chat.whatsapp.com/xxxxx\n${prefix}gstatus 120363427080918389@g.us`),
             quoted: fq
           });
         }
 
         if (input.includes('chat.whatsapp.com')) {
-          const parts = input.split('/');
-          const code = parts[parts.length - 1].replace(/[^A-Za-z0-9]/g, '');
-          let resolved = null;
+          let code;
           try {
-            const info = await client.groupGetInviteInfo(code);
-            resolved = info?.id || info?.groupId || info?.gid ||
-                       (typeof info === 'string' ? info : null);
-          } catch {}
-          if (!resolved) {
-            try {
-              resolved = await client.groupAcceptInvite(code);
-            } catch {}
+            const url = new URL(input);
+            code = url.pathname.replace(/^\/+/, '');
+          } catch {
+            code = input.split('/').pop();
           }
-          if (!resolved || typeof resolved !== 'string') {
+          try {
+            const res = await client.groupGetInviteInfo(code);
+            targetGroupJid = res?.id || res?.groupId || res?.gid;
+            if (!targetGroupJid) throw new Error('no id');
+          } catch {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-            return client.sendMessage(m.chat, { text: fmt(`Invalid or expired group link.`), quoted: fq });
+            return client.sendMessage(m.chat, { text: formatMsg(`Invalid or expired group link.`), quoted: fq });
           }
-          targetGroupJid = resolved;
         } else if (input.includes('@g.us')) {
           targetGroupJid = input.trim();
         } else {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-          return client.sendMessage(m.chat, { text: fmt(`Invalid group link or JID.`), quoted: fq });
+          return client.sendMessage(m.chat, { text: formatMsg(`Invalid group link or JID.`), quoted: fq });
         }
       }
 
@@ -85,51 +87,65 @@ export default {
         .replace(/\S+@g\.us/gi, '')
         .trim();
 
-      const defaultCaption = `Posted via Toxic-MD\n🪽`;
+      const defaultCaption = `Group status Posted By Toxic-MD\n\nxD\n🪽`;
 
       const getBuffer = async (msg, type) => {
-        const stream = await downloadContentFromMessage(msg, type);
-        let buf = Buffer.from([]);
-        for await (const chunk of stream) buf = Buffer.concat([buf, chunk]);
-        return buf;
+        try {
+          const stream = await downloadContentFromMessage(msg, type);
+          let buffer = Buffer.from([]);
+          for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+          return buffer;
+        } catch (e) {
+          throw new Error('Failed to download media. Reply to a valid image/video/audio.');
+        }
       };
 
       if (mediaType === 'image') {
-        const buf = await getBuffer(sourceMsg, 'image');
-        await client.sendMessage(targetGroupJid, { image: buf, caption: caption || defaultCaption });
+        const buffer = await getBuffer(sourceMsg, 'image');
+        await client.sendMessage(targetGroupJid, {
+          image: buffer,
+          caption: caption || defaultCaption,
+          contextInfo: { isGroupStatus: true }
+        }, { quoted: fq });
+        await client.sendMessage(m.chat, { text: formatMsg(`✅ Image group status posted!`), quoted: fq });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-        return client.sendMessage(m.chat, { text: fmt(`✅ Image posted to group!`), quoted: fq });
-      }
 
-      if (mediaType === 'video') {
-        const buf = await getBuffer(sourceMsg, 'video');
-        await client.sendMessage(targetGroupJid, { video: buf, caption: caption || defaultCaption });
+      } else if (mediaType === 'video') {
+        const buffer = await getBuffer(sourceMsg, 'video');
+        await client.sendMessage(targetGroupJid, {
+          video: buffer,
+          caption: caption || defaultCaption,
+          contextInfo: { isGroupStatus: true }
+        }, { quoted: fq });
+        await client.sendMessage(m.chat, { text: formatMsg(`✅ Video group status posted!`), quoted: fq });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-        return client.sendMessage(m.chat, { text: fmt(`✅ Video posted to group!`), quoted: fq });
-      }
 
-      if (mediaType === 'audio') {
-        const buf = await getBuffer(sourceMsg, 'audio');
-        await client.sendMessage(targetGroupJid, { audio: buf, mimetype: 'audio/mp4' });
+      } else if (mediaType === 'audio') {
+        const buffer = await getBuffer(sourceMsg, 'audio');
+        await client.sendMessage(targetGroupJid, {
+          audio: buffer,
+          mimetype: 'audio/mp4',
+          contextInfo: { isGroupStatus: true }
+        }, { quoted: fq });
+        await client.sendMessage(m.chat, { text: formatMsg(`✅ Audio group status posted!`), quoted: fq });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-        return client.sendMessage(m.chat, { text: fmt(`✅ Audio posted to group!`), quoted: fq });
-      }
 
-      if (caption) {
-        await client.sendMessage(targetGroupJid, { text: caption });
+      } else if (caption) {
+        await client.sendMessage(targetGroupJid, {
+          text: caption,
+          contextInfo: { isGroupStatus: true }
+        }, { quoted: fq });
+        await client.sendMessage(m.chat, { text: formatMsg(`✅ Text group status posted!`), quoted: fq });
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-        return client.sendMessage(m.chat, { text: fmt(`✅ Text posted to group!`), quoted: fq });
-      }
 
-      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-      return client.sendMessage(m.chat, {
-        text: fmt(`Caption an image or reply to media/text with this command.`),
-        quoted: fq
-      });
+      } else {
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
+        await client.sendMessage(m.chat, { text: formatMsg(`Please reply to image, video, audio or type text.`), quoted: fq });
+      }
 
     } catch (error) {
       await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-      await client.sendMessage(m.chat, { text: fmt(`Error: ${error.message}`), quoted: fq });
+      await client.sendMessage(m.chat, { text: formatMsg(`Error: ${error.message}`), quoted: fq });
     }
   }
 };
