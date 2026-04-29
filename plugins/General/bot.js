@@ -63,7 +63,6 @@ export default {
             {
                 interactiveMessage: {
                     body: { text: bodyText },
-                    footer: { text: `Powered by ${botname}` },
                     nativeFlowMessage: {
                         messageVersion: 1,
                         buttons: [
@@ -90,7 +89,6 @@ export default {
         );
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-
 
         await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
     },
