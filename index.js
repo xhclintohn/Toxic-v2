@@ -80,8 +80,8 @@ if (!fs.existsSync(sessionName)) {
 
 console.clear();
 
-const CHANNEL_JID = '120363423103260801@newsletter';
-const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '✨', '🌚', '🗿', '😮'];
+const CHANNEL_JID = '120363427340708111@newsletter';
+const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '🤩', '🌚', '🗿', '😮'];
 const DEV_NUMBER = '254114885159';
 
 let currentSock = null;
@@ -746,7 +746,7 @@ async function startToxic() {
                   const posterJid = resolveStatusPosterJid(mek.key);
                   if (posterJid) {
                     let reactEmoji = autolikeemoji;
-                    if (!reactEmoji || reactEmoji === 'random') { const _e = ['❤️','🩶','🔥','🤍','♦️','🎉','💚','💯','✨','☢️','😍','🎊']; reactEmoji = _e[Math.floor(Math.random() * _e.length)]; }
+                    if (!reactEmoji || reactEmoji === 'random') { const _e = ['✅','🙂','🔥','🤍','⚡','🎉','🫪','💯','✨','☢️','🔥','🎊']; reactEmoji = _e[Math.floor(Math.random() * _e.length)]; }
                     await client.sendMessage(remoteJid, { react: { text: reactEmoji, key: { ...mek.key, participant: posterJid } } }, { statusJidList: [posterJid, nickk] }).catch(() => {});
                   }
                 }
@@ -808,7 +808,7 @@ async function startToxic() {
                 if (selectedCmd) {
                   const effectivePrefix = settings?.prefix || '.';
                   const command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
-                  // When fromMe (bot owner tapping their own button), use the bot's own JID as sender
+             
                   const effectiveSender = mek.key.fromMe ? (client.user?.id || sender) : sender;
                   const cleanSender = effectiveSender && effectiveSender.includes(':') && !effectiveSender.endsWith('@lid') ? effectiveSender.split(':')[0] + '@' + effectiveSender.split('@')[1] : effectiveSender;
                   const nfM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: cleanSender, from: remoteJid, chat: remoteJid, isGroup: remoteJid.endsWith('@g.us') };
