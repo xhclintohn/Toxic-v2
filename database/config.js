@@ -265,7 +265,7 @@ let Database = null;
       );
       const defaults = {
           prefix: '.', mode: 'public', botname: 'TOXIC-MD', startmessage: true,
-          chatbotpm: false, autoview: false, autoread: false, antidelete: false, stealth: false,
+          chatbotpm: false, autoview: true, autoread: false, antidelete: false, stealth: false,
           autoai: false, toxicagent: false, anticall: false
       };
       const s = { ...defaults };
