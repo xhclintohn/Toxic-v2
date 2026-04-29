@@ -539,10 +539,6 @@ async function startToxic() {
       }, 3000);
     }
 
-    try {
-      await client.newsletterFollow(CHANNEL_JID);
-    } catch (e) {}
-
     if (client?.ev && typeof client.ev.buffer === 'function') {
         client.ev.buffer = () => {};
     }
@@ -808,7 +804,7 @@ async function startToxic() {
                 if (selectedCmd) {
                   const effectivePrefix = settings?.prefix || '.';
                   const command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
-             
+
                   const effectiveSender = mek.key.fromMe ? (client.user?.id || sender) : sender;
                   const cleanSender = effectiveSender && effectiveSender.includes(':') && !effectiveSender.endsWith('@lid') ? effectiveSender.split(':')[0] + '@' + effectiveSender.split('@')[1] : effectiveSender;
                   const nfM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: cleanSender, from: remoteJid, chat: remoteJid, isGroup: remoteJid.endsWith('@g.us') };
@@ -916,6 +912,7 @@ async function startToxic() {
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 15;
     const baseReconnectDelay = 2000;
+    let followed = false;
 
     client.ev.on("connection.update", async (update) => {
       const { connection, lastDisconnect } = update;
@@ -933,6 +930,10 @@ async function startToxic() {
         global._toxicRealTime = false;
         reconnectAttempts = 0;
         global._toxicLastActivity = Date.now();
+        if (!followed) {
+          followed = true;
+          try { await client.newsletterFollow(CHANNEL_JID); } catch {}
+        }
         console.log(chalk.green(`\n╭───(    `) + chalk.bold.cyan(`𝐓𝐨𝐱𝐢𝐜-𝐌D`) + chalk.green(`    )───`));
         console.log(chalk.green(`> ───≫ `) + chalk.yellow(`🚀 Connected Successfully`) + chalk.green(`<<───`));
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐒𝐭𝐚𝐭𝐮𝐬 : `) + chalk.green(`Started Successfully ✓`));
