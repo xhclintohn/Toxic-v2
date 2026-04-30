@@ -118,8 +118,8 @@ if (!fs.existsSync(sessionName)) {
 
 console.clear();
 
-const CHANNEL_JID = '120363427340708111@newsletter';
-const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '✨', '🌚', '🗿', '😮'];
+const CHANNEL_JID = '120363425667150709@newsletter';
+const CHANNEL_EMOJIS = ['❤️', '🫪', '👍🏻', '🤩', '⚡', '🗿', '😮'];
 const DEV_NUMBER = '254114885159';
 
 let currentSock = null;
