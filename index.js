@@ -409,6 +409,11 @@ let processedCallsInterval = null;
 let watchdogInterval = null;
 if (global._toxicLastActivity === undefined) global._toxicLastActivity = Date.now();
 
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 15;
+const baseReconnectDelay = 2000;
+let followed = false;
+
 if (global._toxicCurrentClient === undefined) global._toxicCurrentClient = null;
 if (global._toxicIsStarting === undefined) global._toxicIsStarting = false;
 if (global._toxicReconnectTimer === undefined) global._toxicReconnectTimer = null;
@@ -521,8 +526,8 @@ async function startToxic() {
       markOnlineOnConnect: settingss.presence === 'online',
       connectTimeoutMs: 60000,
       userDevicesCache: new Map(),
-      defaultQueryTimeoutMs: 20000,
-      keepAliveIntervalMs: 10000,
+      defaultQueryTimeoutMs: 60000,
+      keepAliveIntervalMs: 25000,
       generateHighQualityLinkPreview: true,
       emitOwnEvents: true,
       fireInitQueries: true,
@@ -954,11 +959,6 @@ async function startToxic() {
       }
     });
 
-    let reconnectAttempts = 0;
-    const maxReconnectAttempts = 15;
-    const baseReconnectDelay = 2000;
-    let followed = false;
-
     client.ev.on("connection.update", async (update) => {
       const { connection, lastDisconnect } = update;
       const reason = lastDisconnect?.error ? new Boom(lastDisconnect.error).output.statusCode : null;
@@ -989,7 +989,6 @@ async function startToxic() {
         if (global._toxicDrainInterval) clearInterval(global._toxicDrainInterval);
         const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') client.ev.flush(true); } catch {} };
         global._toxicDrainTimer = setTimeout(_drainBuf, 500);
-        global._toxicDrainInterval = setInterval(() => { try { if (client.ws && client.ws.isOpen) client.ws.socket?.ping?.(); } catch {} }, 20 * 1000);
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
         global._toxicKeepalive = null;
 
@@ -1115,7 +1114,7 @@ function cleanupSessionFiles() {
     try {
         if (!fs.existsSync(sessionName)) return;
         const files = fs.readdirSync(sessionName);
-        const keepFiles = ['creds.json', 'app-state-sync-version.json', 'pre-key-', 'session-', 'sender-key-', 'app-state-sync-key-'];
+        const keepFiles = ['creds.json', 'app-state-sync-version-', 'pre-key-', 'session-', 'sender-key-', 'app-state-sync-key-'];
         files.forEach(file => {
             const filePath = path.join(sessionName, file);
             try {
