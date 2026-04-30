@@ -50,6 +50,7 @@ const _SUPPRESS_LOG_PREFIXES = [
     'Session error:',
     'Bad MAC',
     '[LID] ',
+    'Decrypted message with closed session',
 ];
 const _matchesSuppress = (s) => _SUPPRESS_LOG_PREFIXES.some(p => s.startsWith(p));
 
