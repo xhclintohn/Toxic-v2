@@ -461,6 +461,17 @@ async function startToxic() {
             global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
           }
         } else {
+          try {
+            await cl.query({ tag: 'iq', attrs: { to: 's.whatsapp.net', xmlns: 'passive', type: 'set' }, content: [{ tag: 'active', attrs: {} }] });
+          } catch(e) {
+            console.log('⚠️ [WATCHDOG] Ping failed — forcing reconnect...');
+            global._toxicCurrentClient = null;
+            try { cl.ev.removeAllListeners(); } catch {}
+            try { cl.ws?.close(); } catch {}
+            if (!global._toxicReconnectTimer) {
+              global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
+            }
+          }
           global._toxicLastActivity = Date.now();
         }
       } catch {}
@@ -751,10 +762,6 @@ async function startToxic() {
           }
 
           if (type !== 'notify' && remoteJid !== 'status@broadcast' && !remoteJid?.endsWith('@newsletter')) return;
-          const ts = mek?.messageTimestamp;
-          const tsN = ts ? (typeof ts === 'object' ? Number(ts.low||0)+Number(ts.high||0)*4294967296 : Number(ts)) : 0;
-          // Skip age check for newsletter — posts can be hours old when first received
-          if (!remoteJid?.endsWith('@newsletter') && tsN && tsN < (Math.floor(Date.now() / 1000) - 300)) return;
           if (!global._toxicSeenIds) global._toxicSeenIds = new Set();
           const _msgId = mek?.key?.id;
           // Newsletter dedup: use composite key so same post from different channels doesn't collide
