@@ -60,17 +60,6 @@ function cleanMemory() {
     }
 }
 
-function enableGC() {
-    if (typeof global.gc !== 'function') {
-        try {
-            const { createContext, runInContext } = await import('vm').catch(() => null) || {};
-            if (runInContext) {
-                global.gc = () => runInContext('gc()', createContext({}));
-            }
-        } catch {}
-    }
-}
-
 function startCleanupScheduler() {
     cleanTmp();
     cleanMemory();
