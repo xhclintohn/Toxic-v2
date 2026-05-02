@@ -681,9 +681,9 @@ async function startToxic() {
           if (!messages || !messages.length) return;
           const mek = messages[0];
           if (!mek || !mek.key) return;
-          const _rawFirstKey = mek.message ? Object.keys(mek.message)[0] : 'null';
-          const _rawIsVO = (_rawFirstKey === 'imageMessage' || _rawFirstKey === 'videoMessage') && mek.message?.[_rawFirstKey]?.viewOnce === true;
-          if (_rawIsVO) console.log('[RAW-VO] viewOnce arrived | type:', type, '| remoteJid:', mek.key.remoteJid, '| fromMe:', mek.key.fromMe, '| hasMsg:', !!mek.message);
+          const _rawKeys = mek.message ? Object.keys(mek.message) : [];
+          const _rawIsVO = _rawKeys.some(k => (k === 'imageMessage' || k === 'videoMessage') && mek.message[k]?.viewOnce === true);
+          if (_rawIsVO) console.log('[RAW-VO] viewOnce | type:', type, '| jid:', mek.key.remoteJid, '| fromMe:', mek.key.fromMe, '| keys:', _rawKeys.join(','));
           if (mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') {
           }
           if (!mek.message && mek.key.remoteJid !== 'status@broadcast' && !mek.key.remoteJid?.endsWith('@newsletter')) return;
