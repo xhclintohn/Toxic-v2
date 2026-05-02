@@ -12,6 +12,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "latest",
     "@hapi/boom": "^10.0.1",
     "@vitalets/google-translate-api": "^9.2.0",
     "@whiskeysockets/baileys": "github:xhclintohn/Baileys",
