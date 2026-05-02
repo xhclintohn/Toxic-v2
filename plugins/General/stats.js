@@ -1,6 +1,6 @@
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 import { getSudoUsers, getBannedUsers } from '../../database/config.js';
-import { totalCommands } from '../../handlers/commandHandler.js';
+import { commands } from '../../handlers/commandHandler.js';
 import { botname } from '../../config/settings.js';
 
 function detectPlatform() {
@@ -29,7 +29,7 @@ function formatUptime(seconds) {
 
 export default {
     name: 'stats',
-    aliases: ['stat', 'botstats', 'botstat', 'statistics', 'botinfo', 'info'],
+    aliases: ['stat', 'botstats', 'botstat', 'statistics', 'botinfo'],
     description: 'Displays full bot statistics and system info',
     run: async (context) => {
         const { client, m } = context;
@@ -46,8 +46,8 @@ export default {
             const platform = detectPlatform();
             const bName = botname || 'Toxic-MD';
 
-            let groupCount = 0;
-            try { groupCount = Object.keys(await client.groupFetchAllParticipating()).length; } catch {}
+            const cmdCount = Object.keys(commands).length;
+            const groupCount = global._toxicGroupMetaCache?.size ?? '?';
 
             const sudoUsers = await getSudoUsers().catch(() => []);
             const bannedUsers = await getBannedUsers().catch(() => []);
@@ -71,7 +71,7 @@ export default {
                 `├\n` +
                 `├───≫ Bot Data ≪───\n` +
                 `├\n` +
-                `├ 📋 *Commands:* ${totalCommands}\n` +
+                `├ 📋 *Commands:* ${cmdCount}\n` +
                 `├ 👥 *Groups:* ${groupCount}\n` +
                 `├ 🛡️ *Sudo Users:* ${sudoUsers.length}\n` +
                 `├ 🚫 *Banned Users:* ${bannedUsers.length}\n` +
