@@ -582,7 +582,6 @@ export default async (client, m, chatUpdate, store) => {
             return;
         }
 
-        console.log('[TOXIC] feature block reached | mtype:', m.mtype, '| fromMe:', m.key?.fromMe);
         const _featurePromises = [
             status_saver(client, m, Owner, usedPrefix).catch(e => console.log('❌ [STATUS_SAVER]:', e.message)),
             afkFeature(client, m).catch(e => console.log('❌ [AFK]:', e.message)),
