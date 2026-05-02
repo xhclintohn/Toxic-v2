@@ -1,17 +1,18 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 import middleware from '../../utils/botUtil/middleware.js';
+import { getDeviceMode } from '../../lib/deviceMode.js';
 
 const H = (title) => `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├`;
 const F = `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 const box = (title, lines) => `${H(title)}\n${lines.map(l => `├ ${l}`).join('\n')}\n├\n${F}`;
 
-async function sendSelectButtons(client, jid, fq, bodyText, footerText, title, rows) {
+async function sendSelectButtons(client, jid, fq, bodyText, title, rows) {
     try {
         const msg = generateWAMessageFromContent(jid, {
             interactiveMessage: {
                 body: { text: bodyText },
-                footer: { text: footerText },
+                footer: { text: '' },
                 nativeFlowMessage: {
                     buttons: [{
                         name: 'single_select',
@@ -43,11 +44,10 @@ export default [
                 return client.sendMessage(m.chat, {
                     text: box('USAGE', [
                         '📋 .ngc <group name>',
+                        '📌 Tag members to add them',
                         '',
-                        '📌 Examples:',
-                        '  .ngc Toxic Squad',
+                        '  .ngc Toxic Squad @user',
                         '  .newgc My Group',
-                        '  .groupcreate Test',
                     ])
                 }, { quoted: fq });
             }
@@ -55,13 +55,21 @@ export default [
             try {
                 const mentioned = m.mentionedJid?.filter(j => j !== client.user?.id) || [];
                 const group = await client.groupCreate(name, mentioned);
-                const jid = group?.id || group?.gid || '';
+                const gid = group?.id || group?.gid || '';
+                let inviteLink = '';
+                if (gid) {
+                    try {
+                        const code = await client.groupInviteCode(gid);
+                        if (code) inviteLink = `https://chat.whatsapp.com/${code}`;
+                    } catch {}
+                }
                 await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                 await client.sendMessage(m.chat, {
                     text: box('GROUP CREATED', [
                         `✅ *Name:* ${name}`,
                         `👥 *Members added:* ${mentioned.length}`,
-                        `🔗 *JID:* ${jid}`,
+                        `🔗 *JID:* ${gid}`,
+                        ...(inviteLink ? [`🔑 *Link:* ${inviteLink}`] : []),
                     ])
                 }, { quoted: fq });
             } catch (e) {
@@ -147,7 +155,7 @@ export default [
     {
         name: 'disappearing',
         aliases: ['disappear', 'disap', 'dsp', 'gvanish', 'timer', 'ephemeral', 'vanish', 'gcvanish'],
-        description: 'Set disappearing messages. No args = show picker buttons.',
+        description: 'Set disappearing messages. No args = show picker.',
         run: async (context) => {
             await middleware(context, async () => {
                 const { client, m, args, prefix } = context;
@@ -167,10 +175,21 @@ export default [
 
                 if (!arg || !(arg in MAP)) {
                     const p = prefix || '.';
-                    await sendSelectButtons(
+                    const bodyText = box('DISAPPEARING MESSAGES', [
+                        '⏳ Pick a timer for this group:',
+                        '',
+                        `  🚫 off  — Disable`,
+                        `  ⏰ 24h — 24 hours`,
+                        `  📅 7d  — 7 days`,
+                        `  🗓️ 90d — 90 days`,
+                    ]);
+                    const _dev = await getDeviceMode();
+                    if (_dev === 'ios') {
+                        return client.sendMessage(m.chat, { text: bodyText }, { quoted: fq });
+                    }
+                    return sendSelectButtons(
                         client, m.chat, fq,
-                        `╭───(    TOXIC-MD    )───\n├───≫ DISAPPEARING ≪───\n├\n├ Pick a timer for this group:\n├\n${F}`,
-                        'Tap to select',
+                        bodyText,
                         'Set Timer',
                         [
                             { header: '🚫 Off',      title: 'Disable disappearing messages', id: `${p}disappearing off` },
@@ -179,7 +198,6 @@ export default [
                             { header: '🗓️ 90 Days',  title: 'Messages vanish after 90 days',  id: `${p}disappearing 90d` },
                         ]
                     );
-                    return;
                 }
 
                 const seconds = MAP[arg];
