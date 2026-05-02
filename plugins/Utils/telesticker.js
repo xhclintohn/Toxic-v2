@@ -1,25 +1,8 @@
 import fetch from 'node-fetch';
-import webpmux from 'node-webpmux';
+import { Sticker, StickerTypes } from 'wa-sticker-formatter';
+import { promises as fs } from 'fs';
+import path from 'path';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
-
-const { Image: WebpImage } = webpmux;
-
-async function addStickerExif(webpBuffer, packname, author, emojis) {
-    const img = new WebpImage();
-    await img.load(webpBuffer);
-    const json = {
-        'sticker-pack-id': 'com.toxic.whatsapp.sticker',
-        'sticker-pack-name': packname,
-        'sticker-pack-publisher': author,
-        'emojis': emojis
-    };
-    const exifAttr = Buffer.from([0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00]);
-    const jsonBuff = Buffer.from(JSON.stringify(json), 'utf-8');
-    const exif = Buffer.concat([exifAttr, jsonBuff]);
-    exif.writeUIntLE(jsonBuff.length, 14, 4);
-    img.exif = exif;
-    return await img.save(null);
-}
 
 export default async (context) => {
     const { client, m, text, prefix, packname, author } = context;
@@ -66,36 +49,49 @@ export default async (context) => {
 
         let sentCount = 0;
         let failedCount = 0;
-        let skippedCount = 0;
+        let tgsSkipped = 0;
 
         for (let i = 0; i < stickers.length; i++) {
+            let tempFile = null;
             try {
                 const sticker = stickers[i];
                 const stickerUrl = sticker.url;
 
-                if (stickerUrl.endsWith('.tgs') || stickerUrl.endsWith('.webm')) {
-                    skippedCount++;
-                    continue;
-                }
+                if (stickerUrl.endsWith('.tgs')) { tgsSkipped++; continue; }
+
+                const isVideo = stickerUrl.endsWith('.webm');
+                const ext = isVideo ? 'webm' : 'webp';
+                tempFile = path.join('/tmp', `ts-${Date.now()}-${i}.${ext}`);
 
                 const stickerResponse = await fetch(stickerUrl);
                 if (!stickerResponse.ok) throw new Error(`Download failed: ${stickerResponse.status}`);
 
                 const stickerBuffer = Buffer.from(await stickerResponse.arrayBuffer());
-                const emojis = sticker.emoji ? [sticker.emoji] : ['🤔'];
-                const finalBuffer = await addStickerExif(stickerBuffer, stickerPack, stickerAuthor, emojis);
+                await fs.writeFile(tempFile, stickerBuffer);
 
-                await client.sendMessage(m.chat, { sticker: finalBuffer }, { quoted: fq });
+                const waSticker = new Sticker(tempFile, {
+                    pack: stickerPack,
+                    author: stickerAuthor,
+                    type: isVideo ? StickerTypes.CROPPED : StickerTypes.FULL,
+                    categories: sticker.emoji ? [sticker.emoji] : ['🤔'],
+                    quality: 50,
+                });
+
+                const stickerBufferFinal = await waSticker.toBuffer();
+                await client.sendMessage(m.chat, { sticker: stickerBufferFinal }, { quoted: fq });
                 sentCount++;
 
-                if ((i + 1) % 3 === 0) await new Promise(r => setTimeout(r, 1000));
+                if ((i + 1) % 3 === 0) await new Promise(r => setTimeout(r, 800));
 
             } catch { failedCount++; }
+            finally {
+                if (tempFile) await fs.unlink(tempFile).catch(() => {});
+            }
         }
 
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
 
-        const extraNote = skippedCount > 0 ? `\n├ Skipped ${skippedCount} animated (.tgs/.webm)` : '';
+        const extraNote = tgsSkipped > 0 ? `\n├ Skipped ${tgsSkipped} .tgs (Lottie, unsupported)` : '';
         await m.reply(`╭───(    TOXIC-MD    )───\n├───≫ Tᴇʟᴇɢʀᴀᴍ Sᴛɪᴄᴋᴇʀ ≪───\n├ \n├ Success: ${sentCount} stickers\n├ Failed: ${failedCount} stickers${extraNote}\n├ Pack: ${packTitle}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
 
     } catch (error) {
