@@ -4,7 +4,7 @@ import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 export default {
   name: 'gstatus',
   aliases: ['groupstatus', 'gs'],
-  description: 'Posts media or text as a group status.',
+  description: 'Posts media or text as a silent group status.',
   run: async (context) => {
     const { client, m, prefix, IsGroup, botname } = context;
     const fq = getFakeQuoted(m);
@@ -92,28 +92,32 @@ export default {
       if (mediaType === 'image') {
         const buffer = await getBuffer(sourceMsg, 'image');
         await client.sendMessage(targetGroupJid, {
-          image: buffer,
-          caption: caption || defaultCaption,
-          contextInfo: { isGroupStatus: true }
+          groupStatusMessage: {
+            image: buffer,
+            caption: caption || defaultCaption
+          }
         });
       } else if (mediaType === 'video') {
         const buffer = await getBuffer(sourceMsg, 'video');
         await client.sendMessage(targetGroupJid, {
-          video: buffer,
-          caption: caption || defaultCaption,
-          contextInfo: { isGroupStatus: true }
+          groupStatusMessage: {
+            video: buffer,
+            caption: caption || defaultCaption
+          }
         });
       } else if (mediaType === 'audio') {
         const buffer = await getBuffer(sourceMsg, 'audio');
         await client.sendMessage(targetGroupJid, {
-          audio: buffer,
-          mimetype: 'audio/mp4',
-          contextInfo: { isGroupStatus: true }
+          groupStatusMessage: {
+            audio: buffer,
+            mimetype: 'audio/mp4'
+          }
         });
       } else if (caption) {
         await client.sendMessage(targetGroupJid, {
-          text: caption,
-          contextInfo: { isGroupStatus: true }
+          groupStatusMessage: {
+            text: caption
+          }
         });
       } else {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
