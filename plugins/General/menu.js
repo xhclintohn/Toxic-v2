@@ -10,7 +10,7 @@ import fs from 'fs';
 
   export default {
       name: 'menu',
-      aliases: ['commands', 'list', 'cmds', 'm', 'help', 'cmd', 'commandlist', 'allcmds'],
+      aliases: ['commands', 'list', 'cmds', 'm', 'cmd', 'commandlist', 'allcmds'],
       description: 'Displays the Toxic-MD command menu',
       run: async (context) => {
           const { client, m, mode, pict, botname, prefix } = context;
