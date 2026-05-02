@@ -1,5 +1,6 @@
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+import { getDeviceMode } from '../../lib/deviceMode.js';
 
 if (!global._toxicPinPending) global._toxicPinPending = new Map();
 
@@ -30,11 +31,17 @@ async function sendPinButtons(client, m, fq, prefix) {
         `├───≫ PIN MESSAGE ≪───\n├\n` +
         `├ How long should it stay pinned?\n├\n` +
         `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+    const _dev = await getDeviceMode();
+    if (_dev === 'ios') {
+        return client.sendMessage(m.chat, {
+            text: `${bodyText}\n\n├ Use:\n├ ${p}pinm 24h\n├ ${p}pinm 7d\n├ ${p}pinm 30d`
+        }, { quoted: fq });
+    }
     try {
         const msg = generateWAMessageFromContent(m.chat, {
             interactiveMessage: {
                 body: { text: bodyText },
-                footer: { text: 'Tap to select pin duration' },
+                footer: { text: '' },
                 nativeFlowMessage: {
                     buttons: [{
                         name: 'single_select',
@@ -43,10 +50,9 @@ async function sendPinButtons(client, m, fq, prefix) {
                             sections: [{
                                 title: 'How long?',
                                 rows: [
-                                    { header: '⏱️ 24 Hours', title: 'Pin for 1 day',    id: `${p}pinm 24h` },
-                                    { header: '📅 7 Days',   title: 'Pin for 1 week',   id: `${p}pinm 7d`  },
-                                    { header: '🗓️ 30 Days',  title: 'Pin for 1 month',  id: `${p}pinm 30d` },
-                                    { header: '🔒 Forever',  title: 'Pin for 60 seconds (permanent-ish)', id: `${p}pinm 60s` },
+                                    { header: '⏱️ 24 Hours', title: 'Pin for 1 day',   id: `${p}pinm 24h` },
+                                    { header: '📅 7 Days',   title: 'Pin for 1 week',  id: `${p}pinm 7d`  },
+                                    { header: '🗓️ 30 Days',  title: 'Pin for 1 month', id: `${p}pinm 30d` },
                                 ]
                             }]
                         })
@@ -57,7 +63,7 @@ async function sendPinButtons(client, m, fq, prefix) {
         await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
     } catch {
         await client.sendMessage(m.chat, {
-            text: `╭───(    TOXIC-MD    )───\n├ Pick a duration:\n├ ${p}pinm 24h  → 1 day\n├ ${p}pinm 7d   → 7 days\n├ ${p}pinm 30d  → 30 days\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            text: `${bodyText}\n\n├ Use:\n├ ${p}pinm 24h\n├ ${p}pinm 7d\n├ ${p}pinm 30d`
         }, { quoted: fq });
     }
 }
