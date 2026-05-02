@@ -127,6 +127,13 @@ const EXTRA_ALIASES = {
   device:     ['setdevice', 'devicemode', 'platform', 'deviceset', 'setplatform'],
   upx:        ['ghupload', 'uploadmedia'],
   base64:     ['tobase64', 'b64', 'encode64', 'unbase64', 'debase64', 'frombase64', 'decode64', 'b64decode'],
+  ngc:        ['newgc', 'groupcreate', 'aigcreate', 'creategroup', 'createaig'],
+  aigbot:     ['addaibot', 'aigaddbot', 'aibot'],
+  aiginfo:    ['aigroupinfo', 'aiggroupinfo', 'aigmeta'],
+  aiglink:    ['aiginvite', 'aigrouplink', 'aiginvitelink'],
+  aigrevoke:  ['aigresetlink', 'aignewlink', 'aigreset'],
+  aigleave:   ['aigroupleave', 'leaveaig', 'aigbye'],
+  aigephem:   ['aigdisappear', 'aigephemeralmsg', 'aigvanish'],
 };
 
 function fixPluginFiles(dir) {
