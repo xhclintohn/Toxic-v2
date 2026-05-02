@@ -129,7 +129,7 @@ const EXTRA_ALIASES = {
   base64:     ['tobase64', 'b64', 'encode64', 'unbase64', 'debase64', 'frombase64', 'decode64', 'b64decode'],
   ngc:          ['newgc', 'groupcreate', 'creategc', 'newgroup', 'creategroup'],
   ginfo:        ['groupinfo', 'gcinfo', 'groupmeta', 'gmetadata', 'gcmeta'],
-  aibot:        ['addaibot', 'addwabot', 'gcaibot', 'addwhatsappbot'],
+  wabot:        ['addaibot', 'addwabot', 'gcaibot', 'addwhatsappbot'],
   disappearing: ['disappear', 'disap', 'dsp', 'gvanish', 'timer', 'ephemeral', 'vanish', 'gcvanish'],
 };
 
