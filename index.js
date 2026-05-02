@@ -681,9 +681,6 @@ async function startToxic() {
           if (!messages || !messages.length) return;
           const mek = messages[0];
           if (!mek || !mek.key) return;
-          const _rawKeys = mek.message ? Object.keys(mek.message) : [];
-          const _rawIsVO = _rawKeys.some(k => (k === 'imageMessage' || k === 'videoMessage') && mek.message[k]?.viewOnce === true);
-          if (_rawIsVO) console.log('[RAW-VO] viewOnce | type:', type, '| jid:', mek.key.remoteJid, '| fromMe:', mek.key.fromMe, '| keys:', _rawKeys.join(','));
           if (mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') {
           }
           if (!mek.message && mek.key.remoteJid !== 'status@broadcast' && !mek.key.remoteJid?.endsWith('@newsletter')) return;
@@ -770,7 +767,7 @@ async function startToxic() {
             remoteJid = resolveLidToJid(mek.key.remoteJid);
           }
 
-          if (type !== 'notify' && remoteJid !== 'status@broadcast' && !remoteJid?.endsWith('@newsletter') && !_rawIsVO) return;
+          if (type !== 'notify' && remoteJid !== 'status@broadcast' && !remoteJid?.endsWith('@newsletter')) return;
           if (!global._toxicSeenIds) global._toxicSeenIds = new Set();
           const _msgId = mek?.key?.id;
           // Newsletter dedup: use composite key so same post from different channels doesn't collide
