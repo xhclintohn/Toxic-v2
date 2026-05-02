@@ -28,7 +28,7 @@ export default {
         if (!input) {
           await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
           return client.sendMessage(m.chat, {
-            text: fmt(`Reply to media and provide a group link or JID.\nExample:\n${prefix}gstatus https://chat.whatsapp.com/xxxxx\n${prefix}gstatus 120363@g.us`),
+            text: fmt(`Reply to media or text and provide a group link or JID.\nExample:\n${prefix}gstatus https://chat.whatsapp.com/xxxxx\n${prefix}gstatus 120363@g.us`),
             quoted: fq
           });
         }
@@ -58,6 +58,7 @@ export default {
 
       let sourceMsg = null;
       let mediaType = null;
+      let quotedText = null;
 
       if (m.message?.imageMessage) {
         sourceMsg = m.message.imageMessage;
@@ -69,17 +70,31 @@ export default {
         sourceMsg = m.message.audioMessage;
         mediaType = 'audio';
       } else if (m.quoted) {
-        if (m.quoted.mtype === 'imageMessage') { sourceMsg = m.quoted; mediaType = 'image'; }
-        else if (m.quoted.mtype === 'videoMessage') { sourceMsg = m.quoted; mediaType = 'video'; }
-        else if (m.quoted.mtype === 'audioMessage') { sourceMsg = m.quoted; mediaType = 'audio'; }
+        if (m.quoted.mtype === 'imageMessage') {
+          sourceMsg = m.quoted;
+          mediaType = 'image';
+        } else if (m.quoted.mtype === 'videoMessage') {
+          sourceMsg = m.quoted;
+          mediaType = 'video';
+        } else if (m.quoted.mtype === 'audioMessage') {
+          sourceMsg = m.quoted;
+          mediaType = 'audio';
+        } else if (
+          m.quoted.mtype === 'conversation' ||
+          m.quoted.mtype === 'extendedTextMessage'
+        ) {
+          quotedText = m.quoted.text || m.quoted.body || m.quoted.message?.conversation || m.quoted.message?.extendedTextMessage?.text || '';
+          mediaType = 'text';
+        }
       }
 
-      const caption = m.body
+      const inlineCaption = m.body
         .replace(new RegExp(`^\\${prefix}(gstatus|groupstatus|gs)\\s*`, 'i'), '')
         .replace(/https?:\/\/chat\.whatsapp\.com\/\S+/gi, '')
         .replace(/\S+@g\.us/gi, '')
         .trim();
 
+      const caption = inlineCaption || quotedText || null;
       const defaultCaption = `Group status Posted By Toxic-MD\n\nxD\n🪽`;
 
       const getBuffer = async (msg, type) => {
@@ -94,7 +109,7 @@ export default {
         await client.sendMessage(targetGroupJid, {
           groupStatusMessage: {
             image: buffer,
-            caption: caption || defaultCaption
+            caption: inlineCaption || defaultCaption
           }
         });
       } else if (mediaType === 'video') {
@@ -102,7 +117,7 @@ export default {
         await client.sendMessage(targetGroupJid, {
           groupStatusMessage: {
             video: buffer,
-            caption: caption || defaultCaption
+            caption: inlineCaption || defaultCaption
           }
         });
       } else if (mediaType === 'audio') {
@@ -121,7 +136,7 @@ export default {
         });
       } else {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-        return client.sendMessage(m.chat, { text: fmt(`Reply to image, video, audio or include text.`), quoted: fq });
+        return client.sendMessage(m.chat, { text: fmt(`Reply to or include image, video, audio, or text.`), quoted: fq });
       }
 
       await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
