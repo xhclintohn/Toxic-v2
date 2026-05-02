@@ -1,4 +1,7 @@
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
+
+if (!global._toxicPinPending) global._toxicPinPending = new Map();
 
 const parseDuration = (input) => {
     const m = String(input).toLowerCase().match(/^(\d+)\s*(s|m|h|d)$/);
@@ -20,59 +23,112 @@ const durationLabel = (secs) => {
     return `${secs}s`;
 };
 
-export default {
-  name: 'pinm',
-  aliases: ['pinmessage', 'pinmsg'],
-  description: 'Pin a replied-to message. Usage: reply + duration (1s / 30m / 6h / 7d)',
-  run: async (context) => {
-    const { client, m, prefix, IsGroup, args } = context;
-    const fq = getFakeQuoted(m);
-    await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
-
-    if (!IsGroup) {
-      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-      return client.sendMessage(m.chat, {
-        text: `╭───(    TOXIC-MD    )───\n├ \n├ This command can only be used in groups.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      }, { quoted: fq });
-    }
-
-    if (!m.quoted) {
-      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-      return client.sendMessage(m.chat, {
-        text: `╭───(    TOXIC-MD    )───\n├ \n├ Reply to a message to pin it.\n├ \n├ Examples:\n├ ${prefix}pinm 1h  → pin for 1 hour\n├ ${prefix}pinm 30m → pin for 30 minutes\n├ ${prefix}pinm 7d  → pin for 7 days\n├ ${prefix}pinm 60s → pin for 60 seconds\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      }, { quoted: fq });
-    }
-
-    const rawInput = args[0] || '86400';
-    const time = parseDuration(rawInput);
-
-    if (!time || time <= 0) {
-      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-      return client.sendMessage(m.chat, {
-        text: `╭───(    TOXIC-MD    )───\n├ \n├ Invalid duration. Use:\n├ 1s / 5m / 2h / 30d\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      }, { quoted: fq });
-    }
-
+async function sendPinButtons(client, m, fq, prefix) {
+    const p = prefix || '.';
+    const bodyText =
+        `╭───(    TOXIC-MD    )───\n` +
+        `├───≫ PIN MESSAGE ≪───\n├\n` +
+        `├ How long should it stay pinned?\n├\n` +
+        `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
     try {
-      const messageKey = {
-        remoteJid: m.chat,
-        id: m.quoted.id,
-        fromMe: m.quoted.fromMe || false,
-        participant: m.quoted.sender
-      };
-
-      await client.sendMessage(m.chat, { pin: messageKey, type: 1, time });
-
-      await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
-      await client.sendMessage(m.chat, {
-        text: `╭───(    TOXIC-MD    )───\n├ \n├ ✅ Message pinned!\n├ Duration: ${durationLabel(time)}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      }, { quoted: fq });
-
-    } catch (error) {
-      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-      await client.sendMessage(m.chat, {
-        text: `╭───(    TOXIC-MD    )───\n├ \n├ ❌ Failed to pin message.\n├ ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
-      }, { quoted: fq });
+        const msg = generateWAMessageFromContent(m.chat, {
+            interactiveMessage: {
+                body: { text: bodyText },
+                footer: { text: 'Tap to select pin duration' },
+                nativeFlowMessage: {
+                    buttons: [{
+                        name: 'single_select',
+                        buttonParamsJson: JSON.stringify({
+                            title: 'Pin Duration',
+                            sections: [{
+                                title: 'How long?',
+                                rows: [
+                                    { header: '⏱️ 24 Hours', title: 'Pin for 1 day',    id: `${p}pinm 24h` },
+                                    { header: '📅 7 Days',   title: 'Pin for 1 week',   id: `${p}pinm 7d`  },
+                                    { header: '🗓️ 30 Days',  title: 'Pin for 1 month',  id: `${p}pinm 30d` },
+                                    { header: '🔒 Forever',  title: 'Pin for 60 seconds (permanent-ish)', id: `${p}pinm 60s` },
+                                ]
+                            }]
+                        })
+                    }]
+                }
+            }
+        }, { quoted: fq });
+        await client.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
+    } catch {
+        await client.sendMessage(m.chat, {
+            text: `╭───(    TOXIC-MD    )───\n├ Pick a duration:\n├ ${p}pinm 24h  → 1 day\n├ ${p}pinm 7d   → 7 days\n├ ${p}pinm 30d  → 30 days\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+        }, { quoted: fq });
     }
-  }
+}
+
+export default {
+    name: 'pinm',
+    aliases: ['pinmessage', 'pinmsg'],
+    description: 'Pin a replied-to message. Reply to message, then pick duration.',
+    run: async (context) => {
+        const { client, m, prefix, IsGroup, args } = context;
+        const fq = getFakeQuoted(m);
+
+        if (!IsGroup) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return client.sendMessage(m.chat, {
+                text: `╭───(    TOXIC-MD    )───\n├ \n├ Groups only.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            }, { quoted: fq });
+        }
+
+        const rawInput = args[0] || '';
+        const time = rawInput ? parseDuration(rawInput) : null;
+
+        if (m.quoted) {
+            const pendingKey = {
+                remoteJid: m.chat,
+                id: m.quoted.id,
+                fromMe: m.quoted.fromMe || false,
+                participant: m.quoted.sender
+            };
+            global._toxicPinPending.set(m.chat, { key: pendingKey, ts: Date.now() });
+            setTimeout(() => {
+                const p = global._toxicPinPending.get(m.chat);
+                if (p && Date.now() - p.ts > 5 * 60 * 1000) global._toxicPinPending.delete(m.chat);
+            }, 5 * 60 * 1000);
+
+            if (!time) {
+                await client.sendMessage(m.chat, { react: { text: '📌', key: m.reactKey } });
+                return sendPinButtons(client, m, fq, prefix);
+            }
+        }
+
+        const pending = global._toxicPinPending.get(m.chat);
+        const messageKey = pending?.key || (m.quoted ? {
+            remoteJid: m.chat,
+            id: m.quoted.id,
+            fromMe: m.quoted.fromMe || false,
+            participant: m.quoted.sender
+        } : null);
+
+        if (!messageKey) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            return client.sendMessage(m.chat, {
+                text: `╭───(    TOXIC-MD    )───\n├ \n├ Reply to a message first, then use ${prefix}pinm.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            }, { quoted: fq });
+        }
+
+        const pinTime = time || 86400;
+
+        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+        try {
+            await client.sendMessage(m.chat, { pin: messageKey, type: 1, time: pinTime });
+            global._toxicPinPending.delete(m.chat);
+            await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+            await client.sendMessage(m.chat, {
+                text: `╭───(    TOXIC-MD    )───\n├ \n├ 📌 Message pinned!\n├ Duration: ${durationLabel(pinTime)}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            }, { quoted: fq });
+        } catch (error) {
+            await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
+            await client.sendMessage(m.chat, {
+                text: `╭───(    TOXIC-MD    )───\n├ \n├ ❌ Failed to pin: ${error.message}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
+            }, { quoted: fq });
+        }
+    }
 };
