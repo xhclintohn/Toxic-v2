@@ -110,7 +110,7 @@ MEDIA: play <song> | ytmp3 <url> | ytmp4 <url> | spotify <url> | tikdl <url> | t
 AI: gpt <prompt> | groq <prompt> | gemini <prompt> | imagine <prompt> | vision | remini | aicode <lang> <prompt> | transcribe | sora <prompt> | aisong <description> | imgedit <prompt> | rc <prompt>
 EDIT: sticker | toimg | tts <text> | removebg | togif | brat <text> | rip | trigger | trash | wanted | wasted | emix <emoji> | logogen <title> | carbon <code> | encrypt <text> | canvas <title>|<type>|<text>|<wm>
 SEARCH: google <q> | wiki <q> | lyrics <song> | movie <title> | weather <city> | npm <pkg> | technews | screenshot <url> | shorten <url> | github <user> | yts <q>
-GENERAL: menu | ping | alive | uptime | tr <lang> <text> | fancy <n> <text> | tempmail | profile | advice | catfact | fact | quote | joke | coinflip | dice | calc <expr>
+GENERAL: menu | ping | alive | uptime | stats | tr <lang> <text> | fancy <n> <text> | tempmail | profile | advice | catfact | fact | quote | joke | coinflip | dice | calc <expr>
 GROUP: tagall [msg] | hidetag [msg] | add <num> | remove @user | promote @user | demote @user | link | revoke | close | open | poll <q|opt1|opt2> | pin | afk [reason] | warn @user | listonline | xkill | foreigners
 GROUP META: groupmeta setgroupname <name> | groupmeta setgroupdesc <desc> | groupmeta setgrouprestrict on|off
 SETTINGS: prefix <sym> | mode <public/private/group/inbox> | autoview on/off | autoai on/off | chatbotpm on/off | antilink on/off | antidelete on/off | stealth on/off | toxicai on/off | presence <online/offline/typing/recording> | autoread on/off | autobio on/off | anticall on/off | autolike on/off | gcpresence on/off
@@ -143,6 +143,8 @@ COMMAND MAPPING (STRICT):
 - "ping" / "speed test" → CMD:ping
 - "alive" / "are you there" → CMD:alive
 - "uptime" → CMD:uptime
+- "stats" / "bot stats" / "bot info" / "bot statistics" / "show stats" / "bot details" → CMD:stats
+- "settings" / "setting" / "bot settings" / "show settings" / "config" → CMD:settings
 - "sticker" / "make sticker" → CMD:sticker
 - "play <song>" → CMD:play <song>
 - "download tiktok <url>" → CMD:tikdl <url>
