@@ -15,7 +15,8 @@ export default async (context) => {
         const viewOnce = quoted?.viewOnceMessageV2?.message || quoted?.viewOnceMessageV2Extension?.message || quoted?.viewOnceMessage || quoted;
         const imageMsg = viewOnce?.imageMessage || viewOnce?.imageMessageV2 || viewOnce?.imageMessageV1;
         const videoMsg = viewOnce?.videoMessage || viewOnce?.videoMessageV2 || viewOnce?.videoMessageV1;
-        const mediaMessage = imageMsg || videoMsg;
+        const audioMsg = viewOnce?.audioMessage || viewOnce?.audioMessageV2 || viewOnce?.audioMessageV1;
+        const mediaMessage = imageMsg || videoMsg || audioMsg;
 
         if (!mediaMessage) {
             await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
@@ -33,13 +34,16 @@ export default async (context) => {
 
         if (imageMsg) {
             await client.sendMessage(dest, { image: buffer, caption });
-        } else {
+        } else if (videoMsg) {
             await client.sendMessage(dest, { video: buffer, caption });
+        } else {
+            const mime = audioMsg.mimetype || 'audio/ogg; codecs=opus';
+            const isPtt = audioMsg.ptt !== false;
+            await client.sendMessage(dest, { audio: buffer, ptt: isPtt, mimetype: mime });
         }
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
     } catch (error) {
-    await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-        console.error('VVX Error:', error);
+        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
         m.reply(`╭───(    TOXIC-MD    )───\n├───≫ ERROR ≪───\n├ \n├ Failed to retrieve view-once media.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`);
     }
 };
