@@ -105,6 +105,9 @@ import groupEvents from './handlers/eventHandler.js';
 import connectionHandler from './handlers/connectionHandler.js';
 import toxic from './src/toxic.js';
 import './features/cleanup.js';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+
+process.env.FFMPEG_PATH = ffmpegInstaller.path;
 
 const app = express();
 const port = process.env.PORT || 10000;
