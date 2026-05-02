@@ -126,7 +126,7 @@ export default [
     },
 
     {
-        name: 'aibot',
+        name: 'wabot',
         aliases: ['addaibot', 'addwabot', 'gcaibot', 'addwhatsappbot'],
         description: 'Add the WhatsApp AI bot to this group',
         run: async (context) => {
