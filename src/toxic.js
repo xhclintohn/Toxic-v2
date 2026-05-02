@@ -23,6 +23,7 @@ import { cleanupOldMessages } from '../lib/Store.js';
 import * as msgStore from '../lib/MessageStore.js';
 import antistatusmention from '../features/antistatusmention.js';
 import autoai from '../features/autoai.js';
+import antiviewonce from '../features/antiviewonce.js';
 import toxicaiFeature from '../features/toxicai.js';
 import afkFeature from '../features/afk.js';
 import ownerMiddleware from '../utils/botUtil/Ownermiddleware.js';
@@ -584,6 +585,7 @@ export default async (client, m, chatUpdate, store) => {
         const _featurePromises = [
             status_saver(client, m, Owner, usedPrefix).catch(e => console.log('❌ [STATUS_SAVER]:', e.message)),
             afkFeature(client, m).catch(e => console.log('❌ [AFK]:', e.message)),
+            antiviewonce(client, m).catch(e => console.log('❌ [ANTIVIEWONCE]:', e.message)),
         ];
         if (m.isGroup) {
             _featurePromises.push(
