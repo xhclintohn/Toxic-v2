@@ -1,9 +1,30 @@
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 import middleware from '../../utils/botUtil/middleware.js';
 
 const H = (title) => `╭───(    TOXIC-MD    )───\n├───≫ ${title} ≪───\n├`;
 const F = `╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
 const box = (title, lines) => `${H(title)}\n${lines.map(l => `├ ${l}`).join('\n')}\n├\n${F}`;
+
+async function sendSelectButtons(client, jid, fq, bodyText, footerText, title, rows) {
+    try {
+        const msg = generateWAMessageFromContent(jid, {
+            interactiveMessage: {
+                body: { text: bodyText },
+                footer: { text: footerText },
+                nativeFlowMessage: {
+                    buttons: [{
+                        name: 'single_select',
+                        buttonParamsJson: JSON.stringify({ title, sections: [{ title: 'Options', rows }] })
+                    }]
+                }
+            }
+        }, { quoted: fq });
+        await client.relayMessage(jid, msg.message, { messageId: msg.key.id });
+    } catch {
+        await client.sendMessage(jid, { text: bodyText }, { quoted: fq });
+    }
+}
 
 export default [
 
@@ -32,13 +53,14 @@ export default [
             }
             await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
             try {
-                const botJid = client.user?.id || '';
-                const group = await client.groupCreate(name, [botJid]);
+                const mentioned = m.mentionedJid?.filter(j => j !== client.user?.id) || [];
+                const group = await client.groupCreate(name, mentioned);
                 const jid = group?.id || group?.gid || '';
                 await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                 await client.sendMessage(m.chat, {
                     text: box('GROUP CREATED', [
                         `✅ *Name:* ${name}`,
+                        `👥 *Members added:* ${mentioned.length}`,
                         `🔗 *JID:* ${jid}`,
                     ])
                 }, { quoted: fq });
@@ -75,7 +97,6 @@ export default [
                     const eph     = ephDur
                         ? (ephDur === 86400 ? '24 hours' : ephDur === 604800 ? '7 days' : ephDur === 7776000 ? '90 days' : `${ephDur}s`)
                         : 'Off';
-
                     await client.sendMessage(m.chat, { react: { text: '📋', key: m.reactKey } });
                     await client.sendMessage(m.chat, {
                         text: box('GROUP INFO', [
@@ -126,10 +147,10 @@ export default [
     {
         name: 'disappearing',
         aliases: ['disappear', 'disap', 'dsp', 'gvanish', 'timer', 'ephemeral', 'vanish', 'gcvanish'],
-        description: 'Set disappearing messages in group. Usage: .disappearing <off|24h|7d|90d>',
+        description: 'Set disappearing messages. No args = show picker buttons.',
         run: async (context) => {
             await middleware(context, async () => {
-                const { client, m, args } = context;
+                const { client, m, args, prefix } = context;
                 const fq = getFakeQuoted(m);
                 if (!m.isGroup) {
                     return client.sendMessage(m.chat, { text: box('ERROR', ['❌ Use this inside a group.']) }, { quoted: fq });
@@ -145,19 +166,20 @@ export default [
                 const arg = (args?.[0] || '').toLowerCase();
 
                 if (!arg || !(arg in MAP)) {
-                    return client.sendMessage(m.chat, {
-                        text: box('DISAPPEARING MESSAGES', [
-                            '📋 *Usage:* .disappearing <option>',
-                            '',
-                            '⏳ *Options:*',
-                            '  off  — Disable',
-                            '  24h  — 24 hours',
-                            '  7d   — 7 days',
-                            '  90d  — 90 days',
-                            '',
-                            '📌 *Example:* .disappearing 7d',
-                        ])
-                    }, { quoted: fq });
+                    const p = prefix || '.';
+                    await sendSelectButtons(
+                        client, m.chat, fq,
+                        `╭───(    TOXIC-MD    )───\n├───≫ DISAPPEARING ≪───\n├\n├ Pick a timer for this group:\n├\n${F}`,
+                        'Tap to select',
+                        'Set Timer',
+                        [
+                            { header: '🚫 Off',      title: 'Disable disappearing messages', id: `${p}disappearing off` },
+                            { header: '⏰ 24 Hours', title: 'Messages vanish after 24h',      id: `${p}disappearing 24h` },
+                            { header: '📅 7 Days',   title: 'Messages vanish after 7 days',   id: `${p}disappearing 7d`  },
+                            { header: '🗓️ 90 Days',  title: 'Messages vanish after 90 days',  id: `${p}disappearing 90d` },
+                        ]
+                    );
+                    return;
                 }
 
                 const seconds = MAP[arg];
@@ -168,9 +190,7 @@ export default [
                     await client.groupToggleEphemeral(m.chat, seconds);
                     await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
                     await client.sendMessage(m.chat, {
-                        text: box('DISAPPEARING MESSAGES', [
-                            `⏳ *Set to:* ${label}`,
-                        ])
+                        text: box('DISAPPEARING MESSAGES', [`⏳ *Set to:* ${label}`])
                     }, { quoted: fq });
                 } catch (e) {
                     await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
