@@ -18,8 +18,9 @@ export default async (context) => {
         const mediaType = m.quoted?.mtype || '';
         const isImage = mediaType === 'imageMessage' || !!(m.quoted?.imageMessage);
         const isVideo = mediaType === 'videoMessage' || !!(m.quoted?.videoMessage);
+        const isAudio = mediaType === 'audioMessage' || !!(m.quoted?.audioMessage);
 
-        if (isImage || isVideo) {
+        if (isImage || isVideo || isAudio) {
             const buffer = await m.quoted.download();
             if (!buffer || buffer.length === 0) {
                 return await client.sendMessage(m.chat, {
@@ -31,8 +32,13 @@ export default async (context) => {
             const mentions = m.quoted?.sender ? [m.quoted.sender] : [];
             if (isImage) {
                 await client.sendMessage(dest, { image: buffer, caption, mentions });
-            } else {
+            } else if (isVideo) {
                 await client.sendMessage(dest, { video: buffer, caption, mentions });
+            } else {
+                const mime = m.quoted?.audioMessage?.mimetype || 'audio/ogg; codecs=opus';
+                const isPtt = m.quoted?.audioMessage?.ptt !== false;
+                await client.sendMessage(dest, { audio: buffer, ptt: isPtt, mimetype: mime });
+                await client.sendMessage(dest, { text: caption, mentions });
             }
             await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
             return;
@@ -53,14 +59,15 @@ export default async (context) => {
         const inner = unwrap(quotedMsg);
         const imageMsg = inner?.imageMessage || null;
         const videoMsg = inner?.videoMessage || null;
+        const audioMsg = inner?.audioMessage || null;
 
-        if (!imageMsg && !videoMsg) {
+        if (!imageMsg && !videoMsg && !audioMsg) {
             return await client.sendMessage(m.chat, {
                 text: `╭───(    TOXIC-MD    )───\n├───≫ RETRIEVE ≪───\n├ \n├ That's not a view-once. Stop wasting my time. 😒\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`
             }, { quoted: fq });
         }
 
-        const mediaMsg = imageMsg || videoMsg;
+        const mediaMsg = imageMsg || videoMsg || audioMsg;
         const buffer = await client.downloadMediaMessage(mediaMsg);
 
         if (!buffer || buffer.length === 0) {
@@ -75,8 +82,13 @@ export default async (context) => {
 
         if (imageMsg) {
             await client.sendMessage(dest, { image: buffer, caption, mentions });
-        } else {
+        } else if (videoMsg) {
             await client.sendMessage(dest, { video: buffer, caption, mentions });
+        } else {
+            const mime = audioMsg.mimetype || 'audio/ogg; codecs=opus';
+            const isPtt = audioMsg.ptt !== false;
+            await client.sendMessage(dest, { audio: buffer, ptt: isPtt, mimetype: mime });
+            await client.sendMessage(dest, { text: caption, mentions });
         }
         await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
     } catch (e) {
