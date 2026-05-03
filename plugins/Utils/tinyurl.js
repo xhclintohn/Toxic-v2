@@ -2,8 +2,8 @@ import axios from 'axios';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
 export default {
-    name: 'shorten',
-    aliases: ['shortlink', 'tinyurl', 'short'],
+    name: 'tinyurl',
+    aliases: ['shortlink', 'short'],
     description: 'Shorten URLs with TinyURL',
     run: async (context) => {
         const { client, m, text } = context;

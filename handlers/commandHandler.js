@@ -126,6 +126,7 @@ const EXTRA_ALIASES = {
   mode:       ['botmode', 'setmode'],
   device:     ['setdevice', 'devicemode', 'platform', 'deviceset', 'setplatform'],
   upx:        ['ghupload', 'uploadmedia'],
+  upload:     ['tourl', 'mediaurl', 'geturl', 'fileurl'],
   base64:     ['tobase64', 'b64', 'encode64', 'unbase64', 'debase64', 'frombase64', 'decode64', 'b64decode'],
   ngc:          ['newgc', 'groupcreate', 'creategc', 'newgroup', 'creategroup'],
   ginfo:        ['groupinfo', 'gcinfo', 'groupmeta', 'gmetadata', 'gcmeta'],

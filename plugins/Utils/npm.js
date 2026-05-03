@@ -2,8 +2,8 @@ import axios from 'axios';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
 export default {
-    name: 'npm',
-    aliases: ['npminfo', 'npmpackage', 'npmlookup'],
+    name: 'npminfo',
+    aliases: ['npmpackage', 'npmlookup'],
     description: 'Look up an npm package',
     run: async (context) => {
         const { client, m, text } = context;

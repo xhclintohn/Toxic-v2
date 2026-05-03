@@ -2,8 +2,8 @@ import { getAnime } from '../../lib/toxicApi.js';
 import { getFakeQuoted } from '../../lib/fakeQuoted.js';
 
 export default {
-    name: 'hug',
-    aliases: ['animehug', 'glomp'],
+    name: 'animehug',
+    aliases: ['glomp'],
     description: 'Send a hug anime gif',
     run: async (context) => {
         const { client, m } = context;
