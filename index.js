@@ -704,18 +704,10 @@ async function startToxic() {
               let _posterJid = _rawP || null;
 
               if (_pDomain === 'lid') {
-                const _altFromKey = mek.key.remoteJidAlt;
-                if (_altFromKey && !_altFromKey.endsWith('@lid') && _altFromKey.includes('@')) {
-                  _posterJid = _altFromKey;
-                } else {
-                  try {
-                    const _pn = await client.signalRepository.lidMapping.getPNForLID(_rawP);
-                    if (_pn) {
-                      const _pnStr = String(_pn).split('@')[0].replace(/\D/g, '');
-                      if (_pnStr) _posterJid = _pnStr + '@s.whatsapp.net';
-                    }
-                  } catch (e) {
-                  }
+                try {
+                  _posterJid = await resolveLidForStatus(client, _rawP);
+                } catch (e) {
+                  _posterJid = _rawP;
                 }
               }
 
@@ -723,8 +715,10 @@ async function startToxic() {
 
               if (_svSettings?.autoview === true || _svSettings?.autoview === 'true' || _svSettings?.autoview === 1) {
                 try {
-                  await client.sendReceipts([_resolvedKey], 'read');
-                } catch (e) {}
+                  await client.readMessages([_resolvedKey]);
+                } catch (e) {
+                  try { await client.readMessages([mek.key]); } catch {}
+                }
               }
 
               if (_svSettings?.autolike === true || _svSettings?.autolike === 'true' || _svSettings?.autolike === 1) {
@@ -735,9 +729,10 @@ async function startToxic() {
                     const _E = ['❤️','🩶','🔥','🤍','♦️','🎉','💚','💯','✨','☢️','😍','🎊'];
                     _emoji = _E[Math.floor(Math.random() * _E.length)];
                   }
+                  const _reactKey = { ...mek.key, participant: _posterJid || _rawP };
                   await client.sendMessage('status@broadcast',
-                    { react: { text: _emoji, key: { ...mek.key, participant: _posterJid } } },
-                    { statusJidList: [_posterJid, _botJid].filter(Boolean) }
+                    { react: { text: _emoji, key: _reactKey } },
+                    { statusJidList: [_posterJid || _rawP, _botJid].filter(Boolean) }
                   );
                 } catch (e) {}
               }
