@@ -57,16 +57,7 @@ export default {
 
       await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
 
-      const body = m.body || '';
-      const usedPrefix = prefix || '.';
-      const prefixEscaped = usedPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      let caption = body.replace(new RegExp(`^${prefixEscaped}(gstatus|groupstatus|gs)\\s*`, 'i'), '')
-        .replace(/https?:\/\/chat\.whatsapp\.com\/\S+/gi, '')
-        .replace(/\S+@g\.us/gi, '')
-        .trim();
-
-      const defaultCaption = `Group status Posted By ${botname}\n\nxD\n🪽`;
-
+      let caption = null;
       let sourceMsg = null;
       let mediaType = null;
 
@@ -75,11 +66,11 @@ export default {
       if (m.message?.imageMessage) {
         sourceMsg = m.message.imageMessage;
         mediaType = 'image';
-        if (!caption) caption = m.message.imageMessage?.caption || '';
+        caption = m.message.imageMessage?.caption || null;
       } else if (m.message?.videoMessage) {
         sourceMsg = m.message.videoMessage;
         mediaType = 'video';
-        if (!caption) caption = m.message.videoMessage?.caption || '';
+        caption = m.message.videoMessage?.caption || null;
       } else if (m.message?.audioMessage) {
         sourceMsg = m.message.audioMessage;
         mediaType = 'audio';
@@ -87,11 +78,11 @@ export default {
         if (quoted.imageMessage) {
           sourceMsg = quoted.imageMessage;
           mediaType = 'image';
-          if (!caption) caption = quoted.imageMessage?.caption || '';
+          caption = quoted.imageMessage?.caption || null;
         } else if (quoted.videoMessage) {
           sourceMsg = quoted.videoMessage;
           mediaType = 'video';
-          if (!caption) caption = quoted.videoMessage?.caption || '';
+          caption = quoted.videoMessage?.caption || null;
         } else if (quoted.audioMessage) {
           sourceMsg = quoted.audioMessage;
           mediaType = 'audio';
@@ -105,7 +96,7 @@ export default {
       if (!mediaType && !caption) {
         await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
         return client.sendMessage(m.chat, {
-          text: fmt(`Reply to an image, video, audio, or include text.\nExample: ${usedPrefix}gstatus Check out this update!`),
+          text: fmt(`Reply to an image, video, audio, or include text.\nExample: ${prefix}gstatus Check out this update!`),
           quoted: fq
         });
       }
@@ -121,14 +112,14 @@ export default {
         const buffer = await getBuffer(sourceMsg, 'image');
         await client.sendMessage(targetGroupJid, {
           image: buffer,
-          caption: caption || defaultCaption,
+          caption: caption,
           contextInfo: { isGroupStatus: true }
         });
       } else if (mediaType === 'video') {
         const buffer = await getBuffer(sourceMsg, 'video');
         await client.sendMessage(targetGroupJid, {
           video: buffer,
-          caption: caption || defaultCaption,
+          caption: caption,
           contextInfo: { isGroupStatus: true }
         });
       } else if (mediaType === 'audio') {
