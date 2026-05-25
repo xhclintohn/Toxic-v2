@@ -15,6 +15,8 @@ const _pNum = (p) => {
 
 const isDevJid = (jid) => _num(jid) === DEV_NUMBER;
 
+const fmt = (msg) => `╭───( *Toxic-MD Antilink* )───\n├ ${msg}\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`;
+
 export default async (client, m) => {
     try {
         if (!m || !m.chat || !m.chat.endsWith('@g.us')) return;
@@ -46,10 +48,7 @@ export default async (client, m) => {
         const groupMetadata = await client.groupMetadata(m.chat);
         const sender = resolveTargetJid(m.sender, groupMetadata.participants);
 
-
-        if (!sender) {
-            return;
-        }
+        if (!sender) return;
 
         const senderNum = _num(sender);
         const botRaw = client.decodeJid ? client.decodeJid(client.user.id) : (client.user?.id || '');
@@ -62,9 +61,18 @@ export default async (client, m) => {
             return _pNum(p) === botNum && (p.admin === 'admin' || p.admin === 'superadmin');
         });
 
-
-
+        const username = senderNum || sender.split('@')[0];
         const reason = isChannelForward ? '📡 Channel forward' : '🔗 Link detected';
+
+        if (isAdmin) return;
+
+        if (!isBotAdmin) {
+            await client.sendMessage(m.chat, {
+                text: fmt(`@${username} sent a link.\nMake me admin so I can actually do something about it. 😤`),
+                mentions: [sender],
+            });
+            return;
+        }
 
         try {
             await client.sendMessage(m.chat, {
@@ -78,13 +86,11 @@ export default async (client, m) => {
         } catch (e) {
         }
 
-        const username = senderNum || sender.split('@')[0];
-
         if (antilinkMode === 'kick') {
             try {
                 await client.groupParticipantsUpdate(m.chat, [sender], 'remove');
                 await client.sendMessage(m.chat, {
-                    text: `╭───( *Toxic-MD Antilink* )───\n├ 🚨 @${username} KICKED!\n├ Reason: ${reason}\n├ Kick mode — zero tolerance. 😈\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                    text: fmt(`🚨 @${username} KICKED!\n├ Reason: ${reason}\n├ Kick mode — zero tolerance. 😈`),
                     mentions: [sender]
                 });
             } catch (e) {
@@ -100,14 +106,14 @@ export default async (client, m) => {
             await resetWarn(m.chat, username);
             try { await client.groupParticipantsUpdate(m.chat, [sender], 'remove'); } catch {}
             await client.sendMessage(m.chat, {
-                text: `╭───( *Toxic-MD Antilink* )───\n├ 🚨 @${username} KICKED!\n├ Reason: ${reason}\n├ Warns: ${newCount}/${MAX_WARNS}\n├ That's it. Get out. 😈\n├ Warn count wiped clean.\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+                text: fmt(`🚨 @${username} KICKED!\n├ Reason: ${reason}\n├ Warns: ${newCount}/${MAX_WARNS}\n├ That's it. Get out. 😈\n├ Warn count wiped clean.`),
                 mentions: [sender]
             });
             return;
         }
 
         await client.sendMessage(m.chat, {
-            text: `╭───( *Toxic-MD Antilink* )───\n├ ⚠️ @${username}, warned!\n├ Reason: ${reason}\n├ Message deleted.\n├ Warns: ${newCount}/${MAX_WARNS}\n├ ${remaining} more and you're GONE. 😈\n╰──────────────────☉\n> ©𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 𝐱𝐡_𝐜𝐥𝐢𝐧𝐭𝐨𝐧`,
+            text: fmt(`⚠️ @${username}, warned!\n├ Reason: ${reason}\n├ Message deleted.\n├ Warns: ${newCount}/${MAX_WARNS}\n├ ${remaining} more and you're GONE. 😈`),
             mentions: [sender]
         });
     } catch (err) {
