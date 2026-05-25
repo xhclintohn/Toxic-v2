@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
+    "start": "node --experimental-sqlite index.js",
     "prestart": "node patch-baileys.js"
   },
   "engines": {
