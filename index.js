@@ -149,10 +149,8 @@ function cacheLidPhone(lidNum, phoneNum) {
 function resolvePhoneFromLid(jid) {
     if (!jid) return null;
     const lidNum = jid.split('@')[0].split(':')[0];
-
     const cached = lidPhoneCache.get(lidNum);
     if (cached) return cached;
-
     return null;
 }
 
@@ -161,16 +159,13 @@ globalThis.resolvePhoneFromLid = resolvePhoneFromLid;
 async function resolvePhoneFromLidAsync(jid) {
     if (!jid) return null;
     const lidNum = jid.split('@')[0].split(':')[0];
-
     const cached = lidPhoneCache.get(lidNum);
     if (cached) return cached;
-
     const stored = await getPhoneFromLid(lidNum).catch(() => null);
     if (stored) {
         lidPhoneCache.set(lidNum, stored);
         return stored;
     }
-
     if (!currentSock) return null;
     const formats = [jid, `${lidNum}:0@lid`, `${lidNum}@lid`];
     for (const fmt of formats) {
@@ -294,13 +289,11 @@ function invalidateSettingsCache() {
 async function resolveLidForStatus(sock, rawLidJid) {
   if (!rawLidJid || !rawLidJid.endsWith('@lid')) return rawLidJid;
   const lidNum = rawLidJid.split('@')[0].split(':')[0];
-
   const fromCache = lidPhoneCache?.get(lidNum);
   if (fromCache) {
     const n = String(fromCache).replace(/\D/g, '');
     if (n && n !== lidNum) { console.log(`[LID] Cache hit: ${rawLidJid} → ${n}@s.whatsapp.net`); return n + '@s.whatsapp.net'; }
   }
-
   if (sock.signalRepository?.lidMapping?.getPNForLID) {
     const variants = [rawLidJid, `${lidNum}:0@lid`, `${lidNum}:1@lid`, `${lidNum}@s.whatsapp.net`];
     for (const v of variants) {
@@ -317,7 +310,6 @@ async function resolveLidForStatus(sock, rawLidJid) {
       } catch {}
     }
   }
-
   try {
     const revFile = path.join(sessionName, `lid-mapping-${lidNum}_reverse.json`);
     if (fs.existsSync(revFile)) {
@@ -333,7 +325,6 @@ async function resolveLidForStatus(sock, rawLidJid) {
       }
     }
   } catch {}
-
   try {
     const allGroups = await sock.groupFetchAllParticipating();
     for (const [, meta] of Object.entries(allGroups || {})) {
@@ -350,7 +341,6 @@ async function resolveLidForStatus(sock, rawLidJid) {
       }
     }
   } catch (e) { console.log(`[LID] Group scan error: ${e.message}`); }
-
   try {
     const phone = await resolvePhoneFromLidAsync(rawLidJid);
     if (phone && typeof phone === 'string') {
@@ -358,7 +348,6 @@ async function resolveLidForStatus(sock, rawLidJid) {
       if (n && n !== lidNum) { console.log(`[LID] Async DB/signalRepo: ${rawLidJid} → ${n}@s.whatsapp.net`); return n + '@s.whatsapp.net'; }
     }
   } catch {}
-
   console.log(`[LID] All resolvers failed for ${rawLidJid} — will use LID directly`);
   return rawLidJid;
 }
@@ -370,12 +359,9 @@ async function handleAutoViewStatus(sock, m) {
   if (!m?.key) return;
   if (m.key.remoteJid !== 'status@broadcast') return;
   if (m.key.fromMe) return;
-
   const rawParticipant = m.key.remoteJidAlt || m.key.participant || '';
-
   const participantJid = await resolveLidForStatus(sock, rawParticipant);
   const resolvedKey = rawParticipant ? { ...m.key, participant: participantJid } : m.key;
-
   try {
     await sock.readMessages([resolvedKey]);
   } catch (err) {
@@ -746,7 +732,7 @@ async function startToxic() {
               remoteJid = mapped + '@s.whatsapp.net';
             } else if (client.signalRepository?.lidMapping?.getPNForLID) {
               try {
-                const pn = client.signalRepository.lidMapping.getPNForLID(mek.key.remoteJid);
+                const pn = await client.signalRepository.lidMapping.getPNForLID(mek.key.remoteJid);
                 if (pn) {
                   const phone = String(pn).split('@')[0].split(':')[0].replace(/[^0-9]/g, '');
                   if (phone.length >= 7) {
@@ -899,7 +885,7 @@ async function startToxic() {
           if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
             const settings = await getCachedSettings();
             client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true' || settings?.autoview === 1;
-            handleAutoViewStatus(client, { key: update.key }).catch(() => {});
+            await handleAutoViewStatus(client, { key: update.key }).catch(() => {});
           }
         } catch (e) {}
       })).catch(() => {});
