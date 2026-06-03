@@ -40,6 +40,8 @@ const __dirname = dirname(__filename);
     process.exit(0);
   }
 }
+// ═══════════════════════════════════════════════════════════════════
+
 
 const _SUPPRESS_LOG_PREFIXES = [
     'Closing session',
@@ -48,7 +50,6 @@ const _SUPPRESS_LOG_PREFIXES = [
     'Session error:',
     'Bad MAC',
     '[LID] ',
-    'Decrypted message with closed session',
 ];
 const _matchesSuppress = (s) => _SUPPRESS_LOG_PREFIXES.some(p => s.startsWith(p));
 
@@ -103,9 +104,6 @@ import groupEvents from './handlers/eventHandler.js';
 import connectionHandler from './handlers/connectionHandler.js';
 import toxic from './src/toxic.js';
 import './features/cleanup.js';
-import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
-
-process.env.FFMPEG_PATH = ffmpegInstaller.path;
 
 const app = express();
 const port = process.env.PORT || 10000;
@@ -119,8 +117,8 @@ if (!fs.existsSync(sessionName)) {
 
 console.clear();
 
-const CHANNEL_JID = '120363425667150709@newsletter';
-const CHANNEL_EMOJIS = ['❤️', '🫪', '👍🏻', '🤩', '⚡', '🗿', '😮'];
+const CHANNEL_JID = '120363427340708111@newsletter';
+const CHANNEL_EMOJIS = ['❤️', '🔥', '👍🏻', '✨', '🌚', '🗿', '😮'];
 const DEV_NUMBER = '254114885159';
 
 let currentSock = null;
@@ -149,8 +147,10 @@ function cacheLidPhone(lidNum, phoneNum) {
 function resolvePhoneFromLid(jid) {
     if (!jid) return null;
     const lidNum = jid.split('@')[0].split(':')[0];
+
     const cached = lidPhoneCache.get(lidNum);
     if (cached) return cached;
+
     return null;
 }
 
@@ -159,15 +159,18 @@ globalThis.resolvePhoneFromLid = resolvePhoneFromLid;
 async function resolvePhoneFromLidAsync(jid) {
     if (!jid) return null;
     const lidNum = jid.split('@')[0].split(':')[0];
+
     const cached = lidPhoneCache.get(lidNum);
     if (cached) return cached;
+
     const stored = await getPhoneFromLid(lidNum).catch(() => null);
     if (stored) {
         lidPhoneCache.set(lidNum, stored);
         return stored;
     }
+
     if (!currentSock) return null;
-    const formats = [jid, `${lidNum}:0@lid`, `${lidNum}@lid`];
+    const formats = [jid, `\( {lidNum}:0@lid`, ` \){lidNum}@lid`];
     for (const fmt of formats) {
         try {
             const pn = await currentSock.signalRepository?.lidMapping?.getPNForLID?.(fmt);
@@ -198,7 +201,7 @@ function getDisplayNumber(senderJid) {
                 cacheLidPhone(raw, phone);
             }
         }
-        return phone ? `+${phone}` : `LID: ${raw.substring(0, 8)}...`;
+        return phone ? `+\( {phone}` : `LID: \){raw.substring(0, 8)}...`;
     }
     return `+${raw}`;
 }
@@ -289,11 +292,13 @@ function invalidateSettingsCache() {
 async function resolveLidForStatus(sock, rawLidJid) {
   if (!rawLidJid || !rawLidJid.endsWith('@lid')) return rawLidJid;
   const lidNum = rawLidJid.split('@')[0].split(':')[0];
+
   const fromCache = lidPhoneCache?.get(lidNum);
   if (fromCache) {
     const n = String(fromCache).replace(/\D/g, '');
     if (n && n !== lidNum) { console.log(`[LID] Cache hit: ${rawLidJid} → ${n}@s.whatsapp.net`); return n + '@s.whatsapp.net'; }
   }
+
   if (sock.signalRepository?.lidMapping?.getPNForLID) {
     const variants = [rawLidJid, `${lidNum}:0@lid`, `${lidNum}:1@lid`, `${lidNum}@s.whatsapp.net`];
     for (const v of variants) {
@@ -310,6 +315,7 @@ async function resolveLidForStatus(sock, rawLidJid) {
       } catch {}
     }
   }
+
   try {
     const revFile = path.join(sessionName, `lid-mapping-${lidNum}_reverse.json`);
     if (fs.existsSync(revFile)) {
@@ -325,6 +331,7 @@ async function resolveLidForStatus(sock, rawLidJid) {
       }
     }
   } catch {}
+
   try {
     const allGroups = await sock.groupFetchAllParticipating();
     for (const [, meta] of Object.entries(allGroups || {})) {
@@ -341,6 +348,7 @@ async function resolveLidForStatus(sock, rawLidJid) {
       }
     }
   } catch (e) { console.log(`[LID] Group scan error: ${e.message}`); }
+
   try {
     const phone = await resolvePhoneFromLidAsync(rawLidJid);
     if (phone && typeof phone === 'string') {
@@ -348,8 +356,9 @@ async function resolveLidForStatus(sock, rawLidJid) {
       if (n && n !== lidNum) { console.log(`[LID] Async DB/signalRepo: ${rawLidJid} → ${n}@s.whatsapp.net`); return n + '@s.whatsapp.net'; }
     }
   } catch {}
+
   console.log(`[LID] All resolvers failed for ${rawLidJid} — will use LID directly`);
-  return rawLidJid;
+  return rawLidJid; // last resort: pass LID through, WhatsApp may handle natively
 }
 
 async function handleAutoViewStatus(sock, m) {
@@ -359,9 +368,12 @@ async function handleAutoViewStatus(sock, m) {
   if (!m?.key) return;
   if (m.key.remoteJid !== 'status@broadcast') return;
   if (m.key.fromMe) return;
+
   const rawParticipant = m.key.remoteJidAlt || m.key.participant || '';
+
   const participantJid = await resolveLidForStatus(sock, rawParticipant);
   const resolvedKey = rawParticipant ? { ...m.key, participant: participantJid } : m.key;
+
   try {
     await sock.readMessages([resolvedKey]);
   } catch (err) {
@@ -395,11 +407,6 @@ let memoryCheckInterval = null;
 let processedCallsInterval = null;
 let watchdogInterval = null;
 if (global._toxicLastActivity === undefined) global._toxicLastActivity = Date.now();
-
-let reconnectAttempts = 0;
-const maxReconnectAttempts = 15;
-const baseReconnectDelay = 2000;
-let followed = false;
 
 if (global._toxicCurrentClient === undefined) global._toxicCurrentClient = null;
 if (global._toxicIsStarting === undefined) global._toxicIsStarting = false;
@@ -454,17 +461,6 @@ async function startToxic() {
             global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
           }
         } else {
-          try {
-            await cl.query({ tag: 'iq', attrs: { to: 's.whatsapp.net', xmlns: 'passive', type: 'set' }, content: [{ tag: 'active', attrs: {} }] });
-          } catch(e) {
-            console.log('⚠️ [WATCHDOG] Ping failed — forcing reconnect...');
-            global._toxicCurrentClient = null;
-            try { cl.ev.removeAllListeners(); } catch {}
-            try { cl.ws?.close(); } catch {}
-            if (!global._toxicReconnectTimer) {
-              global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
-            }
-          }
           global._toxicLastActivity = Date.now();
         }
       } catch {}
@@ -513,8 +509,8 @@ async function startToxic() {
       markOnlineOnConnect: settingss.presence === 'online',
       connectTimeoutMs: 60000,
       userDevicesCache: new Map(),
-      defaultQueryTimeoutMs: 60000,
-      keepAliveIntervalMs: 25000,
+      defaultQueryTimeoutMs: 20000,
+      keepAliveIntervalMs: 10000,
       generateHighQualityLinkPreview: true,
       emitOwnEvents: true,
       fireInitQueries: true,
@@ -668,6 +664,8 @@ async function startToxic() {
           if (!messages || !messages.length) return;
           const mek = messages[0];
           if (!mek || !mek.key) return;
+          if (mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') {
+          }
           if (!mek.message && mek.key.remoteJid !== 'status@broadcast' && !mek.key.remoteJid?.endsWith('@newsletter')) return;
 
           if ((mek.key.remoteJid === 'status@broadcast' || mek.key.remoteJidAlt === 'status@broadcast') && !mek.key.fromMe) {
@@ -686,10 +684,18 @@ async function startToxic() {
               let _posterJid = _rawP || null;
 
               if (_pDomain === 'lid') {
-                try {
-                  _posterJid = await resolveLidForStatus(client, _rawP);
-                } catch (e) {
-                  _posterJid = _rawP;
+                const _altFromKey = mek.key.remoteJidAlt;
+                if (_altFromKey && !_altFromKey.endsWith('@lid') && _altFromKey.includes('@')) {
+                  _posterJid = _altFromKey;
+                } else {
+                  try {
+                    const _pn = await client.signalRepository.lidMapping.getPNForLID(_rawP);
+                    if (_pn) {
+                      const _pnStr = String(_pn).split('@')[0].replace(/\D/g, '');
+                      if (_pnStr) _posterJid = _pnStr + '@s.whatsapp.net';
+                    }
+                  } catch (e) {
+                  }
                 }
               }
 
@@ -697,10 +703,8 @@ async function startToxic() {
 
               if (_svSettings?.autoview === true || _svSettings?.autoview === 'true' || _svSettings?.autoview === 1) {
                 try {
-                  await client.readMessages([_resolvedKey]);
-                } catch (e) {
-                  try { await client.readMessages([mek.key]); } catch {}
-                }
+                  await client.sendReceipts([_resolvedKey], 'read');
+                } catch (e) {}
               }
 
               if (_svSettings?.autolike === true || _svSettings?.autolike === 'true' || _svSettings?.autolike === 1) {
@@ -711,10 +715,9 @@ async function startToxic() {
                     const _E = ['❤️','🩶','🔥','🤍','♦️','🎉','💚','💯','✨','☢️','😍','🎊'];
                     _emoji = _E[Math.floor(Math.random() * _E.length)];
                   }
-                  const _reactKey = { ...mek.key, participant: _posterJid || _rawP };
                   await client.sendMessage('status@broadcast',
-                    { react: { text: _emoji, key: _reactKey } },
-                    { statusJidList: [_posterJid || _rawP, _botJid].filter(Boolean) }
+                    { react: { text: _emoji, key: { ...mek.key, participant: _posterJid } } },
+                    { statusJidList: [_posterJid, _botJid].filter(Boolean) }
                   );
                 } catch (e) {}
               }
@@ -732,7 +735,7 @@ async function startToxic() {
               remoteJid = mapped + '@s.whatsapp.net';
             } else if (client.signalRepository?.lidMapping?.getPNForLID) {
               try {
-                const pn = await client.signalRepository.lidMapping.getPNForLID(mek.key.remoteJid);
+                const pn = client.signalRepository.lidMapping.getPNForLID(mek.key.remoteJid);
                 if (pn) {
                   const phone = String(pn).split('@')[0].split(':')[0].replace(/[^0-9]/g, '');
                   if (phone.length >= 7) {
@@ -748,8 +751,13 @@ async function startToxic() {
           }
 
           if (type !== 'notify' && remoteJid !== 'status@broadcast' && !remoteJid?.endsWith('@newsletter')) return;
+          const ts = mek?.messageTimestamp;
+          const tsN = ts ? (typeof ts === 'object' ? Number(ts.low||0)+Number(ts.high||0)*4294967296 : Number(ts)) : 0;
+          // Skip age check for newsletter — posts can be hours old when first received
+          if (!remoteJid?.endsWith('@newsletter') && tsN && tsN < (Math.floor(Date.now() / 1000) - 300)) return;
           if (!global._toxicSeenIds) global._toxicSeenIds = new Set();
           const _msgId = mek?.key?.id;
+          // Newsletter dedup: use composite key so same post from different channels doesn't collide
           const _dedupKey = remoteJid?.endsWith('@newsletter') ? `nl_${remoteJid}_${_msgId}` : _msgId;
           if (_dedupKey) {
             if (global._toxicSeenIds.has(_dedupKey)) {
@@ -779,6 +787,9 @@ async function startToxic() {
             })();
             return;
           }
+          // Debug: log ALL newsletter messages reaching this point
+          if (remoteJid?.endsWith('@newsletter')) {
+          }
           if (remoteJid === CHANNEL_JID) {
             (async () => {
               try {
@@ -790,13 +801,15 @@ async function startToxic() {
                 const delay = 3000 + Math.floor(Math.random() * 7000);
                 await new Promise(r => setTimeout(r, delay));
                 if (typeof client.newsletterReactMessage === 'function') {
-                  await client.newsletterReactMessage(remoteJid, messageId.toString(), emoji);
+                  await client.newsletterReactMessage(remoteJid, messageId.toString(), emoji)
+                } else {
                 }
-              } catch (e) {}
+              } catch (e) {
+              }
             })();
             return;
           }
-          if (!mek.message) return;
+          if (!mek.message) return; // Safety: catch any null message that slipped past earlier guards
           mek.message = Object.keys(mek.message)[0] === "ephemeralMessage" ? mek.message.ephemeralMessage.message : mek.message;
           if (!mek.message) return;
           const isStealthOn = settings.stealth === 'true' || settings.stealth === true;
@@ -818,6 +831,7 @@ async function startToxic() {
             }
           }
 
+          // Handle nativeFlow single_select responses (carousel buttons)
           if (mek.message?.interactiveResponseMessage) {
             try {
               const nfr = mek.message.interactiveResponseMessage.nativeFlowResponseMessage;
@@ -827,6 +841,7 @@ async function startToxic() {
                 if (selectedCmd) {
                   const effectivePrefix = settings?.prefix || '.';
                   const command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
+                  // When fromMe (bot owner tapping their own button), use the bot's own JID as sender
                   const effectiveSender = mek.key.fromMe ? (client.user?.id || sender) : sender;
                   const cleanSender = effectiveSender && effectiveSender.includes(':') && !effectiveSender.endsWith('@lid') ? effectiveSender.split(':')[0] + '@' + effectiveSender.split('@')[1] : effectiveSender;
                   const nfM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: cleanSender, from: remoteJid, chat: remoteJid, isGroup: remoteJid.endsWith('@g.us') };
@@ -842,6 +857,7 @@ async function startToxic() {
             if (selectedCmd) {
               const effectivePrefix = settings?.prefix || '.';
               const command = selectedCmd.startsWith(effectivePrefix) ? selectedCmd.slice(effectivePrefix.length).toLowerCase() : selectedCmd.toLowerCase();
+              // When fromMe (bot owner tapping their own button), use the bot's own JID as sender
               const effectiveSenderL = mek.key.fromMe ? (client.user?.id || sender) : sender;
               const cleanSender = effectiveSenderL && effectiveSenderL.includes(':') && !effectiveSenderL.endsWith('@lid') ? effectiveSenderL.split(':')[0] + '@' + effectiveSenderL.split('@')[1] : effectiveSenderL;
               const listM = { ...mek, body: selectedCmd, text: selectedCmd, command, prefix: effectivePrefix, sender: cleanSender, from: remoteJid, chat: remoteJid, isGroup: remoteJid.endsWith('@g.us') };
@@ -866,26 +882,25 @@ async function startToxic() {
           m.sender = sender;
           m.chat = remoteJid;
           toxic(client, m, { type: "notify" }, store).catch(e => console.log('❌ [TOXIC ASYNC]:', e.message));
-          setImmediate(() => {
-              if (settings?.autoread === true || settings?.autoread === 'true' || settings?.autoread === 1) { client.readMessages([mek.key]).catch(() => {}); }
-              if (remoteJid.endsWith('@s.whatsapp.net') && presence && presence !== 'off') {
-                try {
-                  if (presence === 'online') client.sendPresenceUpdate('available', remoteJid).catch(() => {});
-                  else if (presence === 'typing') client.sendPresenceUpdate('composing', remoteJid).catch(() => {});
-                  else if (presence === 'recording') client.sendPresenceUpdate('recording', remoteJid).catch(() => {});
-                } catch {}
-              }
-            });
+              setImmediate(() => {
+                  if (settings?.autoread === true || settings?.autoread === 'true' || settings?.autoread === 1) { client.readMessages([mek.key]).catch(() => {}); }
+                  if (remoteJid.endsWith('@s.whatsapp.net') && presence && presence !== 'off') {
+                    try {
+                      if (presence === 'online') client.sendPresenceUpdate('available', remoteJid).catch(() => {});
+                      else if (presence === 'typing') client.sendPresenceUpdate('composing', remoteJid).catch(() => {});
+                      else if (presence === 'recording') client.sendPresenceUpdate('recording', remoteJid).catch(() => {});
+                    } catch {}
+                  }
+                });
         } catch (syncErr) { console.log('❌ [UPSERT SYNC]:', syncErr?.message || String(syncErr)); }
       });
-
     client.ev.on("messages.update", (updates) => {
       Promise.all(updates.map(async (update) => {
         try {
           if (update.key && update.key.remoteJid === "status@broadcast" && update.update?.messageStubType === 1) {
             const settings = await getCachedSettings();
             client.sessionConfig.autoViewStatus = settings?.autoview === true || settings?.autoview === 'true' || settings?.autoview === 1;
-            await handleAutoViewStatus(client, { key: update.key }).catch(() => {});
+            handleAutoViewStatus(client, { key: update.key }).catch(() => {});
           }
         } catch (e) {}
       })).catch(() => {});
@@ -931,6 +946,11 @@ async function startToxic() {
       }
     });
 
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 15;
+    const baseReconnectDelay = 2000;
+    let followed = false;
+
     client.ev.on("connection.update", async (update) => {
       const { connection, lastDisconnect } = update;
       const reason = lastDisconnect?.error ? new Boom(lastDisconnect.error).output.statusCode : null;
@@ -940,9 +960,8 @@ async function startToxic() {
         if (global._toxicDrainInterval) { clearInterval(global._toxicDrainInterval); global._toxicDrainInterval = null; }
         if (global._toxicDrainTimer) { clearTimeout(global._toxicDrainTimer); global._toxicDrainTimer = null; }
         if (global._toxicGhost) { clearInterval(global._toxicGhost); global._toxicGhost = null; }
-      }
-
-      if (connection === "open") {
+    }
+    if (connection === "open") {
         global._toxicSessionTs = Math.floor(Date.now() / 1000);
         global._toxicSeenIds = new Set();
         global._toxicRealTime = false;
@@ -958,52 +977,49 @@ async function startToxic() {
         console.log(chalk.green(`> `) + chalk.white(`\`々\` 𝐌𝐨𝐝𝐞 : `) + chalk.cyan(`${settingss.mode || 'public'}`));
         console.log(chalk.green(`╰──────────────────☉\n`));
         global._toxicConnectTime = Date.now();
-        if (global._toxicDrainTimer) clearTimeout(global._toxicDrainTimer);
+            if (global._toxicDrainTimer) clearTimeout(global._toxicDrainTimer);
         if (global._toxicDrainInterval) clearInterval(global._toxicDrainInterval);
         const _drainBuf = () => { try { if (typeof client.ev.flush === 'function') client.ev.flush(true); } catch {} };
         global._toxicDrainTimer = setTimeout(_drainBuf, 500);
+        global._toxicDrainInterval = setInterval(() => { try { if (client.ws && client.ws.isOpen) client.ws.socket?.ping?.(); } catch {} }, 20 * 1000);
         if (global._toxicKeepalive) clearInterval(global._toxicKeepalive);
         global._toxicKeepalive = null;
 
         if (global._toxicGhost) clearInterval(global._toxicGhost);
-
-        if (client.ws && typeof client.ws.on === 'function') {
-          client.ws.on('close', () => {
-            console.log('🔌 [WS CLOSE] WebSocket closed');
-            if (!global._toxicShuttingDown && !global._toxicReconnectTimer) {
-              global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
-            }
-          });
-          client.ws.on('CB:ib', (node) => {
-            const child = (node?.content || []).map(c => c?.tag).join(',');
-          });
-        }
-
-        setTimeout(async () => {
-          try {
-            await client.query({ tag: 'iq', attrs: { to: 's.whatsapp.net', xmlns: 'passive', type: 'set' }, content: [{ tag: 'active', attrs: {} }] });
-          } catch (e) {}
-        }, 500);
-
-        let _initDone = false;
-        setTimeout(() => { _initDone = true; }, 2000);
-
-        setTimeout(async () => {
-          try {
-            const groups = await client.groupFetchAllParticipating();
-            if (!global._toxicGroupMetaCache) global._toxicGroupMetaCache = new Map();
-            for (const [jid, meta] of Object.entries(groups || {})) {
-              global._toxicGroupMetaCache.set(jid, { data: meta, time: Date.now() });
-            }
-            const { getSudoUsers } = await import('./database/config.js');
-            const sudoList = await getSudoUsers().catch(() => []);
-            autoScanGroupsForSudo(client, sudoList).catch(() => {});
-          } catch {}
-        }, 4000);
-
-        if (global._toxicBatchPoll) clearInterval(global._toxicBatchPoll);
+if (client.ws && typeof client.ws.on === 'function') {
+              client.ws.on('close', () => {
+                  console.log('🔌 [WS CLOSE] WebSocket closed');
+                  if (!global._toxicShuttingDown && !global._toxicReconnectTimer) {
+                      global._toxicReconnectTimer = setTimeout(() => { global._toxicReconnectTimer = null; startToxic(); }, 3000);
+                  }
+              });
+client.ws.on('CB:ib', (node) => {
+                  const child = (node?.content || []).map(c => c?.tag).join(',');
+              });
+          }
+          setTimeout(async () => {
+              try {
+                  await client.query({ tag: 'iq', attrs: { to: 's.whatsapp.net', xmlns: 'passive', type: 'set' }, content: [{ tag: 'active', attrs: {} }] });
+              } catch (e) {
+              }
+          }, 500);
+          let _initDone = false;
+          setTimeout(() => { _initDone = true; }, 2000);
+            setTimeout(async () => {
+              try {
+                const groups = await client.groupFetchAllParticipating();
+                if (!global._toxicGroupMetaCache) global._toxicGroupMetaCache = new Map();
+                for (const [jid, meta] of Object.entries(groups || {})) {
+                  global._toxicGroupMetaCache.set(jid, { data: meta, time: Date.now() });
+                }
+                const { getSudoUsers } = await import('./database/config.js');
+                const sudoList = await getSudoUsers().catch(() => []);
+                autoScanGroupsForSudo(client, sudoList).catch(() => {});
+              } catch {}
+            }, 4000);
+          if (global._toxicBatchPoll) clearInterval(global._toxicBatchPoll);
         global._toxicBatchPoll = null;
-      }
+}
 
       if (connection === "close") {
         if (global._toxicShuttingDown) return;
@@ -1091,7 +1107,7 @@ function cleanupSessionFiles() {
     try {
         if (!fs.existsSync(sessionName)) return;
         const files = fs.readdirSync(sessionName);
-        const keepFiles = ['creds.json', 'app-state-sync-version-', 'pre-key-', 'session-', 'sender-key-', 'app-state-sync-key-'];
+        const keepFiles = ['creds.json', 'app-state-sync-version.json', 'pre-key-', 'session-', 'sender-key-', 'app-state-sync-key-'];
         files.forEach(file => {
             const filePath = path.join(sessionName, file);
             try {
