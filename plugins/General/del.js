@@ -29,6 +29,16 @@ export default {
 
       await client.sendMessage(m.chat, { delete: deleteKey }, { quoted: fq });
 
+      if (m.key && m.key.id) {
+        const selfDeleteKey = {
+          remoteJid: m.chat,
+          fromMe: m.key.fromMe || false,
+          id: m.key.id,
+          ...(isGroup && (m.participant || m.sender) ? { participant: m.participant || m.sender } : {})
+        };
+        await client.sendMessage(m.chat, { delete: selfDeleteKey }).catch(() => {});
+      }
+
     } catch (error) {
     await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
       console.error(`del command error:`, error);
